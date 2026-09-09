@@ -477,6 +477,9 @@
         #weatherMapPanel.is-fullscreen .map-header-to-hide {
             display: none !important;
         }
+        #weatherMapPanel.is-fullscreen #mapBoxWrapper {
+            height: calc(100vh - 60px) !important;
+        }
     </style>
 </head>
 <body>
@@ -681,7 +684,7 @@
             </div>
             <div class="segment-control map-header-to-hide" style="margin-bottom: 12px;">
                 <button class="segment-btn active" id="mapLayerAll" onclick="setMapLayer('all')">🌡️氣溫</button>
-                <button class="segment-btn" id="mapLayerTemp" onclick="setMapLayer('rain')">🌧️日雨量</button>
+                <button class="segment-btn" id="mapLayerTemp" onclick="setMapLayer('rain')">🌧️雨量</button>
             </div>
             <div id="mapBoxWrapper" style="width: 100%; height: 470px; border-radius: 16px; overflow: hidden; border: 1px solid var(--panel-border); position: relative; transition: height 0.3s ease;">
                 <div id="stationMapContainer" style="width: 100%; height: 100%;"></div>
@@ -704,9 +707,9 @@
                     </div>
                 </div>
 
-                <!-- 左上角日雨量色階圖例 (直列式數值格式) -->
+                <!-- 左上角雨量色階圖例 (直列式數值格式) -->
                 <div id="rainLegendBox" style="display: none; position: absolute; top: 15px; left: 15px; z-index: 1000; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 12px; font-size: 11px; color: #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                    <div style="font-weight: 700; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; color: #38bdf8;">日雨量 (mm)</div>
+                    <div style="font-weight: 700; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; color: #38bdf8;">雨量 (mm)</div>
                     <div style="display: flex; align-items: stretch; gap: 8px; height: 260px; padding: 2px 0;">
                         <div style="width: 12px; border-radius: 6px; background: linear-gradient(to top, #C0C0C0, #99FFFF, #00CCFF, #0066FF, #0000CC, #00CC00, #009900, #FFFF00, #FFCC00, #FF9900, #FF6600, #FF0000, #CC0000, #990000, #990099, #660066, #FF66FF);"></div>
                         <div style="display: flex; flex-direction: column; justify-content: space-between; font-size: 10px; color: #cbd5e1; height: 100%; white-space: nowrap;">
@@ -731,8 +734,8 @@
                     </div>
                 </div>
 
-                <!-- 右下角全螢幕按鈕 -->
-                <button id="mapFullscreenBtn" onclick="toggleMapFullscreen()" title="全螢幕切換" style="position: absolute; bottom: 15px; right: 15px; z-index: 1000; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); color: #f1f5f9; border-radius: 10px; padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                <!-- 右下角全螢幕放大按鈕 -->
+                <button id="mapFullscreenBtn" onclick="toggleMapFullscreen()" style="position: absolute; bottom: 15px; right: 15px; z-index: 1000; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; width: 38px; height: 38px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.2s;" title="切換全螢幕">
                     <i class="fas fa-expand" id="mapFullscreenIcon"></i>
                 </button>
             </div>
@@ -798,7 +801,7 @@
         let userCurrentCounty = '';
         let stationMap = null;
         let mapMarkersLayer = null;
-        let currentMapLayerMode = 'all'; // 'all' 為 🌡️氣溫，'rain' 為 🌧️日雨量[cite: 1]
+        let currentMapLayerMode = 'all'; // 'all' 為 🌡️氣溫，'rain' 為 🌧️雨量[cite: 1]
         
         const TAIWAN_REGIONS_ORDER = [
             "基隆市", "臺北市", "新北市", "桃園市", "新竹市", "新竹縣", "苗栗縣",
@@ -826,24 +829,14 @@
         });
 
         function toggleMapFullscreen() {
-            const panel = document.getElementById('weatherMapPanel');
-            const mapBox = document.getElementById('mapBoxWrapper');
+            const mapPanel = document.getElementById('weatherMapPanel');
             const icon = document.getElementById('mapFullscreenIcon');
-            const btn = document.getElementById('mapFullscreenBtn');
-            
-            panel.classList.toggle('is-fullscreen');
-            const isFull = panel.classList.contains('is-fullscreen');
-            
-            if (isFull) {
-                mapBox.style.height = 'calc(100vh - 20px)';
-                icon.className = 'fas fa-compress';
-                btn.innerHTML = '<i class="fas fa-compress" id="mapFullscreenIcon"></i> 退出';
-            } else {
-                mapBox.style.height = '470px';
-                icon.className = 'fas fa-expand';
-                btn.innerHTML = '<i class="fas fa-expand" id="mapFullscreenIcon"></i>';
+            if (!mapPanel) return;
+            mapPanel.classList.toggle('is-fullscreen');
+            const isFull = mapPanel.classList.contains('is-fullscreen');
+            if (icon) {
+                icon.className = isFull ? 'fas fa-compress' : 'fas fa-expand';
             }
-            
             setTimeout(() => {
                 if (stationMap) {
                     stationMap.invalidateSize();
@@ -1453,7 +1446,7 @@
                             <p><b>地區：</b>${county}${town}</p>
                             <p><b>當前氣溫：</b>${tempFullStr}</p>
                             <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + '%' : '--'}</p>
-                            <p><b>日雨量：</b>${rainStr}</p>
+                            <p><b>雨量：</b>${rainStr}</p>
                             <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
                             <button onclick="selectStationById('${station.StationId}'); switchMainPage('dashboard');" style="margin-top: 6px; background: #06b6d4; color: white; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600;">切換至此測站儀表板</button>
                         </div>
@@ -1883,7 +1876,7 @@
                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--panel-border); padding-top: 8px;">
                                 <div>💨 風向/風力：<b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s (${getWindLevel(data.windSpeed)}) / 陣風 ${data.windGust.toFixed(1)} m/s (${getWindLevel(data.windGust)})</b></div>
                                 <div>💧 相對濕度：<b>${data.humidity !== '--' ? data.humidity + ' %' : '-- %'}</b></div>
-                                <div style="grid-column: span 2;">🌧️ 日累積雨量：<b>${data.rain.toFixed(1)} mm</b></div>
+                                <div style="grid-column: span 2;">🌧️ 雨量：<b>${data.rain.toFixed(1)} mm</b></div>
                                 <div style="grid-column: span 2; color: #38bdf8; font-weight: 600; margin-top: 4px;">💡 氣象署天氣概況：${wxInfo.text}</div>
                             </div>
                         `;
@@ -2071,12 +2064,15 @@
             document.getElementById('chartTimeSubtitle').innerText = `${fullDateLabels[0]} ~ ${fullDateLabels[fullDateLabels.length - 1]}`;
             initPastChart(xAxisLabels, temps, fullDateLabels);
         }
-        function initPastChart(labels, dataValues, fullDateLabels) {
+        function initPastChart(labels, dataValues, fullDates) {
             const ctx = document.getElementById('tempChart').getContext('2d');
-            if (tempChart) tempChart.destroy();
+            if (tempChart) {
+                tempChart.destroy();
+            }
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
             const textColor = isDark ? '#94a3b8' : '#64748b';
+
             tempChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -2086,11 +2082,11 @@
                         data: dataValues,
                         borderColor: '#06b6d4',
                         backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        borderWidth: 2.5,
+                        borderWidth: 3,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#38bdf8',
                         fill: true,
-                        tension: 0.3,
-                        pointRadius: 2,
-                        pointHoverRadius: 5
+                        tension: 0.3
                     }]
                 },
                 options: {
@@ -2102,7 +2098,7 @@
                             callbacks: {
                                 title: function(context) {
                                     const index = context[0].dataIndex;
-                                    return fullDateLabels[index] || context[0].label;
+                                    return fullDates[index] || context[0].label;
                                 },
                                 label: function(context) {
                                     return ` 氣溫: ${context.parsed.y} °C`;
@@ -2113,11 +2109,11 @@
                     scales: {
                         x: {
                             grid: { color: gridColor },
-                            ticks: { color: textColor, font: { size: 10 }, maxTicksLimit: 8 }
+                            ticks: { color: textColor, font: { size: 11 } }
                         },
                         y: {
                             grid: { color: gridColor },
-                            ticks: { color: textColor, font: { size: 10 } }
+                            ticks: { color: textColor, font: { size: 11 } }
                         }
                     }
                 }
