@@ -478,7 +478,8 @@
             display: none !important;
         }
         #weatherMapPanel.is-fullscreen #mapBoxWrapper {
-            height: calc(100vh - 60px) !important;
+            height: 100% !important;
+            flex: 1 !important;
         }
     </style>
 </head>
@@ -735,8 +736,8 @@
                 </div>
 
                 <!-- 右下角全螢幕放大按鈕 -->
-                <button id="mapFullscreenBtn" onclick="toggleMapFullscreen()" style="position: absolute; bottom: 15px; right: 15px; z-index: 1000; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; width: 38px; height: 38px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.2s;" title="切換全螢幕">
-                    <i class="fas fa-expand" id="mapFullscreenIcon"></i>
+                <button id="mapFullscreenBtn" onclick="toggleMapFullscreen()" style="position: absolute; bottom: 15px; right: 15px; z-index: 1000; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 8px 12px; color: #f1f5f9; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                    <i class="fas fa-expand" id="mapFullscreenIcon"></i> 全螢幕
                 </button>
             </div>
         </div>
@@ -829,13 +830,14 @@
         });
 
         function toggleMapFullscreen() {
-            const mapPanel = document.getElementById('weatherMapPanel');
+            const panel = document.getElementById('weatherMapPanel');
             const icon = document.getElementById('mapFullscreenIcon');
-            if (!mapPanel) return;
-            mapPanel.classList.toggle('is-fullscreen');
-            const isFull = mapPanel.classList.contains('is-fullscreen');
-            if (icon) {
-                icon.className = isFull ? 'fas fa-compress' : 'fas fa-expand';
+            panel.classList.toggle('is-fullscreen');
+            const isFull = panel.classList.contains('is-fullscreen');
+            if (isFull) {
+                icon.className = 'fas fa-compress';
+            } else {
+                icon.className = 'fas fa-expand';
             }
             setTimeout(() => {
                 if (stationMap) {
