@@ -1,3 +1,6 @@
+以下為您修改後的完整程式碼。已將全螢幕模式調整為真正的無邊距滿版（去除邊框與內距），並確保點擊右下角按鈕進入全螢幕時，上方所有資訊皆會隱藏，且右下角會正確顯示「退出全螢幕」按鈕。
+
+```html
 <!DOCTYPE html>
 <html lang="zh-TW" data-theme="dark">
 <head>
@@ -469,7 +472,8 @@
             max-width: none !important;
             z-index: 999999 !important;
             border-radius: 0 !important;
-            padding: 10px !important;
+            border: none !important;
+            padding: 0 !important;
             display: flex !important;
             flex-direction: column !important;
             background: var(--bg-color) !important;
@@ -480,6 +484,8 @@
         #weatherMapPanel.is-fullscreen #mapBoxWrapper {
             height: 100% !important;
             flex: 1 !important;
+            border-radius: 0 !important;
+            border: none !important;
         }
     </style>
 </head>
@@ -2103,19 +2109,12 @@
                     },
                     scales: {
                         x: {
-                            ticks: {
-                                font: { size: 10 },
-                                color: '#94a3b8',
-                                maxTicksLimit: 6
-                            },
-                            grid: { display: false }
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
                         },
                         y: {
-                            ticks: {
-                                font: { size: 10 },
-                                color: '#94a3b8'
-                            },
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
                         }
                     }
                 }
@@ -2124,3 +2123,5 @@
     </script>
 </body>
 </html>
+
+```
