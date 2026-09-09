@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <style>
-        /* 主題顏色變數[cite: 1] */
+        /* 主題顏色變數 */
         :root {
             --bg-color: #090d16;
             --text-color: #f1f5f9;
@@ -485,7 +485,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- 頁籤導覽[cite: 1] -->
+        <!-- 頁籤導覽 -->
         <div class="page-tabs">
             <button id="tabDashboard" class="tab-btn active" onclick="switchMainPage('dashboard')">
                 <i class="fas fa-chart-line"></i> 觀測儀表板
@@ -506,7 +506,7 @@
                 <i class="fas fa-moon" id="themeIcon"></i>
             </button>
         </div>
-        <!-- 儀表板面板[cite: 1] -->
+        <!-- 儀表板面板 -->
         <div id="dashboardPanel" class="content-panel active modern-dashboard">
             <div class="header">
                 <div class="header-title">
@@ -654,7 +654,7 @@
                 </div>
             </div>
         </div>
-        <!-- 縣市預報面板[cite: 1] -->
+        <!-- 縣市預報面板 -->
         <div id="countyForecastPanel" class="content-panel modern-dashboard">
             <div class="header">
                 <div class="header-title" style="flex-wrap: nowrap; overflow: hidden; width: 100%;">
@@ -674,7 +674,7 @@
                 <div class="my-location-status" style="grid-column: span 2;"><i class="fas fa-spinner fa-spin"></i> 載入預報中...</div>
             </div>
         </div>
-        <!-- 天氣地圖面板[cite: 1] -->
+        <!-- 天氣地圖面板 -->
         <div id="weatherMapPanel" class="content-panel modern-dashboard">
             <div class="header map-header-to-hide">
                 <div class="header-title">
@@ -735,13 +735,13 @@
                     </div>
                 </div>
 
-                <!-- 右下角全螢幕放大按鈕 -->
+                <!-- 右下角全螢幕放大/退出按鈕 -->
                 <button id="mapFullscreenBtn" onclick="toggleMapFullscreen()" style="position: absolute; bottom: 15px; right: 15px; z-index: 1000; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 8px 12px; color: #f1f5f9; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
                     <i class="fas fa-expand" id="mapFullscreenIcon"></i> 全螢幕
                 </button>
             </div>
         </div>
-        <!-- 地震面板[cite: 1] -->
+        <!-- 地震面板 -->
         <div id="quakePanel" class="content-panel modern-dashboard">
             <div class="header">
                 <div class="header-title">
@@ -763,7 +763,7 @@
                 </div>
             </div>
         </div>
-        <!-- 颱風面板[cite: 1] -->
+        <!-- 颱風面板 -->
         <div id="typhoonPanel" class="content-panel modern-dashboard">
             <div class="header">
                 <div class="header-title">
@@ -802,7 +802,7 @@
         let userCurrentCounty = '';
         let stationMap = null;
         let mapMarkersLayer = null;
-        let currentMapLayerMode = 'all'; // 'all' 為 🌡️氣溫，'rain' 為 🌧️雨量[cite: 1]
+        let currentMapLayerMode = 'all'; // 'all' 為 🌡️氣溫，'rain' 為 🌧️雨量
         
         const TAIWAN_REGIONS_ORDER = [
             "基隆市", "臺北市", "新北市", "桃園市", "新竹市", "新竹縣", "苗栗縣",
@@ -831,13 +831,16 @@
 
         function toggleMapFullscreen() {
             const panel = document.getElementById('weatherMapPanel');
+            const btn = document.getElementById('mapFullscreenBtn');
             const icon = document.getElementById('mapFullscreenIcon');
             panel.classList.toggle('is-fullscreen');
             const isFull = panel.classList.contains('is-fullscreen');
             if (isFull) {
                 icon.className = 'fas fa-compress';
+                btn.innerHTML = '<i class="fas fa-compress" id="mapFullscreenIcon"></i> 退出全螢幕';
             } else {
                 icon.className = 'fas fa-expand';
+                btn.innerHTML = '<i class="fas fa-expand" id="mapFullscreenIcon"></i> 全螢幕';
             }
             setTimeout(() => {
                 if (stationMap) {
@@ -1262,7 +1265,6 @@
                         latestTimeStr = `${yyyy}/${mm}/${dd} ${hh}:${min}`;
                     }
                     
-                    // 更新 CWA 觀測時間顯示
                     const cwaTimeEl = document.getElementById('cwaObsTimeDisplay');
                     if (cwaTimeEl) {
                         cwaTimeEl.innerText = `CWA觀測時間：${latestTimeStr}`;
@@ -1323,7 +1325,6 @@
             document.getElementById('mapLayerTemp').classList.toggle('active', mode === 'rain');
             renderMapMarkers();
 
-            // 切換對應的圖例顯示
             const tempLegend = document.getElementById('tempLegendBox');
             const rainLegend = document.getElementById('rainLegendBox');
             if (tempLegend && rainLegend) {
@@ -2071,24 +2072,19 @@
             if (tempChart) {
                 tempChart.destroy();
             }
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-            const textColor = isDark ? '#94a3b8' : '#64748b';
-
             tempChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: '氣溫 (°C)',
                         data: dataValues,
-                        borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        borderWidth: 3,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#38bdf8',
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                        borderWidth: 2,
                         fill: true,
-                        tension: 0.3
+                        tension: 0.3,
+                        pointRadius: 2,
+                        pointHoverRadius: 5
                     }]
                 },
                 options: {
@@ -2101,21 +2097,26 @@
                                 title: function(context) {
                                     const index = context[0].dataIndex;
                                     return fullDates[index] || context[0].label;
-                                },
-                                label: function(context) {
-                                    return ` 氣溫: ${context.parsed.y} °C`;
                                 }
                             }
                         }
                     },
                     scales: {
                         x: {
-                            grid: { color: gridColor },
-                            ticks: { color: textColor, font: { size: 11 } }
+                            ticks: {
+                                font: { size: 10 },
+                                color: '#94a3b8',
+                                maxRotation: 0,  // 強制橫向顯示
+                                minRotation: 0   // 強制橫向顯示
+                            },
+                            grid: { display: false }
                         },
                         y: {
-                            grid: { color: gridColor },
-                            ticks: { color: textColor, font: { size: 11 } }
+                            ticks: {
+                                font: { size: 10 },
+                                color: '#94a3b8'
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
                         }
                     }
                 }
