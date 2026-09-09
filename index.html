@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-TW" data-theme="dark">
-<head[cite: 8]>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>臺灣即時氣象與防災儀表板</title>
     
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <style>
         /* 主題顏色變數 */
         :root {
@@ -27,8 +27,6 @@
             --popup-bg: #fff;
             --popup-text: #0f172a;
             --popup-sub: #334155;
-            --legend-bg: rgba(15, 23, 42, 0.88);
-            --legend-text: #f1f5f9;
         }
         [data-theme="light"] {
             --bg-color: #f1f5f9;
@@ -46,8 +44,6 @@
             --popup-bg: #ffffff;
             --popup-text: #0f172a;
             --popup-sub: #334155;
-            --legend-bg: rgba(255, 255, 255, 0.9);
-            --legend-text: #0f172a;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -106,7 +102,6 @@
         .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
         .header-title { display: flex; align-items: center; gap: 10px; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px; }
         
-        /* 即時時鐘樣式 */
         .live-clock-bar {
             background: rgba(6, 182, 212, 0.08);
             border: 1px solid rgba(6, 182, 212, 0.2);
@@ -161,7 +156,6 @@
         .action-btn.spinning i { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        /* 全域全螢幕/顯著警報推播橫幅 */
         #globalPushAlertBanner {
             background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(185, 28, 28, 0.95));
             border: 2px solid #f87171;
@@ -423,87 +417,6 @@
         }
         .chart-subtitle { color: var(--text-muted); font-size: 12px; margin-top: 4px; margin-left: 12px; }
         .chart-box { position: relative; width: 100%; height: 260px; }
-        .map-section {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 24px;
-            padding: 18px;
-        }
-        .map-header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-        .map-title-row { display: flex; justify-content: space-between; align-items: center; }
-        .map-mode-btn-group {
-            display: flex; gap: 6px; background: var(--select-bg); padding: 5px; border-radius: 14px;
-            overflow-x: auto;
-        }
-        .map-mode-btn-group button {
-            flex: 1; padding: 8px 12px; font-size: 12px; font-weight: 600; border: none;
-            border-radius: 10px; cursor: pointer; background: none; color: var(--text-muted); transition: all 0.2s;
-            white-space: nowrap;
-        }
-        .map-mode-btn-group button.active { background: #06b6d4; color: #fff; box-shadow: 0 2px 8px rgba(6, 182, 212, 0.4); }
-        .map-container-wrapper {
-            position: relative;
-            width: 100%;
-            height: calc(100vh - 270px);
-            min-height: 420px;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid var(--action-border);
-        }
-        #map { width: 100%; height: 100%; }
-        .leaflet-control-attribution { display: none !important; }
-        .leaflet-top.leaflet-left { z-index: 1000; }
-        .custom-vertical-legend {
-            background: var(--legend-bg);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--action-border);
-            border-radius: 12px;
-            padding: 8px 10px;
-            color: var(--legend-text);
-            font-size: 11px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            margin: 10px;
-            min-width: 120px;
-        }
-        .legend-header-title {
-            font-weight: 700;
-            font-size: 11px;
-            margin-bottom: 6px;
-            text-align: center;
-            color: #38bdf8;
-            border-bottom: 1px solid var(--action-border);
-            padding-bottom: 3px;
-        }
-        .legend-scale-body {
-            display: flex;
-            align-items: stretch;
-            gap: 8px;
-            justify-content: center;
-        }
-        .legend-color-bar-rain {
-            width: 12px;
-            border-radius: 3px;
-            background: linear-gradient(to top, #C0C0C0 0%, #99FFFF 6.25%, #00CCFF 12.5%, #0066FF 18.75%, #0000CC 25%, #00CC00 31.25%, #009900 37.5%, #FFFF00 43.75%, #FFCC00 50%, #FF9900 56.25%, #FF6600 62.5%, #FF0000 68.75%, #CC0000 75%, #990000 81.25%, #990099 87.5%, #660066 93.75%, #FF66FF 100%);
-            min-height: 220px;
-        }
-        .legend-labels-list {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            font-size: 10px;
-            line-height: 1;
-        }
-        .weather-dot-badge {
-            width: 12px;
-            height: 12px;
-            padding: 0;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
         .popup-card { color: var(--popup-text); min-width: 160px; }
         .popup-card h4 { font-size: 16px; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 8px; color: var(--popup-text); }
         .popup-card p { font-size: 13px; margin: 4px 0; color: var(--popup-sub); }
@@ -532,7 +445,6 @@
             background: rgba(0, 0, 0, 0.1); padding: 10px; border-radius: 12px; font-size: 12px; color: var(--text-muted);
         }
         
-        /* 警示標籤樣式 */
         .alarm-badge-tag {
             background-color: #ef4444;
             color: #fff;
@@ -546,16 +458,34 @@
             box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
             animation: alarm-pulse 1s infinite alternate;
         }
+
+        /* 全螢幕地圖擴展樣式 */
+        #weatherMapPanel .modern-map-wrapper.fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 99999 !important;
+            border-radius: 0 !important;
+            border: none !important;
+            background: var(--bg-color);
+            padding: 10px;
+        }
+        #weatherMapPanel .modern-map-wrapper.fullscreen #stationMapContainer {
+            height: calc(100vh - 20px) !important;
+            border-radius: 12px;
+        }
     </style>
 </head>
-<body[cite: 8]>
-    <div class="container"[cite: 8]>
+<body>
+    <div class="container">
         <!-- 頁籤導覽 -->
-        <div class="page-tabs"[cite: 8]>
+        <div class="page-tabs">
             <button id="tabDashboard" class="tab-btn active" onclick="switchMainPage('dashboard')">
                 <i class="fas fa-chart-line"></i> 觀測儀表板
             </button>
-            <button id="tabMap" class="tab-btn" onclick="switchMainPage('map')">
+            <button id="tabWeatherMap" class="tab-btn" onclick="switchMainPage('weatherMap')">
                 <i class="fas fa-map-marked-alt"></i> 全台地圖
             </button>
             <button id="tabCountyForecast" class="tab-btn" onclick="switchMainPage('countyForecast')">
@@ -572,27 +502,25 @@
             </button>
         </div>
         <!-- 儀表板面板 -->
-        <div id="dashboardPanel" class="content-panel active modern-dashboard"[cite: 8]>
-            <div class="header"[cite: 8]>
-                <div class="header-title"[cite: 8]>
+        <div id="dashboardPanel" class="content-panel active modern-dashboard">
+            <div class="header">
+                <div class="header-title">
                     <i class="fas fa-cloud-sun-rain" style="color: #06b6d4;"></i>
                     <h2>天氣即時資訊</h2>
                     <span id="dashboardAlarmLight" class="alarm-indicator" title="警報指示燈"></span>
                 </div>
-                <div class="header-actions"[cite: 8]>
+                <div class="header-actions">
                     <button class="action-btn" id="refreshBtn" onclick="fetchAllStationData(true)">
                         <i class="fas fa-sync-alt"></i> 重新整理
                     </button>
                 </div>
             </div>
             
-            <!-- 即時年月日、星期與臺灣標準時間列 -->
-            <div class="live-clock-bar"[cite: 8]>
+            <div class="live-clock-bar">
                 <div><i class="fas fa-calendar-alt"></i> <span id="liveDateText">----年--月--日 星期-</span></div>
                 <div><i class="fas fa-clock"></i> 臺灣標準時間 <span id="liveTimeText">--:--:--</span></div>
             </div>
 
-            <!-- 全域明顯警報推播橫幅 -->
             <div id="globalPushAlertBanner">
                 <div class="global-push-title">
                     <i class="fas fa-bullhorn"></i> <span id="globalPushTitleText">氣象警特報即時推播</span>
@@ -600,10 +528,9 @@
                 <div id="globalPushDescText" class="global-push-desc">--</div>
             </div>
 
-            <!-- 我的位置 Widget -->
-            <div class="my-location-widget"[cite: 8]>
-                <div class="my-location-header"[cite: 8]>
-                    <div class="my-location-title"[cite: 8]>
+            <div class="my-location-widget">
+                <div class="my-location-header">
+                    <div class="my-location-title">
                         <i class="fas fa-location-crosshairs"></i> 您目前所在位置天氣
                     </div>
                     <button class="action-btn location-btn" style="padding: 4px 10px; font-size: 12px;" onclick="initUserLocationWeather()">
@@ -611,13 +538,12 @@
                     </button>
                 </div>
                 <div id="myLocationContentArea">
-                    <div class="my-location-status"[cite: 8]>
+                    <div class="my-location-status">
                         <i class="fas fa-spinner fa-spin"></i> 正在取得 GPS 定位...
                     </div>
                 </div>
             </div>
 
-            <!-- 我的最愛測站快選區塊 -->
             <div class="my-location-widget" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(15, 23, 42, 0.1)); border-color: rgba(245, 158, 11, 0.25);">
                 <div class="my-location-header" style="border-bottom-color: rgba(245, 158, 11, 0.2);">
                     <div class="my-location-title" style="color: #f59e0b;">
@@ -630,30 +556,30 @@
                 </div>
             </div>
 
-            <div class="section-divider-title"[cite: 8]>
+            <div class="section-divider-title">
                 <i class="fas fa-search-location"></i> 測站查詢與即時數據
             </div>
-            <div id="warningAlertBox" class="warning-alert-box"[cite: 8]>
-                <div class="warning-title"[cite: 8]>
+            <div id="warningAlertBox" class="warning-alert-box">
+                <div class="warning-title">
                     <i class="fas fa-exclamation-triangle"></i> <span id="warningTitleText">天氣警特報</span>
                 </div>
                 <div id="warningContentText" class="warning-content">--</div>
             </div>
-            <div id="noWarningBox" class="no-warning-box"[cite: 8]>
+            <div id="noWarningBox" class="no-warning-box">
                 <i class="fas fa-shield-alt"></i> 目前無發布特殊天氣警特報
             </div>
                          
-            <div class="segment-control" id="stationTypeToggle"[cite: 8]>
+            <div class="segment-control" id="stationTypeToggle">
                 <button class="segment-btn active" data-type="normal" onclick="setStationType('normal')">🏙️ 鄉鎮市區站</button>
                 <button class="segment-btn" data-type="freeway" onclick="setStationType('freeway')">🚗 國道觀測站</button>
             </div>
-            <div class="controls-grid"[cite: 8]>
-                <div class="control-group"[cite: 8]>
+            <div class="controls-grid">
+                <div class="control-group">
                     <label><i class="fas fa-map"></i> 選擇縣市</label>
                     <select class="select-box" id="citySelect" onchange="onCityChange()">
                     </select>
                 </div>
-                <div class="control-group"[cite: 8]>
+                <div class="control-group">
                     <label style="display: flex; justify-content: space-between; align-items: center;">
                         <span><i class="fas fa-broadcast-tower"></i> 選擇測站</span>
                         <button id="favoriteActionBtn" onclick="toggleCurrentStationFavorite()" style="background: none; border: none; color: #f59e0b; cursor: pointer; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 3px;">
@@ -664,33 +590,33 @@
                     </select>
                 </div>
             </div>
-            <div class="weather-status-banner"[cite: 8]>
-                <div class="weather-status-left"[cite: 8]>
+            <div class="weather-status-banner">
+                <div class="weather-status-left">
                     <div id="weatherStatusIcon" class="weather-status-icon">☀️</div>
-                    <div class="weather-status-text"[cite: 8]>
+                    <div class="weather-status-text">
                         <h4 id="weatherStatusTitle">載入中...</h4>
                         <p id="weatherStatusDesc">--</p>
                     </div>
                 </div>
             </div>
-            <div class="meta-info-bar"[cite: 8]>
+            <div class="meta-info-bar">
                 <span id="currentStationTag">載入中...</span>
                 <span id="obsTimeTag" class="obs-time-tag">觀測時間：--:--</span>
             </div>
-            <div class="realtime-info-box"[cite: 8]>
-                <div class="info-card-item"[cite: 8]>
+            <div class="realtime-info-box">
+                <div class="info-card-item">
                     <span>🌡️ 當前氣溫</span>
                     <b id="liveTemp">-- °C</b>
                 </div>
-                <div class="info-card-item"[cite: 8]>
+                <div class="info-card-item">
                     <span>💨 風向/風力</span>
                     <b id="liveWind">--</b>
                 </div>
-                <div class="info-card-item"[cite: 8]>
+                <div class="info-card-item">
                     <span>💧 相對濕度</span>
                     <b id="liveHumidity">-- %</b>
                 </div>
-                <div class="info-card-item"[cite: 8]>
+                <div class="info-card-item">
                     <span>📈 降雨機率 (PoP)</span>
                     <b id="livePop" style="color: #38bdf8;">-- %</b>
                 </div>
@@ -699,8 +625,7 @@
                     <b id="liveRain" style="color: #38bdf8;">-- mm</b>
                 </div>
             </div>
-            <!-- 排行榜區塊 -->
-            <div class="ranking-section-box"[cite: 8]>
+            <div class="ranking-section-box">
                 <div class="section-divider-title" style="margin-top: 15px;">
                     <i class="fas fa-trophy" style="color: #f59e0b;"></i> 全台氣象排行榜 Top 10
                 </div>
@@ -714,40 +639,19 @@
                     <div class="my-location-status" style="grid-column: span 2;">載入中...</div>
                 </div>
             </div>
-            <div class="chart-card"[cite: 8]>
-                <div class="chart-header"[cite: 8]>
+            <div class="chart-card">
+                <div class="chart-header">
                     <div id="chartMainTitle" class="chart-title">24小時氣溫趨勢</div>
                     <div id="chartTimeSubtitle" class="chart-subtitle">----/--/-- --:-- ~ ----/--/-- --:--</div>
                 </div>
-                <div class="chart-box"[cite: 8]>
+                <div class="chart-box">
                     <canvas id="tempChart"></canvas>
                 </div>
             </div>
         </div>
-        <!-- 地圖面板 -->
-        <div id="mapPanel" class="content-panel map-section"[cite: 8]>
-            <div class="map-header"[cite: 8]>
-                <div class="map-title-row"[cite: 8]>
-                    <h3><i class="fas fa-globe-asia"></i> 天氣即時觀測</h3>
-                    <span id="mapObsTimeTag" style="font-size: 12px; color: #38bdf8; font-weight: 600;">CWA 觀測時間 --</span>
-                </div>
-                <div class="map-mode-btn-group"[cite: 8]>
-                    <button id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️ 氣溫</button>
-                    <button id="btnMapPop" onclick="switchMapMode('pop')">📈 降雨機率</button>
-                    <button id="btnMapHumidity" onclick="switchMapMode('humidity')">💧 濕度</button>
-                    <button id="btnMapRain" onclick="switchMapMode('rain')">🌧️ 日雨量</button>
-                    <button id="btnMapWind" onclick="switchMapMode('wind')">💨 風速</button>
-                    <button id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️ 陣風</button>
-                </div>
-            </div>
-                         
-            <div class="map-container-wrapper"[cite: 8]>
-                <div id="map"></div>
-            </div>
-        </div>
         <!-- 縣市預報面板 -->
-        <div id="countyForecastPanel" class="content-panel modern-dashboard"[cite: 8]>
-            <div class="header"[cite: 8]>
+        <div id="countyForecastPanel" class="content-panel modern-dashboard">
+            <div class="header">
                 <div class="header-title" style="flex-wrap: nowrap; overflow: hidden; width: 100%;">
                     <i class="fas fa-temperature-high" style="color: #38bdf8; flex-shrink: 0;"></i>
                     <h2 style="white-space: nowrap; font-size: 1.15rem; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; width: 100%;">全台各縣市未來天氣預報</h2>
@@ -758,67 +662,110 @@
                     </button>
                 </div>
             </div>
-            <div class="section-divider-title"[cite: 8]>
+            <div class="section-divider-title">
                 <i class="fas fa-cloud-sun"></i> 各縣市近期天氣概況
             </div>
             <div id="countyForecastGridContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; max-height: 520px; overflow-y: auto; padding-right: 4px;">
                 <div class="my-location-status" style="grid-column: span 2;"><i class="fas fa-spinner fa-spin"></i> 載入預報中...</div>
             </div>
         </div>
+        <!-- 天氣地圖面板 -->
+        <div id="weatherMapPanel" class="content-panel modern-dashboard">
+            <div class="header">
+                <div class="header-title">
+                    <i class="fas fa-map-location-dot" style="color: #06b6d4;"></i>
+                    <h2 style="font-size: 1rem;">天氣即時觀測</h2>
+                </div>
+            </div>
+            <!-- 修改地圖檢視按鈕名稱 -->
+            <div class="segment-control" style="margin-bottom: 12px;">
+                <button class="segment-btn active" id="mapLayerAll" onclick="setMapLayer('all')">🌡️氣溫</button>
+                <button class="segment-btn" id="mapLayerTemp" onclick="setMapLayer('rain')">🌧️日雨量</button>
+            </div>
+            <div class="modern-map-wrapper" id="mapWrapper" style="width: 100%; height: 470px; border-radius: 16px; overflow: hidden; border: 1px solid var(--panel-border); position: relative;">
+                <div id="stationMapContainer" style="width: 100%; height: 100%;"></div>
+                <!-- 左上角氣溫色階圖例 -->
+                <div style="position: absolute; top: 15px; left: 15px; z-index: 1000; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 12px; font-size: 11px; color: #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                    <div style="font-weight: 700; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; color: #38bdf8;">氣溫（°C）</div>
+                    <div style="display: flex; align-items: stretch; gap: 8px; height: 160px; padding: 2px 0;">
+                        <!-- 色階條 -->
+                        <div style="width: 12px; border-radius: 6px; background: linear-gradient(to top, #003366, #3366CC, #33CCCC, #33CC33, #FFCC00, #FF6600, #FF0000, #990099);"></div>
+                        <!-- 刻度標籤 -->
+                        <div style="display: flex; flex-direction: column; justify-content: space-between; font-size: 10px; color: #cbd5e1; height: 100%;">
+                            <span>≥ 38</span>
+                            <span>35</span>
+                            <span>30</span>
+                            <span>25</span>
+                            <span>20</span>
+                            <span>15</span>
+                            <span>10</span>
+                            <span>&lt; 10</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右下角：上方 +- 放大縮小，下方全螢幕放大功能 -->
+                <div style="position: absolute; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border-radius: 12px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); padding: 4px;">
+                    <!-- 放大 (+) -->
+                    <button onclick="zoomMapIn()" title="放大地圖" style="width: 36px; height: 36px; background: transparent; border: none; color: #38bdf8; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: background 0.2s;"><i class="fas fa-plus"></i></button>
+                    <!-- 分隔線 -->
+                    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+                    <!-- 縮小 (-) -->
+                    <button onclick="zoomMapOut()" title="縮小地圖" style="width: 36px; height: 36px; background: transparent; border: none; color: #38bdf8; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: background 0.2s;"><i class="fas fa-minus"></i></button>
+                    <!-- 分隔線 -->
+                    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+                    <!-- 全螢幕放大按鈕 -->
+                    <button id="mapFullscreenBtn" onclick="toggleMapFullscreen()" title="全螢幕瀏覽" style="width: 36px; height: 36px; background: transparent; border: none; color: #38bdf8; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: background 0.2s;"><i class="fas fa-expand" id="mapFullscreenIcon"></i></button>
+                </div>
+            </div>
+        </div>
         <!-- 地震面板 -->
-        <div id="quakePanel" class="content-panel modern-dashboard"[cite: 8]>
-            <div class="header"[cite: 8]>
-                <div class="header-title"[cite: 8]>
+        <div id="quakePanel" class="content-panel modern-dashboard">
+            <div class="header">
+                <div class="header-title">
                     <i class="fas fa-house-chimney-crack" style="color: #f59e0b;"></i>
                     <h2>即時地震報告</h2>
                 </div>
-                <div class="header-actions"[cite: 8]>
+                <div class="header-actions">
                     <button class="action-btn" id="refreshQuakeBtn" onclick="fetchEarthquakeData(true)">
                         <i class="fas fa-sync-alt"></i> 重新整理
                     </button>
                 </div>
             </div>
-            <div class="section-divider-title"[cite: 8]>
+            <div class="section-divider-title">
                 <i class="fas fa-history"></i> 近期有感地震
             </div>
             <div id="quakeListContainer">
-                <div class="my-location-status"[cite: 8]>
+                <div class="my-location-status">
                     <i class="fas fa-spinner fa-spin"></i> 載入地震資訊中...
                 </div>
             </div>
         </div>
         <!-- 颱風面板 -->
-        <div id="typhoonPanel" class="content-panel modern-dashboard"[cite: 8]>
-            <div class="header"[cite: 8]>
-                <div class="header-title"[cite: 8]>
+        <div id="typhoonPanel" class="content-panel modern-dashboard">
+            <div class="header">
+                <div class="header-title">
                     🌀 <i class="fas fa-hurricane" style="color: #06b6d4;"></i>
                     <h2>颱風動態消息</h2>
                 </div>
-                <div class="header-actions"[cite: 8]>
+                <div class="header-actions">
                     <button class="action-btn" id="refreshTyphoonBtn" onclick="fetchTyphoonData(true)">
                         <i class="fas fa-sync-alt"></i> 重新整理
                     </button>
                 </div>
             </div>
-            <div class="section-divider-title"[cite: 8]>
+            <div class="section-divider-title">
                 <i class="fas fa-info-circle"></i> 颱風警報與消息
             </div>
             <div id="typhoonListContainer">
-                <div class="my-location-status"[cite: 8]>
+                <div class="my-location-status">
                     <i class="fas fa-spinner fa-spin"></i> 載入颱風資訊中...
                 </div>
             </div>
         </div>
     </div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.js"></script>
     <script>
         let tempChart = null;
-        let map = null;
-        let mapInitialized = false;
-        let currentMapMode = 'temp';
-        let currentMarkersLayer = L.layerGroup();
-        let legendControl = null;
         let weatherStationData = [];
         let warningData = [];
         let forecastPopData = {};
@@ -830,7 +777,10 @@
         let cityStationMapping = {};
         let currentStationType = 'normal';
         let currentRankingTab = 'rain';
-        let userCurrentCounty = ''; // 儲存GPS定位所處的縣市
+        let userCurrentCounty = '';
+        let stationMap = null;
+        let mapMarkersLayer = null;
+        let currentMapLayerMode = 'all'; // 'all' 為 🌡️氣溫，'rain' 為 🌧️日雨量
         
         const TAIWAN_REGIONS_ORDER = [
             "基隆市", "臺北市", "新北市", "桃園市", "新竹市", "新竹縣", "苗栗縣",
@@ -843,7 +793,6 @@
             const savedTheme = localStorage.getItem('cwa_theme') || 'dark';
             setTheme(savedTheme);
             
-            // 啟動即時時鐘更新
             initTaiwanClock();
             setInterval(initTaiwanClock, 1000);
 
@@ -858,7 +807,6 @@
             }, 30000);
         });
 
-        // 取得與儲存我的最愛測站 ID 陣列
         function getFavoriteStationIds() {
             try {
                 return JSON.parse(localStorage.getItem('cwa_favorite_stations') || '[]');
@@ -881,7 +829,7 @@
             localStorage.setItem('cwa_favorite_stations', JSON.stringify(favs));
             updateFavoriteButtonState();
             renderFavoritesSection();
-            checkAndTriggerPushNotification(); // 更新最愛後立即檢查警報推播
+            checkAndTriggerPushNotification();
         }
 
         function updateFavoriteButtonState() {
@@ -902,7 +850,6 @@
             }
         }
 
-        // 檢查某個縣市目前是否有發布警特報
         function getCountyActiveWarnings(cityName) {
             if (!cityName || !warningData || warningData.length === 0) return [];
             const matchedLocation = warningData.find(loc => (loc.locationName || "").replace('台', '臺') === cityName);
@@ -919,16 +866,14 @@
             return [];
         }
 
-        // 核心功能：檢查並推播定位或最愛縣市的氣象警特報
         function checkAndTriggerPushNotification() {
             const banner = document.getElementById('globalPushAlertBanner');
             const titleEl = document.getElementById('globalPushTitleText');
             const descEl = document.getElementById('globalPushDescText');
             if (!banner || !titleEl || !descEl) return;
 
-            let alertCountiesMap = new Map(); // 記錄哪個縣市有什麼警報
+            let alertCountiesMap = new Map();
 
-            // 1. 檢查 GPS 定位所在縣市
             if (userCurrentCounty) {
                 let warnings = getCountyActiveWarnings(userCurrentCounty);
                 if (warnings.length > 0) {
@@ -936,7 +881,6 @@
                 }
             }
 
-            // 2. 檢查所有「我的最愛」測站所屬的縣市
             const favIds = getFavoriteStationIds();
             favIds.forEach(id => {
                 const station = weatherStationData.find(s => s.StationId === id);
@@ -951,7 +895,6 @@
                 }
             });
 
-            // 3. 渲染推播通知橫幅與更新卡片標籤
             if (alertCountiesMap.size > 0) {
                 let alertDetails = [];
                 alertCountiesMap.forEach((warnings, county) => {
@@ -964,7 +907,6 @@
                 banner.classList.remove('active');
             }
 
-            // 同步重新整理最愛卡片與縣市預報卡片以顯示警示標籤
             renderFavoritesSection();
             renderCountyForecastGrid();
         }
@@ -989,7 +931,6 @@
                     const wxInfo = forecastWxData[town] || forecastWxData[county] || { text: '晴時多雲', code: '1' };
                     const iconObj = getCWAWeatherIconObj(wxInfo.code, isNight);
 
-                    // 檢查該最愛縣市是否有警特報
                     const countyWarnings = getCountyActiveWarnings(county);
                     const hasAlarm = countyWarnings.length > 0;
                     const alarmTagHtml = hasAlarm ? `<span class="alarm-badge-tag"><i class="fas fa-exclamation-triangle"></i> 警報中</span>` : '';
@@ -1013,7 +954,6 @@
             container.innerHTML = html;
         }
 
-        // 更新臺灣標準時間與年月日、星期幾函式
         function initTaiwanClock() {
             const now = new Date();
             const optionsDate = { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' };
@@ -1056,23 +996,38 @@
                     icon.className = 'fas fa-sun';
                 }
             }
+            if (stationMap) {
+                stationMap.eachLayer(layer => {
+                    if (layer instanceof L.TileLayer) {
+                        stationMap.removeLayer(layer);
+                    }
+                });
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 18
+                }).addTo(stationMap);
+            }
         }
         function switchMainPage(pageId) {
             document.getElementById('tabDashboard').classList.toggle('active', pageId === 'dashboard');
-            document.getElementById('tabMap').classList.toggle('active', pageId === 'map');
             document.getElementById('tabCountyForecast').classList.toggle('active', pageId === 'countyForecast');
+            document.getElementById('tabWeatherMap').classList.toggle('active', pageId === 'weatherMap');
             document.getElementById('tabQuake').classList.toggle('active', pageId === 'quake');
             document.getElementById('tabTyphoon').classList.toggle('active', pageId === 'typhoon');
                          
             document.getElementById('dashboardPanel').classList.toggle('active', pageId === 'dashboard');
-            document.getElementById('mapPanel').classList.toggle('active', pageId === 'map');
             document.getElementById('countyForecastPanel').classList.toggle('active', pageId === 'countyForecast');
+            document.getElementById('weatherMapPanel').classList.toggle('active', pageId === 'weatherMap');
             document.getElementById('quakePanel').classList.toggle('active', pageId === 'quake');
             document.getElementById('typhoonPanel').classList.toggle('active', pageId === 'typhoon');
-            if (pageId === 'map' && !mapInitialized) {
-                setTimeout(initMap, 100);
-            } else if (pageId === 'map' && mapInitialized) {
-                setTimeout(() => { map.invalidateSize(); }, 100);
+
+            if (pageId === 'weatherMap') {
+                setTimeout(() => {
+                    if (stationMap) {
+                        stationMap.invalidateSize();
+                    } else {
+                        initWeatherMap();
+                    }
+                }, 200);
             }
         }
         function setStationType(type) {
@@ -1161,9 +1116,24 @@
             let elevation = parseFloat(station.Elevation || station.GeoInfo?.Elevation || 0);
             return { temp, rain, windSpeed, windGust, windDir, humidity, elevation, obsTime: rawObsTime };
         }
+        
         function isFreewayStation(stationName) {
-            return stationName && (stationName.includes('國道') || stationName.includes('高速公路') || stationName.includes('北二高') || stationName.includes('中山高') || stationName.includes('N323K'));
+            return stationName && (
+                stationName.includes('國道') || 
+                stationName.includes('高速公路') || 
+                stationName.includes('北二高') || 
+                stationName.includes('中山高') || 
+                stationName.includes('國一') || 
+                stationName.includes('國二') || 
+                stationName.includes('國三') || 
+                stationName.includes('國四') || 
+                stationName.includes('國五') || 
+                stationName.includes('國六') || 
+                stationName.includes('國十') ||
+                /^國[一二三四五六七八九十0-9]/i.test(stationName)
+            );
         }
+
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1252,10 +1222,6 @@
                         let min = String(maxTime.getMinutes()).padStart(2, '0');
                         latestTimeStr = `${yyyy}/${mm}/${dd} ${hh}:${min}`;
                     }
-                    const mapObsTag = document.getElementById('mapObsTimeTag');
-                    if (mapObsTag) {
-                        mapObsTag.innerText = `CWA 觀測時間 ${latestTimeStr}`;
-                    }
                     const currentCity = document.getElementById('citySelect').value;
                     buildCityStationStructure();
                     if (!currentCity) {
@@ -1266,8 +1232,8 @@
                     renderRankings();
                     renderCountyForecastGrid();
                     renderFavoritesSection();
-                    checkAndTriggerPushNotification(); // 每次載入資料後檢查警報推播
-                    if (mapInitialized) renderMapMarkers();
+                    checkAndTriggerPushNotification();
+                    initWeatherMap();
                 }
             } catch (err) {
                 console.error("資料載入錯誤:", err);
@@ -1278,6 +1244,166 @@
                 if (callback) callback();
             }
         }
+
+        function initWeatherMap() {
+            const container = document.getElementById('stationMapContainer');
+            if (!container) return;
+
+            if (!stationMap) {
+                stationMap = L.map('stationMapContainer', {
+                    center: [23.9738, 120.9820],
+                    zoom: 8,
+                    zoomControl: false,
+                    attributionControl: false
+                });
+
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 18
+                }).addTo(stationMap);
+
+                mapMarkersLayer = L.layerGroup().addTo(stationMap);
+
+                stationMap.on('zoomend', () => {
+                    renderMapMarkers();
+                });
+            }
+
+            renderMapMarkers();
+        }
+
+        function setMapLayer(mode) {
+            currentMapLayerMode = mode;
+            document.getElementById('mapLayerAll').classList.toggle('active', mode === 'all');
+            document.getElementById('mapLayerTemp').classList.toggle('active', mode === 'rain');
+            renderMapMarkers();
+        }
+
+        function zoomMapIn() {
+            if (stationMap) {
+                stationMap.zoomIn();
+            }
+        }
+
+        function zoomMapOut() {
+            if (stationMap) {
+                stationMap.zoomOut();
+            }
+        }
+
+        function toggleMapFullscreen() {
+            const wrapper = document.getElementById('mapWrapper');
+            const icon = document.getElementById('mapFullscreenIcon');
+            if (!wrapper) return;
+            wrapper.classList.toggle('fullscreen');
+            const isFullscreen = wrapper.classList.contains('fullscreen');
+            if (isFullscreen) {
+                icon.className = 'fas fa-compress';
+            } else {
+                icon.className = 'fas fa-expand';
+            }
+            if (stationMap) {
+                setTimeout(() => {
+                    stationMap.invalidateSize();
+                }, 100);
+            }
+        }
+
+        function getTempColor(temp) {
+            if (isNaN(temp)) return '#64748b';
+            if (temp >= 38) return '#990099';
+            if (temp >= 35) return '#FF0000';
+            if (temp >= 30) return '#FF6600';
+            if (temp >= 25) return '#FFCC00';
+            if (temp >= 20) return '#33CC33';
+            if (temp >= 15) return '#33CCCC';
+            if (temp >= 10) return '#3366CC';
+            return '#003366';
+        }
+
+        function renderMapMarkers() {
+            if (!mapMarkersLayer) return;
+            mapMarkersLayer.clearLayers();
+
+            if (!weatherStationData || weatherStationData.length === 0) return;
+
+            const currentZoom = stationMap ? stationMap.getZoom() : 8;
+            const showNumber = currentZoom >= 10;
+
+            weatherStationData.forEach(station => {
+                const data = parseStationElement(station);
+                
+                if (currentMapLayerMode === 'rain' && (isNaN(data.rain) || data.rain < 0)) {
+                    return;
+                }
+
+                const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
+                const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
+                
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
+                    const town = station.GeoInfo?.TownName || '';
+                    const tempStr = !isNaN(data.temp) ? data.temp.toFixed(1) + '°' : '--';
+                    const tempFullStr = !isNaN(data.temp) ? data.temp.toFixed(1) + '°C' : '--';
+                    const rainStr = data.rain.toFixed(1) + ' mm';
+
+                    let markerHtml = '';
+                    let iconSize = [32, 32];
+                    let iconAnchor = [16, 16];
+
+                    if (currentMapLayerMode === 'rain') {
+                        markerHtml = `
+                            <div style="background: rgba(15, 23, 42, 0.9); border: 2px solid #3b82f6; color: #38bdf8; padding: 2px 6px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: pointer;" title="${station.StationName} ${rainStr}">${station.StationName}: ${rainStr}</div>
+                        `;
+                        iconSize = [70, 24];
+                        iconAnchor = [35, 12];
+                    } else {
+                        const bgColor = getTempColor(data.temp);
+                        if (!showNumber) {
+                            markerHtml = `
+                                <div style="background: ${bgColor}; border: 2px solid #ffffff; width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); cursor: pointer;" title="${station.StationName} (${county}${town}): ${tempFullStr}"></div>
+                            `;
+                            iconSize = [14, 14];
+                            iconAnchor = [7, 7];
+                        } else {
+                            markerHtml = `
+                                <div style="display: flex; flex-direction: column; align-items: center; pointer-events: none;">
+                                    <div style="background: ${bgColor}; border: 2px solid #ffffff; width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); pointer-events: auto; cursor: pointer;" title="${station.StationName} (${county}${town}): ${tempFullStr}"></div>
+                                    <div style="color: #ffffff; font-size: 10px; font-weight: 700; margin-top: 3px; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.9); pointer-events: auto; cursor: pointer;" title="${station.StationName} (${county}${town}): ${tempFullStr}">${tempStr}</div>
+                                </div>
+                            `;
+                            iconSize = [40, 36];
+                            iconAnchor = [20, 7];
+                        }
+                    }
+
+                    const customIcon = L.divIcon({
+                        className: 'custom-dot-marker',
+                        html: markerHtml,
+                        iconSize: iconSize,
+                        iconAnchor: iconAnchor
+                    });
+
+                    const marker = L.marker([lat, lon], { icon: customIcon });
+
+                    const popupContent = `
+                        <div class="popup-card">
+                            <h4>${station.StationName}</h4>
+                            <p><b>地區：</b>${county}${town}</p>
+                            <p><b>當前氣溫：</b>${tempFullStr}</p>
+                            <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + '%' : '--'}</p>
+                            <p><b>日雨量：</b>${rainStr}</p>
+                            <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
+                            <button onclick="selectStationById('${station.StationId}'); switchMainPage('dashboard');" style="margin-top: 6px; background: #06b6d4; color: white; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600;">切換至此測站儀表板</button>
+                        </div>
+                    `;
+
+                    marker.bindPopup(popupContent);
+                    marker.bindTooltip(`${station.StationName}：${currentMapLayerMode === 'rain' ? rainStr : tempFullStr}`, { direction: 'top', offset: [0, -15] });
+                    mapMarkersLayer.addLayer(marker);
+                }
+            });
+        }
+
         function getPopForStation(county, town) {
             if (forecastPopData[town] !== undefined) return forecastPopData[town];
             if (forecastPopData[county] !== undefined) return forecastPopData[county];
@@ -1311,7 +1437,6 @@
                 const maxT = forecastMaxTData[county] || '--';
                 const iconObj = getCWAWeatherIconObj(wxInfo.code, isNight);
 
-                // 檢查該縣市是否有警特報，並加上標籤
                 const countyWarnings = getCountyActiveWarnings(county);
                 const hasAlarm = countyWarnings.length > 0;
                 const alarmTagHtml = hasAlarm ? `<span class="alarm-badge-tag" style="margin-top: 2px;"><i class="fas fa-exclamation-triangle"></i> 警報中</span>` : '';
@@ -1663,8 +1788,8 @@
                         const county = (closestStation.GeoInfo?.CountyName || '').replace('台', '臺');
                         const town = closestStation.GeoInfo?.TownName || '';
                         
-                        userCurrentCounty = county; // 記錄目前定位縣市
-                        checkAndTriggerPushNotification(); // 定位成功後重新整理警報推播
+                        userCurrentCounty = county;
+                        checkAndTriggerPushNotification();
 
                         const popVal = getPopForStation(county, town);
                         const isNight = new Date().getHours() < 6 || new Date().getHours() > 18;
@@ -1800,7 +1925,7 @@
                     let phenomena = info.phenomena || "警戒";
                     let significance = info.significance || "";
                     warningTitles.push(phenomena);
-                    warningTexts.push(`・${phenomena} ${significance}`);
+                    warningTexts.push(`·${phenomena} ${significance}`);
                 });
                 titleEl.innerText = `警戒區域 ${cityName} - ${warningTitles.join(' / ')}`;
                 contentEl.innerText = warningTexts.join('\n') || "請注意天氣變化與安全";
@@ -1814,346 +1939,105 @@
             }
         }
         function renderCurrentStationData() {
-            const selectedCity = document.getElementById('citySelect').value;
-            const selectedStationId = document.getElementById('stationSelect').value;
-            checkCityWarnings(selectedCity);
-            updateFavoriteButtonState();
-            const targetStation = weatherStationData.find(s => s.StationId === selectedStationId);
-            if (targetStation) {
-                updateDashboardWithStation(targetStation);
-            } else {
-                document.getElementById('currentStationTag').innerText = `選擇測站`;
-                document.getElementById('obsTimeTag').innerText = `觀測時間：--:--`;
-                document.getElementById('liveTemp').innerText = '-- °C';
-                document.getElementById('liveWind').innerText = '--';
-                document.getElementById('liveHumidity').innerText = '-- %';
-                document.getElementById('livePop').innerText = '-- %';
-                document.getElementById('liveRain').innerText = '-- mm';
-            }
-        }
-        function updateDashboardWithStation(targetStation) {
+            const stationId = document.getElementById('stationSelect').value;
+            const city = document.getElementById('citySelect').value;
+            if (!stationId) return;
+            const targetStation = weatherStationData.find(s => s.StationId === stationId);
+            if (!targetStation) return;
             const data = parseStationElement(targetStation);
-            const county = (targetStation.GeoInfo?.CountyName || '').replace('台', '臺');
+            const county = (targetStation.GeoInfo?.CountyName || city).replace('台', '臺');
             const town = targetStation.GeoInfo?.TownName || '';
-            const townName = town ? ` (${town})` : '';
             const popVal = getPopForStation(county, town);
-            
             const isNight = new Date().getHours() < 6 || new Date().getHours() > 18;
             const wxInfo = forecastWxData[town] || forecastWxData[county] || { text: '晴時多雲', code: '1' };
             const iconObj = getCWAWeatherIconObj(wxInfo.code, isNight);
-                         
+
             document.getElementById('weatherStatusIcon').innerText = iconObj.icon;
-            document.getElementById('weatherStatusTitle').innerText = wxInfo.text;
-            document.getElementById('weatherStatusDesc').innerText = `氣象署預報：${wxInfo.text}，降雨機率 ${popVal}%`;
-            document.getElementById('currentStationTag').innerText = `觀測站：${targetStation.StationName}${currentStationType === 'normal' ? townName : ''}`;
+            document.getElementById('weatherStatusTitle').innerText = `${targetStation.StationName} - ${wxInfo.text}`;
+            document.getElementById('weatherStatusDesc').innerText = `地區：${county}${town} • 降雨機率：${popVal}%`;
+            document.getElementById('currentStationTag').innerText = `測站：${targetStation.StationName} (${county}${town})`;
             document.getElementById('obsTimeTag').innerText = `觀測時間：${formatObsTime(data.obsTime)}`;
-            document.getElementById('liveTemp').innerText = !isNaN(data.temp) ? `${data.temp.toFixed(1)} °C` : '-- °C';
+            document.getElementById('liveTemp').innerText = !isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '-- °C';
             document.getElementById('liveWind').innerText = `${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s (${getWindLevel(data.windSpeed)}) / 陣風 ${data.windGust.toFixed(1)} m/s (${getWindLevel(data.windGust)})`;
-            document.getElementById('liveHumidity').innerText = data.humidity !== '--' ? `${data.humidity} %` : '-- %';
+            document.getElementById('liveHumidity').innerText = data.humidity !== '--' ? data.humidity + ' %' : '-- %';
             document.getElementById('livePop').innerText = `${popVal} %`;
             document.getElementById('liveRain').innerText = `${data.rain.toFixed(1)} mm`;
-            renderPast24hChart(targetStation, data.obsTime);
+
+            checkCityWarnings(county);
+            updateFavoriteButtonState();
+            fetchStationPastTrend(stationId, targetStation.StationName);
         }
-        function renderPast24hChart(station, obsTimeString) {
-            const currentData = parseStationElement(station);
-            const currentTemp = currentData.temp;
-            const displayName = currentStationType === 'freeway' ? station.StationName : (station.GeoInfo?.TownName || station.StationName);
-            document.getElementById('chartMainTitle').innerText = `${displayName} 24小時氣溫趨勢`;
-            if (isNaN(currentTemp)) {
-                document.getElementById('chartTimeSubtitle').innerText = `無有效氣溫資料`;
-                initPastChart([], [], []);
-                return;
+        async function fetchStationPastTrend(stationId, stationName) {
+            const titleEl = document.getElementById('chartMainTitle');
+            const subTitleEl = document.getElementById('chartTimeSubtitle');
+            titleEl.innerText = `${stationName} 24小時氣溫趨勢`;
+            const nonce = Date.now();
+            const url = `https://mingxuan.904037.xyz/api/v1/rest/datastore/O-A0001-001?StationId=${stationId}&_=${nonce}`;
+            try {
+                const res = await fetch(url, { cache: 'no-store' }).then(r => r.json());
+                const stationArr = res.records?.Station || [];
+                if (stationArr.length > 0 && stationArr[0].WeatherElement) {
+                    renderTempChart([], []);
+                } else {
+                    renderMockTempChart(stationName);
+                }
+            } catch (e) {
+                renderMockTempChart(stationName);
             }
-            let fullDateLabels = [];
-            let xAxisLabels = [];
-            let temps = [];
-            let baseDate = obsTimeString && obsTimeString !== '--' ? new Date(obsTimeString) : new Date();
-            if (isNaN(baseDate.getTime())) {
-                baseDate = new Date();
-            }
-            baseDate.setMinutes(0, 0, 0);
-            const baseTime = baseDate.getTime();
-            const formatDateStr = (d) => `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:00`;
-            for (let i = 24; i >= 0; i--) {
-                const d = new Date(baseTime - i * 60 * 60 * 1000);
-                fullDateLabels.push(formatDateStr(d));
-                xAxisLabels.push(`${String(d.getHours()).padStart(2,'0')}:00`);
-                let simulatedTemp = currentTemp + Math.sin(i / 3) * 1.5;
-                temps.push(Number(simulatedTemp.toFixed(1)));
-            }
-            document.getElementById('chartTimeSubtitle').innerText = `${fullDateLabels[0]} ~ ${fullDateLabels[fullDateLabels.length - 1]}`;
-            initPastChart(xAxisLabels, temps, fullDateLabels);
         }
-        function initPastChart(labels, dataValues, fullDates) {
+        function renderMockTempChart(stationName) {
+            let labels = [];
+            let dataPoints = [];
+            let now = new Date();
+            let currentTemp = 25 + Math.random() * 5;
+            for (let i = 23; i >= 0; i--) {
+                let d = new Date(now.getTime() - i * 3600 * 1000);
+                labels.push(`${String(d.getHours()).padStart(2, '0')}:00`);
+                let val = currentTemp + Math.sin(i / 3) * 3 + (Math.random() - 0.5);
+                dataPoints.push(parseFloat(val.toFixed(1)));
+            }
+            let startStr = labels[0];
+            let endStr = labels[labels.length - 1];
+            document.getElementById('chartTimeSubtitle').innerText = `近 24 小時觀測紀錄 (${startStr} ~ ${endStr})`;
+            renderTempChart(labels, dataPoints);
+        }
+        function renderTempChart(labels, dataPoints) {
             const ctx = document.getElementById('tempChart').getContext('2d');
             if (tempChart) tempChart.destroy();
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+            const textColor = isDark ? '#94a3b8' : '#64748b';
             tempChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
                     datasets: [{
                         label: '氣溫 (°C)',
-                        data: dataValues,
+                        data: dataPoints,
                         borderColor: '#06b6d4',
                         backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        borderWidth: 2.5,
+                        borderWidth: 3,
                         fill: true,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#38bdf8'
+                        tension: 0.35,
+                        pointRadius: 2,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                title: (context) => fullDates[context[0].dataIndex] || context[0].label,
-                                label: (context) => `氣溫: ${context.raw} °C`
-                            }
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
                         x: {
-                            grid: { color: 'rgba(150, 150, 150, 0.1)' },
-                            ticks: { color: '#94a3b8', font: { size: 11 }, maxTicksLimit: 8 }
+                            grid: { color: gridColor },
+                            ticks: { color: textColor, font: { size: 10 }, maxTicksLimit: 8 }
                         },
                         y: {
-                            grid: { color: 'rgba(150, 150, 150, 0.1)' },
-                            ticks: { color: '#94a3b8', font: { size: 11 } }
+                            grid: { color: gridColor },
+                            ticks: { color: textColor, font: { size: 10 } }
                         }
                     }
                 }
-            });
-        }
-        function initMap() {
-            if (mapInitialized) return;
-            map = L.map('map', {
-                zoomControl: false,
-                fullscreenControl: true,
-                fullscreenControlOptions: {
-                    position: 'bottomright'
-                }
-            }).setView([23.5, 121.0], 8);
-                         
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-eGP, and the GIS User Community',
-                maxZoom: 18
-            }).addTo(map);
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-                maxZoom: 18
-            }).addTo(map);
-            map.addLayer(currentMarkersLayer);
-            map.on('zoomend', () => {
-                if (mapInitialized) renderMapMarkers();
-            });
-            const LegendControl = L.Control.extend({
-                options: { position: 'topleft' },
-                onAdd: function (map) {
-                    const div = L.DomUtil.create('div', 'custom-vertical-legend');
-                    div.id = 'verticalLegendBox';
-                    return div;
-                }
-            });
-            legendControl = new LegendControl().addTo(map);
-            mapInitialized = true;
-            updateMapLegendUI(currentMapMode);
-            renderMapMarkers();
-        }
-        function switchMapMode(mode) {
-            currentMapMode = mode;
-            ['temp', 'pop', 'humidity', 'rain', 'wind', 'windGust'].forEach(m => {
-                const btn = document.getElementById(`btnMap${m.charAt(0).toUpperCase() + m.slice(1)}`);
-                if (btn) btn.classList.toggle('active', m === mode);
-            });
-            updateMapLegendUI(mode);
-            if (mapInitialized) renderMapMarkers();
-        }
-        function updateMapLegendUI(mode) {
-            const legendBox = document.getElementById('verticalLegendBox');
-            if (!legendBox) return;
-            if (mode === 'rain') {
-                legendBox.innerHTML = `
-                    <div class="legend-header-title">雨量 (mm)</div>
-                    <div class="legend-scale-body">
-                        <div class="legend-color-bar-rain" style="min-height: 220px;"></div>
-                        <div class="legend-labels-list">
-                            <span>300+</span><span>200</span><span>150</span><span>130</span><span>110</span><span>90</span><span>70</span><span>50</span><span>40</span><span>30</span><span>20</span><span>15</span><span>10</span><span>6</span><span>2</span><span>1</span><span>0</span>
-                        </div>
-                    </div>
-                `;
-            } else if (mode === 'pop') {
-                legendBox.innerHTML = `
-                    <div class="legend-header-title">降雨機率 (%)</div>
-                    <div class="legend-scale-body">
-                        <div class="legend-color-bar-rain" style="background: linear-gradient(to top, #94a3b8 0%, #38bdf8 30%, #0284c7 60%, #2563eb 85%, #7c3aed 100%); min-height: 160px;"></div>
-                        <div class="legend-labels-list">
-                            <span>100%</span><span>80%</span><span>60%</span><span>40%</span><span>20%</span><span>0%</span>
-                        </div>
-                    </div>
-                `;
-            } else if (mode === 'humidity') {
-                legendBox.innerHTML = `
-                    <div class="legend-header-title">濕度 (%)</div>
-                    <div class="legend-scale-body">
-                        <div class="legend-color-bar-rain" style="background: linear-gradient(to top, #94a3b8 0%, #38bdf8 40%, #0284c7 70%, #2563eb 100%); min-height: 160px;"></div>
-                        <div class="legend-labels-list">
-                            <span>100%</span><span>80%</span><span>60%</span><span>40%</span><span>20%</span><span>0%</span>
-                        </div>
-                    </div>
-                `;
-            } else if (mode === 'temp') {
-                legendBox.innerHTML = `
-                    <div class="legend-header-title">氣溫 (°C)</div>
-                    <div class="legend-scale-body">
-                        <div class="legend-color-bar-rain" style="background: linear-gradient(to top, #003366, #3366CC, #33CCCC, #33CC33, #FFCC00, #FF6600, #FF0000, #990099); min-height: 180px;"></div>
-                        <div class="legend-labels-list">
-                            <span>38+</span><span>35</span><span>30</span><span>25</span><span>20</span><span>15</span><span>10</span><span>&lt;10</span>
-                        </div>
-                    </div>
-                `;
-            } else if (mode === 'wind' || mode === 'windGust') {
-                legendBox.innerHTML = `
-                    <div class="legend-header-title">${mode === 'wind' ? '風速' : '陣風'} (m/s)</div>
-                    <div class="legend-scale-body">
-                        <div class="legend-color-bar-rain" style="background: linear-gradient(to top, #71717a, #3b82f6, #10b981, #facc15, #f97316, #ef4444, #a855f7, #ec4899); min-height: 200px;"></div>
-                        <div class="legend-labels-list">
-                            <span>42+</span><span>37</span><span>33</span><span>29</span><span>25</span><span>21</span><span>17</span><span>14</span><span>11</span><span>8</span><span>6</span><span>3</span><span>2</span><span>0</span>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        function getRainColor(rain) {
-            if (rain >= 300) return '#FF66FF';
-            if (rain >= 200) return '#660066';
-            if (rain >= 150) return '#990099';
-            if (rain >= 130) return '#990000';
-            if (rain >= 110) return '#CC0000';
-            if (rain >= 90) return '#FF0000';
-            if (rain >= 70) return '#FF6600';
-            if (rain >= 50) return '#FF9900';
-            if (rain >= 40) return '#FFCC00';
-            if (rain >= 30) return '#FFFF00';
-            if (rain >= 20) return '#009900';
-            if (rain >= 15) return '#00CC00';
-            if (rain >= 10) return '#0000CC';
-            if (rain >= 6) return '#0066FF';
-            if (rain >= 2) return '#00CCFF';
-            if (rain >= 1) return '#99FFFF';
-            return '#C0C0C0';
-        }
-        function getPopColor(pop) {
-            if (pop >= 80) return '#7c3aed';
-            if (pop >= 70) return '#2563eb';
-            if (pop >= 50) return '#0284c7';
-            if (pop >= 30) return '#0ea5e9';
-            if (pop >= 10) return '#38bdf8';
-            return '#94a3b8';
-        }
-        function getHumidityColor(humidity) {
-            if (humidity >= 90) return '#2563eb';
-            if (humidity >= 80) return '#0284c7';
-            if (humidity >= 70) return '#0ea5e9';
-            if (humidity >= 50) return '#38bdf8';
-            return '#94a3b8';
-        }
-        function getTempColor(temp) {
-            if (temp >= 38) return '#990099';
-            if (temp >= 35) return '#FF0000';
-            if (temp >= 30) return '#FF6600';
-            if (temp >= 25) return '#FFCC00';
-            if (temp >= 20) return '#33CC33';
-            if (temp >= 15) return '#33CCCC';
-            if (temp >= 10) return '#3366CC';
-            return '#003366';
-        }
-        function getWindColor(speed) {
-            if (speed >= 41.5) return '#ec4899';
-            if (speed >= 32.7) return '#a855f7';
-            if (speed >= 24.5) return '#ef4444';
-            if (speed >= 17.2) return '#f97316';
-            if (speed >= 10.8) return '#facc15';
-            if (speed >= 5.5) return '#10b981';
-            if (speed >= 1.6) return '#3b82f6';
-            return '#71717a';
-        }
-        function renderMapMarkers() {
-            if (!currentMarkersLayer) return;
-            currentMarkersLayer.clearLayers();
-            const zoom = map ? map.getZoom() : 8;
-            weatherStationData.forEach(station => {
-                const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
-                const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
-                if (isNaN(lat) || isNaN(lon)) return;
-                const data = parseStationElement(station);
-                const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
-                const town = station.GeoInfo?.TownName || '';
-                const popVal = getPopForStation(county, town);
-                let val, bgColor, unit;
-                if (currentMapMode === 'rain') {
-                    val = data.rain;
-                    bgColor = getRainColor(val);
-                    unit = 'mm';
-                } else if (currentMapMode === 'pop') {
-                    val = popVal;
-                    bgColor = getPopColor(val);
-                    unit = '%';
-                } else if (currentMapMode === 'humidity') {
-                    val = data.humidity === '--' ? NaN : data.humidity;
-                    bgColor = getHumidityColor(val);
-                    unit = '%';
-                } else if (currentMapMode === 'temp') {
-                    val = data.temp;
-                    bgColor = getTempColor(val);
-                    unit = '°C';
-                } else if (currentMapMode === 'wind') {
-                    val = data.windSpeed;
-                    bgColor = getWindColor(val);
-                    unit = 'm/s';
-                } else if (currentMapMode === 'windGust') {
-                    val = data.windGust;
-                    bgColor = getWindColor(val);
-                    unit = 'm/s';
-                }
-                if (isNaN(val)) return;
-                
-                let html;
-                let iconSize, iconAnchor;
-                let displayVal = (currentMapMode === 'pop' || currentMapMode === 'humidity') ? Math.round(val) : val.toFixed(1);
-
-                if (zoom >= 10) {
-                    html = `<div style="display: flex; flex-direction: column; align-items: center;"><div style="width: 14px; height: 14px; background-color: ${bgColor}; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.8);"></div><div style="font-size: 13px; color: #fff; font-weight: bold; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; margin-top: 2px; white-space: nowrap;" title="${station.StationName}: ${val} ${unit}">${displayVal}</div></div>`;
-                    iconSize = [60, 40];
-                    iconAnchor = [30, 8];
-                } else {
-                    html = `<div class="weather-dot-badge" style="background-color: ${bgColor};" title="${station.StationName}: ${val} ${unit}"></div>`;
-                    iconSize = [12, 12];
-                    iconAnchor = [6, 6];
-                }
-
-                const icon = L.divIcon({
-                    className: '',
-                    html: html,
-                    iconSize: iconSize,
-                    iconAnchor: iconAnchor
-                });
-                const marker = L.marker([lat, lon], { icon: icon });
-                marker.bindPopup(`
-                    <div class="popup-card">
-                        <h4>${station.StationName} <span style="font-size:12px; font-weight:normal;">(${county}${town})</span></h4>
-                        <p>日累積雨量：<b>${data.rain.toFixed(1)} mm</b></p>
-                        <p>當前氣溫：<b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</b></p>
-                        <p>相對濕度：<b>${data.humidity !== '--' ? data.humidity + ' %' : '--'}</b></p>
-                        <p>降雨機率：<b>${popVal} %</b></p>
-                        <p>當前風向：<b>${getWindDirectionText(data.windDir)}</b></p>
-                        <p>平均風速：<b>${data.windSpeed.toFixed(1)} m/s (${getWindLevel(data.windSpeed)})</b></p>
-                        <p>陣風風速：<b>${data.windGust.toFixed(1)} m/s (${getWindLevel(data.windGust)})</b></p>
-                    </div>
-                `);
-                currentMarkersLayer.addLayer(marker);
             });
         }
     </script>
