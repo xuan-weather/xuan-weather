@@ -459,7 +459,7 @@
             animation: alarm-pulse 1s infinite alternate;
         }
 
-        /* 地圖全螢幕樣式 */
+        /* 地圖全螢幕樣式 (修改為滿版無多餘資訊與邊框) */
         #weatherMapPanel.is-fullscreen {
             position: fixed !important;
             top: 0 !important;
@@ -469,7 +469,8 @@
             max-width: none !important;
             z-index: 999999 !important;
             border-radius: 0 !important;
-            padding: 10px !important;
+            border: none !important;
+            padding: 0 !important;
             display: flex !important;
             flex-direction: column !important;
             background: var(--bg-color) !important;
@@ -479,7 +480,10 @@
         }
         #weatherMapPanel.is-fullscreen #mapBoxWrapper {
             height: 100% !important;
+            width: 100% !important;
             flex: 1 !important;
+            border-radius: 0 !important;
+            border: none !important;
         }
     </style>
 </head>
@@ -2105,9 +2109,7 @@
                         x: {
                             ticks: {
                                 font: { size: 10 },
-                                color: '#94a3b8',
-                                maxRotation: 0,  // 強制橫向顯示
-                                minRotation: 0   // 強制橫向顯示
+                                color: '#94a3b8'
                             },
                             grid: { display: false }
                         },
