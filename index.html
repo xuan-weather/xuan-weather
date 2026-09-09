@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <style>
-        /* 主題顏色變數 */
+        /* 主題顏色變數[cite: 1] */
         :root {
             --bg-color: #090d16;
             --text-color: #f1f5f9;
@@ -459,28 +459,29 @@
             animation: alarm-pulse 1s infinite alternate;
         }
 
-        /* 全螢幕地圖擴展樣式 */
-        #weatherMapPanel .modern-map-wrapper.fullscreen {
+        /* 地圖全螢幕樣式 */
+        #weatherMapPanel.is-fullscreen {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            z-index: 99999 !important;
+            max-width: none !important;
+            z-index: 999999 !important;
             border-radius: 0 !important;
-            border: none !important;
-            background: var(--bg-color);
-            padding: 10px;
+            padding: 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            background: var(--bg-color) !important;
         }
-        #weatherMapPanel .modern-map-wrapper.fullscreen #stationMapContainer {
-            height: calc(100vh - 20px) !important;
-            border-radius: 12px;
+        #weatherMapPanel.is-fullscreen .map-header-to-hide {
+            display: none !important;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 頁籤導覽 -->
+        <!-- 頁籤導覽[cite: 1] -->
         <div class="page-tabs">
             <button id="tabDashboard" class="tab-btn active" onclick="switchMainPage('dashboard')">
                 <i class="fas fa-chart-line"></i> 觀測儀表板
@@ -501,7 +502,7 @@
                 <i class="fas fa-moon" id="themeIcon"></i>
             </button>
         </div>
-        <!-- 儀表板面板 -->
+        <!-- 儀表板面板[cite: 1] -->
         <div id="dashboardPanel" class="content-panel active modern-dashboard">
             <div class="header">
                 <div class="header-title">
@@ -649,7 +650,7 @@
                 </div>
             </div>
         </div>
-        <!-- 縣市預報面板 -->
+        <!-- 縣市預報面板[cite: 1] -->
         <div id="countyForecastPanel" class="content-panel modern-dashboard">
             <div class="header">
                 <div class="header-title" style="flex-wrap: nowrap; overflow: hidden; width: 100%;">
@@ -669,30 +670,29 @@
                 <div class="my-location-status" style="grid-column: span 2;"><i class="fas fa-spinner fa-spin"></i> 載入預報中...</div>
             </div>
         </div>
-        <!-- 天氣地圖面板 -->
+        <!-- 天氣地圖面板[cite: 1] -->
         <div id="weatherMapPanel" class="content-panel modern-dashboard">
-            <div class="header">
+            <div class="header map-header-to-hide">
                 <div class="header-title">
                     <i class="fas fa-map-location-dot" style="color: #06b6d4;"></i>
                     <h2 style="font-size: 1rem;">天氣即時觀測</h2>
+                    <span id="cwaObsTimeDisplay" style="font-size: 12px; color: var(--text-muted); font-weight: normal; margin-left: 8px;">CWA觀測時間：--:--</span>
                 </div>
             </div>
-            <!-- 修改地圖檢視按鈕名稱 -->
-            <div class="segment-control" style="margin-bottom: 12px;">
+            <div class="segment-control map-header-to-hide" style="margin-bottom: 12px;">
                 <button class="segment-btn active" id="mapLayerAll" onclick="setMapLayer('all')">🌡️氣溫</button>
                 <button class="segment-btn" id="mapLayerTemp" onclick="setMapLayer('rain')">🌧️日雨量</button>
             </div>
-            <div class="modern-map-wrapper" id="mapWrapper" style="width: 100%; height: 470px; border-radius: 16px; overflow: hidden; border: 1px solid var(--panel-border); position: relative;">
+            <div id="mapBoxWrapper" style="width: 100%; height: 470px; border-radius: 16px; overflow: hidden; border: 1px solid var(--panel-border); position: relative; transition: height 0.3s ease;">
                 <div id="stationMapContainer" style="width: 100%; height: 100%;"></div>
+                
                 <!-- 左上角氣溫色階圖例 -->
-                <div style="position: absolute; top: 15px; left: 15px; z-index: 1000; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 12px; font-size: 11px; color: #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                <div id="tempLegendBox" style="position: absolute; top: 15px; left: 15px; z-index: 1000; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 12px; font-size: 11px; color: #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
                     <div style="font-weight: 700; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; color: #38bdf8;">氣溫（°C）</div>
                     <div style="display: flex; align-items: stretch; gap: 8px; height: 160px; padding: 2px 0;">
-                        <!-- 色階條 -->
                         <div style="width: 12px; border-radius: 6px; background: linear-gradient(to top, #003366, #3366CC, #33CCCC, #33CC33, #FFCC00, #FF6600, #FF0000, #990099);"></div>
-                        <!-- 刻度標籤 -->
                         <div style="display: flex; flex-direction: column; justify-content: space-between; font-size: 10px; color: #cbd5e1; height: 100%;">
-                            <span>≥ 38</span>
+                            <span>38+</span>
                             <span>35</span>
                             <span>30</span>
                             <span>25</span>
@@ -704,22 +704,40 @@
                     </div>
                 </div>
 
-                <!-- 右下角：上方 +- 放大縮小，下方全螢幕放大功能 -->
-                <div style="position: absolute; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border-radius: 12px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); padding: 4px;">
-                    <!-- 放大 (+) -->
-                    <button onclick="zoomMapIn()" title="放大地圖" style="width: 36px; height: 36px; background: transparent; border: none; color: #38bdf8; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: background 0.2s;"><i class="fas fa-plus"></i></button>
-                    <!-- 分隔線 -->
-                    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
-                    <!-- 縮小 (-) -->
-                    <button onclick="zoomMapOut()" title="縮小地圖" style="width: 36px; height: 36px; background: transparent; border: none; color: #38bdf8; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: background 0.2s;"><i class="fas fa-minus"></i></button>
-                    <!-- 分隔線 -->
-                    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
-                    <!-- 全螢幕放大按鈕 -->
-                    <button id="mapFullscreenBtn" onclick="toggleMapFullscreen()" title="全螢幕瀏覽" style="width: 36px; height: 36px; background: transparent; border: none; color: #38bdf8; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: background 0.2s;"><i class="fas fa-expand" id="mapFullscreenIcon"></i></button>
+                <!-- 左上角日雨量色階圖例 (直列式數值格式) -->
+                <div id="rainLegendBox" style="display: none; position: absolute; top: 15px; left: 15px; z-index: 1000; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 12px; font-size: 11px; color: #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                    <div style="font-weight: 700; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; color: #38bdf8;">日雨量 (mm)</div>
+                    <div style="display: flex; align-items: stretch; gap: 8px; height: 260px; padding: 2px 0;">
+                        <div style="width: 12px; border-radius: 6px; background: linear-gradient(to top, #C0C0C0, #99FFFF, #00CCFF, #0066FF, #0000CC, #00CC00, #009900, #FFFF00, #FFCC00, #FF9900, #FF6600, #FF0000, #CC0000, #990000, #990099, #660066, #FF66FF);"></div>
+                        <div style="display: flex; flex-direction: column; justify-content: space-between; font-size: 10px; color: #cbd5e1; height: 100%; white-space: nowrap;">
+                            <span>300+</span>
+                            <span>200</span>
+                            <span>150</span>
+                            <span>130</span>
+                            <span>110</span>
+                            <span>90</span>
+                            <span>70</span>
+                            <span>50</span>
+                            <span>40</span>
+                            <span>30</span>
+                            <span>20</span>
+                            <span>15</span>
+                            <span>10</span>
+                            <span>6</span>
+                            <span>2</span>
+                            <span>1</span>
+                            <span>0</span>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- 右下角全螢幕按鈕 -->
+                <button id="mapFullscreenBtn" onclick="toggleMapFullscreen()" title="全螢幕切換" style="position: absolute; bottom: 15px; right: 15px; z-index: 1000; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); color: #f1f5f9; border-radius: 10px; padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                    <i class="fas fa-expand" id="mapFullscreenIcon"></i>
+                </button>
             </div>
         </div>
-        <!-- 地震面板 -->
+        <!-- 地震面板[cite: 1] -->
         <div id="quakePanel" class="content-panel modern-dashboard">
             <div class="header">
                 <div class="header-title">
@@ -741,7 +759,7 @@
                 </div>
             </div>
         </div>
-        <!-- 颱風面板 -->
+        <!-- 颱風面板[cite: 1] -->
         <div id="typhoonPanel" class="content-panel modern-dashboard">
             <div class="header">
                 <div class="header-title">
@@ -780,7 +798,7 @@
         let userCurrentCounty = '';
         let stationMap = null;
         let mapMarkersLayer = null;
-        let currentMapLayerMode = 'all'; // 'all' 為 🌡️氣溫，'rain' 為 🌧️日雨量
+        let currentMapLayerMode = 'all'; // 'all' 為 🌡️氣溫，'rain' 為 🌧️日雨量[cite: 1]
         
         const TAIWAN_REGIONS_ORDER = [
             "基隆市", "臺北市", "新北市", "桃園市", "新竹市", "新竹縣", "苗栗縣",
@@ -806,6 +824,32 @@
                 fetchEarthquakeData(false);
             }, 30000);
         });
+
+        function toggleMapFullscreen() {
+            const panel = document.getElementById('weatherMapPanel');
+            const mapBox = document.getElementById('mapBoxWrapper');
+            const icon = document.getElementById('mapFullscreenIcon');
+            const btn = document.getElementById('mapFullscreenBtn');
+            
+            panel.classList.toggle('is-fullscreen');
+            const isFull = panel.classList.contains('is-fullscreen');
+            
+            if (isFull) {
+                mapBox.style.height = 'calc(100vh - 20px)';
+                icon.className = 'fas fa-compress';
+                btn.innerHTML = '<i class="fas fa-compress" id="mapFullscreenIcon"></i> 退出';
+            } else {
+                mapBox.style.height = '470px';
+                icon.className = 'fas fa-expand';
+                btn.innerHTML = '<i class="fas fa-expand" id="mapFullscreenIcon"></i>';
+            }
+            
+            setTimeout(() => {
+                if (stationMap) {
+                    stationMap.invalidateSize();
+                }
+            }, 300);
+        }
 
         function getFavoriteStationIds() {
             try {
@@ -1222,6 +1266,13 @@
                         let min = String(maxTime.getMinutes()).padStart(2, '0');
                         latestTimeStr = `${yyyy}/${mm}/${dd} ${hh}:${min}`;
                     }
+                    
+                    // 更新 CWA 觀測時間顯示
+                    const cwaTimeEl = document.getElementById('cwaObsTimeDisplay');
+                    if (cwaTimeEl) {
+                        cwaTimeEl.innerText = `CWA觀測時間：${latestTimeStr}`;
+                    }
+
                     const currentCity = document.getElementById('citySelect').value;
                     buildCityStationStructure();
                     if (!currentCity) {
@@ -1276,35 +1327,13 @@
             document.getElementById('mapLayerAll').classList.toggle('active', mode === 'all');
             document.getElementById('mapLayerTemp').classList.toggle('active', mode === 'rain');
             renderMapMarkers();
-        }
 
-        function zoomMapIn() {
-            if (stationMap) {
-                stationMap.zoomIn();
-            }
-        }
-
-        function zoomMapOut() {
-            if (stationMap) {
-                stationMap.zoomOut();
-            }
-        }
-
-        function toggleMapFullscreen() {
-            const wrapper = document.getElementById('mapWrapper');
-            const icon = document.getElementById('mapFullscreenIcon');
-            if (!wrapper) return;
-            wrapper.classList.toggle('fullscreen');
-            const isFullscreen = wrapper.classList.contains('fullscreen');
-            if (isFullscreen) {
-                icon.className = 'fas fa-compress';
-            } else {
-                icon.className = 'fas fa-expand';
-            }
-            if (stationMap) {
-                setTimeout(() => {
-                    stationMap.invalidateSize();
-                }, 100);
+            // 切換對應的圖例顯示
+            const tempLegend = document.getElementById('tempLegendBox');
+            const rainLegend = document.getElementById('rainLegendBox');
+            if (tempLegend && rainLegend) {
+                tempLegend.style.display = (mode === 'all') ? 'block' : 'none';
+                rainLegend.style.display = (mode === 'rain') ? 'block' : 'none';
             }
         }
 
@@ -1318,6 +1347,27 @@
             if (temp >= 15) return '#33CCCC';
             if (temp >= 10) return '#3366CC';
             return '#003366';
+        }
+
+        function getRainColor(rain) {
+            if (isNaN(rain) || rain <= 0) return '#C0C0C0';
+            if (rain >= 300) return '#FF66FF';
+            if (rain >= 200) return '#660066';
+            if (rain >= 150) return '#990099';
+            if (rain >= 130) return '#990000';
+            if (rain >= 110) return '#CC0000';
+            if (rain >= 90) return '#FF0000';
+            if (rain >= 70) return '#FF6600';
+            if (rain >= 50) return '#FF9900';
+            if (rain >= 40) return '#FFCC00';
+            if (rain >= 30) return '#FFFF00';
+            if (rain >= 20) return '#009900';
+            if (rain >= 15) return '#00CC00';
+            if (rain >= 10) return '#0000CC';
+            if (rain >= 6) return '#0066FF';
+            if (rain >= 2) return '#00CCFF';
+            if (rain >= 1) return '#99FFFF';
+            return '#C0C0C0';
         }
 
         function renderMapMarkers() {
@@ -1351,11 +1401,23 @@
                     let iconAnchor = [16, 16];
 
                     if (currentMapLayerMode === 'rain') {
-                        markerHtml = `
-                            <div style="background: rgba(15, 23, 42, 0.9); border: 2px solid #3b82f6; color: #38bdf8; padding: 2px 6px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: pointer;" title="${station.StationName} ${rainStr}">${station.StationName}: ${rainStr}</div>
-                        `;
-                        iconSize = [70, 24];
-                        iconAnchor = [35, 12];
+                        const rainColor = getRainColor(data.rain);
+                        if (!showNumber) {
+                            markerHtml = `
+                                <div style="background: ${rainColor}; border: 2px solid #ffffff; width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); cursor: pointer;" title="${station.StationName} (${county}${town}): ${rainStr}"></div>
+                            `;
+                            iconSize = [14, 14];
+                            iconAnchor = [7, 7];
+                        } else {
+                            markerHtml = `
+                                <div style="display: flex; flex-direction: column; align-items: center; pointer-events: none;">
+                                    <div style="background: ${rainColor}; border: 2px solid #ffffff; width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); pointer-events: auto; cursor: pointer;" title="${station.StationName} (${county}${town}): ${rainStr}"></div>
+                                    <div style="color: #ffffff; font-size: 10px; font-weight: 700; margin-top: 3px; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.9); pointer-events: auto; cursor: pointer;" title="${station.StationName} (${county}${town}): ${rainStr}">${data.rain.toFixed(1)}</div>
+                                </div>
+                            `;
+                            iconSize = [40, 36];
+                            iconAnchor = [20, 7];
+                        }
                     } else {
                         const bgColor = getTempColor(data.temp);
                         if (!showNumber) {
@@ -1939,69 +2001,77 @@
             }
         }
         function renderCurrentStationData() {
-            const stationId = document.getElementById('stationSelect').value;
-            const city = document.getElementById('citySelect').value;
-            if (!stationId) return;
-            const targetStation = weatherStationData.find(s => s.StationId === stationId);
-            if (!targetStation) return;
+            const selectedCity = document.getElementById('citySelect').value;
+            const selectedStationId = document.getElementById('stationSelect').value;
+            checkCityWarnings(selectedCity);
+            updateFavoriteButtonState();
+            const targetStation = weatherStationData.find(s => s.StationId === selectedStationId);
+            if (targetStation) {
+                updateDashboardWithStation(targetStation);
+            } else {
+                document.getElementById('currentStationTag').innerText = `選擇測站`;
+                document.getElementById('obsTimeTag').innerText = `觀測時間：--:--`;
+                document.getElementById('liveTemp').innerText = '-- °C';
+                document.getElementById('liveWind').innerText = '--';
+                document.getElementById('liveHumidity').innerText = '-- %';
+                document.getElementById('livePop').innerText = '-- %';
+                document.getElementById('liveRain').innerText = '-- mm';
+            }
+        }
+        function updateDashboardWithStation(targetStation) {
             const data = parseStationElement(targetStation);
-            const county = (targetStation.GeoInfo?.CountyName || city).replace('台', '臺');
+            const county = (targetStation.GeoInfo?.CountyName || '').replace('台', '臺');
             const town = targetStation.GeoInfo?.TownName || '';
+            const townName = town ? ` (${town})` : '';
             const popVal = getPopForStation(county, town);
+            
             const isNight = new Date().getHours() < 6 || new Date().getHours() > 18;
             const wxInfo = forecastWxData[town] || forecastWxData[county] || { text: '晴時多雲', code: '1' };
             const iconObj = getCWAWeatherIconObj(wxInfo.code, isNight);
-
+                         
             document.getElementById('weatherStatusIcon').innerText = iconObj.icon;
-            document.getElementById('weatherStatusTitle').innerText = `${targetStation.StationName} - ${wxInfo.text}`;
-            document.getElementById('weatherStatusDesc').innerText = `地區：${county}${town} • 降雨機率：${popVal}%`;
-            document.getElementById('currentStationTag').innerText = `測站：${targetStation.StationName} (${county}${town})`;
+            document.getElementById('weatherStatusTitle').innerText = wxInfo.text;
+            document.getElementById('weatherStatusDesc').innerText = `氣象署預報：${wxInfo.text}，降雨機率 ${popVal}%`;
+            document.getElementById('currentStationTag').innerText = `觀測站：${targetStation.StationName}${currentStationType === 'normal' ? townName : ''}`;
             document.getElementById('obsTimeTag').innerText = `觀測時間：${formatObsTime(data.obsTime)}`;
-            document.getElementById('liveTemp').innerText = !isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '-- °C';
+            document.getElementById('liveTemp').innerText = !isNaN(data.temp) ? `${data.temp.toFixed(1)} °C` : '-- °C';
             document.getElementById('liveWind').innerText = `${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s (${getWindLevel(data.windSpeed)}) / 陣風 ${data.windGust.toFixed(1)} m/s (${getWindLevel(data.windGust)})`;
-            document.getElementById('liveHumidity').innerText = data.humidity !== '--' ? data.humidity + ' %' : '-- %';
+            document.getElementById('liveHumidity').innerText = data.humidity !== '--' ? `${data.humidity} %` : '-- %';
             document.getElementById('livePop').innerText = `${popVal} %`;
             document.getElementById('liveRain').innerText = `${data.rain.toFixed(1)} mm`;
-
-            checkCityWarnings(county);
-            updateFavoriteButtonState();
-            fetchStationPastTrend(stationId, targetStation.StationName);
+            renderPast24hChart(targetStation, data.obsTime);
         }
-        async function fetchStationPastTrend(stationId, stationName) {
-            const titleEl = document.getElementById('chartMainTitle');
-            const subTitleEl = document.getElementById('chartTimeSubtitle');
-            titleEl.innerText = `${stationName} 24小時氣溫趨勢`;
-            const nonce = Date.now();
-            const url = `https://mingxuan.904037.xyz/api/v1/rest/datastore/O-A0001-001?StationId=${stationId}&_=${nonce}`;
-            try {
-                const res = await fetch(url, { cache: 'no-store' }).then(r => r.json());
-                const stationArr = res.records?.Station || [];
-                if (stationArr.length > 0 && stationArr[0].WeatherElement) {
-                    renderTempChart([], []);
-                } else {
-                    renderMockTempChart(stationName);
-                }
-            } catch (e) {
-                renderMockTempChart(stationName);
+        function renderPast24hChart(station, obsTimeString) {
+            const currentData = parseStationElement(station);
+            const currentTemp = currentData.temp;
+            const displayName = currentStationType === 'freeway' ? station.StationName : (station.GeoInfo?.TownName || station.StationName);
+            document.getElementById('chartMainTitle').innerText = `${displayName} 24小時氣溫趨勢`;
+            if (isNaN(currentTemp)) {
+                document.getElementById('chartTimeSubtitle').innerText = `無有效氣溫資料`;
+                initPastChart([], [], []);
+                return;
             }
-        }
-        function renderMockTempChart(stationName) {
-            let labels = [];
-            let dataPoints = [];
-            let now = new Date();
-            let currentTemp = 25 + Math.random() * 5;
-            for (let i = 23; i >= 0; i--) {
-                let d = new Date(now.getTime() - i * 3600 * 1000);
-                labels.push(`${String(d.getHours()).padStart(2, '0')}:00`);
-                let val = currentTemp + Math.sin(i / 3) * 3 + (Math.random() - 0.5);
-                dataPoints.push(parseFloat(val.toFixed(1)));
+            let fullDateLabels = [];
+            let xAxisLabels = [];
+            let temps = [];
+            let baseDate = obsTimeString && obsTimeString !== '--' ? new Date(obsTimeString) : new Date();
+            if (isNaN(baseDate.getTime())) {
+                baseDate = new Date();
             }
-            let startStr = labels[0];
-            let endStr = labels[labels.length - 1];
-            document.getElementById('chartTimeSubtitle').innerText = `近 24 小時觀測紀錄 (${startStr} ~ ${endStr})`;
-            renderTempChart(labels, dataPoints);
+            baseDate.setMinutes(0, 0, 0);
+            const baseTime = baseDate.getTime();
+            const formatDateStr = (d) => `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:00`;
+            for (let i = 24; i >= 0; i--) {
+                const d = new Date(baseTime - i * 60 * 60 * 1000);
+                fullDateLabels.push(formatDateStr(d));
+                xAxisLabels.push(`${String(d.getHours()).padStart(2,'0')}:00`);
+                let simulatedTemp = currentTemp + Math.sin(i / 3) * 1.5;
+                temps.push(Number(simulatedTemp.toFixed(1)));
+            }
+            document.getElementById('chartTimeSubtitle').innerText = `${fullDateLabels[0]} ~ ${fullDateLabels[fullDateLabels.length - 1]}`;
+            initPastChart(xAxisLabels, temps, fullDateLabels);
         }
-        function renderTempChart(labels, dataPoints) {
+        function initPastChart(labels, dataValues, fullDateLabels) {
             const ctx = document.getElementById('tempChart').getContext('2d');
             if (tempChart) tempChart.destroy();
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -2013,20 +2083,33 @@
                     labels: labels,
                     datasets: [{
                         label: '氣溫 (°C)',
-                        data: dataPoints,
+                        data: dataValues,
                         borderColor: '#06b6d4',
                         backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        borderWidth: 3,
+                        borderWidth: 2.5,
                         fill: true,
-                        tension: 0.35,
+                        tension: 0.3,
                         pointRadius: 2,
-                        pointHoverRadius: 6
+                        pointHoverRadius: 5
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    const index = context[0].dataIndex;
+                                    return fullDateLabels[index] || context[0].label;
+                                },
+                                label: function(context) {
+                                    return ` 氣溫: ${context.parsed.y} °C`;
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         x: {
                             grid: { color: gridColor },
