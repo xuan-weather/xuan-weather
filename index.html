@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>臺灣氣象即時觀測與預報</title>
+    <title>臺灣即時氣象與防災儀表板ˇ</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" />
@@ -415,7 +415,25 @@
         .legend-color-bar-rain {
             width: 12px;
             border-radius: 3px;
-            background: linear-gradient(to top, #C0C0C0 0%, #99FFFF 6.25%, #00CCFF 12.5%, #0066FF 18.75%, #0000CC 25%, #00CC00 31.25%, #009900 37.5%, #FFFF00 43.75%, #FFCC00 50%, #FF9900 56.25%, #FF6600 62.5%, #FF0000 68.75%, #CC0000 75%, #990000 81.25%, #990099 87.5%, #660066 93.75%, #FF66FF 100%);
+            background: linear-gradient(to top, 
+                #C0C0C0 0%, 
+                #99FFFF 6.25%, 
+                #00CCFF 12.5%, 
+                #0066FF 18.75%, 
+                #0000CC 25%, 
+                #00CC00 31.25%, 
+                #009900 37.5%, 
+                #FFFF00 43.75%, 
+                #FFCC00 50%, 
+                #FF9900 56.25%, 
+                #FF6600 62.5%, 
+                #FF0000 68.75%, 
+                #CC0000 75%, 
+                #990000 81.25%, 
+                #990099 87.5%, 
+                #660066 93.75%, 
+                #FF66FF 100%
+            );
             min-height: 220px;
         }
         .legend-labels-list {
@@ -564,7 +582,7 @@
                 </div>
                 <div class="realtime-info-box">
                     <div class="info-card-item">
-                        <span>🌡️氣溫</span>
+                        <span>🌡️當前氣溫</span>
                         <b id="liveTemp">-- °C</b>
                     </div>
                     <div class="info-card-item">
@@ -619,12 +637,12 @@
                     <span id="mapObsTimeTag" style="font-size: 12px; color: #38bdf8; font-weight: 600;">CWA 觀測時間 --</span>
                 </div>
                 <div class="map-mode-btn-group">
-                    <button id="btnMapTemp" class="active" onclick="switchMapMode('temp')">氣溫</button>
-                    <button id="btnMapPop" onclick="switchMapMode('pop')">降雨機率</button>
-                    <button id="btnMapHumidity" onclick="switchMapMode('humidity')">濕度</button>
-                    <button id="btnMapRain" onclick="switchMapMode('rain')">雨量</button>
-                    <button id="btnMapWind" onclick="switchMapMode('wind')">風速</button>
-                    <button id="btnMapWindGust" onclick="switchMapMode('windGust')">陣風</button>
+                    <button id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️氣溫</button>
+                    <button id="btnMapPop" onclick="switchMapMode('pop')">📈降雨機率</button>
+                    <button id="btnMapHumidity" onclick="switchMapMode('humidity')">💧濕度</button>
+                    <button id="btnMapRain" onclick="switchMapMode('rain')">🌧️日雨量</button>
+                    <button id="btnMapWind" onclick="switchMapMode('wind')">💨風速</button>
+                    <button id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️陣風</button>
                 </div>
             </div>
                                       
@@ -1197,7 +1215,7 @@
                     html += `
                         <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
-                                <span class="ranking-station-name">${item.stationName}</span>
+                                <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
                             </div>
                             <div class="ranking-main-value">${item.rain.toFixed(1)}<span style="font-size: 14px; font-weight: 600; margin-left: 2px;">mm</span></div>
@@ -1221,7 +1239,7 @@
                     html += `
                         <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
-                                <span class="ranking-station-name">${item.stationName}</span>
+                                <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
                             </div>
                             <div class="ranking-main-value" style="color: #f59e0b;">${item.temp.toFixed(1)}<span style="font-size: 14px; font-weight: 600; margin-left: 2px;">°C</span></div>
@@ -1253,7 +1271,7 @@
                     html += `
                         <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
-                                <span class="ranking-station-name">${item.stationName}</span>
+                                <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
                             </div>
                             <div class="ranking-main-value" style="color: #38bdf8;">${item.temp.toFixed(1)}<span style="font-size: 14px; font-weight: 600; margin-left: 2px;">°C</span></div>
@@ -1277,7 +1295,7 @@
                     html += `
                         <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
-                                <span class="ranking-station-name">${item.stationName}</span>
+                                <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
                             </div>
                             <div class="ranking-main-value" style="color: #a855f7;">${item.windGust.toFixed(1)}<span style="font-size: 14px; font-weight: 600; margin-left: 2px;">m/s</span> <span style="font-size: 12px; font-weight: normal; color: var(--text-muted);">(${getWindLevel(item.windGust)})</span></div>
@@ -1667,7 +1685,7 @@
                                       
             document.getElementById('weatherStatusIcon').innerText = iconObj.icon;
             document.getElementById('weatherStatusTitle').innerText = wxInfo.text;
-            document.getElementById('weatherStatusDesc').innerText = `${adviceText} | 降雨機率 ${popVal}%`;
+            document.getElementById('weatherStatusDesc').innerText = `${adviceText}`;
             document.getElementById('currentStationTag').innerText = `觀測站：${targetStation.StationName}${currentStationType === 'normal' ? townName : ''}`;
             document.getElementById('obsTimeTag').innerText = `觀測時間：${formatObsTime(data.obsTime)}`;
             document.getElementById('liveTemp').innerText = !isNaN(data.temp) ? `${data.temp.toFixed(1)} °C` : '-- °C';
@@ -1784,14 +1802,14 @@
                         <div class="legend-scale-body">
                             <div class="legend-color-bar-rain" id="legendColorBar"></div>
                             <div class="legend-labels-list" id="legendLabelsList">
-                                <span>38°C</span>
-                                <span>35°C</span>
-                                <span>30°C</span>
-                                <span>25°C</span>
-                                <span>20°C</span>
-                                <span>15°C</span>
-                                <span>10°C</span>
-                                <span>0°C</span>
+                                <span>38+</span>
+                                <span>35</span>
+                                <span>30</span>
+                                <span>25</span>
+                                <span>20</span>
+                                <span>15</span>
+                                <span>10</span>
+                                <span>&lt;10</span>
                             </div>
                         </div>
                     `;
@@ -1825,22 +1843,23 @@
         }
         
         function getRainColor(val) {
-            if (val >= 300) return '#FF66FF';
-            if (val >= 200) return '#660066';
-            if (val >= 150) return '#990099';
-            if (val >= 130) return '#990000';
-            if (val >= 110) return '#CC0000';
-            if (val >= 90) return '#FF0000';
-            if (val >= 70) return '#FF6600';
+            if (isNaN(val) || val < 0) return '#C0C0C0';
+            if (val >= 200) return '#FF66FF';
+            if (val >= 150) return '#660066';
+            if (val >= 130) return '#990099';
+            if (val >= 110) return '#990000';
+            if (val >= 90) return '#CC0000';
+            if (val >= 70) return '#FF0000';
+            if (val >= 60) return '#FF6600';
             if (val >= 50) return '#FF9900';
-            if (val >= 30) return '#FFCC00';
-            if (val >= 15) return '#FFFF00';
-            if (val >= 10) return '#009900';
-            if (val >= 6) return '#00CC00';
-            if (val >= 5) return '#0000CC';
-            if (val >= 2) return '#0066FF';
-            if (val >= 1) return '#00CCFF';
-            if (val > 0) return '#99FFFF';
+            if (val >= 40) return '#FFCC00';
+            if (val >= 30) return '#FFFF00';
+            if (val >= 20) return '#009900';
+            if (val >= 15) return '#00CC00';
+            if (val >= 10) return '#0000CC';
+            if (val >= 6) return '#0066FF';
+            if (val >= 2) return '#00CCFF';
+            if (val >= 1) return '#99FFFF';
             return '#C0C0C0';
         }
         
@@ -1857,13 +1876,18 @@
         
         function getWindSpeedColor(val) {
             if (isNaN(val)) return '#94a3b8';
-            if (val >= 17.2) return '#dc2626';
-            if (val >= 13.9) return '#ea580c';
-            if (val >= 10.8) return '#d97706';
-            if (val >= 8.0) return '#ca8a04';
-            if (val >= 5.5) return '#16a34a';
-            if (val >= 3.4) return '#0d9488';
-            return '#0284c7';
+            if (val >= 41.5) return '#7e22ce'; // 風級大於或等於14 (>=41.5)
+            if (val >= 32.7) return '#990099'; // 風級大於或等於12 (>=32.7)
+            if (val >= 28.5) return '#dc2626'; // 風級11 (28.5-32.6)
+            if (val >= 24.5) return '#ea580c'; // 風級10 (24.5-28.4)
+            if (val >= 20.8) return '#f97316'; // 風級9 (20.8-24.4)
+            if (val >= 17.2) return '#eab308'; // 風級8 (17.2-20.7)
+            if (val >= 13.9) return '#84cc16'; // 風級7 (13.9-17.1)
+            if (val >= 10.8) return '#10b981'; // 風級6 (10.8-13.8)
+            if (val >= 8.0) return '#06b6d4';  // 風級5 (8.0-10.7)
+            if (val >= 5.5) return '#3b82f6';  // 風級4 (5.5-7.9)
+            if (val >= 0.3) return '#60a5fa';  // 風級<4 (0.3-5.4)
+            return '#cbd5e1';                  // 風級0 (<0.3)
         }
         
         function renderMapMarkers() {
@@ -1877,7 +1901,7 @@
                 if (currentMapMode === 'temp') {
                     titleEl.innerText = '氣溫 (°C)';
                     colorBarEl.style.background = 'linear-gradient(to top, #003366, #3366CC, #33CCCC, #33CC33, #FFCC00, #FF6600, #FF0000, #990099)';
-                    labelsListEl.innerHTML = '<span>38°C</span><span>35°C</span><span>30°C</span><span>25°C</span><span>20°C</span><span>15°C</span><span>10°C</span><span>0°C</span>';
+                    labelsListEl.innerHTML = '<span>38+</span><span>35</span><span>30</span><span>25</span><span>20</span><span>15</span><span>10</span><span>&lt;10</span>';
                 } else if (currentMapMode === 'pop') {
                     titleEl.innerText = '降雨機率 (%)';
                     colorBarEl.style.background = 'linear-gradient(to top, #3b82f6, #06b6d4, #10b981, #eab308, #ef4444)';
@@ -1885,15 +1909,15 @@
                 } else if (currentMapMode === 'humidity') {
                     titleEl.innerText = '相對濕度 (%)';
                     colorBarEl.style.background = 'linear-gradient(to top, #f97316, #eab308, #84cc16, #14b8a6, #06b6d4, #3b82f6, #1d4ed8)';
-                    labelsListEl.innerHTML = '<span>100%</span><span>80%</span><span>60%</span><span>40%</span><span>20%</span>';
+                    labelsListEl.innerHTML = '<span>100</span><span>80</span><span>60</span><span>40</span><span>20</span>';
                 } else if (currentMapMode === 'rain') {
-                    titleEl.innerText = '累積雨量 (mm)';
+                    titleEl.innerText = '日雨量(mm)';
                     colorBarEl.style.background = 'linear-gradient(to top, #C0C0C0 0%, #99FFFF 6.25%, #00CCFF 12.5%, #0066FF 18.75%, #0000CC 25%, #00CC00 31.25%, #009900 37.5%, #FFFF00 43.75%, #FFCC00 50%, #FF9900 56.25%, #FF6600 62.5%, #FF0000 68.75%, #CC0000 75%, #990000 81.25%, #990099 87.5%, #660066 93.75%, #FF66FF 100%)';
-                    labelsListEl.innerHTML = '<span>300+</span><span>200</span><span>100</span><span>50</span><span>25</span><span>10</span><span>2</span><span>0</span>';
+                    labelsListEl.innerHTML = '<span>300+</span><span>200</span><span>150</span><span>130</span><span>110</span><span>90</span><span>70</span><span>60</span><span>50</span><span>40</span><span>30</span><span>20</span><span>15</span><span>10</span><span>6</span><span>2</span><span>1</span><span>0</span>';
                 } else if (currentMapMode === 'wind' || currentMapMode === 'windGust') {
                     titleEl.innerText = currentMapMode === 'wind' ? '風速 (m/s)' : '陣風 (m/s)';
-                    colorBarEl.style.background = 'linear-gradient(to top, #0284c7, #0d9488, #16a34a, #ca8a04, #d97706, #ea580c, #dc2626)';
-                    labelsListEl.innerHTML = '<span>17.2+</span><span>13.9</span><span>10.8</span><span>8.0</span><span>5.5</span><span>3.4</span><span>0</span>';
+                    colorBarEl.style.background = 'linear-gradient(to top, #cbd5e1, #60a5fa, #3b82f6, #06b6d4, #10b981, #84cc16, #eab308, #f97316, #ea580c, #dc2626, #990099, #7e22ce)';
+                    labelsListEl.innerHTML = '<span>&ge;41.5 (&ge;14)</span><span>&ge;32.7 (&ge;12)</span><span>28.5 (11)</span><span>24.5 (10)</span><span>20.8 (9)</span><span>17.2 (8)</span><span>13.9 (7)</span><span>10.8 (6)</span><span>8.0 (5)</span><span>5.5 (4)</span><span>0.3 (&lt;4)</span><span>&lt;0.3 (0)</span>';
                 }
             }
             weatherStationData.forEach(station => {
@@ -1903,33 +1927,43 @@
                 const data = parseStationElement(station);
                 let val = 0;
                 let color = '#94a3b8';
+                let hasData = true;
+
                 if (currentMapMode === 'temp') {
                     val = data.temp;
+                    if (isNaN(val)) hasData = false;
                     color = getTempColor(val);
                 } else if (currentMapMode === 'pop') {
                     const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
                     const town = station.GeoInfo?.TownName || '';
                     val = getPopForStation(county, town);
+                    if (isNaN(val)) hasData = false;
                     color = getTempColor(val * 0.4);
                 } else if (currentMapMode === 'humidity') {
                     val = data.humidity;
+                    if (val === '--' || isNaN(val)) hasData = false;
                     color = getHumidityColor(val);
                 } else if (currentMapMode === 'rain') {
                     val = data.rain;
+                    if (isNaN(val)) hasData = false;
                     color = getRainColor(val);
                 } else if (currentMapMode === 'wind') {
                     val = data.windSpeed;
+                    if (isNaN(val) || val < 0) hasData = false;
                     color = getWindSpeedColor(val);
                 } else if (currentMapMode === 'windGust') {
                     val = data.windGust;
+                    if (isNaN(val) || val < 0) hasData = false;
                     color = getWindSpeedColor(val);
                 }
                 
+                if (!hasData) return;
+
                 let displayValText = '';
-                if (currentMapMode === 'temp') displayValText = !isNaN(data.temp) ? data.temp.toFixed(1) : '';
+                if (currentMapMode === 'temp') displayValText = data.temp.toFixed(1);
                 else if (currentMapMode === 'pop') displayValText = val + '%';
-                else if (currentMapMode === 'humidity') displayValText = data.humidity !== '--' ? data.humidity + '%' : '';
-                else if (currentMapMode === 'rain') displayValText = data.rain > 0 ? data.rain.toFixed(1) : '';
+                else if (currentMapMode === 'humidity') displayValText = data.humidity + '%';
+                else if (currentMapMode === 'rain') displayValText = data.rain.toFixed(1);
                 else if (currentMapMode === 'wind') displayValText = data.windSpeed.toFixed(1);
                 else if (currentMapMode === 'windGust') displayValText = data.windGust.toFixed(1);
 
@@ -1939,7 +1973,7 @@
                     html: `
                         <div style="display: flex; flex-direction: column; align-items: center; pointer-events: none;">
                             <div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
-                            ${showText && displayValText ? `<div style="margin-top: 2px; font-size: 13px; font-weight: bold; color: var(--text-color); text-shadow: 0 1px 2px rgba(0,0,0,0.8); white-space: nowrap;">${displayValText}</div>` : ''}
+                            ${showText && displayValText ? `<div style="margin-top: 2px; font-size: 13px; font-weight: bold; color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); white-space: nowrap;">${displayValText}</div>` : ''}
                         </div>
                     `,
                     iconSize: [40, 30],
