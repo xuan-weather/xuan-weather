@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>臺灣即時氣象與防災儀表板ˇ</title>
+    <title>臺灣即時氣象與防災儀表板</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" />
@@ -634,7 +634,7 @@
             <div class="map-header">
                 <div class="map-title-row">
                     <h3><i class="fas fa-globe-asia"></i> 天氣即時觀測</h3>
-                    <span id="mapObsTimeTag" style="font-size: 12px; color: #38bdf8; font-weight: 600;">CWA 觀測時間 --</span>
+                    <span id="mapObsTimeTag" style="font-size: 12px; color: #38bdf8; font-weight: 600;">CWA 觀測時間： --</span>
                 </div>
                 <div class="map-mode-btn-group">
                     <button id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️氣溫</button>
@@ -675,7 +675,7 @@
             <div class="header">
                 <div class="header-title">
                     <i class="fas fa-house-chimney-crack" style="color: #f59e0b;"></i>
-                    <h2>地震速報</h2>
+                    <h2>即時地震報告</h2>
                 </div>
                 <div class="header-actions">
                     <button class="action-btn" id="refreshQuakeBtn" onclick="fetchEarthquakeData(true)">
@@ -684,7 +684,7 @@
                 </div>
             </div>
             <div class="section-divider-title">
-                <i class="fas fa-history"></i> 近期地震活動
+                <i class="fas fa-history"></i> 近期有感地震
             </div>
             <div id="quakeListContainer">
                 <div class="my-location-status">
@@ -1112,7 +1112,7 @@
                     }
                     const mapObsTag = document.getElementById('mapObsTimeTag');
                     if (mapObsTag) {
-                        mapObsTag.innerText = `CWA 觀測時間 ${latestTimeStr}`;
+                        mapObsTag.innerText = `CWA 觀測時間：${latestTimeStr}`;
                     }
                     const currentCity = document.getElementById('citySelect').value;
                     buildCityStationStructure();
@@ -1359,7 +1359,7 @@
                             <div class="quake-card-item" onclick="showQuakeDetail(${index})" style="cursor: pointer;" title="點擊查看報告">
                                 <div class="quake-top-row">
                                     <div class="quake-mag-badge" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">
-                                        <i class="fas fa-bolt"></i> M ${mag}${isLocal}
+                                        <i class="fas fa-bolt"></i> 芮氏規模M${mag}${isLocal}
                                     </div>
                                     <div class="quake-time">${oTime} <i class="fas fa-chevron-right" style="font-size: 10px; margin-left: 4px;"></i></div>
                                 </div>
@@ -1479,7 +1479,7 @@
                     </div>
                     <div style="font-size: 14px; margin-bottom: 8px;"><b>發震時間：</b> ${originTime}</div>
                     <div style="font-size: 14px; margin-bottom: 8px;"><b>震央位置：</b> ${location}</div>
-                    <div style="font-size: 14px; margin-bottom: 8px;"><b>規模：</b> M ${magnitude} | <b>深度：</b> ${depth} 公里</div>
+                    <div style="font-size: 14px; margin-bottom: 8px;"><b>規模：</b> 芮氏規模 ${magnitude} | <b>深度：</b> ${depth} 公里</div>
                     <div style="font-size: 13px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px; margin-top: 10px; line-height: 1.5; white-space: pre-line;">${reportContent}</div>
                     ${intensityHtml}
                     ${reportImage ? `<div style="margin-top: 14px; text-align: center;"><img src="${reportImage}" style="max-width: 100%; border-radius: 10px; border: 1px solid var(--action-border);" alt="地震分佈圖"></div>` : ''}
@@ -1875,19 +1875,25 @@
         }
         
         function getWindSpeedColor(val) {
-            if (isNaN(val)) return '#94a3b8';
-            if (val >= 41.5) return '#7e22ce'; // 風級大於或等於14 (>=41.5)
-            if (val >= 32.7) return '#990099'; // 風級大於或等於12 (>=32.7)
-            if (val >= 28.5) return '#dc2626'; // 風級11 (28.5-32.6)
-            if (val >= 24.5) return '#ea580c'; // 風級10 (24.5-28.4)
-            if (val >= 20.8) return '#f97316'; // 風級9 (20.8-24.4)
-            if (val >= 17.2) return '#eab308'; // 風級8 (17.2-20.7)
-            if (val >= 13.9) return '#84cc16'; // 風級7 (13.9-17.1)
-            if (val >= 10.8) return '#10b981'; // 風級6 (10.8-13.8)
-            if (val >= 8.0) return '#06b6d4';  // 風級5 (8.0-10.7)
-            if (val >= 5.5) return '#3b82f6';  // 風級4 (5.5-7.9)
-            if (val >= 0.3) return '#60a5fa';  // 風級<4 (0.3-5.4)
-            return '#cbd5e1';                  // 風級0 (<0.3)
+            if (isNaN(val) || val < 0) return '#94a3b8';
+            if (val >= 56.1) return '#312e81'; // 17級以上
+            if (val >= 51.0) return '#4f46e5'; // 16級
+            if (val >= 46.2) return '#db2777'; // 15級
+            if (val >= 41.5) return '#ec4899'; // 14級
+            if (val >= 37.0) return '#9333ea'; // 13級
+            if (val >= 32.7) return '#a855f7'; // 12級
+            if (val >= 28.5) return '#dc2626'; // 11級
+            if (val >= 24.5) return '#ef4444'; // 10級
+            if (val >= 20.8) return '#ea580c'; // 9級
+            if (val >= 17.2) return '#f97316'; // 8級
+            if (val >= 13.9) return '#eab308'; // 7級
+            if (val >= 10.8) return '#facc15'; // 6級
+            if (val >= 8.0) return '#15803d';  // 5級
+            if (val >= 5.5) return '#22c55e';  // 4級
+            if (val >= 3.4) return '#0284c7';  // 3級
+            if (val >= 1.6) return '#38bdf8';  // 2級
+            if (val >= 0.3) return '#3cbd5e';  // 1級
+            return '#94a3b8';                  // 0級 (< 0.3)
         }
         
         function renderMapMarkers() {
@@ -1911,13 +1917,13 @@
                     colorBarEl.style.background = 'linear-gradient(to top, #f97316, #eab308, #84cc16, #14b8a6, #06b6d4, #3b82f6, #1d4ed8)';
                     labelsListEl.innerHTML = '<span>100</span><span>80</span><span>60</span><span>40</span><span>20</span>';
                 } else if (currentMapMode === 'rain') {
-                    titleEl.innerText = '日雨量(mm)';
+                    titleEl.innerText = '日雨量 (mm)';
                     colorBarEl.style.background = 'linear-gradient(to top, #C0C0C0 0%, #99FFFF 6.25%, #00CCFF 12.5%, #0066FF 18.75%, #0000CC 25%, #00CC00 31.25%, #009900 37.5%, #FFFF00 43.75%, #FFCC00 50%, #FF9900 56.25%, #FF6600 62.5%, #FF0000 68.75%, #CC0000 75%, #990000 81.25%, #990099 87.5%, #660066 93.75%, #FF66FF 100%)';
                     labelsListEl.innerHTML = '<span>300+</span><span>200</span><span>150</span><span>130</span><span>110</span><span>90</span><span>70</span><span>60</span><span>50</span><span>40</span><span>30</span><span>20</span><span>15</span><span>10</span><span>6</span><span>2</span><span>1</span><span>0</span>';
                 } else if (currentMapMode === 'wind' || currentMapMode === 'windGust') {
                     titleEl.innerText = currentMapMode === 'wind' ? '風速 (m/s)' : '陣風 (m/s)';
-                    colorBarEl.style.background = 'linear-gradient(to top, #cbd5e1, #60a5fa, #3b82f6, #06b6d4, #10b981, #84cc16, #eab308, #f97316, #ea580c, #dc2626, #990099, #7e22ce)';
-                    labelsListEl.innerHTML = '<span>&ge;41.5 (&ge;14)</span><span>&ge;32.7 (&ge;12)</span><span>28.5 (11)</span><span>24.5 (10)</span><span>20.8 (9)</span><span>17.2 (8)</span><span>13.9 (7)</span><span>10.8 (6)</span><span>8.0 (5)</span><span>5.5 (4)</span><span>0.3 (&lt;4)</span><span>&lt;0.3 (0)</span>';
+                    colorBarEl.style.background = 'linear-gradient(to top, #94a3b8, #3cbd5e, #38bdf8, #0284c7, #22c55e, #15803d, #facc15, #eab308, #f97316, #ea580c, #ef4444, #dc2626, #a855f7, #9333ea, #ec4899, #db2777, #4f46e5, #312e81)';
+                    labelsListEl.innerHTML = '<span>56.1+ 17+級</span><span>51.0 16級</span><span>46.2 15級</span><span>41.5 14級</span><span>37.0 13級</span><span>32.7 12級</span><span>28.5 11級</span><span>24.5 10級</span><span>20.8 9級</span><span>17.2 8級</span><span>13.9 7級</span><span>10.8 6級</span><span>8.0 5級</span><span>5.5 4級</span><span>3.4 3級</span><span>1.6 2級</span><span>0.3 1級</span><span>&lt;0.3 0級</span>';
                 }
             }
             weatherStationData.forEach(station => {
@@ -1983,15 +1989,18 @@
                 const marker = L.marker([lat, lon], { icon: htmlIcon });
                 const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
                 const town = station.GeoInfo?.TownName || '';
+                const currentWindText = getWindDirectionText(data.windDir);
                 
                 marker.bindPopup(`
                     <div class="popup-card">
                         <h4>${station.StationName}</h4>
-                        <p><b>區域：</b>${county}${town}</p>
-                        <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
-                        <p><b>降雨量：</b>${data.rain.toFixed(1)} mm</p>
-                        <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
+                        <p><b>測站區域：</b>${county}${town}</p>
+                        <p><b>當前氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
                         <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + '%' : '--'}</p>
+                        <p><b>日積雨量：</b>${data.rain.toFixed(1)} mm</p>
+                        <p><b>當前風向：</b>${currentWindText}</p>
+                        <p><b>平均風速：</b>${data.windSpeed.toFixed(1)} m/s (${getWindLevel(data.windSpeed)})</p>
+                        <p><b>最大陣風：</b>${data.windGust.toFixed(1)} m/s (${getWindLevel(data.windGust)})</p>
                     </div>
                 `);
                 currentMarkersLayer.addLayer(marker);
