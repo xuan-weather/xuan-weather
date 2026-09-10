@@ -481,7 +481,7 @@
             <div class="header">
                 <div class="header-title">
                     <i class="fas fa-cloud-sun-rain" style="color: #06b6d4;"></i>
-                    <h2>台灣天氣觀測站</h2>
+                    <h2>天氣即時資訊</h2>
                 </div>
                 <div class="header-actions">
                     <button class="action-btn" id="refreshBtn" onclick="fetchAllStationData(true)">
@@ -615,7 +615,7 @@
         <div id="mapPanel" class="content-panel map-section">
             <div class="map-header">
                 <div class="map-title-row">
-                    <h3><i class="fas fa-globe-asia"></i> 氣象即時地圖</h3>
+                    <h3><i class="fas fa-globe-asia"></i> 天氣即時觀測</h3>
                     <span id="mapObsTimeTag" style="font-size: 12px; color: #38bdf8; font-weight: 600;">CWA 觀測時間 --</span>
                 </div>
                 <div class="map-mode-btn-group">
@@ -1536,7 +1536,7 @@
                                 <div>💨風向/風力: <b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s / 陣風 ${data.windGust.toFixed(1)} m/s</b></div>
                                 <div>💧相對濕度: <b>${data.humidity !== '--' ? data.humidity + ' %' : '-- %'}</b></div>
                                 <div style="grid-column: span 2;">🌧️日累積雨量: <b>${data.rain.toFixed(1)} mm</b></div>
-                                <div style="grid-column: span 2; color: #38bdf8; font-weight: 600; margin-top: 4px;">💡 ${adviceText}</div>
+                                <div style="grid-column: span 2; color: #38bdf8; font-weight: 600; margin-top: 4px;">${adviceText}</div>
                             </div>
                         `;
                     } else {
@@ -1939,7 +1939,7 @@
                     html: `
                         <div style="display: flex; flex-direction: column; align-items: center; pointer-events: none;">
                             <div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
-                            ${showText && displayValText ? `<div style="margin-top: 2px; font-size: 11px; font-weight: bold; color: var(--text-color); text-shadow: 0 1px 2px rgba(0,0,0,0.8); white-space: nowrap;">${displayValText}</div>` : ''}
+                            ${showText && displayValText ? `<div style="margin-top: 2px; font-size: 13px; font-weight: bold; color: var(--text-color); text-shadow: 0 1px 2px rgba(0,0,0,0.8); white-space: nowrap;">${displayValText}</div>` : ''}
                         </div>
                     `,
                     iconSize: [40, 30],
@@ -1966,5 +1966,3 @@
     </script>
 </body>
 </html>
-
-```
