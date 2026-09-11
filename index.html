@@ -512,6 +512,19 @@
                 <div><i class="fas fa-calendar-alt"></i> <span id="liveDateText">---- -- --</span></div>
                 <div><i class="fas fa-clock"></i> 臺灣標準時間 <span id="liveTimeText">--:--:--</span></div>
             </div>
+
+            <!-- 新增：氣象署即時警特報與防災快訊專區 -->
+            <div class="my-location-widget" id="weatherWarningsWidget" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(15, 23, 42, 0.1)); border-color: rgba(239, 68, 68, 0.25);">
+                <div class="my-location-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
+                    <div class="my-location-title" style="color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle"></i> 氣象署即時警特報與防災快訊
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted);" id="warningCountTag">同步更新中</div>
+                </div>
+                <div id="weatherWarningsContent">
+                    <div class="my-location-status"><i class="fas fa-spinner fa-spin"></i> 正在檢查豪大雨特報、強風與地震報告...</div>
+                </div>
+            </div>
             
             <div class="my-location-widget">
                 <div class="my-location-header">
@@ -758,10 +771,85 @@
             });
             fetchEarthquakeData(false);
             fetchTyphoonData(false);
+            fetchWeatherWarnings(); // 初始化載入警特報資訊
             setInterval(() => {
                 fetchEarthquakeData(false);
+                fetchWeatherWarnings();
             }, 30000);
         });
+
+        // 新增：抓取並渲染氣象署警特報（豪大雨、強風、地震摘要等）
+        async function fetchWeatherWarnings() {
+            const container = document.getElementById('weatherWarningsContent');
+            const countTag = document.getElementById('warningCountTag');
+            if (!container) return;
+            const nonce = Date.now();
+            const warningUrl = `https://mingxuan.904037.xyz/api/v1/rest/datastore/W-C0033-001?_=${nonce}`;
+            try {
+                const res = await fetch(warningUrl, { cache: 'no-store' }).then(r => r.json()).catch(() => null);
+                const hazards = res?.records?.hazardNotice || res?.records?.record || [];
+                
+                let html = '';
+                let activeCount = 0;
+
+                // 1. 一般天氣警特報 (豪大雨、強風等)
+                if (Array.isArray(hazards) && hazards.length > 0) {
+                    hazards.forEach(h => {
+                        const title = h.Phenomena || h.Hazards?.Info?.Phenomena || h.title || '氣象特報';
+                        const desc = h.Significance || h.text || h.Description || '';
+                        activeCount++;
+                        html += `
+                            <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px;">
+                                <div style="font-size: 13px; font-weight: 700; color: #f87171; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fas fa-exclamation-circle"></i> ${title}
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">${desc}</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // 2. 串聯最新地震資訊作為防災特報顯示
+                if (earthquakeData && earthquakeData.length > 0) {
+                    const latestEq = earthquakeData[0];
+                    const eqInfo = latestEq.EarthquakeInfo || {};
+                    const mag = eqInfo.EarthquakeMagnitude?.MagnitudeValue || '--';
+                    const loc = eqInfo.Epicenter?.Location || '';
+                    const time = eqInfo.OriginTime || '';
+                    activeCount++;
+                    html += `
+                        <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; cursor: pointer;" onclick="switchMainPage('quake')">
+                            <div style="font-size: 13px; font-weight: 700; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-house-chimney-crack"></i> 顯著有感地震報告 (規模 M${mag})
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">${loc} (${time})</div>
+                        </div>
+                    `;
+                }
+
+                if (activeCount > 0) {
+                    if (countTag) countTag.innerText = `目前有 ${activeCount} 項警特報/防災快訊`;
+                    container.innerHTML = html;
+                } else {
+                    if (countTag) countTag.innerText = `目前無發布警特報`;
+                    container.innerHTML = `
+                        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px; font-size: 13px; color: #34d399; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-shield-alt" style="font-size: 16px;"></i> 
+                            <div>氣象署目前無發布豪大雨、強風等特殊氣象警特報。</div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error("警特報載入錯誤:", err);
+                if (countTag) countTag.innerText = `狀態正常`;
+                container.innerHTML = `
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px; font-size: 13px; color: #34d399; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-shield-alt" style="font-size: 16px;"></i> 
+                        <div>氣象署目前無發布特殊氣象警特報。</div>
+                    </div>
+                `;
+            }
+        }
 
         function getWeatherAdvice(wxText) {
             if (!wxText) return '氣候多變，外出請留意天氣變化。';
@@ -1911,7 +1999,7 @@
                 } else if (currentMapMode === 'pop') {
                     titleEl.innerText = '降雨機率 (%)';
                     colorBarEl.style.background = 'linear-gradient(to top, #3b82f6, #06b6d4, #10b981, #eab308, #ef4444)';
-                    labelsListEl.innerHTML = '<span>100%</span><span>80%</span><span>60%</span><span>40%</span><span>20%</span><span>0%</span>';
+                    labelsListEl.innerHTML = '<span>100</span><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span>';
                 } else if (currentMapMode === 'humidity') {
                     titleEl.innerText = '相對濕度 (%)';
                     colorBarEl.style.background = 'linear-gradient(to top, #f97316, #eab308, #84cc16, #14b8a6, #06b6d4, #3b82f6, #1d4ed8)';
