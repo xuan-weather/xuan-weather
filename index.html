@@ -513,6 +513,7 @@
                 <div><i class="fas fa-clock"></i> 臺灣標準時間 <span id="liveTimeText">--:--:--</span></div>
             </div>
 
+            <!-- 新增：氣象署即時警特報與防災快訊專區 -->
             <div class="my-location-widget" id="weatherWarningsWidget" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(15, 23, 42, 0.1)); border-color: rgba(239, 68, 68, 0.25);">
                 <div class="my-location-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
                     <div class="my-location-title" style="color: #ef4444;">
@@ -770,13 +771,14 @@
             });
             fetchEarthquakeData(false);
             fetchTyphoonData(false);
-            fetchWeatherWarnings();
+            fetchWeatherWarnings(); // 初始化載入警特報資訊
             setInterval(() => {
                 fetchEarthquakeData(false);
                 fetchWeatherWarnings();
             }, 30000);
         });
 
+        // 新增：抓取並渲染氣象署警特報（豪大雨、強風、地震摘要等）
         async function fetchWeatherWarnings() {
             const container = document.getElementById('weatherWarningsContent');
             const countTag = document.getElementById('warningCountTag');
@@ -790,6 +792,7 @@
                 let html = '';
                 let activeCount = 0;
 
+                // 1. 一般天氣警特報 (豪大雨、強風等)
                 if (Array.isArray(hazards) && hazards.length > 0) {
                     hazards.forEach(h => {
                         const title = h.Phenomena || h.Hazards?.Info?.Phenomena || h.title || '氣象特報';
@@ -806,6 +809,7 @@
                     });
                 }
 
+                // 2. 串聯最新地震資訊作為防災特報顯示
                 if (earthquakeData && earthquakeData.length > 0) {
                     const latestEq = earthquakeData[0];
                     const eqInfo = latestEq.EarthquakeInfo || {};
@@ -2019,17 +2023,16 @@
                     const town = station.GeoInfo?.TownName || '';
                     const popVal = getPopForStation(county, town);
                     
-                    let val = data.temp;
+                    let val = 0;
                     let color = '#94a3b8';
-                    
                     if (currentMapMode === 'temp') {
                         val = data.temp;
                         color = getTempColor(val);
                     } else if (currentMapMode === 'pop') {
                         val = popVal;
-                        color = getTempColor(val * 0.4); 
+                        color = getHumidityColor(val * 1.25);
                     } else if (currentMapMode === 'humidity') {
-                        val = data.humidity;
+                        val = data.humidity !== '--' ? data.humidity : 0;
                         color = getHumidityColor(val);
                     } else if (currentMapMode === 'rain') {
                         val = data.rain;
@@ -2042,43 +2045,44 @@
                         color = getWindSpeedColor(val);
                     }
 
-                    let displayVal = '--';
-                    if (!isNaN(val)) {
-                        displayVal = typeof val === 'number' ? val.toFixed(currentMapMode === 'rain' ? 1 : (currentMapMode === 'temp' ? 1 : 0)) : val;
+                    let marker;
+                    if (zoom >= 12) {
+                        const displayVal = !isNaN(val) ? (typeof val === 'number' ? val.toFixed(1) : val) : '--';
+                        const html = `<div style="display: flex; flex-direction: column; align-items: center; pointer-events: none;">
+                            <div style="width: 12px; height: 12px; background-color: ${color}; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.8); box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
+                            <div style="font-size: 11px; font-weight: 700; color: #ffffff; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; margin-top: 2px; white-space: nowrap;">${displayVal}</div>
+                        </div>`;
+                        const icon = L.divIcon({
+                            className: '',
+                            html: html,
+                            iconSize: [40, 40],
+                            iconAnchor: [20, 6]
+                        });
+                        marker = L.marker([lat, lon], { icon: icon });
+                    } else {
+                        marker = L.circleMarker([lat, lon], {
+                            radius: 6,
+                            fillColor: color,
+                            color: '#ffffff',
+                            weight: 1.5,
+                            opacity: 0.9,
+                            fillOpacity: 0.9
+                        });
                     }
 
-                    let iconHtml = `<div style="display: flex; flex-direction: column; align-items: center; pointer-events: none;">`;
-                    iconHtml += `<div style="width: 10px; height: 10px; background-color: ${color}; border-radius: 50%; border: 1.5px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.6);"></div>`;
-                    
-                    // 放大到 10 倍率 (zoom >= 10) 時在圓點下方標上數字，不加框框
-                    if (zoom >= 10) {
-                        iconHtml += `<div style="font-size: 11px; font-weight: 700; color: #ffffff; text-shadow: 1px 1px 2px rgba(0,0,0,0.9); margin-top: 2px; white-space: nowrap; background: transparent; border: none; padding: 0;">${displayVal}</div>`;
-                    }
-                    iconHtml += `</div>`;
-
-                    const customIcon = L.divIcon({
-                        className: 'station-dot-icon',
-                        html: iconHtml,
-                        iconSize: [20, 20],
-                        iconAnchor: [10, 10]
-                    });
-
-                    const marker = L.marker([lat, lon], { icon: customIcon });
-                    
-                    const wxInfo = forecastWxData[town] || forecastWxData[county] || { text: '--' };
-                    marker.bindPopup(`
+                    const popText = `
                         <div class="popup-card">
                             <h4>${station.StationName}</h4>
-                            <p><b>區域：</b>${county}${town}</p>
-                            <p><b>天氣：</b>${wxInfo.text}</p>
+                            <p><b>地區：</b>${county}${town}</p>
                             <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
                             <p><b>降雨機率：</b>${popVal}%</p>
                             <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
                             <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
                             <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + '%' : '--'}</p>
+                            <p><b>觀測時間：</b>${formatObsTime(data.obsTime)}</p>
                         </div>
-                    `);
-                    
+                    `;
+                    marker.bindPopup(popText);
                     currentMarkersLayer.addLayer(marker);
                 }
             });
