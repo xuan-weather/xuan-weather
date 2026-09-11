@@ -513,7 +513,6 @@
                 <div><i class="fas fa-clock"></i> 臺灣標準時間 <span id="liveTimeText">--:--:--</span></div>
             </div>
 
-            <!-- 新增：氣象署即時警特報與防災快訊專區 -->
             <div class="my-location-widget" id="weatherWarningsWidget" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(15, 23, 42, 0.1)); border-color: rgba(239, 68, 68, 0.25);">
                 <div class="my-location-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
                     <div class="my-location-title" style="color: #ef4444;">
@@ -778,7 +777,6 @@
             }, 30000);
         });
 
-        // 新增：抓取並渲染氣象署警特報（豪大雨、強風、地震摘要等）
         async function fetchWeatherWarnings() {
             const container = document.getElementById('weatherWarningsContent');
             const countTag = document.getElementById('warningCountTag');
@@ -792,7 +790,6 @@
                 let html = '';
                 let activeCount = 0;
 
-                // 1. 一般天氣警特報 (豪大雨、強風等)
                 if (Array.isArray(hazards) && hazards.length > 0) {
                     hazards.forEach(h => {
                         const title = h.Phenomena || h.Hazards?.Info?.Phenomena || h.title || '氣象特報';
@@ -809,7 +806,6 @@
                     });
                 }
 
-                // 2. 串聯最新地震資訊作為防災特報顯示
                 if (earthquakeData && earthquakeData.length > 0) {
                     const latestEq = earthquakeData[0];
                     const eqInfo = latestEq.EarthquakeInfo || {};
@@ -2048,31 +2044,40 @@
                         color = getWindSpeedColor(val);
                         valStr = val.toFixed(1) + ' m/s';
                     }
+                    
+                    let marker;
+                    if (zoom >= 11) {
+                        marker = L.marker([lat, lon], {
+                            icon: L.divIcon({
+                                className: 'station-value-label-marker',
+                                html: `<div style="text-align: center;"><div style="width: 12px; height: 12px; background: ${color}; border: 2px solid #fff; border-radius: 50%; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div><div style="font-size: 11px; font-weight: 700; color: var(--text-color); text-shadow: 0 1px 2px rgba(0,0,0,0.5); margin-top: 2px; white-space: nowrap;">${valStr}</div></div>`,
+                                iconSize: [40, 40],
+                                iconAnchor: [20, 6]
+                            })
+                        });
+                    } else {
+                        marker = L.circleMarker([lat, lon], {
+                            radius: 6,
+                            fillColor: color,
+                            color: '#fff',
+                            weight: 1.5,
+                            opacity: 1,
+                            fillOpacity: 0.9
+                        });
+                    }
 
-                    const markerRadius = zoom > 9 ? 8 : 6;
-                    const circleMarker = L.circleMarker([lat, lon], {
-                        radius: markerRadius,
-                        fillColor: color,
-                        color: '#ffffff',
-                        weight: 1.5,
-                        opacity: 0.9,
-                        fillOpacity: 0.95
-                    });
-
-                    const popupContent = `
+                    marker.bindPopup(`
                         <div class="popup-card">
                             <h4>${station.StationName}</h4>
-                            <p><b>地區：</b>${county}${town}</p>
+                            <p><b>縣市鄉鎮：</b>${county}${town}</p>
                             <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
-                            <p><b>降雨機率：</b>${popVal}%</p>
                             <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
-                            <p><b>風速：</b>${data.windSpeed.toFixed(1)} m/s (陣風 ${data.windGust.toFixed(1)} m/s)</p>
-                            <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + '%' : '--'}</p>
-                            <button onclick="selectStationById('${station.StationId}')" style="margin-top: 6px; width: 100%; background: #06b6d4; color: white; border: none; padding: 4px; border-radius: 6px; cursor: pointer; font-size: 12px;">查看詳細儀表板</button>
+                            <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
+                            <p><b>陣風：</b>${data.windGust.toFixed(1)} m/s</p>
+                            <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + ' %' : '--'}</p>
                         </div>
-                    `;
-                    circleMarker.bindPopup(popupContent);
-                    currentMarkersLayer.addLayer(circleMarker);
+                    `);
+                    currentMarkersLayer.addLayer(marker);
                 }
             });
         }
