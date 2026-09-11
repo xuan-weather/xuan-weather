@@ -1964,24 +1964,24 @@
         
         function getWindSpeedColor(val) {
             if (isNaN(val) || val < 0) return '#94a3b8';
-            if (val >= 56.1) return '#312e81'; // 17級以上
-            if (val >= 51.0) return '#4f46e5'; // 16級
-            if (val >= 46.2) return '#db2777'; // 15級
-            if (val >= 41.5) return '#ec4899'; // 14級
-            if (val >= 37.0) return '#9333ea'; // 13級
-            if (val >= 32.7) return '#a855f7'; // 12級
-            if (val >= 28.5) return '#dc2626'; // 11級
-            if (val >= 24.5) return '#ef4444'; // 10級
-            if (val >= 20.8) return '#ea580c'; // 9級
-            if (val >= 17.2) return '#f97316'; // 8級
-            if (val >= 13.9) return '#eab308'; // 7級
-            if (val >= 10.8) return '#facc15'; // 6級
-            if (val >= 8.0) return '#15803d';  // 5級
-            if (val >= 5.5) return '#22c55e';  // 4級
-            if (val >= 3.4) return '#0284c7';  // 3級
-            if (val >= 1.6) return '#38bdf8';  // 2級
-            if (val >= 0.3) return '#3cbd5e';  // 1級
-            return '#94a3b8';                  // 0級 (< 0.3)
+            if (val >= 56.1) return '#312e81';
+            if (val >= 51.0) return '#4f46e5';
+            if (val >= 46.2) return '#db2777';
+            if (val >= 41.5) return '#ec4899';
+            if (val >= 37.0) return '#9333ea';
+            if (val >= 32.7) return '#a855f7';
+            if (val >= 28.5) return '#dc2626';
+            if (val >= 24.5) return '#ef4444';
+            if (val >= 20.8) return '#ea580c';
+            if (val >= 17.2) return '#f97316';
+            if (val >= 13.9) return '#eab308';
+            if (val >= 10.8) return '#facc15';
+            if (val >= 8.0) return '#15803d';
+            if (val >= 5.5) return '#22c55e';
+            if (val >= 3.4) return '#0284c7';
+            if (val >= 1.6) return '#38bdf8';
+            if (val >= 0.3) return '#3cbd5e';
+            return '#94a3b8';
         }
         
         function renderMapMarkers() {
@@ -2017,81 +2017,63 @@
             weatherStationData.forEach(station => {
                 const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
                 const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
-                if (isNaN(lat) || isNaN(lon)) return;
-                const data = parseStationElement(station);
-                const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
-                const town = station.GeoInfo?.TownName || '';
-                const popVal = getPopForStation(county, town);
-                let val = 0;
-                let color = '#94a3b8';
-                let hasData = true;
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    const data = parseStationElement(station);
+                    const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
+                    const town = station.GeoInfo?.TownName || '';
+                    const popVal = getPopForStation(county, town);
+                    
+                    let val = data.temp;
+                    let color = getTempColor(val);
+                    let valStr = !isNaN(val) ? val.toFixed(1) + ' °C' : '--';
 
-                if (currentMapMode === 'temp') {
-                    val = data.temp;
-                    if (isNaN(val)) hasData = false;
-                    color = getTempColor(val);
-                } else if (currentMapMode === 'pop') {
-                    val = popVal;
-                    if (isNaN(val)) hasData = false;
-                    color = getTempColor(val * 0.4);
-                } else if (currentMapMode === 'humidity') {
-                    val = data.humidity;
-                    if (val === '--' || isNaN(val)) hasData = false;
-                    color = getHumidityColor(val);
-                } else if (currentMapMode === 'rain') {
-                    val = data.rain;
-                    if (isNaN(val)) hasData = false;
-                    color = getRainColor(val);
-                } else if (currentMapMode === 'wind') {
-                    val = data.windSpeed;
-                    if (isNaN(val) || val < 0) hasData = false;
-                    color = getWindSpeedColor(val);
-                } else if (currentMapMode === 'windGust') {
-                    val = data.windGust;
-                    if (isNaN(val) || val < 0) hasData = false;
-                    color = getWindSpeedColor(val);
-                }
-                
-                if (!hasData) return;
+                    if (currentMapMode === 'pop') {
+                        val = popVal;
+                        color = getTempColor(val * 0.4); 
+                        valStr = val + ' %';
+                    } else if (currentMapMode === 'humidity') {
+                        val = data.humidity !== '--' ? data.humidity : NaN;
+                        color = getHumidityColor(val);
+                        valStr = !isNaN(val) ? val + ' %' : '--';
+                    } else if (currentMapMode === 'rain') {
+                        val = data.rain;
+                        color = getRainColor(val);
+                        valStr = val.toFixed(1) + ' mm';
+                    } else if (currentMapMode === 'wind') {
+                        val = data.windSpeed;
+                        color = getWindSpeedColor(val);
+                        valStr = val.toFixed(1) + ' m/s';
+                    } else if (currentMapMode === 'windGust') {
+                        val = data.windGust;
+                        color = getWindSpeedColor(val);
+                        valStr = val.toFixed(1) + ' m/s';
+                    }
 
-                let displayValText = '';
-                if (currentMapMode === 'temp') displayValText = data.temp.toFixed(1);
-                else if (currentMapMode === 'pop') displayValText = val;
-                else if (currentMapMode === 'humidity') displayValText = data.humidity;
-                else if (currentMapMode === 'rain') displayValText = data.rain.toFixed(1);
-                else if (currentMapMode === 'wind') displayValText = data.windSpeed.toFixed(1);
-                else if (currentMapMode === 'windGust') displayValText = data.windGust.toFixed(1);
+                    const markerRadius = zoom > 9 ? 8 : 6;
+                    const circleMarker = L.circleMarker([lat, lon], {
+                        radius: markerRadius,
+                        fillColor: color,
+                        color: '#ffffff',
+                        weight: 1.5,
+                        opacity: 0.9,
+                        fillOpacity: 0.95
+                    });
 
-                const showText = zoom >= 11;
-                const htmlIcon = L.divIcon({
-                    className: 'custom-map-marker',
-                    html: `
-                        <div style="display: flex; flex-direction: column; align-items: center; pointer-events: none;">
-                            <div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
-                            ${showText && displayValText ? `<div style="margin-top: 2px; font-size: 11px; font-weight: bold; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); white-space: nowrap;">${displayValText}</div>` : ''}
+                    const popupContent = `
+                        <div class="popup-card">
+                            <h4>${station.StationName}</h4>
+                            <p><b>地區：</b>${county}${town}</p>
+                            <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
+                            <p><b>降雨機率：</b>${popVal}%</p>
+                            <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
+                            <p><b>風速：</b>${data.windSpeed.toFixed(1)} m/s (陣風 ${data.windGust.toFixed(1)} m/s)</p>
+                            <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + '%' : '--'}</p>
+                            <button onclick="selectStationById('${station.StationId}')" style="margin-top: 6px; width: 100%; background: #06b6d4; color: white; border: none; padding: 4px; border-radius: 6px; cursor: pointer; font-size: 12px;">查看詳細儀表板</button>
                         </div>
-                    `,
-                    iconSize: [44, 30],
-                    iconAnchor: [22, 6]
-                });
-
-                const marker = L.marker([lat, lon], { icon: htmlIcon });
-                const currentWindText = getWindDirectionText(data.windDir);
-                
-                marker.bindPopup(`
-                    <div class="popup-card">
-                        <h4>${station.StationName}</h4>
-                        <p><b>區域：</b>${county}${town}</p>
-                        <p><b>降雨機率：</b>${popVal}%</p>
-                        <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
-                        <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + '%' : '--'}</p>
-                        <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
-                        <p><b>風向：</b>${currentWindText}</p>
-                        <p><b>風速：</b>${data.windSpeed.toFixed(1)} m/s (${getWindLevel(data.windSpeed)})</p>
-                        <p><b>陣風：</b>${data.windGust.toFixed(1)} m/s (${getWindLevel(data.windGust)})</p>
-                    </div>
-                `);
-                currentMarkersLayer.addLayer(marker);
+                    `;
+                    circleMarker.bindPopup(popupContent);
+                    currentMarkersLayer.addLayer(circleMarker);
+                }
             });
         }
     </script>
