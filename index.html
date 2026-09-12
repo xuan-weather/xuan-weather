@@ -2037,27 +2037,32 @@
                     color = getWindSpeedColor(val);
                 }
 
+                // 如果沒有有效資料則直接跳過，不畫出圓點
+                if (isNaN(val) || (currentMapMode === 'temp' && isNaN(data.temp)) || (currentMapMode === 'humidity' && val === '--')) {
+                    return;
+                }
+
                 let displayVal = '--';
                 if (currentMapMode === 'temp') displayVal = !isNaN(data.temp) ? data.temp.toFixed(1) : '--';
-                else if (currentMapMode === 'pop') displayVal = `${val}%`;
-                else if (currentMapMode === 'humidity') displayVal = data.humidity !== '--' ? `${data.humidity}%` : '--';
-                else if (currentMapMode === 'rain') displayVal = `${data.rain.toFixed(1)}`;
-                else if (currentMapMode === 'wind') displayVal = `${data.windSpeed.toFixed(1)}`;
-                else if (currentMapMode === 'windGust') displayVal = `${data.windGust.toFixed(1)}`;
+                else if (currentMapMode === 'pop') displayVal = val + '%';
+                else if (currentMapMode === 'humidity') displayVal = val !== '--' ? val + '%' : '--';
+                else if (currentMapMode === 'rain') displayVal = val.toFixed(1);
+                else if (currentMapMode === 'wind' || currentMapMode === 'windGust') displayVal = val.toFixed(1);
 
                 let marker;
+                // 放大倍率 >= 10 時，在測站圓點下方顯示數值且不要有框框
                 if (zoom >= 10) {
                     const htmlContent = `
-                        <div style="display: flex; flex-direction: column; align-items: center; pointer-events: none;">
-                            <div style="width: 10px; height: 10px; background-color: ${color}; border: 1.5px solid #ffffff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.4);"></div>
-                            <div style="font-size: 11px; font-weight: 700; color: var(--text-color); text-shadow: 1px 1px 2px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9); margin-top: 2px; white-space: nowrap;">${displayVal}</div>
+                        <div style="text-align: center; pointer-events: none;">
+                            <div style="width: 10px; height: 10px; background-color: ${color}; border: 1.5px solid #fff; border-radius: 50%; margin: 0 auto; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>
+                            <div style="font-size: 10px; font-weight: bold; color: ${document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#f1f5f9'}; text-shadow: 0 0 3px rgba(0,0,0,0.8); margin-top: 2px; white-space: nowrap;">${displayVal}</div>
                         </div>
                     `;
                     const customIcon = L.divIcon({
-                        className: 'station-value-label-marker',
+                        className: 'custom-map-label-marker',
                         html: htmlContent,
-                        iconSize: [60, 40],
-                        iconAnchor: [30, 5]
+                        iconSize: [40, 30],
+                        iconAnchor: [20, 5]
                     });
                     marker = L.marker([lat, lon], { icon: customIcon });
                 } else {
@@ -2065,27 +2070,20 @@
                         radius: 6,
                         fillColor: color,
                         color: '#fff',
-                        weight: 1.5,
+                        weight: 1,
                         opacity: 1,
-                        fillOpacity: 0.9
+                        fillOpacity: 0.85
                     });
                 }
 
-                const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
-                const town = station.GeoInfo?.TownName || '';
-                const popVal = getPopForStation(county, town);
-                const popupHtml = `
+                marker.bindPopup(`
                     <div class="popup-card">
                         <h4>${station.StationName}</h4>
-                        <p><b>地區：</b>${county}${town}</p>
-                        <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
-                        <p><b>降雨機率：</b>${popVal}%</p>
-                        <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
-                        <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + '%' : '--'}</p>
-                        <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
+                        <p><b>縣市鄉鎮：</b> ${station.GeoInfo?.CountyName || ''} ${station.GeoInfo?.TownName || ''}</p>
+                        <p><b>${titleEl.innerText}:</b> ${displayVal}</p>
+                        <p><b>觀測時間：</b> ${formatObsTime(data.obsTime)}</p>
                     </div>
-                `;
-                marker.bindPopup(popupHtml);
+                `);
                 currentMarkersLayer.addLayer(marker);
             });
         }
