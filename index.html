@@ -470,21 +470,6 @@
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
             background: rgba(0, 0, 0, 0.1); padding: 10px; border-radius: 12px; font-size: 12px; color: var(--text-muted);
         }
-        /* Map zoom label styles (no box, no overlap, shown below circle when zoomed in) */
-        .map-station-label {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-color);
-            text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9);
-            white-space: nowrap;
-            margin-top: 2px;
-        }
-        .leaflet-tooltip.map-station-label::before {
-            display: none !important;
-        }
     </style>
 </head>
 <body>
@@ -785,7 +770,7 @@
             });
             fetchEarthquakeData(false);
             fetchTyphoonData(false);
-            fetchWeatherWarnings(); // 初始化載入警特報資訊
+            fetchWeatherWarnings();
             setInterval(() => {
                 fetchEarthquakeData(false);
                 fetchWeatherWarnings();
@@ -2005,104 +1990,103 @@
             if (titleEl && colorBarEl && labelsListEl) {
                 if (currentMapMode === 'temp') {
                     titleEl.innerText = '氣溫 (°C)';
-                    colorBarEl.style.background = 'linear-gradient(to top, #003366, #3366CC, #33CCCC, #33CC33, #FFCC00, #FF6600, #FF0000, #990099)';
+                    colorBarEl.style.background = 'linear-gradient(to top, #003366 0%, #3366CC 14.28%, #33CCCC 28.57%, #33CC33 42.85%, #FFCC00 57.14%, #FF6600 71.42%, #FF0000 85.71%, #990099 100%)';
                     labelsListEl.innerHTML = '<span>38+</span><span>35</span><span>30</span><span>25</span><span>20</span><span>15</span><span>10</span><span>&lt;10</span>';
                 } else if (currentMapMode === 'pop') {
                     titleEl.innerText = '降雨機率 (%)';
-                    colorBarEl.style.background = 'linear-gradient(to top, #3b82f6, #06b6d4, #10b981, #eab308, #ef4444)';
-                    labelsListEl.innerHTML = '<span>100</span><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span>';
+                    colorBarEl.style.background = 'linear-gradient(to top, #e2e8f0 0%, #bae6fd 25%, #38bdf8 50%, #0284c7 75%, #1d4ed8 100%)';
+                    labelsListEl.innerHTML = '<span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span>';
                 } else if (currentMapMode === 'humidity') {
                     titleEl.innerText = '相對濕度 (%)';
-                    colorBarEl.style.background = 'linear-gradient(to top, #f97316, #eab308, #84cc16, #14b8a6, #06b6d4, #3b82f6, #1d4ed8)';
-                    labelsListEl.innerHTML = '<span>100</span><span>80</span><span>60</span><span>40</span><span>20</span>';
+                    colorBarEl.style.background = 'linear-gradient(to top, #f97316 0%, #eab308 20%, #84cc16 40%, #14b8a6 60%, #06b6d4 80%, #1d4ed8 100%)';
+                    labelsListEl.innerHTML = '<span>100%</span><span>80%</span><span>60%</span><span>40%</span><span>&lt;40%</span>';
                 } else if (currentMapMode === 'rain') {
                     titleEl.innerText = '日雨量 (mm)';
                     colorBarEl.style.background = 'linear-gradient(to top, #C0C0C0 0%, #99FFFF 6.25%, #00CCFF 12.5%, #0066FF 18.75%, #0000CC 25%, #00CC00 31.25%, #009900 37.5%, #FFFF00 43.75%, #FFCC00 50%, #FF9900 56.25%, #FF6600 62.5%, #FF0000 68.75%, #CC0000 75%, #990000 81.25%, #990099 87.5%, #660066 93.75%, #FF66FF 100%)';
-                    labelsListEl.innerHTML = '<span>300+</span><span>200</span><span>150</span><span>130</span><span>110</span><span>90</span><span>70</span><span>60</span><span>50</span><span>40</span><span>30</span><span>20</span><span>15</span><span>10</span><span>6</span><span>2</span><span>1</span><span>0</span>';
+                    labelsListEl.innerHTML = '<span>200+</span><span>100</span><span>50</span><span>10</span><span>2</span><span>0</span>';
                 } else if (currentMapMode === 'wind' || currentMapMode === 'windGust') {
                     titleEl.innerText = currentMapMode === 'wind' ? '風速 (m/s)' : '陣風 (m/s)';
-                    colorBarEl.style.background = 'linear-gradient(to top, #94a3b8, #3cbd5e, #38bdf8, #0284c7, #22c55e, #15803d, #facc15, #eab308, #f97316, #ea580c, #ef4444, #dc2626, #a855f7, #9333ea, #ec4899, #db2777, #4f46e5, #312e81)';
-                    labelsListEl.innerHTML = '<span>56.1+ 17+級</span><span>51.0 16級</span><span>46.2 15級</span><span>41.5 14級</span><span>37.0 13級</span><span>32.7 12級</span><span>28.5 11級</span><span>24.5 10級</span><span>20.8 9級</span><span>17.2 8級</span><span>13.9 7級</span><span>10.8 6級</span><span>8.0 5級</span><span>5.5 4級</span><span>3.4 3級</span><span>1.6 2級</span><span>0.3 1級</span><span>&lt;0.3 0級</span>';
+                    colorBarEl.style.background = 'linear-gradient(to top, #94a3b8 0%, #38bdf8 25%, #22c55e 50%, #eab308 75%, #ef4444 90%, #4f46e5 100%)';
+                    labelsListEl.innerHTML = '<span>50+</span><span>30</span><span>15</span><span>5</span><span>0</span>';
                 }
             }
+
             weatherStationData.forEach(station => {
                 const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
                 const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
-                if (!isNaN(lat) && !isNaN(lon)) {
-                    const data = parseStationElement(station);
+                if (isNaN(lat) || isNaN(lon)) return;
+                const data = parseStationElement(station);
+                let val = data.temp;
+                let color = getTempColor(data.temp);
+                if (currentMapMode === 'pop') {
                     const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
                     const town = station.GeoInfo?.TownName || '';
-                    const popVal = getPopForStation(county, town);
-                    
-                    let val = data.temp;
-                    let color = getTempColor(val);
-                    let valStr = !isNaN(val) ? val.toFixed(1) + ' °C' : '--';
-                    let rawNumStr = '--';
+                    val = getPopForStation(county, town);
+                    color = val >= 70 ? '#1d4ed8' : val >= 40 ? '#0284c7' : '#38bdf8';
+                } else if (currentMapMode === 'humidity') {
+                    val = data.humidity;
+                    color = getHumidityColor(val);
+                } else if (currentMapMode === 'rain') {
+                    val = data.rain;
+                    color = getRainColor(val);
+                } else if (currentMapMode === 'wind') {
+                    val = data.windSpeed;
+                    color = getWindSpeedColor(val);
+                } else if (currentMapMode === 'windGust') {
+                    val = data.windGust;
+                    color = getWindSpeedColor(val);
+                }
 
-                    if (currentMapMode === 'temp') {
-                        val = data.temp;
-                        color = getTempColor(val);
-                        rawNumStr = !isNaN(data.temp) ? data.temp.toFixed(1) : '--';
-                    } else if (currentMapMode === 'pop') {
-                        val = popVal;
-                        color = getTempColor(val * 0.4); 
-                        rawNumStr = !isNaN(popVal) ? popVal.toString() : '--';
-                    } else if (currentMapMode === 'humidity') {
-                        val = data.humidity !== '--' ? data.humidity : NaN;
-                        color = getHumidityColor(val);
-                        rawNumStr = data.humidity !== '--' ? data.humidity.toString() : '--';
-                    } else if (currentMapMode === 'rain') {
-                        val = data.rain;
-                        color = getRainColor(val);
-                        rawNumStr = !isNaN(data.rain) ? data.rain.toFixed(1) : '--';
-                    } else if (currentMapMode === 'wind') {
-                        val = data.windSpeed;
-                        color = getWindSpeedColor(val);
-                        rawNumStr = !isNaN(data.windSpeed) ? data.windSpeed.toFixed(1) : '--';
-                    } else if (currentMapMode === 'windGust') {
-                        val = data.windGust;
-                        color = getWindSpeedColor(val);
-                        rawNumStr = !isNaN(data.windGust) ? data.windGust.toFixed(1) : '--';
-                    }
+                let displayVal = '--';
+                if (currentMapMode === 'temp') displayVal = !isNaN(data.temp) ? data.temp.toFixed(1) : '--';
+                else if (currentMapMode === 'pop') displayVal = `${val}%`;
+                else if (currentMapMode === 'humidity') displayVal = data.humidity !== '--' ? `${data.humidity}%` : '--';
+                else if (currentMapMode === 'rain') displayVal = `${data.rain.toFixed(1)}`;
+                else if (currentMapMode === 'wind') displayVal = `${data.windSpeed.toFixed(1)}`;
+                else if (currentMapMode === 'windGust') displayVal = `${data.windGust.toFixed(1)}`;
 
-                    // 如果氣象署沒有資料 (數值為 NaN 或無效)，則隱藏該測站圓點
-                    if (isNaN(val)) {
-                        return;
-                    }
-
-                    const marker = L.circleMarker([lat, lon], {
+                let marker;
+                if (zoom >= 10) {
+                    const htmlContent = `
+                        <div style="display: flex; flex-direction: column; align-items: center; pointer-events: none;">
+                            <div style="width: 10px; height: 10px; background-color: ${color}; border: 1.5px solid #ffffff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.4);"></div>
+                            <div style="font-size: 11px; font-weight: 700; color: var(--text-color); text-shadow: 1px 1px 2px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9); margin-top: 2px; white-space: nowrap;">${displayVal}</div>
+                        </div>
+                    `;
+                    const customIcon = L.divIcon({
+                        className: 'station-value-label-marker',
+                        html: htmlContent,
+                        iconSize: [60, 40],
+                        iconAnchor: [30, 5]
+                    });
+                    marker = L.marker([lat, lon], { icon: customIcon });
+                } else {
+                    marker = L.circleMarker([lat, lon], {
                         radius: 6,
                         fillColor: color,
                         color: '#fff',
                         weight: 1.5,
-                        opacity: 0.9,
-                        fillOpacity: 0.85
+                        opacity: 1,
+                        fillOpacity: 0.9
                     });
-
-                    // 當地圖放大倍率達3次以上時 (zoom >= 11，預設為8，8+3=11)，在圓點下方標上數字，不加框框且不重疊
-                    if (zoom >= 11) {
-                        marker.bindTooltip(rawNumStr, {
-                            permanent: true,
-                            direction: 'bottom',
-                            className: 'map-station-label',
-                            offset: [0, 2]
-                        });
-                    }
-
-                    const popupContent = `
-                        <div class="popup-card">
-                            <h4>${station.StationName}</h4>
-                            <p><b>地區：</b>${county}${town}</p>
-                            <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
-                            <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
-                            <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
-                            <p><b>陣風：</b>${data.windGust.toFixed(1)} m/s</p>
-                            <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + ' %' : '--'}</p>
-                        </div>
-                    `;
-                    marker.bindPopup(popupContent);
-                    currentMarkersLayer.addLayer(marker);
                 }
+
+                const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
+                const town = station.GeoInfo?.TownName || '';
+                const popVal = getPopForStation(county, town);
+                const popupHtml = `
+                    <div class="popup-card">
+                        <h4>${station.StationName}</h4>
+                        <p><b>地區：</b>${county}${town}</p>
+                        <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
+                        <p><b>降雨機率：</b>${popVal}%</p>
+                        <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
+                        <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + '%' : '--'}</p>
+                        <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
+                    </div>
+                `;
+                marker.bindPopup(popupHtml);
+                currentMarkersLayer.addLayer(marker);
             });
         }
     </script>
