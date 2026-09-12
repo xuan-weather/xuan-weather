@@ -2003,7 +2003,7 @@
                 } else if (currentMapMode === 'rain') {
                     titleEl.innerText = '日雨量 (mm)';
                     colorBarEl.style.background = 'linear-gradient(to top, #C0C0C0 0%, #99FFFF 6.25%, #00CCFF 12.5%, #0066FF 18.75%, #0000CC 25%, #00CC00 31.25%, #009900 37.5%, #FFFF00 43.75%, #FFCC00 50%, #FF9900 56.25%, #FF6600 62.5%, #FF0000 68.75%, #CC0000 75%, #990000 81.25%, #990099 87.5%, #660066 93.75%, #FF66FF 100%)';
-                    labelsListEl.innerHTML = '<span>200+</span><span>100</span><span>50</span><span>10</span><span>2</span><span>0</span>';
+                    labelsListEl.innerHTML = '<span>300+</span><span>200</span><span>150</span><span>130</span><span>110</span><span>90</span><span>70</span><span>60</span><span>50</span><span>40</span><span>30</span><span>25</span><span>20</span><span>15</span><span>10</span><span>6</span><span>2</span><span>1</span><span>0</span>';
                 } else if (currentMapMode === 'wind' || currentMapMode === 'windGust') {
                     titleEl.innerText = currentMapMode === 'wind' ? '風速 (m/s)' : '陣風 (m/s)';
                     colorBarEl.style.background = 'linear-gradient(to top, #94a3b8 0%, #38bdf8 25%, #22c55e 50%, #eab308 75%, #ef4444 90%, #4f46e5 100%)';
@@ -2065,27 +2065,23 @@
                         radius: 6,
                         fillColor: color,
                         color: '#fff',
-                        weight: 1.5,
+                        weight: 1,
                         opacity: 1,
-                        fillOpacity: 0.9
+                        fillOpacity: 0.8
                     });
+                    marker.bindPopup(`
+                        <div class="popup-card">
+                            <h4>${station.StationName}</h4>
+                            <p><b>測站位置：</b>${station.GeoInfo?.CountyName || ''}${station.GeoInfo?.TownName || ''}</p>
+                            <p><b>當前氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
+                            <p><b>日累積雨量：</b>${data.rain.toFixed(1)} mm</p>
+                            <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
+                            <p><b>陣風：</b>${data.windGust.toFixed(1)} m/s</p>
+                            <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + '%' : '--'}</p>
+                            <p style="text-align: right; margin-top: 6px;"><button onclick="selectStationById('${station.StationId}')" style="background: #06b6d4; color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;">查看詳情</button></p>
+                        </div>
+                    `);
                 }
-
-                const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
-                const town = station.GeoInfo?.TownName || '';
-                const popVal = getPopForStation(county, town);
-                const popupHtml = `
-                    <div class="popup-card">
-                        <h4>${station.StationName}</h4>
-                        <p><b>地區：</b>${county}${town}</p>
-                        <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
-                        <p><b>降雨機率：</b>${popVal}%</p>
-                        <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
-                        <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + '%' : '--'}</p>
-                        <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
-                    </div>
-                `;
-                marker.bindPopup(popupHtml);
                 currentMarkersLayer.addLayer(marker);
             });
         }
