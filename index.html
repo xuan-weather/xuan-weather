@@ -770,7 +770,7 @@
             });
             fetchEarthquakeData(false);
             fetchTyphoonData(false);
-            fetchWeatherWarnings(); // 初始化載入警特報資訊
+            fetchWeatherWarnings();
             setInterval(() => {
                 fetchEarthquakeData(false);
                 fetchWeatherWarnings();
@@ -1874,9 +1874,13 @@
                 maxZoom: 18
             }).addTo(map);
             map.addLayer(currentMarkersLayer);
+
             map.on('zoomend', () => {
-                if (mapInitialized) renderMapMarkers();
+                if (mapInitialized && currentMarkersLayer) {
+                    renderMapMarkers();
+                }
             });
+            
             const LegendControl = L.Control.extend({
                 options: { position: 'topleft' },
                 onAdd: function() {
@@ -1983,7 +1987,6 @@
         function renderMapMarkers() {
             if (!currentMarkersLayer) return;
             currentMarkersLayer.clearLayers();
-            const zoom = map.getZoom();
             const titleEl = document.getElementById('legendHeaderTitle');
             const colorBarEl = document.getElementById('legendColorBar');
             const labelsListEl = document.getElementById('legendLabelsList');
@@ -2023,78 +2026,62 @@
                     let color = getTempColor(val);
                     let valStr = !isNaN(val) ? val.toFixed(1) + ' °C' : '--';
 
+                    let numberValStr = !isNaN(val) ? val.toFixed(1) : '--';
+
                     if (currentMapMode === 'pop') {
                         val = popVal;
                         color = getTempColor(val * 0.4); 
                         valStr = val + ' %';
+                        numberValStr = val + '%';
                     } else if (currentMapMode === 'humidity') {
                         val = data.humidity !== '--' ? data.humidity : NaN;
                         color = getHumidityColor(val);
                         valStr = !isNaN(val) ? val + ' %' : '--';
+                        numberValStr = !isNaN(val) ? val + '%' : '--';
                     } else if (currentMapMode === 'rain') {
                         val = data.rain;
                         color = getRainColor(val);
                         valStr = val.toFixed(1) + ' mm';
+                        numberValStr = val.toFixed(1);
                     } else if (currentMapMode === 'wind') {
                         val = data.windSpeed;
                         color = getWindSpeedColor(val);
                         valStr = val.toFixed(1) + ' m/s';
+                        numberValStr = val.toFixed(1);
                     } else if (currentMapMode === 'windGust') {
                         val = data.windGust;
                         color = getWindSpeedColor(val);
                         valStr = val.toFixed(1) + ' m/s';
+                        numberValStr = val.toFixed(1);
                     }
 
-                    let rawNumStr = '--';
-                    if (currentMapMode === 'temp') {
-                        rawNumStr = !isNaN(data.temp) ? data.temp.toFixed(1) : '--';
-                    } else if (currentMapMode === 'pop') {
-                        rawNumStr = !isNaN(popVal) ? popVal.toString() : '--';
-                    } else if (currentMapMode === 'humidity') {
-                        rawNumStr = data.humidity !== '--' ? data.humidity.toString() : '--';
-                    } else if (currentMapMode === 'rain') {
-                        rawNumStr = !isNaN(data.rain) ? data.rain.toFixed(1) : '--';
-                    } else if (currentMapMode === 'wind') {
-                        rawNumStr = !isNaN(data.windSpeed) ? data.windSpeed.toFixed(1) : '--';
-                    } else if (currentMapMode === 'windGust') {
-                        rawNumStr = !isNaN(data.windGust) ? data.windGust.toFixed(1) : '--';
-                    }
-
-                    let marker;
-                    if (zoom >= 10) {
-                        marker = L.marker([lat, lon], {
-                            icon: L.divIcon({
-                                className: 'custom-map-label-icon',
-                                html: `<div style="text-align: center;"><div style="width: 10px; height: 10px; background-color: ${color}; border-radius: 50%; margin: 0 auto; border: 1px solid white;"></div><div style="font-size: 11px; color: var(--text-color, #f1f5f9); text-shadow: 1px 1px 2px #000; margin-top: 2px; white-space: nowrap; font-weight: bold;">${rawNumStr}</div></div>`,
-                                iconSize: [40, 40],
-                                iconAnchor: [20, 5]
-                            })
-                        });
-                    } else {
-                        marker = L.circleMarker([lat, lon], {
-                            radius: 6,
-                            fillColor: color,
-                            color: '#fff',
-                            weight: 1,
-                            opacity: 1,
-                            fillOpacity: 0.9
-                        });
-                    }
+                    // 使用 L.divIcon 確保放大時測站圓點固定尺寸不變、效能流暢不卡頓（如 DPIP 防災 app 的實作方式）
+                    const currentZoom = map ? map.getZoom() : 8;
+                    const showLabel = currentZoom >= 10; // 初始縮放是 8，放大 2 次即 zoom >= 10
                     
-                    const popupContent = `
+                    const dotHtml = `<div style="width: 12px; height: 12px; background-color: ${color}; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`;
+                    const labelHtml = showLabel ? `<div style="font-size: 11px; color: var(--text-color); text-shadow: 0 0 3px rgba(0,0,0,0.9); white-space: nowrap; margin-top: 2px; text-align: center; font-weight: 700;">${numberValStr}</div>` : '';
+
+                    const icon = L.divIcon({
+                        className: 'custom-station-marker',
+                        html: `<div style="display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%);">${dotHtml}${labelHtml}</div>`,
+                        iconSize: [0, 0],
+                        iconAnchor: [0, 0]
+                    });
+
+                    const marker = L.marker([lat, lon], { icon: icon });
+                    marker.bindPopup(`
                         <div class="popup-card">
-                            <h4>${station.StationName}</h4>
-                            <p><b>地區：</b>${county}${town}</p>
-                            <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
-                            <p><b>降雨機率：</b>${popVal} %</p>
-                            <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + ' %' : '--'}</p>
-                            <p><b>日累積雨量：</b>${data.rain.toFixed(1)} mm</p>
-                            <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
-                            <p><b>陣風：</b>${data.windGust.toFixed(1)} m/s</p>
-                            <p><b>觀測時間：</b>${formatObsTime(data.obsTime)}</p>
+                            <h4>${station.StationName} (${county}${town})</h4>
+                            <p><b>氣溫：</b> ${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
+                            <p><b>降雨機率：</b> ${popVal} %</p>
+                            <p><b>相對濕度：</b> ${data.humidity !== '--' ? data.humidity + ' %' : '--'}</p>
+                            <p><b>日雨量：</b> ${data.rain.toFixed(1)} mm</p>
+                            <p><b>風向風速：</b> ${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
+                            <p><b>陣風：</b> ${data.windGust.toFixed(1)} m/s</p>
+                            <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">觀測時間：${formatObsTime(data.obsTime)}</p>
                         </div>
-                    `;
-                    marker.bindPopup(popupContent);
+                    `);
                     currentMarkersLayer.addLayer(marker);
                 }
             });
