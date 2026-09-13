@@ -488,6 +488,78 @@
             transform-origin: center center;
         }
 
+
+        .station-history-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            background: rgba(2, 6, 23, 0.72);
+            backdrop-filter: blur(8px);
+        }
+        .station-history-modal.active { display: flex; }
+        .station-history-card {
+            width: min(1100px, 100%);
+            max-height: 92vh;
+            overflow-y: auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 22px;
+            box-shadow: 0 24px 70px rgba(0,0,0,.4);
+            padding: 18px;
+        }
+        .station-history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .station-history-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-color);
+        }
+        .station-history-subtitle {
+            margin-top: 3px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .station-history-close {
+            border: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            cursor: pointer;
+            background: rgba(148,163,184,.12);
+            color: var(--text-color);
+            font-size: 18px;
+        }
+        .station-history-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0,1fr));
+            gap: 12px;
+        }
+        .station-history-chart {
+            min-height: 260px;
+            padding: 10px;
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            background: rgba(0,0,0,.10);
+        }
+        .station-history-empty {
+            padding: 34px 14px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        @media (max-width: 760px) {
+            .station-history-grid { grid-template-columns: 1fr; }
+            .station-history-card { padding: 12px; }
+        }
+
 </style>
 </head>
 <body>
@@ -749,6 +821,22 @@
         </div>
     </div>
     
+    
+    <div id="stationHistoryModal" class="station-history-modal" onclick="if(event.target===this) closeStationHistory()">
+        <div class="station-history-card">
+            <div class="station-history-head">
+                <div>
+                    <div id="stationHistoryTitle" class="station-history-title">測站歷史趨勢</div>
+                    <div id="stationHistorySubtitle" class="station-history-subtitle">最近 24 小時</div>
+                </div>
+                <button class="station-history-close" onclick="closeStationHistory()" aria-label="關閉">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            <div id="stationHistoryBody" class="station-history-grid"></div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.js"></script>
     <script>
@@ -1138,6 +1226,222 @@
             return R * c;
         }
         
+
+        // ===== 測站最近 24 小時歷史趨勢 =====
+        const STATION_HISTORY_STORAGE_KEY = 'cwa_station_history_v1';
+        const STATION_HISTORY_MAX_MS = 24 * 60 * 60 * 1000;
+        const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
+        let stationHistoryCache = {};
+        let stationHistoryCharts = [];
+        let currentHistoryStationId = null;
+        let lastHistorySampleAt = 0;
+
+        function loadStationHistoryCache() {
+            try {
+                const raw = localStorage.getItem(STATION_HISTORY_STORAGE_KEY);
+                stationHistoryCache = raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                stationHistoryCache = {};
+            }
+        }
+
+        function saveStationHistoryCache() {
+            try {
+                localStorage.setItem(STATION_HISTORY_STORAGE_KEY, JSON.stringify(stationHistoryCache));
+            } catch (e) {
+                // Storage full/private mode: charts still work for this page session.
+            }
+        }
+
+        function getStationHistoryId(station) {
+            return String(station.StationId || station.StationName || '');
+        }
+
+        function getStationHistoryValues(station) {
+            const data = parseStationElement(station);
+            const obsRaw = station.ObsTime?.DateTime || station.ObsTime;
+            const ts = Date.parse(obsRaw || '') || Date.now();
+            return {
+                ts,
+                temp: Number.isFinite(data.temp) ? data.temp : null,
+                rain: Number.isFinite(data.rain) ? data.rain : null,
+                humidity: data.humidity === '--' ? null : Number(data.humidity),
+                wind: Number.isFinite(data.windSpeed) ? data.windSpeed : null
+            };
+        }
+
+        function recordStationHistorySnapshot(force = false) {
+            const now = Date.now();
+            if (!force && now - lastHistorySampleAt < STATION_HISTORY_SAMPLE_MS) return;
+            lastHistorySampleAt = now;
+
+            if (!stationHistoryCache || typeof stationHistoryCache !== 'object') {
+                stationHistoryCache = {};
+            }
+
+            weatherStationData.forEach(station => {
+                const id = getStationHistoryId(station);
+                if (!id) return;
+                const point = getStationHistoryValues(station);
+                const arr = Array.isArray(stationHistoryCache[id]) ? stationHistoryCache[id] : [];
+
+                // Avoid storing duplicate observations with the same timestamp.
+                const last = arr[arr.length - 1];
+                if (!last || Math.abs(Number(last.ts) - point.ts) > 30000) {
+                    arr.push(point);
+                } else {
+                    arr[arr.length - 1] = point;
+                }
+
+                const cutoff = now - STATION_HISTORY_MAX_MS;
+                stationHistoryCache[id] = arr
+                    .filter(p => Number(p.ts) >= cutoff)
+                    .slice(-180);
+            });
+
+            saveStationHistoryCache();
+        }
+
+        function destroyStationHistoryCharts() {
+            stationHistoryCharts.forEach(chart => {
+                try { chart.destroy(); } catch (e) {}
+            });
+            stationHistoryCharts = [];
+        }
+
+        function buildStationHistoryChart(canvasId, label, values, unit, suggestedMin = undefined) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const chart = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: values.map(p => new Date(p.ts).toLocaleTimeString('zh-TW', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    })),
+                    datasets: [{
+                        label,
+                        data: values.map(p => p.value),
+                        borderWidth: 2,
+                        pointRadius: 1.5,
+                        pointHoverRadius: 4,
+                        tension: 0.25,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${label}：${ctx.parsed.y}${unit}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { maxTicksLimit: 8, color: '#94a3b8' },
+                            grid: { color: 'rgba(148,163,184,.10)' }
+                        },
+                        y: {
+                            suggestedMin,
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: value => `${value}${unit}`
+                            },
+                            grid: { color: 'rgba(148,163,184,.10)' }
+                        }
+                    }
+                }
+            });
+            stationHistoryCharts.push(chart);
+        }
+
+        function openStationHistory(station) {
+            if (!station) return;
+
+            const modal = document.getElementById('stationHistoryModal');
+            const title = document.getElementById('stationHistoryTitle');
+            const subtitle = document.getElementById('stationHistorySubtitle');
+            const body = document.getElementById('stationHistoryBody');
+            if (!modal || !body) return;
+
+            recordStationHistorySnapshot(true);
+            currentHistoryStationId = getStationHistoryId(station);
+
+            const arr = Array.isArray(stationHistoryCache[currentHistoryStationId])
+                ? stationHistoryCache[currentHistoryStationId]
+                : [];
+
+            const cutoff = Date.now() - STATION_HISTORY_MAX_MS;
+            const clean = arr.filter(p => Number(p.ts) >= cutoff);
+
+            title.textContent = `${station.StationName || '測站'}｜歷史趨勢`;
+            subtitle.textContent = `最近 24 小時｜目前已累積 ${clean.length} 筆觀測資料`;
+
+            destroyStationHistoryCharts();
+
+            if (clean.length < 2) {
+                body.innerHTML = `
+                    <div class="station-history-empty" style="grid-column:1/-1;">
+                        <i class="fas fa-chart-line"></i>
+                        <div style="margin-top:8px;font-weight:700;">歷史資料正在累積</div>
+                        <div style="margin-top:5px;">網站會持續保存這個測站的即時觀測資料，累積後即可顯示 24 小時折線圖。</div>
+                    </div>
+                `;
+                modal.classList.add('active');
+                return;
+            }
+
+            body.innerHTML = `
+                <div class="station-history-chart"><canvas id="stationHistoryTemp"></canvas></div>
+                <div class="station-history-chart"><canvas id="stationHistoryRain"></canvas></div>
+                <div class="station-history-chart"><canvas id="stationHistoryHumidity"></canvas></div>
+                <div class="station-history-chart"><canvas id="stationHistoryWind"></canvas></div>
+            `;
+
+            modal.classList.add('active');
+
+            const series = [
+                ['stationHistoryTemp', '氣溫', 'temp', '°C', undefined],
+                ['stationHistoryRain', '24 小時雨量', 'rain', ' mm', 0],
+                ['stationHistoryHumidity', '濕度', 'humidity', ' %', 0],
+                ['stationHistoryWind', '風速', 'wind', ' m/s', 0]
+            ];
+
+            series.forEach(([canvasId, label, key, unit, min]) => {
+                const values = clean
+                    .filter(p => p[key] !== null && Number.isFinite(Number(p[key])))
+                    .map(p => ({ ts: p.ts, value: Number(p[key]) }));
+                if (values.length >= 2) {
+                    buildStationHistoryChart(canvasId, label, values, unit, min);
+                } else {
+                    const canvas = document.getElementById(canvasId);
+                    if (canvas) {
+                        canvas.parentElement.innerHTML = `<div class="station-history-empty">目前沒有足夠的${label}資料</div>`;
+                    }
+                }
+            });
+        }
+
+        function closeStationHistory() {
+            const modal = document.getElementById('stationHistoryModal');
+            if (modal) modal.classList.remove('active');
+            destroyStationHistoryCharts();
+            currentHistoryStationId = null;
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') closeStationHistory();
+        });
+
+        loadStationHistoryCache();
+
         async function fetchAllStationData(isManualRefresh = false, callback = null) {
             const btn = document.getElementById('refreshBtn');
             if (btn && isManualRefresh) btn.classList.add('spinning');
@@ -1198,6 +1502,7 @@
                     }
                 });
                 if (weatherStationData.length > 0) {
+                    recordStationHistorySnapshot();
                     let latestTimeStr = '--';
                     let times = weatherStationData.map(s => {
                         let t = s.ObsTime?.DateTime || s.ObsTime;
@@ -2128,6 +2433,10 @@
                             <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
                             <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
                             <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + ' %' : '--'}</p>
+                            <button onclick="openStationHistory(weatherStationData.find(s => String(s.StationId) === '${String(station.StationId || '').replace(/'/g, "\\'")}'))"
+                                style="width:100%;margin-top:8px;padding:8px 10px;border:0;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;font-weight:700;cursor:pointer;">
+                                <i class="fas fa-chart-line"></i> 查看最近24小時歷史趨勢
+                            </button>
                         </div>
                     `);
                     currentMarkersLayer.addLayer(marker);
