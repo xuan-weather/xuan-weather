@@ -69,6 +69,52 @@
             gap: 4px;
             flex-wrap: wrap;
         }
+
+        .disaster-timeline-topbar {
+            flex: 1.45;
+            min-width: 300px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.42);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            overflow: hidden;
+        }
+        .disaster-timeline-topbar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .disaster-timeline-topbar-title {
+            font-size: 12px;
+            font-weight: 750;
+            color: #f59e0b;
+            white-space: nowrap;
+        }
+        .disaster-timeline-topbar-list {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            min-height: 24px;
+            align-items: center;
+        }
+        .disaster-timeline-topbar-list .disaster-timeline-item {
+            flex: 0 0 220px;
+            min-width: 220px;
+            padding: 5px 8px;
+            border-radius: 8px;
+            background: rgba(30, 41, 59, 0.5);
+            border-left: 2px solid currentColor;
+        }
+        .disaster-timeline-topbar-list .disaster-timeline-dot { display: none; }
+        .disaster-timeline-topbar-list .disaster-timeline-time { font-size: 9px; }
+        .disaster-timeline-topbar-list .disaster-timeline-name { font-size: 11px; }
+        .disaster-timeline-topbar-list .disaster-timeline-desc { font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        @media (max-width: 700px) {
+            .disaster-timeline-topbar { min-width: 100%; order: 10; }
+        }
         .tab-btn {
             flex: 1;
             padding: 10px 6px;
@@ -560,6 +606,10 @@
             .station-history-card { padding: 12px; }
         }
 
+
+        .disaster-timeline-widget{margin-top:16px;background:linear-gradient(135deg,rgba(15,23,42,.72),rgba(30,41,59,.58));border:1px solid rgba(148,163,184,.22);border-radius:16px;padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+        .disaster-timeline-header{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(148,163,184,.16);padding-bottom:10px;margin-bottom:10px}.disaster-timeline-title{font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px}.disaster-timeline-title i{color:#f59e0b}.disaster-timeline-list{position:relative;margin-left:8px;padding-left:20px}.disaster-timeline-list:before{content:"";position:absolute;left:4px;top:7px;bottom:7px;width:2px;background:rgba(148,163,184,.22);border-radius:2px}.disaster-timeline-item{position:relative;padding:0 0 12px 10px}.disaster-timeline-item:last-child{padding-bottom:2px}.disaster-timeline-dot{position:absolute;left:-20px;top:4px;width:10px;height:10px;border-radius:50%;border:2px solid var(--bg-card,#0f172a);box-shadow:0 0 0 2px currentColor}.disaster-timeline-time{font-size:11px;color:var(--text-muted);font-variant-numeric:tabular-nums}.disaster-timeline-name{font-size:13px;font-weight:750;margin-top:2px}.disaster-timeline-desc{font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.4}.disaster-timeline-empty{padding:12px;border-radius:10px;background:rgba(16,185,129,.08);color:#34d399;font-size:12px}
+
 </style>
 </head>
 <body>
@@ -568,6 +618,15 @@
             <button id="tabDashboard" class="tab-btn active" onclick="switchMainPage('dashboard')">
                 <i class="fas fa-chart-line"></i> 觀測儀表板
             </button>
+            <div class="disaster-timeline-topbar" id="disasterTimelineWidget">
+                <div class="disaster-timeline-topbar-header">
+                    <div class="disaster-timeline-topbar-title"><i class="fas fa-timeline"></i> 防災事件時間軸</div>
+                    <div id="disasterTimelineStatus" style="font-size:10px;color:var(--text-muted);">即時同步</div>
+                </div>
+                <div id="disasterTimelineList" class="disaster-timeline-topbar-list">
+                    <div class="my-location-status"><i class="fas fa-spinner fa-spin"></i> 正在整理最新防災事件...</div>
+                </div>
+            </div>
             <button id="tabMap" class="tab-btn" onclick="switchMainPage('map')">
                 <i class="fas fa-map-marked-alt"></i> 全台地圖
             </button>
@@ -615,6 +674,7 @@
                 </div>
             </div>
             
+
             <div class="my-location-widget">
                 <div class="my-location-header">
                     <div class="my-location-title">
@@ -853,6 +913,7 @@
         let forecastMaxTData = {};
         let earthquakeData = [];
         let typhoonData = [];
+        let weatherWarnings = [];
         let cityStationMapping = {};
         let currentStationType = 'normal';
         let currentRankingTab = 'rain';
@@ -892,6 +953,7 @@
             try {
                 const res = await fetch(warningUrl, { cache: 'no-store' }).then(r => r.json()).catch(() => null);
                 const hazards = res?.records?.hazardNotice || res?.records?.record || [];
+                weatherWarnings = Array.isArray(hazards) ? hazards : [];
                 
                 let html = '';
                 let activeCount = 0;
@@ -941,8 +1003,11 @@
                         </div>
                     `;
                 }
+                renderDisasterTimeline();
             } catch (err) {
                 console.error("警特報載入錯誤:", err);
+                weatherWarnings = [];
+                renderDisasterTimeline();
                 if (countTag) countTag.innerText = `狀態正常`;
                 container.innerHTML = `
                     <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px; font-size: 13px; color: #34d399; display: flex; align-items: center; gap: 8px;">
@@ -1731,6 +1796,48 @@
             renderCurrentStationData();
         }
         
+        function renderDisasterTimeline() {
+            const list = document.getElementById('disasterTimelineList');
+            const status = document.getElementById('disasterTimelineStatus');
+            if (!list) return;
+            const events = [];
+            const pushEvent = (type, title, desc, time, color, priority=2) => {
+                const d = time ? new Date(time) : null;
+                const ts = d && !isNaN(d.getTime()) ? d.getTime() : 0;
+                events.push({type,title,desc,time:d,ts,color,priority});
+            };
+            (weatherWarnings || []).forEach((w) => {
+                const info = w.HazardWeather || w.Hazards || w.Info || {};
+                const title = info.Info?.Phenomena || info.Phenomena || w.title || w.Title || '氣象特報';
+                const desc = w.Significance || w.Description || w.text || info.Significance || '';
+                const time = w.StartTime || w.IssueTime || w.UpdateTime || w.Time || '';
+                pushEvent('warning','⚠️ '+title,desc,time,'#ef4444',1);
+            });
+            (earthquakeData || []).slice(0,8).forEach((eq) => {
+                const info=eq.EarthquakeInfo||{}; const mag=info.EarthquakeMagnitude?.MagnitudeValue ?? '--';
+                const loc=info.Epicenter?.Location || '未知震央';
+                pushEvent('earthquake','🚨 地震速報／地震報告',`M${mag}｜${loc}`,info.OriginTime,'#f59e0b',1);
+            });
+            (typhoonData || []).forEach((t) => {
+                const name=t.TyphoonName || t.name || '未命名颱風';
+                const desc=t.Description || t.warningMessage || '颱風資訊更新';
+                const time=t.IssueTime || t.UpdateTime || t.Time || '';
+                pushEvent('typhoon','🌀 '+name,desc,time,'#a855f7',1);
+            });
+            events.sort((a,b)=>b.ts-a.ts || a.priority-b.priority);
+            const latest=events.slice(0,10);
+            if(!latest.length){
+                list.innerHTML='<div class="disaster-timeline-empty"><i class="fas fa-shield-alt"></i> 目前沒有可顯示的防災事件</div>';
+                if(status) status.textContent='目前無事件';
+                return;
+            }
+            list.innerHTML=latest.map(e=>{
+                const time=e.time && !isNaN(e.time.getTime()) ? e.time.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '時間待確認';
+                return `<div class="disaster-timeline-item"><span class="disaster-timeline-dot" style="color:${e.color};background:${e.color};"></span><div class="disaster-timeline-time">${time}</div><div class="disaster-timeline-name">${e.title}</div><div class="disaster-timeline-desc">${e.desc || '官方資料已更新'}</div></div>`;
+            }).join('');
+            if(status) status.textContent=`最近 ${latest.length} 筆事件`;
+        }
+
         async function fetchEarthquakeData(isManualRefresh = false) {
             const btn = document.getElementById('refreshQuakeBtn');
             if (btn && isManualRefresh) btn.classList.add('spinning');
@@ -1782,6 +1889,7 @@
                 } else {
                     container.innerHTML = `<div class="my-location-status">目前無地震報告</div>`;
                 }
+                renderDisasterTimeline();
             } catch (err) {
                 console.error("地震資料錯誤:", err);
                 if (earthquakeData.length === 0) {
@@ -1832,8 +1940,10 @@
                         </div>
                     `;
                 }
+                renderDisasterTimeline();
             } catch (err) {
                 console.error("颱風資料錯誤:", err);
+                renderDisasterTimeline();
                 container.innerHTML = `
                     <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 14px 16px; font-size: 13px; color: #34d399; display: flex; align-items: center; gap: 10px;">
                         <i class="fas fa-shield-alt" style="font-size: 18px;"></i> 
