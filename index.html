@@ -980,6 +980,7 @@
         let weatherStationData = [];
         // 即時排行榜專用：使用 CWA O-A0003-001 10 分鐘綜觀資料，對應氣象署「現在」排行
         let realtimeRankingStationData = [];
+        let cwaRainfallRankingData = [];
         let forecastPopData = {};
         let forecastWxData = {};
         let forecastMinTData = {};
@@ -1615,18 +1616,23 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             const nonce = Date.now();
             const url1 = `https://mingxuan.904037.xyz/api/v1/rest/datastore/O-A0001-001?_=${nonce}`;
             const url2 = `https://mingxuan.904037.xyz/api/v1/rest/datastore/O-A0003-001?_=${nonce}`;
+            const urlRain = `https://mingxuan.904037.xyz/api/v1/rest/datastore/O-A0002-001?_=${nonce}`;
             const urlPop = `https://mingxuan.904037.xyz/api/v1/rest/datastore/F-C0032-001?_=${nonce}`;
             try {
-                const [res1, res2, resPop] = await Promise.all([
+                const [res1, res2, resRain, resPop] = await Promise.all([
                     fetch(url1, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Station: [] } })),
                     fetch(url2, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Station: [] } })),
+                    fetch(urlRain, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Station: [] } })),
                     fetch(urlPop, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { dataset: { location: [] } } }))
                 ]);
                 const list1 = res1.records?.Station || [];
                 const list2 = res2.records?.Station || [];
+                const listRain = resRain.records?.Station || [];
                 // O-A0003-001 是 10 分鐘綜觀觀測，氣象署「現在」高溫排行榜使用這類最新觀測。
-                // 即時排行榜獨立使用 list2，不再被 O-A0001-001 的逐時資料覆蓋。
+                // 溫度／風速／陣風即時排行榜獨立使用 O-A0003-001，不被 O-A0001-001 的逐時資料覆蓋。
                 realtimeRankingStationData = list2.filter(station => station && station.StationId);
+                // O-A0002-001 是中央氣象署專用雨量觀測資料集，雨量排行榜獨立使用此來源。
+                cwaRainfallRankingData = listRain.filter(station => station && station.StationId);
                     // 地圖即時測站統一以 CWA O-A0003-001（10分鐘綜觀觀測）為主。
                 // O-A0001-001 僅作為缺少 O-A0003 座標/資料時的後備來源，不覆蓋 O-A0003。
                 const realtimeById = new Map();
@@ -1778,6 +1784,14 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             return { lat, lon };
         }
 
+        function parseCwaRainfallStation(station) {
+            const rainfall = station?.RainfallElement || {};
+            const now = rainfall.Now || rainfall.NOW || {};
+            const raw = now.Precipitation ?? station?.WeatherElement?.Now?.Precipitation;
+            const value = parseFloat(raw);
+            return Number.isFinite(value) && value >= 0 ? value : NaN;
+        }
+
         function renderQuickRankingCards() {
             const container = document.getElementById('quickRankingCards');
             if (!container) return;
@@ -1807,7 +1821,18 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
 
             const highestTemp = list.filter(x => Number.isFinite(x.temp)).sort((a,b) => b.temp - a.temp)[0];
             const lowestTemp = list.filter(x => Number.isFinite(x.temp)).sort((a,b) => a.temp - b.temp)[0];
-            const maxRain = list.filter(x => Number.isFinite(x.rain) && x.rain >= 0).sort((a,b) => b.rain - a.rain)[0];
+            const rainRankingList = (Array.isArray(cwaRainfallRankingData) ? cwaRainfallRankingData : []).map(station => {
+                const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
+                const town = station.GeoInfo?.TownName || '';
+                return {
+                    stationId: station.StationId,
+                    stationName: station.StationName || '--',
+                    county,
+                    town,
+                    rain: parseCwaRainfallStation(station)
+                };
+            });
+            const maxRain = rainRankingList.filter(x => Number.isFinite(x.rain) && x.rain >= 0).sort((a,b) => b.rain - a.rain)[0];
             const maxWind = list.filter(x => Number.isFinite(x.windSpeed) && x.windSpeed >= 0).sort((a,b) => b.windSpeed - a.windSpeed)[0];
             const maxGust = list.filter(x => Number.isFinite(x.windGust) && x.windGust >= 0).sort((a,b) => b.windGust - a.windGust)[0];
 
@@ -1880,11 +1905,15 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
         function renderRankings() {
             const container = document.getElementById('rankingCardsContainer');
             if (!container || weatherStationData.length === 0) return;
-            const rankingSource = (Array.isArray(realtimeRankingStationData) && realtimeRankingStationData.length > 0)
-                ? realtimeRankingStationData
-                : weatherStationData;
+            const rankingSource = currentRankingTab === 'rain'
+                ? ((Array.isArray(cwaRainfallRankingData) && cwaRainfallRankingData.length > 0) ? cwaRainfallRankingData : [])
+                : ((Array.isArray(realtimeRankingStationData) && realtimeRankingStationData.length > 0)
+                    ? realtimeRankingStationData
+                    : weatherStationData);
             let parsedList = rankingSource.map(station => {
-                const data = parseStationElement(station);
+                const data = currentRankingTab === 'rain'
+                    ? { temp: NaN, rain: parseCwaRainfallStation(station), elevation: 0, windSpeed: NaN, windGust: NaN }
+                    : parseStationElement(station);
                 const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
                 const town = station.GeoInfo?.TownName || '';
                 return {
