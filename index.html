@@ -273,6 +273,96 @@
         .ranking-section-box {
             margin-bottom: 24px;
         }
+        .quick-ranking-section {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .quick-ranking-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-color);
+            margin-bottom: 12px;
+        }
+        .quick-ranking-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .quick-ranking-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 13px 12px;
+            min-height: 128px;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+        .quick-ranking-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+        }
+        .quick-ranking-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .quick-ranking-value {
+            font-size: 22px;
+            line-height: 1.15;
+            font-weight: 900;
+            letter-spacing: -0.4px;
+            margin-top: 8px;
+        }
+        .quick-ranking-unit {
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 2px;
+        }
+        .quick-ranking-station {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 5px;
+        }
+        .quick-ranking-location {
+            font-size: 10px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+        .quick-ranking-jump {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            font-size: 10px;
+            color: #38bdf8;
+            opacity: 0.9;
+        }
+        @media (max-width: 760px) {
+            .quick-ranking-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .quick-ranking-card {
+                min-height: 120px;
+            }
+        }
         .ranking-cards-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -732,6 +822,17 @@
                     <div class="info-card-item" style="grid-column: span 2;">
                         <span>🌧️日累積雨量</span>
                         <b id="liveRain" style="color: #38bdf8;">-- mm</b>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-ranking-section">
+                <div class="quick-ranking-title">
+                    <i class="fas fa-ranking-star" style="color: #f59e0b;"></i> 台灣即時極值
+                </div>
+                <div id="quickRankingCards" class="quick-ranking-grid">
+                    <div class="my-location-status" style="grid-column: 1 / -1;">
+                        <i class="fas fa-spinner fa-spin"></i> 正在計算全台即時極值...
                     </div>
                 </div>
             </div>
@@ -1580,6 +1681,7 @@
                     } else {
                         renderCurrentStationData();
                     }
+                    renderQuickRankingCards();
                     renderRankings();
                     renderCountyForecastGrid();
                     renderFavoritesSection();
@@ -1643,6 +1745,112 @@
             container.innerHTML = html;
         }
         
+        function escapeQuickRankingText(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
+        function getStationLatLon(station) {
+            const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
+            const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
+            return { lat, lon };
+        }
+
+        function renderQuickRankingCards() {
+            const container = document.getElementById('quickRankingCards');
+            if (!container) return;
+            if (!Array.isArray(weatherStationData) || weatherStationData.length === 0) {
+                container.innerHTML = `<div class="my-location-status" style="grid-column: 1 / -1;">目前沒有可用的測站資料</div>`;
+                return;
+            }
+
+            const list = weatherStationData.map(station => {
+                const data = parseStationElement(station);
+                const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
+                const town = station.GeoInfo?.TownName || '';
+                return {
+                    stationId: station.StationId,
+                    stationName: station.StationName || '--',
+                    county,
+                    town,
+                    temp: data.temp,
+                    rain: data.rain,
+                    windSpeed: data.windSpeed,
+                    windGust: data.windGust
+                };
+            });
+
+            const highestTemp = list.filter(x => Number.isFinite(x.temp)).sort((a,b) => b.temp - a.temp)[0];
+            const lowestTemp = list.filter(x => Number.isFinite(x.temp)).sort((a,b) => a.temp - b.temp)[0];
+            const maxRain = list.filter(x => Number.isFinite(x.rain) && x.rain >= 0).sort((a,b) => b.rain - a.rain)[0];
+            const maxWind = list.filter(x => Number.isFinite(x.windSpeed) && x.windSpeed >= 0).sort((a,b) => b.windSpeed - a.windSpeed)[0];
+            const maxGust = list.filter(x => Number.isFinite(x.windGust) && x.windGust >= 0).sort((a,b) => b.windGust - a.windGust)[0];
+
+            const cards = [
+                { icon: '🌡️', label: '目前最高溫', item: highestTemp, value: x => `${x.temp.toFixed(1)}<span class="quick-ranking-unit">°C</span>`, color: '#f59e0b' },
+                { icon: '❄️', label: '目前最低溫', item: lowestTemp, value: x => `${x.temp.toFixed(1)}<span class="quick-ranking-unit">°C</span>`, color: '#38bdf8' },
+                { icon: '🌧️', label: '目前雨量最大', item: maxRain, value: x => `${x.rain.toFixed(1)}<span class="quick-ranking-unit">mm</span>`, color: '#38bdf8' },
+                { icon: '💨', label: '目前風速最大', item: maxWind, value: x => `${x.windSpeed.toFixed(1)}<span class="quick-ranking-unit">m/s</span>`, color: '#22c55e' },
+                { icon: '🌪️', label: '目前陣風最大', item: maxGust, value: x => `${x.windGust.toFixed(1)}<span class="quick-ranking-unit">m/s</span>`, color: '#a855f7' }
+            ];
+
+            container.innerHTML = cards.map(card => {
+                if (!card.item) {
+                    return `<div class="quick-ranking-card" style="cursor: default; opacity: .7;">
+                        <div class="quick-ranking-label">${card.icon} ${card.label}</div>
+                        <div class="quick-ranking-value" style="color:${card.color};">--</div>
+                        <div class="quick-ranking-station">目前無資料</div>
+                    </div>`;
+                }
+                const item = card.item;
+                const stationLabel = escapeQuickRankingText(item.stationName);
+                const locationLabel = escapeQuickRankingText(`${item.county}${item.town}`);
+                return `<div class="quick-ranking-card" onclick="jumpToQuickRankingStation('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊後前往地圖並定位此測站">
+                    <div>
+                        <div class="quick-ranking-label">${card.icon} ${card.label}</div>
+                        <div class="quick-ranking-value" style="color:${card.color};">${card.value(item)}</div>
+                        <div class="quick-ranking-station">${stationLabel}</div>
+                        <div class="quick-ranking-location">${locationLabel}</div>
+                    </div>
+                    <div class="quick-ranking-jump"><i class="fas fa-location-arrow"></i> 地圖定位</div>
+                </div>`;
+            }).join('');
+        }
+
+        function jumpToQuickRankingStation(stationId) {
+            const targetStation = weatherStationData.find(s => String(s.StationId) === String(stationId));
+            if (!targetStation) return;
+
+            // 先切換到全台地圖，再把地圖中心移到該測站。
+            switchMainPage('map');
+            const { lat, lon } = getStationLatLon(targetStation);
+            if (isNaN(lat) || isNaN(lon)) return;
+
+            const finishJump = () => {
+                if (!map) return;
+                map.invalidateSize();
+                renderMapMarkers();
+                map.setView([lat, lon], Math.max(map.getZoom(), 11), { animate: true });
+
+                // 找到對應測站的既有圓點並直接打開原本的測站資訊 popup。
+                let matchedMarker = null;
+                currentMarkersLayer.eachLayer(layer => {
+                    const pos = layer.getLatLng ? layer.getLatLng() : null;
+                    if (pos && Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lon) < 0.0001) {
+                        matchedMarker = layer;
+                    }
+                });
+                if (matchedMarker) {
+                    setTimeout(() => matchedMarker.openPopup(), 250);
+                }
+            };
+
+            if (!mapInitialized) {
+                setTimeout(finishJump, 350);
+            } else {
+                setTimeout(finishJump, 120);
+            }
+        }
+
         function renderRankings() {
             const container = document.getElementById('rankingCardsContainer');
             if (!container || weatherStationData.length === 0) return;
