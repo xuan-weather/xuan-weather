@@ -2308,26 +2308,17 @@
             return '#f97316';
         }
         
+        // 風速／陣風採用「風險導向」色階：低風險→注意→強風→高風險→極端
+        // 保留原本蒲福風級門檻，只調整顏色分組，讓顏色更容易直接判斷風險。
         function getWindSpeedColor(val) {
             if (isNaN(val) || val < 0) return '#94a3b8';
-            if (val >= 56.1) return '#312e81';
-            if (val >= 51.0) return '#4f46e5';
-            if (val >= 46.2) return '#db2777';
-            if (val >= 41.5) return '#ec4899';
-            if (val >= 37.0) return '#9333ea';
-            if (val >= 32.7) return '#a855f7';
-            if (val >= 28.5) return '#dc2626';
-            if (val >= 24.5) return '#ef4444';
-            if (val >= 20.8) return '#ea580c';
-            if (val >= 17.2) return '#f97316';
-            if (val >= 13.9) return '#eab308';
-            if (val >= 10.8) return '#facc15';
-            if (val >= 8.0) return '#15803d';
-            if (val >= 5.5) return '#22c55e';
-            if (val >= 3.4) return '#0284c7';
-            if (val >= 1.6) return '#38bdf8';
-            if (val >= 0.3) return '#3cbd5e';
-            return '#94a3b8';
+            if (val >= 32.7) return '#7e22ce'; // 12級以上：極端
+            if (val >= 24.5) return '#dc2626'; // 10–11級：高風險
+            if (val >= 17.2) return '#f97316'; // 8–9級：強風
+            if (val >= 10.8) return '#eab308'; // 6–7級：注意
+            if (val >= 5.5) return '#22c55e';  // 4–5級：低風險／有感風
+            if (val >= 0.3) return '#38bdf8';  // 1–3級：微風
+            return '#94a3b8';                   // 0級：無風
         }
         
         function renderMapMarkers() {
@@ -2354,9 +2345,10 @@
                     colorBarEl.style.background = 'linear-gradient(to top, #C0C0C0 0%, #99FFFF 6.25%, #00CCFF 12.5%, #0066FF 18.75%, #0000CC 25%, #00CC00 31.25%, #009900 37.5%, #FFFF00 43.75%, #FFCC00 50%, #FF9900 56.25%, #FF6600 62.5%, #FF0000 68.75%, #CC0000 75%, #990000 81.25%, #990099 87.5%, #660066 93.75%, #FF66FF 100%)';
                     labelsListEl.innerHTML = '<span>300+</span><span>200</span><span>150</span><span>130</span><span>110</span><span>90</span><span>70</span><span>60</span><span>50</span><span>40</span><span>30</span><span>20</span><span>15</span><span>10</span><span>6</span><span>2</span><span>1</span><span>0</span>';
                 } else if (currentMapMode === 'wind' || currentMapMode === 'windGust') {
-                    titleEl.innerText = currentMapMode === 'wind' ? '風速 (m/s)' : '陣風 (m/s)';
-                    colorBarEl.style.background = 'linear-gradient(to top, #94a3b8, #3cbd5e, #38bdf8, #0284c7, #22c55e, #15803d, #facc15, #eab308, #f97316, #ea580c, #ef4444, #dc2626, #a855f7, #9333ea, #ec4899, #db2777, #4f46e5, #312e81)';
-                    labelsListEl.innerHTML = '<span>56.1+ 17+級</span><span>51.0 16級</span><span>46.2 15級</span><span>41.5 14級</span><span>37.0 13級</span><span>32.7 12級</span><span>28.5 11級</span><span>24.5 10級</span><span>20.8 9級</span><span>17.2 8級</span><span>13.9 7級</span><span>10.8 6級</span><span>8.0 5級</span><span>5.5 4級</span><span>3.4 3級</span><span>1.6 2級</span><span>0.3 1級</span><span>&lt;0.3 0級</span>';
+                    titleEl.innerText = currentMapMode === 'wind' ? '風速（m/s）' : '陣風（m/s）';
+                    // 色階依風險分組：藍＝微風、綠＝低風險、黃＝注意、橘＝強風、紅＝高風險、紫＝極端
+                    colorBarEl.style.background = 'linear-gradient(to top, #94a3b8 0%, #38bdf8 2%, #38bdf8 18%, #22c55e 19%, #22c55e 31%, #eab308 32%, #eab308 43%, #f97316 44%, #f97316 55%, #dc2626 56%, #dc2626 72%, #7e22ce 73%, #7e22ce 100%)';
+                    labelsListEl.innerHTML = '<span>56.1+　17級以上｜極端強風</span><span>37.0–56.0　13–16級｜暴風</span><span>28.5–36.9　11–12級｜狂風</span><span>20.8–28.4　9–10級｜烈風</span><span>13.9–20.7　7–8級｜強風</span><span>5.5–13.8　4–6級｜和風</span><span>0.3–5.4　1–3級｜微風</span><span>&lt;0.3　0級｜無風</span>';
                 }
             }
             weatherStationData.forEach(station => {
