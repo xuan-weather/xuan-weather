@@ -355,26 +355,6 @@
             color: #38bdf8;
             opacity: 0.9;
         }
-        .ranking-card-jump {
-            margin-top: 8px;
-            margin-left: auto;
-            width: fit-content;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            padding: 5px 9px;
-            border-radius: 8px;
-            border: 1px solid rgba(56, 189, 248, 0.28);
-            background: rgba(56, 189, 248, 0.08);
-            color: #38bdf8;
-            font-size: 11px;
-            font-weight: 700;
-            pointer-events: none;
-        }
-        .ranking-card {
-            position: relative;
-        }
-        
         @media (max-width: 760px) {
             .quick-ranking-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1900,7 +1880,7 @@
                 let html = '';
                 top10.forEach((item, index) => {
                     html += `
-                        <div class="ranking-card" onclick="jumpToQuickRankingStation('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊後前往全台地圖並定位此測站">
+                        <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
                                 <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
@@ -1909,7 +1889,6 @@
                             <div class="ranking-sub-info">
                                 <i class="fas fa-cloud-rain"></i> 地點：${item.county}${item.town}
                             </div>
-                            <div class="ranking-card-jump"><i class="fas fa-location-arrow"></i> 地圖定位</div>
                         </div>
                     `;
                 });
@@ -1925,7 +1904,7 @@
                 let html = '';
                 top10.forEach((item, index) => {
                     html += `
-                        <div class="ranking-card" onclick="jumpToQuickRankingStation('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊後前往全台地圖並定位此測站">
+                        <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
                                 <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
@@ -1934,7 +1913,6 @@
                             <div class="ranking-sub-info" style="color: #38bdf8;">
                                 <i class="fas fa-map-marker-alt"></i> 地點：${item.county}${item.town}
                             </div>
-                            <div class="ranking-card-jump"><i class="fas fa-location-arrow"></i> 地圖定位</div>
                         </div>
                     `;
                 });
@@ -1958,7 +1936,7 @@
                 let html = '';
                 top10.forEach((item, index) => {
                     html += `
-                        <div class="ranking-card" onclick="jumpToQuickRankingStation('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊後前往全台地圖並定位此測站">
+                        <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
                                 <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
@@ -1967,7 +1945,6 @@
                             <div class="ranking-sub-info" style="color: #34d399;">
                                 <i class="fas fa-snowflake"></i> 地點：${item.county}${item.town}
                             </div>
-                            <div class="ranking-card-jump"><i class="fas fa-location-arrow"></i> 地圖定位</div>
                         </div>
                     `;
                 });
@@ -1983,7 +1960,7 @@
                 let html = '';
                 top10.forEach((item, index) => {
                     html += `
-                        <div class="ranking-card" onclick="jumpToQuickRankingStation('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊後前往全台地圖並定位此測站">
+                        <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
                                 <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
@@ -1992,7 +1969,6 @@
                             <div class="ranking-sub-info" style="color: #a855f7;">
                                 <i class="fas fa-wind"></i> 地點：${item.county}${item.town}
                             </div>
-                            <div class="ranking-card-jump"><i class="fas fa-location-arrow"></i> 地圖定位</div>
                         </div>
                     `;
                 });
