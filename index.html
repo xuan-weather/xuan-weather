@@ -1324,9 +1324,22 @@
             const dataMin = numericValues.length ? Math.min(...numericValues) : 0;
             const dataMax = numericValues.length ? Math.max(...numericValues) : 0;
             const isTemperature = unit.includes('°C');
-            const isIntegerUnit = unit.includes('%');
-            const isZeroBased = unit.includes('mm') || unit.includes('m/s') || isIntegerUnit;
+            const isRain = unit.includes('mm');
+            const isHumidity = unit.includes('%');
+            const isIntegerUnit = isHumidity;
+            const isZeroBased = isRain || unit.includes('m/s');
             const tickDigits = isIntegerUnit ? 0 : (isTemperature ? 1 : 1);
+
+            // 雨量與濕度依實際資料自動縮放；氣溫維持原本刻度設定。
+            let axisMin = isZeroBased ? 0 : suggestedMin;
+            let axisMax;
+            if (isRain) {
+                axisMax = dataMax === 0 ? 1 : Math.max(1, Math.ceil((dataMax * 1.2) * 10) / 10);
+            } else if (isHumidity) {
+                axisMin = Math.max(0, Math.floor((dataMin - 5) / 5) * 5);
+                axisMax = Math.min(100, Math.ceil((dataMax + 5) / 5) * 5);
+                if (axisMax <= axisMin) axisMax = Math.min(100, axisMin + 10);
+            }
 
             const chart = new Chart(canvas.getContext('2d'), {
                 type: 'line',
@@ -1364,8 +1377,9 @@
                             grid: { color: 'rgba(148,163,184,.10)' }
                         },
                         y: {
-                            suggestedMin: isZeroBased ? 0 : suggestedMin,
-                            suggestedMax: (unit.includes('mm') && dataMax === 0) ? 1 : undefined,
+                            min: axisMin,
+                            max: axisMax,
+                            suggestedMin: isTemperature ? suggestedMin : undefined,
                             beginAtZero: isZeroBased,
                             ticks: {
                                 color: '#94a3b8',
