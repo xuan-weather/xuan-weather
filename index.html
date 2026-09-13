@@ -579,6 +579,19 @@
             background: rgba(248, 113, 113, 0.12);
         }
 
+
+        .local-report-cloud-btn {
+            border: 1px solid rgba(59, 130, 246, 0.45);
+            background: rgba(59, 130, 246, 0.10);
+            color: #60a5fa;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .local-report-cloud-btn:hover { background: rgba(59, 130, 246, 0.18); }
+
 </style>
 </head>
 <body>
@@ -905,6 +918,17 @@
             </div>
 
             <div class="section-divider-title local-report-history-title" style="margin-top: 20px;">
+                <div><i class="fas fa-globe-asia"></i> 各地即時天氣回報</div>
+                <button type="button" class="local-report-cloud-btn" onclick="loadCloudWeatherReports()">
+                    <i class="fas fa-sync-alt"></i> 更新
+                </button>
+            </div>
+            <div id="cloudReportStatus" class="local-report-note">雲端回報尚未連線</div>
+            <div id="cloudReportList" class="report-list">
+                <div class="my-location-status">正在載入各地共享回報…</div>
+            </div>
+
+            <div class="section-divider-title" style="margin-top: 20px;">
                 <div><i class="fas fa-clock-rotate-left"></i> 本機最近回報</div>
                 <button type="button" class="local-report-clear-btn" onclick="clearLocalWeatherReports()">
                     <i class="fas fa-trash-alt"></i> 清除全部
@@ -988,6 +1012,81 @@
             }, 30000);
         });
 
+
+        // ===== 各地即時天氣回報：雲端 API =====
+        // 部署後把你的 API 網址填入這裡，例如：https://your-domain.example/api
+        const CLOUD_REPORT_API_BASE = window.CLOUD_REPORT_API_BASE || '';
+
+        async function publishCloudWeatherReport(report) {
+            const status = document.getElementById('cloudReportStatus');
+            if (!CLOUD_REPORT_API_BASE) {
+                if (status) status.innerText = '目前為本機模式；設定雲端 API 後即可讓其他使用者看到回報';
+                return;
+            }
+            try {
+                if (status) status.innerText = '正在發布到雲端…';
+                const payload = {
+                    weather: report.weather,
+                    rain: report.rain,
+                    wind: report.wind,
+                    visibility: report.visibility,
+                    temperature: report.temperature,
+                    stationName: report.stationName,
+                    stationMeta: report.stationMeta,
+                    comment: report.comment || '',
+                    createdAt: report.createdAt
+                };
+                const res = await fetch(`${CLOUD_REPORT_API_BASE}/api/reports`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('cloud upload failed');
+                if (status) status.innerText = '已發布到雲端，其他使用者可以看到';
+                await loadCloudWeatherReports();
+            } catch (e) {
+                if (status) status.innerText = '雲端發布失敗，本機回報仍已保存';
+            }
+        }
+
+        async function loadCloudWeatherReports() {
+            const container = document.getElementById('cloudReportList');
+            const status = document.getElementById('cloudReportStatus');
+            if (!container) return;
+            if (!CLOUD_REPORT_API_BASE) {
+                container.innerHTML = '<div class="my-location-status">尚未設定雲端 API</div>';
+                if (status) status.innerText = '目前為本機模式；設定雲端 API 後即可顯示各地共享回報';
+                return;
+            }
+            try {
+                if (status) status.innerText = '正在取得各地最新回報…';
+                const res = await fetch(`${CLOUD_REPORT_API_BASE}/api/reports?limit=50`, { cache: 'no-store' });
+                if (!res.ok) throw new Error('cloud fetch failed');
+                const reports = await res.json();
+                if (!Array.isArray(reports) || reports.length === 0) {
+                    container.innerHTML = '<div class="my-location-status">目前尚無各地共享回報</div>';
+                } else {
+                    container.innerHTML = reports.map(report => {
+                        const time = new Date(report.createdAt);
+                        const timeText = isNaN(time.getTime()) ? '--' : time.toLocaleString('zh-TW', {hour12:false});
+                        const comment = String(report.comment || '').replace(/[<>]/g,'');
+                        const station = String(report.stationName || '附近測站').replace(/[<>]/g,'');
+                        return `<div class="report-item">
+                            <div class="report-item-top">
+                                <div class="report-item-title">${getWeatherReportIcon(report.weather)} ${String(report.weather||'').replace(/[<>]/g,'')}｜${station}</div>
+                                <div class="report-item-time">${timeText}</div>
+                            </div>
+                            <div class="report-item-meta">🌡️ ${String(report.temperature||'--').replace(/[<>]/g,'')}　🌧️ ${String(report.rain||'').replace(/[<>]/g,'')}　💨 ${String(report.wind||'').replace(/[<>]/g,'')}　👁️ ${String(report.visibility||'').replace(/[<>]/g,'')}</div>
+                            ${comment ? `<div class="report-item-comment">${comment}</div>` : ''}
+                        </div>`;
+                    }).join('');
+                }
+                if (status) status.innerText = `已更新，共 ${Array.isArray(reports) ? reports.length : 0} 筆各地回報`;
+            } catch (e) {
+                container.innerHTML = '<div class="my-location-status">目前無法取得雲端回報</div>';
+                if (status) status.innerText = '雲端連線失敗';
+            }
+        }
 
         function getLocalWeatherReports() {
             try {
@@ -1087,7 +1186,7 @@
             });
         }
 
-        function submitLocalWeatherReport() {
+        async function submitLocalWeatherReport() {
             const stationName = document.getElementById('localReportStationName').innerText;
             const stationMeta = document.getElementById('localReportStationMeta').innerText;
             const temperature = document.getElementById('localReportTemp').innerText;
@@ -1110,6 +1209,9 @@
             saveLocalWeatherReports(reports);
             document.getElementById('localReportComment').value = '';
             renderLocalWeatherReports();
+
+            // 同步發布到雲端；若雲端尚未設定，不影響本機回報。
+            await publishCloudWeatherReport(report);
             const btn = document.getElementById('localReportSubmitBtn');
             const original = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-check"></i> 回報已儲存';
@@ -1386,6 +1488,7 @@
             document.getElementById('localReportPanel').classList.toggle('active', pageId === 'localReport');
             if (pageId === 'localReport') {
                 renderLocalWeatherReports();
+                loadCloudWeatherReports();
                 prepareLocalWeatherReport();
             }
             if (pageId === 'map' && !mapInitialized) {
