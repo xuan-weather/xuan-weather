@@ -1370,7 +1370,15 @@
         // ===== 測站最近 24 小時歷史趨勢 =====
         const STATION_HISTORY_STORAGE_KEY = 'cwa_station_history_v1';
         const STATION_HISTORY_MAX_MS = 24 * 60 * 60 * 1000;
-        const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
+        // CWA_SOURCE_UPDATE_POLICY:
+// 每個欄位沿用其原始 CWA 資料來源的更新頻率，不做全站統一刷新。
+const CWA_SOURCE_UPDATE_POLICY = {
+    "O-A0001-001": "hourly",
+    "O-A0003-001": "10min",
+    "O-A0002-001": "10min"
+};
+
+const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
         let stationHistoryCache = {};
         let stationHistoryCharts = [];
         let currentHistoryStationId = null;
