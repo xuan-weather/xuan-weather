@@ -2423,7 +2423,7 @@
                             <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
                             <p><b>降雨機率：</b>${popForStation} %</p>
                             <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
-                            <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s</p>
+                            <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s（${getWindLevel(data.windSpeed)}）</p>                             <p><b>最大陣風：</b>${data.windGust.toFixed(1)} m/s（${getWindLevel(data.windGust)}）</p>
                             <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + ' %' : '--'}</p>
                             <button onclick="openStationHistory(weatherStationData.find(s => String(s.StationId) === '${String(station.StationId || '').replace(/'/g, "\\'")}'))"
                                 style="width:100%;margin-top:8px;padding:8px 10px;border:0;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;font-weight:700;cursor:pointer;">
