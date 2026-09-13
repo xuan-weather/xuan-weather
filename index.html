@@ -996,31 +996,53 @@
                 document.getElementById('localReportStationMeta').innerText = '請稍後重新整理資料';
                 return;
             }
-            // 優先沿用儀表板目前選取的測站，避免修改地圖與既有測站標記。
-            const selectedId = document.getElementById('stationSelect')?.value;
-            const selectedStation = weatherStationData.find(s => s.StationId === selectedId);
-            if (selectedStation) {
-                setLocalReportFromStation(selectedStation);
-                return;
-            }
+
+            // 在地天氣回報一律以「目前裝置定位」尋找最近測站。
+            // 不使用 stationSelect，避免被預設的基隆七堵區測站帶走。
             if (!navigator.geolocation) {
-                setLocalReportFromStation(weatherStationData[0]);
+                document.getElementById('localReportStationName').innerText = '無法取得目前位置';
+                document.getElementById('localReportStationMeta').innerText = '請開啟瀏覽器的定位權限後，再按「取得最新天氣」';
                 return;
             }
+
+            document.getElementById('localReportStationName').innerText = '正在取得目前位置…';
+            document.getElementById('localReportStationMeta').innerText = '正在根據目前 GPS 位置尋找最近測站';
+
             navigator.geolocation.getCurrentPosition(position => {
-                let closest = weatherStationData[0];
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
+                let closest = null;
                 let minDistance = Infinity;
+
                 weatherStationData.forEach(station => {
                     const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
                     const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
                     if (!isNaN(lat) && !isNaN(lon)) {
-                        const d = calculateDistance(position.coords.latitude, position.coords.longitude, lat, lon);
-                        if (d < minDistance) { minDistance = d; closest = station; }
+                        const d = calculateDistance(userLat, userLon, lat, lon);
+                        if (d < minDistance) {
+                            minDistance = d;
+                            closest = station;
+                        }
                     }
                 });
+
+                if (!closest) {
+                    document.getElementById('localReportStationName').innerText = '找不到附近測站';
+                    document.getElementById('localReportStationMeta').innerText = '目前定位成功，但沒有可比對的測站資料';
+                    return;
+                }
+
                 setLocalReportFromStation(closest);
-                document.getElementById('localReportStationMeta').innerText += `｜距離約 ${minDistance.toFixed(1)} 公里`;
-            }, () => setLocalReportFromStation(weatherStationData[0]), { timeout: 6000, maximumAge: 60000 });
+                document.getElementById('localReportStationMeta').innerText += `｜距離目前位置約 ${minDistance.toFixed(1)} 公里`;
+            }, error => {
+                document.getElementById('localReportStationName').innerText = '無法取得目前位置';
+                const reason = error?.code === 1 ? '請允許此網站使用定位權限' : '請確認手機定位功能已開啟後再試一次';
+                document.getElementById('localReportStationMeta').innerText = reason;
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
         }
 
         function submitLocalWeatherReport() {
