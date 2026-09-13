@@ -472,6 +472,22 @@
             background: rgba(0, 0, 0, 0.1); padding: 10px; border-radius: 12px; font-size: 12px; color: var(--text-muted);
         }
 
+
+        @keyframes hotStationBreathing {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 6px rgba(0,0,0,0.4);
+            }
+            50% {
+                transform: scale(1.45);
+                box-shadow: 0 0 14px rgba(239, 68, 68, 0.95), 0 0 24px rgba(239, 68, 68, 0.55);
+            }
+        }
+        .custom-station-marker.hot-breathing > div {
+            animation: hotStationBreathing 1.5s ease-in-out infinite;
+            transform-origin: center center;
+        }
+
 </style>
 </head>
 <body>
@@ -2088,8 +2104,9 @@
                     }
                     iconHtml += `</div>`;
 
+                    const hotBreathing = currentMapMode === 'temp' && !isNaN(data.temp) && data.temp > 35;
                     const markerIcon = L.divIcon({
-                        className: 'custom-station-marker',
+                        className: hotBreathing ? 'custom-station-marker hot-breathing' : 'custom-station-marker',
                         html: iconHtml,
                         iconSize: [14, 14],
                         iconAnchor: [7, 7]
