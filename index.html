@@ -219,6 +219,76 @@
             transition: border-color 0.2s;
         }
         .select-box:focus { border-color: #38bdf8; }
+
+        /* 在地天氣回報 */
+        .local-report-panel {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(59, 130, 246, 0.08));
+            border: 1px solid rgba(52, 211, 153, 0.25);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .local-report-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .local-report-full { grid-column: 1 / -1; }
+        .local-report-note {
+            color: var(--text-muted);
+            font-size: 12px;
+            line-height: 1.5;
+            margin: 8px 0 14px;
+        }
+        .local-report-current {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .local-report-current-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .local-report-current-icon { font-size: 28px; }
+        .local-report-current-title { font-size: 14px; font-weight: 700; }
+        .local-report-current-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+        .local-report-current-value { font-size: 18px; font-weight: 800; color: #38bdf8; white-space: nowrap; }
+        .local-report-submit {
+            width: 100%;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .local-report-submit:hover { transform: translateY(-1px); opacity: 0.92; }
+        .local-report-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+        .report-list { margin-top: 16px; }
+        .report-item {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        .report-item-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+        .report-item-title { font-size: 13px; font-weight: 700; }
+        .report-item-time { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+        .report-item-meta { font-size: 12px; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+        .report-item-comment { font-size: 12px; color: var(--text-color); margin-top: 6px; line-height: 1.5; }
+        @media (max-width: 520px) {
+            .local-report-grid { grid-template-columns: 1fr; }
+            .local-report-full { grid-column: auto; }
+            .local-report-current { align-items: flex-start; }
+        }
+
         .weather-status-banner {
             background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(59, 130, 246, 0.12));
             border: 1px solid rgba(6, 182, 212, 0.3);
@@ -490,6 +560,9 @@
             <button id="tabTyphoon" class="tab-btn" onclick="switchMainPage('typhoon')">
                  <i class="fas fa-hurricane"></i> 🌀 颱風資訊
             </button>
+            <button id="tabLocalReport" class="tab-btn" onclick="switchMainPage('localReport')">
+                <i class="fas fa-cloud-sun"></i> 在地天氣回報
+            </button>
             <button class="tab-btn" id="themeToggleBtn" onclick="toggleTheme()" title="切換主題" style="flex: 0 0 38px;">
                 <i class="fas fa-moon" id="themeIcon"></i>
             </button>
@@ -516,7 +589,7 @@
             <div class="my-location-widget" id="weatherWarningsWidget" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(15, 23, 42, 0.1)); border-color: rgba(239, 68, 68, 0.25);">
                 <div class="my-location-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
                     <div class="my-location-title" style="color: #ef4444;">
-                        <i class="fas fa-exclamation-triangle"></i> 氣象署即時警特報與防災快訊
+                        <i class="fas fa-exclamation-triangle"></i> 即時警特報與防災快訊
                     </div>
                     <div style="font-size: 12px; color: var(--text-muted);" id="warningCountTag">同步更新中</div>
                 </div>
@@ -705,6 +778,101 @@
             </div>
         </div>
         
+
+        <div id="localReportPanel" class="content-panel modern-dashboard">
+            <div class="header">
+                <div class="header-title">
+                    <i class="fas fa-cloud-sun" style="color: #10b981;"></i>
+                    <h2>在地天氣回報</h2>
+                </div>
+                <div class="header-actions">
+                    <button class="action-btn" onclick="prepareLocalWeatherReport()">
+                        <i class="fas fa-location-crosshairs"></i> 取得最新天氣
+                    </button>
+                </div>
+            </div>
+
+            <div class="local-report-panel">
+                <div class="section-divider-title">
+                    <i class="fas fa-bullhorn"></i> 回報目前所在地天氣
+                </div>
+                <div id="localReportCurrent" class="local-report-current">
+                    <div class="local-report-current-main">
+                        <div class="local-report-current-icon">🌤️</div>
+                        <div>
+                            <div class="local-report-current-title" id="localReportStationName">尚未取得附近測站</div>
+                            <div class="local-report-current-sub" id="localReportStationMeta">可先選擇下方天氣狀況，再送出回報</div>
+                        </div>
+                    </div>
+                    <div class="local-report-current-value" id="localReportTemp">-- °C</div>
+                </div>
+
+                <div class="local-report-note">
+                    系統會優先使用目前已載入的 CWA 測站資料；若瀏覽器允許定位，會自動尋找最近測站。回報內容目前儲存在本機瀏覽器，不會改動全台地圖測站圓點。
+                </div>
+
+                <div class="local-report-grid">
+                    <div class="control-group">
+                        <label for="localReportWeather"><i class="fas fa-cloud"></i> 目前天氣</label>
+                        <select id="localReportWeather" class="select-box">
+                            <option value="晴朗">☀️ 晴朗</option>
+                            <option value="多雲">⛅ 多雲</option>
+                            <option value="陰天">☁️ 陰天</option>
+                            <option value="小雨">🌦️ 小雨</option>
+                            <option value="大雨">🌧️ 大雨</option>
+                            <option value="雷雨">⛈️ 雷雨</option>
+                            <option value="強風">💨 強風</option>
+                            <option value="濃霧">🌫️ 濃霧</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="localReportRain"><i class="fas fa-cloud-rain"></i> 降雨程度</label>
+                        <select id="localReportRain" class="select-box">
+                            <option value="無雨">無雨</option>
+                            <option value="毛毛雨">毛毛雨</option>
+                            <option value="間歇雨">間歇雨</option>
+                            <option value="持續降雨">持續降雨</option>
+                            <option value="豪雨">豪雨</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="localReportWind"><i class="fas fa-wind"></i> 體感風況</label>
+                        <select id="localReportWind" class="select-box">
+                            <option value="無明顯風">無明顯風</option>
+                            <option value="微風">微風</option>
+                            <option value="有風">有風</option>
+                            <option value="強風">強風</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="localReportVisibility"><i class="fas fa-eye"></i> 能見度</label>
+                        <select id="localReportVisibility" class="select-box">
+                            <option value="良好">良好</option>
+                            <option value="普通">普通</option>
+                            <option value="偏低">偏低</option>
+                            <option value="很低">很低</option>
+                        </select>
+                    </div>
+                    <div class="control-group local-report-full">
+                        <label for="localReportComment"><i class="fas fa-comment-dots"></i> 補充說明（選填）</label>
+                        <textarea id="localReportComment" class="select-box" rows="3" maxlength="200" placeholder="例如：目前有短暫陣雨、路面積水、風勢明顯增強……"></textarea>
+                    </div>
+                    <div class="local-report-full">
+                        <button id="localReportSubmitBtn" class="local-report-submit" onclick="submitLocalWeatherReport()">
+                            <i class="fas fa-paper-plane"></i> 發布在地天氣回報
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider-title" style="margin-top: 20px;">
+                <i class="fas fa-clock-rotate-left"></i> 本機最近回報
+            </div>
+            <div id="localReportList" class="report-list">
+                <div class="my-location-status">尚無回報紀錄</div>
+            </div>
+        </div>
+
         <div id="typhoonPanel" class="content-panel modern-dashboard">
             <div class="header">
                 <div class="header-title">
@@ -770,12 +938,144 @@
             });
             fetchEarthquakeData(false);
             fetchTyphoonData(false);
+            renderLocalWeatherReports();
             fetchWeatherWarnings();
             setInterval(() => {
                 fetchEarthquakeData(false);
                 fetchWeatherWarnings();
             }, 30000);
         });
+
+
+        function getLocalWeatherReports() {
+            try {
+                const reports = JSON.parse(localStorage.getItem('cwa_local_weather_reports') || '[]');
+                return Array.isArray(reports) ? reports : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveLocalWeatherReports(reports) {
+            localStorage.setItem('cwa_local_weather_reports', JSON.stringify(reports.slice(0, 20)));
+        }
+
+        function getWeatherReportIcon(weather) {
+            const icons = { '晴朗':'☀️', '多雲':'⛅', '陰天':'☁️', '小雨':'🌦️', '大雨':'🌧️', '雷雨':'⛈️', '強風':'💨', '濃霧':'🌫️' };
+            return icons[weather] || '🌤️';
+        }
+
+        document.addEventListener('change', event => {
+            if (event.target && event.target.id === 'localReportWeather') {
+                const iconEl = document.querySelector('#localReportCurrent .local-report-current-icon');
+                if (iconEl) iconEl.innerText = getWeatherReportIcon(event.target.value);
+            }
+        });
+
+        function setLocalReportFromStation(station) {
+            if (!station) return;
+            const data = parseStationElement(station);
+            const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
+            const town = station.GeoInfo?.TownName || '';
+            const wxInfo = forecastWxData[town] || forecastWxData[county] || { text: '晴朗', code: '1' };
+            const wxText = wxInfo.text || '晴朗';
+            const weatherSelect = document.getElementById('localReportWeather');
+            const options = Array.from(weatherSelect.options);
+            const matched = options.find(o => wxText.includes(o.value) || o.value.includes(wxText));
+            if (matched) weatherSelect.value = matched.value;
+            const iconEl = document.querySelector('#localReportCurrent .local-report-current-icon');
+            if (iconEl) iconEl.innerText = getWeatherReportIcon(weatherSelect.value);
+            document.getElementById('localReportStationName').innerText = station.StationName || '附近測站';
+            document.getElementById('localReportStationMeta').innerText = `${county}${town ? ' ' + town : ''}｜觀測時間：${formatObsTime(data.obsTime)}`;
+            document.getElementById('localReportTemp').innerText = !isNaN(data.temp) ? `${data.temp.toFixed(1)} °C` : '-- °C';
+        }
+
+        function prepareLocalWeatherReport() {
+            if (!weatherStationData || weatherStationData.length === 0) {
+                document.getElementById('localReportStationName').innerText = '尚無測站資料';
+                document.getElementById('localReportStationMeta').innerText = '請稍後重新整理資料';
+                return;
+            }
+            // 優先沿用儀表板目前選取的測站，避免修改地圖與既有測站標記。
+            const selectedId = document.getElementById('stationSelect')?.value;
+            const selectedStation = weatherStationData.find(s => s.StationId === selectedId);
+            if (selectedStation) {
+                setLocalReportFromStation(selectedStation);
+                return;
+            }
+            if (!navigator.geolocation) {
+                setLocalReportFromStation(weatherStationData[0]);
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(position => {
+                let closest = weatherStationData[0];
+                let minDistance = Infinity;
+                weatherStationData.forEach(station => {
+                    const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
+                    const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        const d = calculateDistance(position.coords.latitude, position.coords.longitude, lat, lon);
+                        if (d < minDistance) { minDistance = d; closest = station; }
+                    }
+                });
+                setLocalReportFromStation(closest);
+                document.getElementById('localReportStationMeta').innerText += `｜距離約 ${minDistance.toFixed(1)} 公里`;
+            }, () => setLocalReportFromStation(weatherStationData[0]), { timeout: 6000, maximumAge: 60000 });
+        }
+
+        function submitLocalWeatherReport() {
+            const stationName = document.getElementById('localReportStationName').innerText;
+            const stationMeta = document.getElementById('localReportStationMeta').innerText;
+            const temperature = document.getElementById('localReportTemp').innerText;
+            const weather = document.getElementById('localReportWeather').value;
+            const rain = document.getElementById('localReportRain').value;
+            const wind = document.getElementById('localReportWind').value;
+            const visibility = document.getElementById('localReportVisibility').value;
+            const comment = document.getElementById('localReportComment').value.trim();
+            if (!stationName || stationName.includes('尚未') || stationName.includes('尚無')) {
+                alert('目前還沒有可用的測站資料，請先重新整理天氣資料。');
+                return;
+            }
+            const report = {
+                id: Date.now(),
+                stationName, stationMeta, temperature, weather, rain, wind, visibility, comment,
+                createdAt: new Date().toISOString()
+            };
+            const reports = getLocalWeatherReports();
+            reports.unshift(report);
+            saveLocalWeatherReports(reports);
+            document.getElementById('localReportComment').value = '';
+            renderLocalWeatherReports();
+            const btn = document.getElementById('localReportSubmitBtn');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> 回報已儲存';
+            btn.disabled = true;
+            setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 1400);
+        }
+
+        function renderLocalWeatherReports() {
+            const container = document.getElementById('localReportList');
+            if (!container) return;
+            const reports = getLocalWeatherReports();
+            if (reports.length === 0) {
+                container.innerHTML = '<div class="my-location-status">尚無回報紀錄，發布第一筆在地天氣吧！</div>';
+                return;
+            }
+            container.innerHTML = reports.slice(0, 10).map(report => {
+                const time = new Date(report.createdAt);
+                const timeText = isNaN(time.getTime()) ? '--' : time.toLocaleString('zh-TW', { hour12: false });
+                return `
+                    <div class="report-item">
+                        <div class="report-item-top">
+                            <div class="report-item-title">${getWeatherReportIcon(report.weather)} ${report.weather}｜${report.stationName}</div>
+                            <div class="report-item-time">${timeText}</div>
+                        </div>
+                        <div class="report-item-meta">🌡️ ${report.temperature}　🌧️ ${report.rain}　💨 ${report.wind}　👁️ ${report.visibility}</div>
+                        ${report.comment ? `<div class="report-item-comment">${report.comment.replace(/[<>]/g, '')}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
 
         async function fetchWeatherWarnings() {
             const container = document.getElementById('weatherWarningsContent');
@@ -986,12 +1286,18 @@
             document.getElementById('tabCountyForecast').classList.toggle('active', pageId === 'countyForecast');
             document.getElementById('tabQuake').classList.toggle('active', pageId === 'quake');
             document.getElementById('tabTyphoon').classList.toggle('active', pageId === 'typhoon');
+            document.getElementById('tabLocalReport').classList.toggle('active', pageId === 'localReport');
                                       
             document.getElementById('dashboardPanel').classList.toggle('active', pageId === 'dashboard');
             document.getElementById('mapPanel').classList.toggle('active', pageId === 'map');
             document.getElementById('countyForecastPanel').classList.toggle('active', pageId === 'countyForecast');
             document.getElementById('quakePanel').classList.toggle('active', pageId === 'quake');
             document.getElementById('typhoonPanel').classList.toggle('active', pageId === 'typhoon');
+            document.getElementById('localReportPanel').classList.toggle('active', pageId === 'localReport');
+            if (pageId === 'localReport') {
+                renderLocalWeatherReports();
+                prepareLocalWeatherReport();
+            }
             if (pageId === 'map' && !mapInitialized) {
                 setTimeout(initMap, 100);
             } else if (pageId === 'map' && mapInitialized) {
@@ -2100,5 +2406,3 @@
             });
         }
     </script>
-</body>
-</html>
