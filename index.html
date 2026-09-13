@@ -540,7 +540,46 @@
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
             background: rgba(0, 0, 0, 0.1); padding: 10px; border-radius: 12px; font-size: 12px; color: var(--text-muted);
         }
-    </style>
+    
+        .local-report-history-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .local-report-history-title > div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .local-report-clear-btn {
+            border: 1px solid rgba(248, 113, 113, 0.45);
+            background: rgba(248, 113, 113, 0.10);
+            color: #f87171;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .local-report-clear-btn:hover {
+            background: rgba(248, 113, 113, 0.18);
+        }
+        .local-report-delete-btn {
+            margin-left: 8px;
+            border: 1px solid rgba(248, 113, 113, 0.40);
+            background: transparent;
+            color: #f87171;
+            border-radius: 6px;
+            padding: 3px 7px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .local-report-delete-btn:hover {
+            background: rgba(248, 113, 113, 0.12);
+        }
+
+</style>
 </head>
 <body>
     <div class="container">
@@ -865,8 +904,11 @@
                 </div>
             </div>
 
-            <div class="section-divider-title" style="margin-top: 20px;">
-                <i class="fas fa-clock-rotate-left"></i> 本機最近回報
+            <div class="section-divider-title local-report-history-title" style="margin-top: 20px;">
+                <div><i class="fas fa-clock-rotate-left"></i> 本機最近回報</div>
+                <button type="button" class="local-report-clear-btn" onclick="clearLocalWeatherReports()">
+                    <i class="fas fa-trash-alt"></i> 清除全部
+                </button>
             </div>
             <div id="localReportList" class="report-list">
                 <div class="my-location-status">尚無回報紀錄</div>
@@ -1075,6 +1117,28 @@
             setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 1400);
         }
 
+        function deleteLocalWeatherReport(encodedCreatedAt) {
+            const createdAt = decodeURIComponent(encodedCreatedAt || '');
+            const reports = getLocalWeatherReports();
+            const index = reports.findIndex(report => String(report.createdAt) === createdAt);
+            if (index < 0) return;
+            if (!confirm('確定要刪除這筆在地天氣回報嗎？')) return;
+            reports.splice(index, 1);
+            saveLocalWeatherReports(reports);
+            renderLocalWeatherReports();
+        }
+
+        function clearLocalWeatherReports() {
+            const reports = getLocalWeatherReports();
+            if (reports.length === 0) {
+                alert('目前沒有本機最近回報。');
+                return;
+            }
+            if (!confirm(`確定要清除全部 ${reports.length} 筆本機最近回報嗎？`)) return;
+            localStorage.removeItem('cwa_local_weather_reports');
+            renderLocalWeatherReports();
+        }
+
         function renderLocalWeatherReports() {
             const container = document.getElementById('localReportList');
             if (!container) return;
@@ -1090,7 +1154,11 @@
                     <div class="report-item">
                         <div class="report-item-top">
                             <div class="report-item-title">${getWeatherReportIcon(report.weather)} ${report.weather}｜${report.stationName}</div>
-                            <div class="report-item-time">${timeText}</div>
+                            <div class="report-item-time">${timeText}
+                                <button type="button" class="local-report-delete-btn" onclick="deleteLocalWeatherReport('${encodeURIComponent(report.createdAt)}')" title="刪除此筆回報">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="report-item-meta">🌡️ ${report.temperature}　🌧️ ${report.rain}　💨 ${report.wind}　👁️ ${report.visibility}</div>
                         ${report.comment ? `<div class="report-item-comment">${report.comment.replace(/[<>]/g, '')}</div>` : ''}
