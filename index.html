@@ -978,6 +978,8 @@
         let currentMarkersLayer = L.layerGroup();
         let legendControl = null;
         let weatherStationData = [];
+        // 即時排行榜專用：使用 CWA O-A0003-001 10 分鐘綜觀資料，對應氣象署「現在」排行
+        let realtimeRankingStationData = [];
         let forecastPopData = {};
         let forecastWxData = {};
         let forecastMinTData = {};
@@ -1013,6 +1015,10 @@
                 fetchEarthquakeData(false);
                 fetchWeatherWarnings();
             }, 30000);
+            // 氣象署觀測資料約每 10 分鐘更新；網站每 60 秒重新抓取一次，資料一發布即可同步。
+            setInterval(() => {
+                fetchAllStationData(false);
+            }, 60000);
         });
 
         async function fetchWeatherWarnings() {
@@ -1610,19 +1616,28 @@
                 ]);
                 const list1 = res1.records?.Station || [];
                 const list2 = res2.records?.Station || [];
-                const combined = [...list1, ...list2];
-                const seenIds = new Set();
-                const seenNames = new Set();
-                weatherStationData = [];
-                combined.forEach(station => {
-                    const sId = station.StationId;
-                    const sName = station.StationName;
-                    if (sId && !seenIds.has(sId) && sName && !seenNames.has(sName)) {
-                        seenIds.add(sId);
-                        seenNames.add(sName);
-                        weatherStationData.push(station);
-                    }
+                // O-A0003-001 是 10 分鐘綜觀觀測，氣象署「現在」高溫排行榜使用這類最新觀測。
+                // 即時排行榜獨立使用 list2，不再被 O-A0001-001 的逐時資料覆蓋。
+                realtimeRankingStationData = list2.filter(station => station && station.StationId);
+                    // 地圖即時測站統一以 CWA O-A0003-001（10分鐘綜觀觀測）為主。
+                // O-A0001-001 僅作為缺少 O-A0003 座標/資料時的後備來源，不覆蓋 O-A0003。
+                const realtimeById = new Map();
+                list2.forEach(station => {
+                    if (station?.StationId) realtimeById.set(station.StationId, station);
                 });
+                const fallbackById = new Map();
+                list1.forEach(station => {
+                    if (station?.StationId) fallbackById.set(station.StationId, station);
+                });
+
+                weatherStationData = [];
+                const stationIds = new Set([...realtimeById.keys(), ...fallbackById.keys()]);
+                stationIds.forEach(id => {
+                    // 有10分鐘資料就只用10分鐘資料；沒有才退回逐時資料。
+                    const station = realtimeById.get(id) || fallbackById.get(id);
+                    if (station?.StationId) weatherStationData.push(station);
+                });
+
                 forecastPopData = {};
                 forecastWxData = {};
                 forecastMinTData = {};
@@ -1763,7 +1778,10 @@
                 return;
             }
 
-            const list = weatherStationData.map(station => {
+            const rankingSource = (Array.isArray(realtimeRankingStationData) && realtimeRankingStationData.length > 0)
+                ? realtimeRankingStationData
+                : weatherStationData;
+            const list = rankingSource.map(station => {
                 const data = parseStationElement(station);
                 const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
                 const town = station.GeoInfo?.TownName || '';
@@ -1854,7 +1872,10 @@
         function renderRankings() {
             const container = document.getElementById('rankingCardsContainer');
             if (!container || weatherStationData.length === 0) return;
-            let parsedList = weatherStationData.map(station => {
+            const rankingSource = (Array.isArray(realtimeRankingStationData) && realtimeRankingStationData.length > 0)
+                ? realtimeRankingStationData
+                : weatherStationData;
+            let parsedList = rankingSource.map(station => {
                 const data = parseStationElement(station);
                 const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
                 const town = station.GeoInfo?.TownName || '';
