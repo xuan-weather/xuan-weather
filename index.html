@@ -701,46 +701,6 @@
             .station-history-grid { grid-template-columns: 1fr; }
         }
 
-
-        .weather-time-machine {
-            margin-top: 12px;
-            padding: 12px;
-            border: 1px solid var(--panel-border);
-            border-radius: 16px;
-            background: var(--panel-bg);
-            color: var(--text-color);
-            box-sizing: border-box;
-        }
-        .weather-time-machine-header {
-            display:flex; align-items:center; justify-content:space-between; gap:12px;
-        }
-        .weather-time-machine-title { font-weight:800; font-size:15px; }
-        .weather-time-machine-subtitle { margin-top:3px; font-size:11px; color:var(--text-muted); }
-        .weather-time-machine-controls { margin-top:10px; }
-        .time-machine-nav { display:flex; gap:7px; flex-wrap:wrap; }
-        .time-machine-btn {
-            border:1px solid var(--card-border); background:rgba(148,163,184,.10);
-            color:var(--text-color); border-radius:10px; padding:8px 10px;
-            font-size:12px; font-weight:700; cursor:pointer;
-        }
-        .time-machine-btn:hover { background:rgba(56,189,248,.16); }
-        .time-machine-live { color:#ef4444; }
-        .time-machine-hour-list {
-            display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; margin-top:10px;
-        }
-        .time-machine-hour {
-            border:1px solid var(--card-border); background:rgba(148,163,184,.08);
-            color:var(--text-color); border-radius:9px; padding:7px 3px; cursor:pointer;
-            text-align:center; font-size:11px; font-weight:700;
-        }
-        .time-machine-hour.active { background:#2563eb; color:#fff; border-color:#3b82f6; }
-        .time-machine-hour.has-data::after { content:'●'; display:block; font-size:7px; margin-top:2px; opacity:.75; }
-        .time-machine-selected-time { margin-top:8px; font-size:12px; color:#38bdf8; font-weight:700; text-align:center; }
-        @media (max-width:760px) {
-            .time-machine-hour-list { grid-template-columns:repeat(4,minmax(0,1fr)); }
-            .weather-time-machine-header { align-items:flex-start; }
-        }
-
 </style>
 </head>
 <body>
@@ -944,27 +904,6 @@
                                       
             <div class="map-container-wrapper">
                 <div id="map"></div>
-            </div>
-
-            <!-- 氣象時間機器：固定放在地圖下方，不遮住地圖全螢幕控制 -->
-            <div id="weatherTimeMachine" class="weather-time-machine">
-                <div class="weather-time-machine-header">
-                    <div>
-                        <div class="weather-time-machine-title">⏪ 氣象時間機器</div>
-                        <div id="timeMachineStatus" class="weather-time-machine-subtitle">每小時歷史資料｜尚未啟用</div>
-                    </div>
-                    <button id="timeMachineToggleBtn" class="action-btn" type="button" onclick="toggleWeatherTimeMachine()">⏪ 開啟</button>
-                </div>
-                <div id="timeMachineControls" class="weather-time-machine-controls" style="display:none;">
-                    <div class="time-machine-nav">
-                        <button type="button" class="time-machine-btn" onclick="stepWeatherTimeMachine(-1)">⏮ 上一小時</button>
-                        <button type="button" class="time-machine-btn time-machine-live" onclick="exitWeatherTimeMachine()">🔴 即時</button>
-                        <button type="button" class="time-machine-btn" onclick="stepWeatherTimeMachine(1)">下一小時 ⏭</button>
-                        <button type="button" class="time-machine-btn" onclick="toggleWeatherTimeMachinePlay()" id="timeMachinePlayBtn">▶️ 播放</button>
-                    </div>
-                    <div id="timeMachineHourList" class="time-machine-hour-list"></div>
-                    <div id="timeMachineSelectedTime" class="time-machine-selected-time">歷史時間：--</div>
-                </div>
             </div>
         </div>
         
@@ -1265,7 +1204,7 @@
             favIds.forEach(id => {
                 const station = weatherStationData.find(s => s.StationId === id);
                 if (station) {
-                    const data = weatherTimeMachineActive ? getHistoricalStationValues(station, weatherTimeMachineHour) : parseStationElement(station);
+                    const data = parseStationElement(station);
                     const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
                     const town = station.GeoInfo?.TownName || '';
                     const popVal = getPopForStation(county, town);
@@ -2577,7 +2516,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--panel-border); padding-top: 8px;">
                                 <div>💨風向/風力: <b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s / 陣風 ${data.windGust.toFixed(1)} m/s</b></div>
                                 <div>💧相對濕度: <b>${data.humidity !== '--' ? data.humidity + ' %' : '-- %'}</b></div>
-                                <div style="grid-column: span 2;">🌧️日累積雨量: <b>${!isNaN(data.rain) ? data.rain.toFixed(1) + ' mm' : '--'}</b></div>
+                                <div style="grid-column: span 2;">🌧️日累積雨量: <b>${data.rain.toFixed(1)} mm</b></div>
                                 <div style="grid-column: span 2; color: #38bdf8; font-weight: 600; margin-top: 4px;">${adviceText}</div>
                             </div>
                         `;
@@ -2946,151 +2885,8 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             return '#94a3b8';                   // 0級：無風
         }
         
-        // ===== ⏪ 氣象時間機器：每小時歷史快照 =====
-        let weatherTimeMachineActive = false;
-        let weatherTimeMachineHour = null;
-        let weatherTimeMachineHours = [];
-        let weatherTimeMachineTimer = null;
-
-        function getHistoryHourKey(ts) {
-            const d = new Date(Number(ts));
-            if (isNaN(d.getTime())) return null;
-            d.setMinutes(0, 0, 0);
-            return d.getTime();
-        }
-
-        function getAvailableWeatherTimeMachineHours() {
-            const set = new Set();
-            Object.values(stationHistoryCache || {}).forEach(arr => {
-                if (!Array.isArray(arr)) return;
-                arr.forEach(p => {
-                    const h = getHistoryHourKey(p.ts);
-                    if (h !== null) set.add(h);
-                });
-            });
-            const latest = Math.floor(Date.now() / 3600000) * 3600000;
-            if (!set.size) {
-                for (let i = 0; i < 24; i++) set.add(latest - i * 3600000);
-            }
-            return [...set].sort((a,b)=>b-a).slice(0,24);
-        }
-
-        function getHistoricalStationValues(station, hourTs) {
-            const id = getStationHistoryId(station);
-            const arr = Array.isArray(stationHistoryCache?.[id]) ? stationHistoryCache[id] : [];
-            const target = Number(hourTs);
-            if (!Number.isFinite(target)) return { temp:NaN, rain:NaN, humidity:NaN, windSpeed:NaN, windGust:NaN, windDir:NaN, obsTime:null };
-
-            // 嚴格使用該「整點」的實際觀測，不用前後時間資料補值。
-            const point = arr.find(p => getHistoryHourKey(p.ts) === target && Math.abs(Number(p.ts) - target) < 5 * 60 * 1000);
-            if (!point) return { temp:NaN, rain:NaN, humidity:NaN, windSpeed:NaN, windGust:NaN, windDir:NaN, obsTime:null };
-            return {
-                temp: Number.isFinite(Number(point.temp)) ? Number(point.temp) : NaN,
-                rain: Number.isFinite(Number(point.rain)) ? Number(point.rain) : NaN,
-                humidity: Number.isFinite(Number(point.humidity)) ? Number(point.humidity) : NaN,
-                windSpeed: Number.isFinite(Number(point.wind)) ? Number(point.wind) : NaN,
-                windGust: NaN,
-                windDir: NaN,
-                obsTime: point.ts
-            };
-        }
-
-        function formatTimeMachineHour(ts) {
-            const d = new Date(Number(ts));
-            if (isNaN(d.getTime())) return '--';
-            return `${String(d.getHours()).padStart(2,'0')}:00`;
-        }
-
-        function formatTimeMachineDate(ts) {
-            const d = new Date(Number(ts));
-            if (isNaN(d.getTime())) return '--';
-            return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${formatTimeMachineHour(ts)}`;
-        }
-
-        function refreshWeatherTimeMachineUI() {
-            const controls = document.getElementById('timeMachineControls');
-            const toggle = document.getElementById('timeMachineToggleBtn');
-            const status = document.getElementById('timeMachineStatus');
-            const list = document.getElementById('timeMachineHourList');
-            const selected = document.getElementById('timeMachineSelectedTime');
-            if (!controls || !toggle || !status || !list || !selected) return;
-            weatherTimeMachineHours = getAvailableWeatherTimeMachineHours();
-            controls.style.display = weatherTimeMachineActive ? 'block' : 'none';
-            toggle.innerText = weatherTimeMachineActive ? '⏪ 關閉' : '⏪ 開啟';
-            status.innerText = weatherTimeMachineActive ? '每小時歷史資料｜不補值，無資料顯示 --' : '每小時歷史資料｜尚未啟用';
-            list.innerHTML = weatherTimeMachineHours.map((ts, idx) => {
-                const hasAny = Object.values(stationHistoryCache || {}).some(arr => Array.isArray(arr) && arr.some(p => getHistoryHourKey(p.ts) === ts));
-                return `<button type="button" class="time-machine-hour ${weatherTimeMachineHour === ts ? 'active' : ''} ${hasAny ? 'has-data' : ''}" onclick="selectWeatherTimeMachineHour(${ts})">${formatTimeMachineHour(ts)}</button>`;
-            }).join('');
-            selected.innerText = weatherTimeMachineActive && weatherTimeMachineHour !== null ? `歷史時間：${formatTimeMachineDate(weatherTimeMachineHour)}` : '歷史時間：--';
-            const playBtn = document.getElementById('timeMachinePlayBtn');
-            if (playBtn) playBtn.innerText = weatherTimeMachineTimer ? '⏸️ 暫停' : '▶️ 播放';
-        }
-
-        function toggleWeatherTimeMachine() {
-            if (weatherTimeMachineActive) exitWeatherTimeMachine();
-            else {
-                weatherTimeMachineActive = true;
-                weatherTimeMachineHours = getAvailableWeatherTimeMachineHours();
-                weatherTimeMachineHour = weatherTimeMachineHours[0] ?? null;
-                refreshWeatherTimeMachineUI();
-                if (mapInitialized) renderMapMarkers();
-            }
-        }
-
-        function selectWeatherTimeMachineHour(ts) {
-            if (!weatherTimeMachineActive) weatherTimeMachineActive = true;
-            weatherTimeMachineHour = Number(ts);
-            refreshWeatherTimeMachineUI();
-            if (mapInitialized) renderMapMarkers();
-        }
-
-        function stepWeatherTimeMachine(direction) {
-            weatherTimeMachineHours = getAvailableWeatherTimeMachineHours();
-            if (!weatherTimeMachineHours.length) return;
-            let idx = weatherTimeMachineHours.indexOf(Number(weatherTimeMachineHour));
-            if (idx < 0) idx = 0;
-            idx += direction;
-            idx = Math.max(0, Math.min(weatherTimeMachineHours.length - 1, idx));
-            selectWeatherTimeMachineHour(weatherTimeMachineHours[idx]);
-        }
-
-        function toggleWeatherTimeMachinePlay() {
-            if (weatherTimeMachineTimer) {
-                clearInterval(weatherTimeMachineTimer);
-                weatherTimeMachineTimer = null;
-                refreshWeatherTimeMachineUI();
-                return;
-            }
-            weatherTimeMachineTimer = setInterval(() => {
-                const before = weatherTimeMachineHour;
-                stepWeatherTimeMachine(-1);
-                if (before === weatherTimeMachineHour || weatherTimeMachineHour === null) {
-                    clearInterval(weatherTimeMachineTimer);
-                    weatherTimeMachineTimer = null;
-                    refreshWeatherTimeMachineUI();
-                }
-            }, 1200);
-            refreshWeatherTimeMachineUI();
-        }
-
-        function exitWeatherTimeMachine() {
-            weatherTimeMachineActive = false;
-            weatherTimeMachineHour = null;
-            if (weatherTimeMachineTimer) clearInterval(weatherTimeMachineTimer);
-            weatherTimeMachineTimer = null;
-            refreshWeatherTimeMachineUI();
-            const tag = document.getElementById('mapObsTimeTag');
-            if (tag) tag.innerText = 'CWA 觀測時間：--';
-            if (mapInitialized) renderMapMarkers();
-        }
-
         function renderMapMarkers() {
             if (!currentMarkersLayer) return;
-            if (weatherTimeMachineActive && weatherTimeMachineHour !== null) {
-                const tag = document.getElementById('mapObsTimeTag');
-                if (tag) tag.innerText = `歷史觀測時間：${formatTimeMachineDate(weatherTimeMachineHour)}`;
-            }
             currentMarkersLayer.clearLayers();
             const titleEl = document.getElementById('legendHeaderTitle');
             const colorBarEl = document.getElementById('legendColorBar');
@@ -3191,8 +2987,8 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                             <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
                             <p><b>降雨機率：</b>${popForStation} %</p>
                             <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
-                            <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${!isNaN(data.windSpeed) ? data.windSpeed.toFixed(1) + ' m/s（' + getWindLevel(data.windSpeed) + '）' : '--'}</p>                             <p><b>最大陣風：</b>${!isNaN(data.windGust) ? data.windGust.toFixed(1) + ' m/s（' + getWindLevel(data.windGust) + '）' : '--'}</p>
-                            <p><b>相對濕度：</b>${!isNaN(data.humidity) ? data.humidity + ' %' : '--'}</p>
+                            <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s（${getWindLevel(data.windSpeed)}）</p>                             <p><b>最大陣風：</b>${data.windGust.toFixed(1)} m/s（${getWindLevel(data.windGust)}）</p>
+                            <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + ' %' : '--'}</p>
                             <button onclick="openStationHistory(weatherStationData.find(s => String(s.StationId) === '${String(station.StationId || '').replace(/'/g, "\\'")}'))"
                                 style="width:100%;margin-top:8px;padding:8px 10px;border:0;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;font-weight:700;cursor:pointer;">
                                 <i class="fas fa-chart-line"></i> 查看最近24小時歷史趨勢
