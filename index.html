@@ -701,6 +701,64 @@
             .station-history-grid { grid-template-columns: 1fr; }
         }
 
+
+        /* ===== 氣象時間機器 ===== */
+        .weather-time-machine {
+            position: relative;
+            left: auto;
+            right: auto;
+            bottom: auto;
+            z-index: 1;
+            background: rgba(15,23,42,.92);
+            border: 1px solid rgba(148,163,184,.28);
+            border-radius: 14px;
+            padding: 10px 12px;
+            box-shadow: 0 8px 28px rgba(0,0,0,.28);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+        }
+        .weather-time-machine.active { display:block; }
+        .weather-time-machine-top {
+            display:flex; align-items:center; gap:8px; margin-bottom:7px;
+        }
+        .weather-time-machine-title {
+            font-size:13px; font-weight:800; color:#fff; flex:1;
+        }
+        .weather-time-machine-time {
+            font-size:12px; font-weight:700; color:#38bdf8;
+            white-space:nowrap;
+        }
+        .weather-time-machine-controls {
+            display:flex; align-items:center; gap:8px;
+        }
+        .weather-time-machine button {
+            border:0; border-radius:9px; width:32px; height:32px;
+            background:rgba(51,65,85,.9); color:#fff; cursor:pointer;
+            font-size:14px;
+        }
+        .weather-time-machine button.active { background:#2563eb; }
+        #weatherTimeMachineRange {
+            flex:1; min-width:0; accent-color:#38bdf8;
+        }
+        .weather-time-machine-hint {
+            margin-top:5px; font-size:10px; color:#94a3b8;
+            text-align:center;
+        }
+        .weather-time-machine-toggle {
+            position:relative; right:auto; bottom:auto; z-index:1;
+            margin-top:10px;
+            border:1px solid rgba(148,163,184,.35); border-radius:10px;
+            background:rgba(15,23,42,.9); color:#fff; padding:8px 10px;
+            font-size:12px; font-weight:800; cursor:pointer;
+            backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+        }
+        .weather-time-machine-toggle.active { background:#2563eb; }
+        @media (max-width:760px) {
+            .weather-time-machine { left:auto; right:auto; bottom:auto; }
+            .weather-time-machine-time { font-size:11px; }
+        }
+
 </style>
 </head>
 <body>
@@ -902,8 +960,22 @@
                 </div>
             </div>
                                       
-            <div class="map-container-wrapper">
+            <div class="map-container-wrapper" style="position:relative;">
                 <div id="map"></div>
+            </div>
+            <button id="weatherTimeMachineToggle" class="weather-time-machine-toggle" onclick="toggleWeatherTimeMachine()">⏪ 時間機器</button>
+            <div id="weatherTimeMachine" class="weather-time-machine">
+                    <div class="weather-time-machine-top">
+                        <div class="weather-time-machine-title">⏪ 氣象時間機器</div>
+                        <div id="weatherTimeMachineTime" class="weather-time-machine-time">尚無歷史資料</div>
+                    </div>
+                    <div class="weather-time-machine-controls">
+                        <button onclick="stepWeatherTimeMachine(-1)" title="上一小時">⏮</button>
+                        <button id="weatherTimeMachinePlay" onclick="playWeatherTimeMachine()" title="播放">▶</button>
+                        <input id="weatherTimeMachineRange" type="range" min="0" max="0" value="0" step="1" oninput="seekWeatherTimeMachine(this.value)">
+                        <button onclick="stepWeatherTimeMachine(1)" title="下一小時">⏭</button>
+                    </div>
+                    <div class="weather-time-machine-hint">每小時一個時間點；拖曳時間軸查看已保存的實際測站觀測，離開時間機器即恢復即時資料</div>
             </div>
         </div>
         
@@ -2743,6 +2815,152 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             });
         }
         
+
+        // ===== ⏪ 氣象時間機器：只讀取網站已保存的實際 CWA 測站觀測 =====
+        let weatherTimeMachineEnabled = false;
+        let weatherTimeMachineTimes = [];
+        let weatherTimeMachineIndex = 0;
+        let weatherTimeMachineTimer = null;
+
+        function buildWeatherTimeMachineTimeline() {
+            // 時間機器固定以「每小時」為一格；不把每 10 分鐘觀測當成獨立時間點。
+            // 每個整點會對應到該小時內最接近整點的實際測站觀測。
+            const set = new Set();
+            Object.values(stationHistoryCache || {}).forEach(arr => {
+                if (!Array.isArray(arr)) return;
+                arr.forEach(p => {
+                    const ts = Number(p.ts);
+                    if (!Number.isFinite(ts)) return;
+                    const d = new Date(ts);
+                    d.setMinutes(0, 0, 0);
+                    set.add(d.getTime());
+                });
+            });
+            weatherTimeMachineTimes = Array.from(set).sort((a,b) => a-b);
+            const range = document.getElementById('weatherTimeMachineRange');
+            if (range) {
+                range.min = 0;
+                range.max = Math.max(0, weatherTimeMachineTimes.length - 1);
+                range.value = Math.max(0, weatherTimeMachineTimes.length - 1);
+            }
+            weatherTimeMachineIndex = Math.max(0, weatherTimeMachineTimes.length - 1);
+        }
+
+        function getHistoricalStationValues(station) {
+            const id = getStationHistoryId(station);
+            const arr = Array.isArray(stationHistoryCache?.[id]) ? stationHistoryCache[id] : [];
+            if (!arr.length || !weatherTimeMachineTimes.length) return parseStationElement(station);
+            const targetTs = weatherTimeMachineTimes[weatherTimeMachineIndex];
+            let best = null;
+            let bestDiff = Infinity;
+            // 只取該整點附近的實際資料，避免把其他小時的觀測誤套進來。
+            for (let i = 0; i < arr.length; i++) {
+                const p = arr[i];
+                const pts = Number(p.ts);
+                if (!Number.isFinite(pts)) continue;
+                const diff = Math.abs(pts - targetTs);
+                if (diff <= 30 * 60 * 1000 && diff < bestDiff) {
+                    best = p;
+                    bestDiff = diff;
+                }
+            }
+            if (!best) return parseStationElement(station);
+            const now = parseStationElement(station);
+            return {
+                ...now,
+                temp: Number.isFinite(Number(best.temp)) ? Number(best.temp) : now.temp,
+                rain: Number.isFinite(Number(best.rain)) ? Number(best.rain) : now.rain,
+                humidity: best.humidity == null ? now.humidity : Number(best.humidity),
+                windSpeed: Number.isFinite(Number(best.wind)) ? Number(best.wind) : now.windSpeed,
+                obsTime: new Date(Number(best.ts)).toISOString()
+            };
+        }
+
+        function formatWeatherTimeMachineTime(ts) {
+            if (!ts) return '尚無歷史資料';
+            return new Date(ts).toLocaleString('zh-TW', {
+                month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false
+            }).replace(',', ' ');
+        }
+
+        function updateWeatherTimeMachineUI() {
+            const time = weatherTimeMachineTimes[weatherTimeMachineIndex];
+            const label = document.getElementById('weatherTimeMachineTime');
+            const range = document.getElementById('weatherTimeMachineRange');
+            if (label) label.innerText = time ? formatWeatherTimeMachineTime(time) : '尚無歷史資料';
+            if (range) range.value = weatherTimeMachineIndex;
+            const tag = document.getElementById('mapObsTimeTag');
+            if (tag) tag.innerText = time ? `歷史觀測時間：${formatWeatherTimeMachineTime(time)}` : 'CWA 觀測時間：--';
+        }
+
+        function seekWeatherTimeMachine(value) {
+            if (!weatherTimeMachineTimes.length) return;
+            weatherTimeMachineIndex = Math.max(0, Math.min(weatherTimeMachineTimes.length - 1, Number(value) || 0));
+            updateWeatherTimeMachineUI();
+            if (mapInitialized) renderMapMarkers();
+        }
+
+        function stepWeatherTimeMachine(delta) {
+            seekWeatherTimeMachine(weatherTimeMachineIndex + delta);
+        }
+
+        function playWeatherTimeMachine() {
+            if (!weatherTimeMachineTimes.length) return;
+            const btn = document.getElementById('weatherTimeMachinePlay');
+            if (weatherTimeMachineTimer) {
+                clearInterval(weatherTimeMachineTimer);
+                weatherTimeMachineTimer = null;
+                if (btn) btn.innerText = '▶';
+                return;
+            }
+            if (weatherTimeMachineIndex >= weatherTimeMachineTimes.length - 1) {
+                weatherTimeMachineIndex = 0;
+            }
+            if (btn) btn.innerText = '⏸';
+            weatherTimeMachineTimer = setInterval(() => {
+                if (weatherTimeMachineIndex >= weatherTimeMachineTimes.length - 1) {
+                    clearInterval(weatherTimeMachineTimer);
+                    weatherTimeMachineTimer = null;
+                    if (btn) btn.innerText = '▶';
+                    return;
+                }
+                seekWeatherTimeMachine(weatherTimeMachineIndex + 1);
+            }, 800);
+        }
+
+        function toggleWeatherTimeMachine() {
+            const panel = document.getElementById('weatherTimeMachine');
+            const toggle = document.getElementById('weatherTimeMachineToggle');
+            weatherTimeMachineEnabled = !weatherTimeMachineEnabled;
+            if (weatherTimeMachineEnabled) {
+                loadStationHistoryCache();
+                buildWeatherTimeMachineTimeline();
+                if (!weatherTimeMachineTimes.length) {
+                    weatherTimeMachineEnabled = false;
+                    alert('目前還沒有足夠的實際測站歷史資料，請先讓網站累積觀測資料。');
+                    return;
+                }
+                if (panel) panel.classList.add('active');
+                if (toggle) {
+                    toggle.classList.add('active');
+                    toggle.innerText = '⏪ 即時模式';
+                }
+                updateWeatherTimeMachineUI();
+                if (mapInitialized) renderMapMarkers();
+            } else {
+                if (weatherTimeMachineTimer) clearInterval(weatherTimeMachineTimer);
+                weatherTimeMachineTimer = null;
+                if (panel) panel.classList.remove('active');
+                if (toggle) {
+                    toggle.classList.remove('active');
+                    toggle.innerText = '⏪ 時間機器';
+                }
+                const tag = document.getElementById('mapObsTimeTag');
+                if (tag) tag.innerText = 'CWA 觀測時間：--';
+                if (mapInitialized) renderMapMarkers();
+            }
+        }
+
         function initMap() {
             if (mapInitialized) return;
             map = L.map('map', {
@@ -2919,7 +3137,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
                 const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
                 if (!isNaN(lat) && !isNaN(lon)) {
-                    const data = parseStationElement(station);
+                    const data = weatherTimeMachineEnabled ? getHistoricalStationValues(station) : parseStationElement(station);
                     const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
                     const town = station.GeoInfo?.TownName || '';
                     const popVal = getPopForStation(county, town);
