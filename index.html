@@ -2,7 +2,11 @@
 <html lang="zh-TW" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b1726">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>臺灣即時氣象與防災儀表板</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -93,6 +97,80 @@
         }
         .content-panel { display: none; }
         .content-panel.active { display: block; }
+
+        /* PWA 全螢幕地圖：進入「全台地圖」時讓地圖延伸到整個可視區域，
+           不在地圖上方留下 body/page-tabs 的空白；iOS PWA 也使用安全區域。 */
+        html, body {
+            min-height: 100%;
+        }
+        body.map-fullscreen {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100%;
+            height: 100%;
+            min-height: 100dvh;
+            overflow: hidden;
+            background: #0b1726;
+        }
+        body.map-fullscreen .container {
+            width: 100%;
+            max-width: none;
+            height: 100%;
+            margin: 0;
+        }
+        body.map-fullscreen .page-tabs {
+            display: none !important;
+        }
+        body.map-fullscreen #mapPanel {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            width: 100vw;
+            height: 100dvh;
+            min-height: 100dvh;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            overflow: hidden;
+            background: #0b1726;
+        }
+        body.map-fullscreen #mapPanel .map-header {
+            position: absolute;
+            top: max(8px, env(safe-area-inset-top));
+            left: 8px;
+            right: 8px;
+            z-index: 1001;
+            margin: 0;
+            pointer-events: none;
+        }
+        body.map-fullscreen #mapPanel .map-title-row {
+            display: none;
+        }
+        body.map-fullscreen #mapPanel .map-mode-btn-group {
+            pointer-events: auto;
+            width: 100%;
+            max-width: 100%;
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+        body.map-fullscreen #mapPanel .map-container-wrapper {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            border: 0;
+            border-radius: 0;
+            overflow: hidden;
+        }
+        body.map-fullscreen #map {
+            width: 100%;
+            height: 100%;
+        }
+
         .modern-dashboard {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
@@ -1007,18 +1085,6 @@
         let cwaRainfallRankingData = [];
         // CWA O-A0002-001 的 RainfallElement.Past1hr：過去 1 小時累積降水量（時雨量），每 10 分鐘更新。
         let cwaHourlyRainfallRankingData = [];
-
-        // 各 CWA 資料源獨立記錄「已套用到畫面」的最新 ObsTime。
-        // 只有當 CWA 回傳的新 ObsTime 真的改變時，才更新對應資料與排行榜，
-        // 避免網站自己的計時器提前刷新、重複刷新舊資料。
-        const cwaAppliedObsTime = {
-            'O-A0001-001': null, // 整點逐時資料
-            'O-A0003-001': null, // 每10分鐘綜觀資料
-            'O-A0002-001': null  // 每10分鐘雨量資料
-        };
-        let latestHourlyStationData = [];
-        let latestRealtimeStationData = [];
-        let latestRainfallStationData = [];
         let forecastPopData = {};
         let forecastWxData = {};
         let forecastMinTData = {};
@@ -1054,17 +1120,28 @@
                 fetchEarthquakeData(false);
                 fetchWeatherWarnings();
             }, 30000);
-            // CWA 資料源各自依官方更新頻率更新：
-            // O-A0001-001＝整點逐時、O-A0003-001＝每10分鐘、O-A0002-001＝每10分鐘。
-            // 網站可以較頻繁檢查，但只有偵測到 CWA 新 ObsTime 才真正套用資料。
-            // 因此不會把「網站刷新時間」誤當成「氣象署資料更新時間」。
-            startCwaObsTimeSync();
+            // CWA O-A0003-001（10分鐘綜觀資料）中的平均風速與最大瞬間風速，
+            // 與氣象署排行榜相同，資料更新頻率為每10分鐘。
+            // 網站同步對齊每10分鐘整點（00/10/20/30/40/50分）抓取，避免風速／陣風排行
+            // 在氣象署尚未發布新一批資料時自行頻繁刷新。
+            scheduleCwaRealtimeRankingUpdate();
         });
 
-        function startCwaObsTimeSync() {
-            // 初始載入已經完成後，以60秒檢查一次 CWA 是否發布新批次。
-            // 60秒只是檢查頻率，不代表資料更新頻率；畫面仍完全以 CWA ObsTime 為準。
-            setInterval(() => fetchAllStationData(false), 60 * 1000);
+        function scheduleCwaRealtimeRankingUpdate() {
+            const now = new Date();
+            const next = new Date(now);
+            next.setSeconds(5, 0);
+            const nextMinute = Math.floor(now.getMinutes() / 10) * 10 + 10;
+            if (nextMinute >= 60) {
+                next.setHours(now.getHours() + 1, 0, 5, 0);
+            } else {
+                next.setMinutes(nextMinute, 5, 0);
+            }
+            const delay = Math.max(1000, next.getTime() - now.getTime());
+            setTimeout(() => {
+                fetchAllStationData(false);
+                setInterval(() => fetchAllStationData(false), 10 * 60 * 1000);
+            }, delay);
         }
 
         async function fetchWeatherWarnings() {
@@ -1273,6 +1350,8 @@
         }
         
         function switchMainPage(pageId) {
+            // PWA 地圖頁進入真正全螢幕模式，移除上方頁籤留白。
+            document.body.classList.toggle('map-fullscreen', pageId === 'map');
             document.getElementById('tabDashboard').classList.toggle('active', pageId === 'dashboard');
             document.getElementById('tabMap').classList.toggle('active', pageId === 'map');
             document.getElementById('tabCountyForecast').classList.toggle('active', pageId === 'countyForecast');
@@ -1657,36 +1736,6 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
 
         loadStationHistoryCache();
 
-        function getCwaLatestObsTime(list) {
-            if (!Array.isArray(list) || list.length === 0) return null;
-            let maxMs = 0;
-            let maxRaw = null;
-            list.forEach(station => {
-                let raw = station?.ObsTime?.DateTime ?? station?.ObsTime ?? station?.DateTime;
-                if (raw && typeof raw === 'object') raw = raw.DateTime ?? raw.dateTime ?? null;
-                const ms = Date.parse(raw || '');
-                if (Number.isFinite(ms) && ms > maxMs) {
-                    maxMs = ms;
-                    maxRaw = raw;
-                }
-            });
-            return maxRaw ? new Date(maxMs).toISOString() : null;
-        }
-
-        function cwaObsTimeChanged(sourceId, list) {
-            const latest = getCwaLatestObsTime(list);
-            if (!latest) return false;
-            if (cwaAppliedObsTime[sourceId] === latest) return false;
-            cwaAppliedObsTime[sourceId] = latest;
-            return true;
-        }
-
-        function formatCwaSourceObsTime(sourceId) {
-            const value = cwaAppliedObsTime[sourceId];
-            if (!value) return '--';
-            return formatCwaRainObservationTime(new Date(value));
-        }
-
         async function fetchAllStationData(isManualRefresh = false, callback = null) {
             const btn = document.getElementById('refreshBtn');
             if (btn && isManualRefresh) btn.classList.add('spinning');
@@ -1705,44 +1754,31 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                 const list1 = res1.records?.Station || [];
                 const list2 = res2.records?.Station || [];
                 const listRain = resRain.records?.Station || [];
-                // 先取得三個 CWA 資料源本次回傳的最新 ObsTime。
-                // 只有 ObsTime 真的前進，才套用該來源的新資料。
-                const hourlyChanged = cwaObsTimeChanged('O-A0001-001', list1);
-                const realtimeChanged = cwaObsTimeChanged('O-A0003-001', list2);
-                const rainfallChanged = cwaObsTimeChanged('O-A0002-001', listRain);
-
-                // O-A0001-001：整點逐時資料。只在新整點 ObsTime 出現時更新。
-                if (hourlyChanged || latestHourlyStationData.length === 0) {
-                    latestHourlyStationData = list1.filter(station => station && station.StationId);
-                }
-
-                // O-A0003-001：10分鐘綜觀資料。高低溫、風速、陣風與即時極值使用這一批資料。
-                if (realtimeChanged || latestRealtimeStationData.length === 0) {
-                    latestRealtimeStationData = list2.filter(station => station && station.StationId);
-                    realtimeRankingStationData = latestRealtimeStationData;
-                }
-
-                // O-A0002-001：10分鐘雨量資料，雨量／時雨量排行榜只在新 ObsTime 出現時更新。
-                if (rainfallChanged || latestRainfallStationData.length === 0) {
-                    latestRainfallStationData = listRain.filter(station => station && station.StationId);
-                    cwaRainfallRankingData = latestRainfallStationData;
-                    cwaHourlyRainfallRankingData = latestRainfallStationData;
-                }
-
-                // 地圖與測站詳細資訊以 O-A0003-001 的最新10分鐘資料為主；
-                // O-A0001-001 僅在 O-A0003 缺少該測站時作為後備。
+                // O-A0002-001 同時包含 Now、Past10Min、Past1hr 等雨量欄位；
+                // 時雨量直接使用同一份氣象署雨量資料，不另外呼叫 O-A0002-002。
+                const listHourlyRain = listRain;
+                // O-A0003-001 是 10 分鐘綜觀觀測，氣象署「現在」高溫排行榜使用這類最新觀測。
+                // 溫度／風速／陣風即時排行榜獨立使用 O-A0003-001，不被 O-A0001-001 的逐時資料覆蓋。
+                realtimeRankingStationData = list2.filter(station => station && station.StationId);
+                // O-A0002-001 是中央氣象署專用雨量觀測資料集，雨量排行榜獨立使用此來源。
+                cwaRainfallRankingData = listRain.filter(station => station && station.StationId);
+                // O-A0002-001 的 Past1hr 為氣象署「最近 1 小時累積降水量」，專門供時雨量排行榜使用。
+                cwaHourlyRainfallRankingData = listHourlyRain.filter(station => station && station.StationId);
+                    // 地圖即時測站統一以 CWA O-A0003-001（10分鐘綜觀觀測）為主。
+                // O-A0001-001 僅作為缺少 O-A0003 座標/資料時的後備來源，不覆蓋 O-A0003。
                 const realtimeById = new Map();
-                latestRealtimeStationData.forEach(station => {
+                list2.forEach(station => {
                     if (station?.StationId) realtimeById.set(station.StationId, station);
                 });
                 const fallbackById = new Map();
-                latestHourlyStationData.forEach(station => {
+                list1.forEach(station => {
                     if (station?.StationId) fallbackById.set(station.StationId, station);
                 });
 
                 weatherStationData = [];
                 const stationIds = new Set([...realtimeById.keys(), ...fallbackById.keys()]);
                 stationIds.forEach(id => {
+                    // 有10分鐘資料就只用10分鐘資料；沒有才退回逐時資料。
                     const station = realtimeById.get(id) || fallbackById.get(id);
                     if (station?.StationId) weatherStationData.push(station);
                 });
