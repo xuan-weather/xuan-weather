@@ -2055,28 +2055,68 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             }
         }
         
+        // 從所有即時資料來源尋找測站，避免排行榜測站因資料集不同而無法跳轉。
+        function getStationForDetailById(stationId) {
+            const id = String(stationId ?? '');
+            const sources = [
+                weatherStationData,
+                realtimeRankingStationData,
+                cwaRainfallRankingData
+            ];
+            for (const source of sources) {
+                if (Array.isArray(source)) {
+                    const found = source.find(s => String(s?.StationId ?? '') === id);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
         function selectStationById(stationId) {
-            const targetStation = weatherStationData.find(s => s.StationId === stationId);
+            const id = String(stationId ?? '');
+            const targetStation = getStationForDetailById(id);
             if (!targetStation) return;
+
             let county = (targetStation.GeoInfo?.CountyName || '').replace('台', '臺');
-            const isFreeway = isFreewayStation(targetStation.StationName);
-                                      
+            const isFreeway = isFreewayStation(targetStation.StationName || '');
             setStationType(isFreeway ? 'freeway' : 'normal');
+
             const citySelect = document.getElementById('citySelect');
-            citySelect.value = county;
-            updateStationOptions();
             const stationSelect = document.getElementById('stationSelect');
-            stationSelect.value = stationId;
+
+            // 一般測站優先沿用既有 cityStationMapping，保持原本下拉選單與地圖資料不變。
+            // 若排行榜測站只存在於其他 CWA 資料集，則建立臨時選項，仍可進入詳細查詢。
+            const mappedStations = cityStationMapping[county] || [];
+            const mappedStation = mappedStations.find(s => String(s?.StationId ?? '') === id);
+
+            if (mappedStation) {
+                citySelect.value = county;
+                updateStationOptions();
+                stationSelect.value = id;
+            } else {
+                // 不修改 cityStationMapping；只在目前查詢下拉選單加入該排行榜測站。
+                if (county && !Array.from(citySelect.options).some(o => o.value === county)) {
+                    const cityOpt = document.createElement('option');
+                    cityOpt.value = county;
+                    cityOpt.textContent = county;
+                    citySelect.appendChild(cityOpt);
+                }
+                if (county) citySelect.value = county;
+                stationSelect.innerHTML = '';
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = `${targetStation.StationName || '--'} (${targetStation.GeoInfo?.TownName || ''})`;
+                stationSelect.appendChild(opt);
+                stationSelect.value = id;
+            }
+
             renderCurrentStationData();
 
             // 從「即時氣象排行榜 TOP 10」點擊測站後，自動捲動到「全台各測站詳細查詢」
             const detailSection = document.getElementById('stationDetailSection');
             if (detailSection) {
                 setTimeout(() => {
-                    detailSection.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+                    detailSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 100);
             }
         }
@@ -2414,7 +2454,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
         function renderCurrentStationData() {
             updateFavoriteButtonState();
             const selectedStationId = document.getElementById('stationSelect').value;
-            const targetStation = weatherStationData.find(s => s.StationId === selectedStationId);
+            const targetStation = getStationForDetailById(selectedStationId);
             if (targetStation) {
                 updateDashboardWithStation(targetStation);
             } else {
