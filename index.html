@@ -864,8 +864,10 @@
                 </div>
                 <div class="segment-control" id="rankingTypeToggle" style="margin-bottom: 12px; flex-wrap: nowrap; overflow-x: auto;">
                     <button class="segment-btn active" id="btnRankRain" onclick="switchRankingTab('rain')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">🌧️雨量排行</button>
+                    <button class="segment-btn" id="btnRankHourlyRain" onclick="switchRankingTab('hourlyRain')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">🌧️時雨量排行</button>
                     <button class="segment-btn" id="btnRankTemp" onclick="switchRankingTab('temp')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">🌡️高溫排行</button>
                     <button class="segment-btn" id="btnRankLowTemp" onclick="switchRankingTab('lowTemp')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">❄️低溫排行</button>
+                    <button class="segment-btn" id="btnRankWind" onclick="switchRankingTab('wind')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">💨風速排行</button>
                     <button class="segment-btn" id="btnRankWindGust" onclick="switchRankingTab('windGust')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">🌪️陣風排行</button>
                 </div>
                 <div id="rankingCardsContainer" class="ranking-cards-grid">
@@ -999,9 +1001,12 @@
         let currentMarkersLayer = L.layerGroup();
         let legendControl = null;
         let weatherStationData = [];
-        // 即時排行榜專用：使用 CWA O-A0003-001 10 分鐘綜觀資料，對應氣象署「現在」排行
+        // 即時排行榜專用：使用 CWA O-A0003-001 10 分鐘綜觀資料，對應氣象署「現在」排行。
+        // 風速與陣風排行均以此資料集的最新一批10分鐘資料為準。
         let realtimeRankingStationData = [];
         let cwaRainfallRankingData = [];
+        // CWA O-A0002-001 的 RainfallElement.Past1hr：過去 1 小時累積降水量（時雨量），每 10 分鐘更新。
+        let cwaHourlyRainfallRankingData = [];
         let forecastPopData = {};
         let forecastWxData = {};
         let forecastMinTData = {};
@@ -1037,11 +1042,29 @@
                 fetchEarthquakeData(false);
                 fetchWeatherWarnings();
             }, 30000);
-            // 氣象署觀測資料約每 10 分鐘更新；網站每 60 秒重新抓取一次，資料一發布即可同步。
-            setInterval(() => {
-                fetchAllStationData(false);
-            }, 60000);
+            // CWA O-A0003-001（10分鐘綜觀資料）中的平均風速與最大瞬間風速，
+            // 與氣象署排行榜相同，資料更新頻率為每10分鐘。
+            // 網站同步對齊每10分鐘整點（00/10/20/30/40/50分）抓取，避免風速／陣風排行
+            // 在氣象署尚未發布新一批資料時自行頻繁刷新。
+            scheduleCwaRealtimeRankingUpdate();
         });
+
+        function scheduleCwaRealtimeRankingUpdate() {
+            const now = new Date();
+            const next = new Date(now);
+            next.setSeconds(5, 0);
+            const nextMinute = Math.floor(now.getMinutes() / 10) * 10 + 10;
+            if (nextMinute >= 60) {
+                next.setHours(now.getHours() + 1, 0, 5, 0);
+            } else {
+                next.setMinutes(nextMinute, 5, 0);
+            }
+            const delay = Math.max(1000, next.getTime() - now.getTime());
+            setTimeout(() => {
+                fetchAllStationData(false);
+                setInterval(() => fetchAllStationData(false), 10 * 60 * 1000);
+            }, delay);
+        }
 
         async function fetchWeatherWarnings() {
             const container = document.getElementById('weatherWarningsContent');
@@ -1280,8 +1303,10 @@
         function switchRankingTab(tab) {
             currentRankingTab = tab;
             document.getElementById('btnRankRain').classList.toggle('active', tab === 'rain');
+            document.getElementById('btnRankHourlyRain').classList.toggle('active', tab === 'hourlyRain');
             document.getElementById('btnRankTemp').classList.toggle('active', tab === 'temp');
             document.getElementById('btnRankLowTemp').classList.toggle('active', tab === 'lowTemp');
+            document.getElementById('btnRankWind').classList.toggle('active', tab === 'wind');
             document.getElementById('btnRankWindGust').classList.toggle('active', tab === 'windGust');
             renderRankings();
         }
@@ -1649,11 +1674,16 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                 const list1 = res1.records?.Station || [];
                 const list2 = res2.records?.Station || [];
                 const listRain = resRain.records?.Station || [];
+                // O-A0002-001 同時包含 Now、Past10Min、Past1hr 等雨量欄位；
+                // 時雨量直接使用同一份氣象署雨量資料，不另外呼叫 O-A0002-002。
+                const listHourlyRain = listRain;
                 // O-A0003-001 是 10 分鐘綜觀觀測，氣象署「現在」高溫排行榜使用這類最新觀測。
                 // 溫度／風速／陣風即時排行榜獨立使用 O-A0003-001，不被 O-A0001-001 的逐時資料覆蓋。
                 realtimeRankingStationData = list2.filter(station => station && station.StationId);
                 // O-A0002-001 是中央氣象署專用雨量觀測資料集，雨量排行榜獨立使用此來源。
                 cwaRainfallRankingData = listRain.filter(station => station && station.StationId);
+                // O-A0002-001 的 Past1hr 為氣象署「最近 1 小時累積降水量」，專門供時雨量排行榜使用。
+                cwaHourlyRainfallRankingData = listHourlyRain.filter(station => station && station.StationId);
                     // 地圖即時測站統一以 CWA O-A0003-001（10分鐘綜觀觀測）為主。
                 // O-A0001-001 僅作為缺少 O-A0003 座標/資料時的後備來源，不覆蓋 O-A0003。
                 const realtimeById = new Map();
@@ -1813,6 +1843,42 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             return Number.isFinite(value) && value >= 0 ? value : NaN;
         }
 
+        // CWA O-A0002-001：過去 1 小時累積降水量（mm）。
+        // 正式欄位：Station.RainfallElement.Past1hr.Precipitation。
+        // -99 / -98、X、T 等缺值／異常／雨跡代碼不列入排行。 
+        function parseCwaHourlyRainfallStation(station) {
+            const rainfall = station?.RainfallElement || {};
+            const past1hr = rainfall.Past1hr || rainfall.Past1HR || rainfall.Past1Hour || {};
+            const raw = past1hr.Precipitation ?? station?.WeatherElement?.Past1hr?.Precipitation;
+            if (raw === undefined || raw === null || raw === '' || raw === 'X' || raw === 'T') return NaN;
+            const value = parseFloat(raw);
+            // CWA：-99 缺值/異常、-98 代表連續6小時無降水，均不列入排行榜。
+            return Number.isFinite(value) && value >= 0 ? value : NaN;
+        }
+
+        function getCwaRainObservationTime(list) {
+            const times = (Array.isArray(list) ? list : [])
+                .map(station => station?.ObsTime?.DateTime || station?.ObsTime?.DateTime || station?.ObsTime)
+                .filter(Boolean)
+                .map(value => {
+                    const d = new Date(value);
+                    return Number.isNaN(d.getTime()) ? null : d;
+                })
+                .filter(Boolean)
+                .sort((a, b) => b - a);
+            return times.length ? times[0] : null;
+        }
+
+        function formatCwaRainObservationTime(date) {
+            if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '--';
+            const parts = new Intl.DateTimeFormat('zh-TW', {
+                timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', hour12: false
+            }).formatToParts(date);
+            const get = type => parts.find(p => p.type === type)?.value || '';
+            return `${get('year')}/${get('month')}/${get('day')} ${get('hour')}:${get('minute')}`;
+        }
+
         function renderQuickRankingCards() {
             const container = document.getElementById('quickRankingCards');
             if (!container) return;
@@ -1928,13 +1994,17 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             if (!container || weatherStationData.length === 0) return;
             const rankingSource = currentRankingTab === 'rain'
                 ? ((Array.isArray(cwaRainfallRankingData) && cwaRainfallRankingData.length > 0) ? cwaRainfallRankingData : [])
-                : ((Array.isArray(realtimeRankingStationData) && realtimeRankingStationData.length > 0)
-                    ? realtimeRankingStationData
-                    : weatherStationData);
+                : currentRankingTab === 'hourlyRain'
+                    ? ((Array.isArray(cwaHourlyRainfallRankingData) && cwaHourlyRainfallRankingData.length > 0) ? cwaHourlyRainfallRankingData : [])
+                    : ((Array.isArray(realtimeRankingStationData) && realtimeRankingStationData.length > 0)
+                        ? realtimeRankingStationData
+                        : weatherStationData);
             let parsedList = rankingSource.map(station => {
                 const data = currentRankingTab === 'rain'
-                    ? { temp: NaN, rain: parseCwaRainfallStation(station), elevation: 0, windSpeed: NaN, windGust: NaN }
-                    : parseStationElement(station);
+                    ? { temp: NaN, rain: parseCwaRainfallStation(station), hourlyRain: NaN, elevation: 0, windSpeed: NaN, windGust: NaN }
+                    : currentRankingTab === 'hourlyRain'
+                        ? { temp: NaN, rain: NaN, hourlyRain: parseCwaHourlyRainfallStation(station), elevation: 0, windSpeed: NaN, windGust: NaN }
+                        : parseStationElement(station);
                 const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
                 const town = station.GeoInfo?.TownName || '';
                 return {
@@ -1944,6 +2014,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                     town: town,
                     temp: data.temp,
                     rain: data.rain,
+                    hourlyRain: data.hourlyRain,
                     elevation: data.elevation,
                     windSpeed: data.windSpeed,
                     windGust: data.windGust
@@ -1965,6 +2036,32 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                                 <span class="ranking-badge-num">#${index + 1}</span>
                             </div>
                             <div class="ranking-main-value">${item.rain.toFixed(1)}<span style="font-size: 14px; font-weight: 600; margin-left: 2px;">mm</span></div>
+                            <div class="ranking-sub-info">
+                                <i class="fas fa-cloud-rain"></i> 地點：${item.county}${item.town}
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } else if (currentRankingTab === 'hourlyRain') {
+                // 時雨量排行：使用 CWA 過去1小時累積雨量，排列與雨量／高溫／低溫／陣風排行完全相同的卡片風格。
+                const validHourlyRainList = parsedList
+                    .filter(item => Number.isFinite(item.hourlyRain) && item.hourlyRain >= 0)
+                    .sort((a, b) => b.hourlyRain - a.hourlyRain);
+                const top10 = validHourlyRainList.slice(0, 10);
+                if (top10.length === 0) {
+                    container.innerHTML = `<div class="my-location-status" style="grid-column: span 2;">目前無時雨量數據</div>`;
+                    return;
+                }
+                let html = '';
+                top10.forEach((item, index) => {
+                    html += `
+                        <div class="ranking-card" onclick="selectStationById('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊檢視測站">
+                            <div class="ranking-card-top">
+                                <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
+                                <span class="ranking-badge-num">#${index + 1}</span>
+                            </div>
+                            <div class="ranking-main-value">${item.hourlyRain.toFixed(1)}<span style="font-size: 14px; font-weight: 600; margin-left: 2px;">mm</span></div>
                             <div class="ranking-sub-info">
                                 <i class="fas fa-cloud-rain"></i> 地點：${item.county}${item.town}
                             </div>
@@ -2023,6 +2120,31 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                             <div class="ranking-main-value" style="color: #38bdf8;">${item.temp.toFixed(1)}<span style="font-size: 14px; font-weight: 600; margin-left: 2px;">°C</span></div>
                             <div class="ranking-sub-info" style="color: #34d399;">
                                 <i class="fas fa-snowflake"></i> 地點：${item.county}${item.town}
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } else if (currentRankingTab === 'wind') {
+                // 風速排行：使用 CWA O-A0003-001 最新風速，與其他排行榜相同的 TOP 10 卡片風格。
+                let validList = parsedList.filter(item => Number.isFinite(item.windSpeed) && item.windSpeed >= 0);
+                validList.sort((a, b) => b.windSpeed - a.windSpeed);
+                let top10 = validList.slice(0, 10);
+                if (top10.length === 0) {
+                    container.innerHTML = `<div class="my-location-status" style="grid-column: span 2;">目前無風速數據</div>`;
+                    return;
+                }
+                let html = '';
+                top10.forEach((item, index) => {
+                    html += `
+                        <div class="ranking-card" onclick="selectStationById('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊檢視測站">
+                            <div class="ranking-card-top">
+                                <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
+                                <span class="ranking-badge-num">#${index + 1}</span>
+                            </div>
+                            <div class="ranking-main-value" style="color: #22c55e;">${item.windSpeed.toFixed(1)}<span style="font-size: 14px; font-weight: 600; margin-left: 2px;">m/s</span> <span style="font-size: 12px; font-weight: normal; color: var(--text-muted);">(${getWindLevel(item.windSpeed)})</span></div>
+                            <div class="ranking-sub-info" style="color: #22c55e;">
+                                <i class="fas fa-wind"></i> 地點：${item.county}${item.town}
                             </div>
                         </div>
                     `;
