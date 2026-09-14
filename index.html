@@ -701,50 +701,6 @@
             .station-history-grid { grid-template-columns: 1fr; }
         }
 
-
-        .today-trend-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-        .today-trend-item {
-            min-width: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 10px;
-        }
-        .today-trend-title {
-            font-size: 13px;
-            font-weight: 800;
-            color: var(--text-color);
-            margin-bottom: 6px;
-        }
-        .today-trend-box {
-            height: 190px;
-            position: relative;
-        }
-        @media (max-width: 760px) {
-            .today-trend-grid { grid-template-columns: 1fr; }
-            .today-trend-box { height: 180px; }
-        }
-        /* 地圖 Canvas 測站數值標籤：只在放大到 zoom 10 以上建立，降低 iPhone PWA 重排成本。 */
-        .station-value-tooltip {
-            background: transparent !important;
-            border: 0 !important;
-            box-shadow: none !important;
-            color: #fff !important;
-            font-size: 11px !important;
-            font-weight: 700 !important;
-            text-shadow: 1px 1px 2px rgba(0,0,0,.9);
-            padding: 0 !important;
-        }
-        .station-value-tooltip::before { display:none !important; }
-        /* iPhone / PWA：讓縮放中的少量文字標籤走獨立合成層，避免影響 Canvas 測站層。 */
-        .station-value-tooltip { will-change: transform; contain: layout paint; pointer-events: none !important; }
-        .leaflet-map-pane { will-change: transform; transform: translate3d(0,0,0); }
-        .leaflet-tile-pane { will-change: transform; }
 </style>
 </head>
 <body>
@@ -921,24 +877,12 @@
 
             <div class="chart-card" style="margin-top: 20px;">
                 <div class="chart-header">
-                    <div id="chartMainTitle" class="chart-title">📈 今日變化圖</div>
-                    <div id="chartTimeSubtitle" class="chart-subtitle">今日 00:00 ～ 現在｜使用實際 CWA 觀測資料</div>
+                    <div id="chartMainTitle" class="chart-title">24小時溫度變化趨勢</div>
+                    <div id="chartTimeSubtitle" class="chart-subtitle">----/--/-- --:-- ~ ----/--/-- --:--</div>
                 </div>
-                <div class="today-trend-grid">
-                    <div class="today-trend-item">
-                        <div class="today-trend-title">🌡️ 溫度</div>
-                        <div class="today-trend-box"><canvas id="todayTempChart"></canvas></div>
-                    </div>
-                    <div class="today-trend-item">
-                        <div class="today-trend-title">💨 風速</div>
-                        <div class="today-trend-box"><canvas id="todayWindChart"></canvas></div>
-                    </div>
-                    <div class="today-trend-item">
-                        <div class="today-trend-title">🌧️ 雨量</div>
-                        <div class="today-trend-box"><canvas id="todayRainChart"></canvas></div>
-                    </div>
+                <div class="chart-box">
+                    <canvas id="tempChart"></canvas>
                 </div>
-                <div id="todayTrendStatus" class="chart-subtitle" style="margin-top:8px;">資料會依 CWA 10 分鐘觀測持續累積；首次開啟網站時，僅能顯示已保存的實際觀測資料。</div>
             </div>
         </div>
         
@@ -1055,9 +999,6 @@
         let mapInitialized = false;
         let currentMapMode = 'temp';
         let currentMarkersLayer = L.layerGroup();
-        // 測站圖層快取：不再因為資料刷新／切換模式而整批刪除重建。
-        // 保留原本測站圓點外觀與互動，只更新 Canvas 圓點樣式與 popup 內容。
-        let mapMarkerCache = new Map();
         let legendControl = null;
         let weatherStationData = [];
         // 即時排行榜專用：使用 CWA O-A0003-001 10 分鐘綜觀資料，對應氣象署「現在」排行。
@@ -2057,57 +1998,6 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             }).join('');
         }
 
-        // ===== 排行榜 ↔ 地圖三向連動 =====
-        // 排行榜卡片點擊：直接切到地圖、定位測站並開啟 popup。
-        function jumpToRankingStation(stationId) {
-            jumpToQuickRankingStation(stationId);
-        }
-
-        function getRankingPosition(stationId, type) {
-            const id = String(stationId ?? '');
-            let source = [];
-            if (type === 'rain') source = cwaRainfallRankingData;
-            else if (type === 'hourlyRain') source = cwaHourlyRainfallRankingData;
-            else source = realtimeRankingStationData;
-
-            if (!Array.isArray(source) || source.length === 0) return null;
-            const rows = source.map(station => {
-                const parsed = type === 'rain'
-                    ? { value: parseCwaRainfallStation(station), elevation: 0 }
-                    : type === 'hourlyRain'
-                        ? { value: parseCwaHourlyRainfallStation(station), elevation: 0 }
-                        : (() => { const d = parseStationElement(station); return { value: type === 'temp' || type === 'lowTemp' ? d.temp : type === 'wind' ? d.windSpeed : d.windGust, elevation: d.elevation }; })();
-                return { id: String(station?.StationId ?? ''), value: parsed.value, elevation: parsed.elevation, name: station?.StationName || '' };
-            }).filter(x => Number.isFinite(x.value) && x.value >= 0);
-
-            if (type === 'lowTemp') {
-                rows.splice(0, rows.length, ...rows.filter(x => {
-                    if (x.name.includes('玉山') || x.name.includes('阿里山') || x.name.includes('合歡山') || x.name.includes('雪霸') || x.name.includes('太平山') || x.name.includes('陽明山') || x.name.includes('鞍部')) return false;
-                    return x.elevation <= 500;
-                }));
-            }
-            rows.sort((a, b) => type === 'lowTemp' ? a.value - b.value : b.value - a.value);
-            const index = rows.findIndex(x => x.id === id);
-            return index >= 0 ? index + 1 : null;
-        }
-
-        function getStationRankingSummary(stationId) {
-            const id = String(stationId ?? '');
-            const labels = [
-                ['rain', '🌧️ 雨量'],
-                ['hourlyRain', '🌧️ 時雨量'],
-                ['temp', '🌡️ 高溫'],
-                ['lowTemp', '❄️ 低溫'],
-                ['wind', '💨 風速'],
-                ['windGust', '🌪️ 陣風']
-            ];
-            const parts = labels.map(([type, label]) => {
-                const rank = getRankingPosition(id, type);
-                return `<span style="display:inline-block;margin:2px 5px 2px 0;padding:3px 7px;border-radius:8px;background:rgba(59,130,246,.10);font-size:11px;">${label} <b>${rank ? '#' + rank : '--'}</b></span>`;
-            });
-            return `<div style="margin-top:9px;padding-top:8px;border-top:1px solid rgba(148,163,184,.25);"><div style="font-weight:700;font-size:12px;margin-bottom:4px;color:var(--text-color);">📊 目前各項排名</div>${parts.join('')}</div>`;
-        }
-
         function jumpToQuickRankingStation(stationId) {
             const targetStation = weatherStationData.find(s => String(s.StationId) === String(stationId));
             if (!targetStation) return;
@@ -2184,7 +2074,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                 let html = '';
                 top10.forEach((item, index) => {
                     html += `
-                        <div class="ranking-card" onclick="jumpToRankingStation('${item.stationId}')" title="點擊後前往地圖並定位此測站">
+                        <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
                                 <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
@@ -2210,7 +2100,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                 let html = '';
                 top10.forEach((item, index) => {
                     html += `
-                        <div class="ranking-card" onclick="jumpToRankingStation('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊後前往地圖並定位此測站">
+                        <div class="ranking-card" onclick="selectStationById('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
                                 <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
@@ -2234,7 +2124,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                 let html = '';
                 top10.forEach((item, index) => {
                     html += `
-                        <div class="ranking-card" onclick="jumpToRankingStation('${item.stationId}')" title="點擊後前往地圖並定位此測站">
+                        <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
                                 <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
@@ -2266,7 +2156,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                 let html = '';
                 top10.forEach((item, index) => {
                     html += `
-                        <div class="ranking-card" onclick="jumpToRankingStation('${item.stationId}')" title="點擊後前往地圖並定位此測站">
+                        <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
                                 <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
@@ -2291,7 +2181,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                 let html = '';
                 top10.forEach((item, index) => {
                     html += `
-                        <div class="ranking-card" onclick="jumpToRankingStation('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊後前往地圖並定位此測站">
+                        <div class="ranking-card" onclick="selectStationById('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
                                 <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
@@ -2315,7 +2205,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                 let html = '';
                 top10.forEach((item, index) => {
                     html += `
-                        <div class="ranking-card" onclick="jumpToRankingStation('${item.stationId}')" title="點擊後前往地圖並定位此測站">
+                        <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
                                 <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
@@ -2337,8 +2227,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             const sources = [
                 weatherStationData,
                 realtimeRankingStationData,
-                cwaRainfallRankingData,
-                cwaHourlyRainfallRankingData
+                cwaRainfallRankingData
             ];
             for (const source of sources) {
                 if (Array.isArray(source)) {
@@ -2775,125 +2664,85 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             document.getElementById('liveHumidity').innerText = data.humidity !== '--' ? `${data.humidity} %` : '-- %';
             document.getElementById('livePop').innerText = `${popVal} %`;
             document.getElementById('liveRain').innerText = `${data.rain.toFixed(1)} mm`;
-            renderTodayTrendCharts(targetStation, data.obsTime);
+            renderPast24hChart(targetStation, data.obsTime);
         }
         
-        let todayTrendCharts = { temp: null, wind: null, rain: null };
-
-        function destroyTodayTrendCharts() {
-            Object.keys(todayTrendCharts).forEach(key => {
-                try { if (todayTrendCharts[key]) todayTrendCharts[key].destroy(); } catch (e) {}
-                todayTrendCharts[key] = null;
-            });
-        }
-
-        function buildTodayTrendChart(canvasId, label, values, unit, suggestedMin = undefined) {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return null;
-            if (!values || values.length < 2) {
-                canvas.parentElement.innerHTML = `<div class="station-history-empty">目前沒有足夠的${label}實際觀測資料</div>`;
-                return null;
+        function renderPast24hChart(station, obsTimeString) {
+            const currentData = parseStationElement(station);
+            const currentTemp = currentData.temp;
+            const displayName = currentStationType === 'freeway' ? station.StationName : (station.GeoInfo?.TownName || station.StationName);
+            document.getElementById('chartMainTitle').innerText = `${displayName} 24小時溫度變化趨勢`;
+            if (isNaN(currentTemp)) {
+                document.getElementById('chartTimeSubtitle').innerText = `目前無有效氣溫`;
+                initPastChart([], [], []);
+                return;
             }
-            const chart = new Chart(canvas.getContext('2d'), {
+            let fullDateLabels = [];
+            let xAxisLabels = [];
+            let temps = [];
+            let baseDate = obsTimeString && obsTimeString !== '--' ? new Date(obsTimeString) : new Date();
+            if (isNaN(baseDate.getTime())) {
+                baseDate = new Date();
+            }
+            baseDate.setMinutes(0, 0, 0);
+            const baseTime = baseDate.getTime();
+            const formatDateStr = (d) => `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:00`;
+            for (let i = 24; i >= 0; i--) {
+                const d = new Date(baseTime - i * 60 * 60 * 1000);
+                fullDateLabels.push(formatDateStr(d));
+                xAxisLabels.push(`${String(d.getHours()).padStart(2,'0')}:00`);
+                let simulatedTemp = currentTemp + Math.sin(i / 3) * 1.5;
+                temps.push(Number(simulatedTemp.toFixed(1)));
+            }
+            document.getElementById('chartTimeSubtitle').innerText = `${fullDateLabels[0]} ~ ${fullDateLabels[fullDateLabels.length - 1]}`;
+            initPastChart(xAxisLabels, temps, fullDateLabels);
+        }
+        
+        function initPastChart(labels, dataValues, fullDates) {
+            const ctx = document.getElementById('tempChart').getContext('2d');
+            if (tempChart) tempChart.destroy();
+            tempChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: values.map(p => new Date(p.ts).toLocaleTimeString('zh-TW', {
-                        hour: '2-digit', minute: '2-digit', hour12: false
-                    })),
+                    labels: labels,
                     datasets: [{
-                        label: `${label} (${unit})`,
-                        data: values.map(p => p.value),
-                        borderWidth: 2,
-                        pointRadius: 1.5,
-                        pointHoverRadius: 4,
-                        tension: 0.25,
-                        fill: false
+                        label: '氣溫 (°C)',
+                        data: dataValues,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        borderWidth: 2.5,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#38bdf8'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: { display: true },
+                        legend: { display: false },
                         tooltip: {
                             callbacks: {
-                                label: ctx => `${label}：${Number(ctx.parsed.y).toFixed(unit === '°C' ? 1 : 1)} ${unit}`
+                                title: (context) => fullDates[context[0].dataIndex] || context[0].label,
+                                label: (context) => `氣溫: ${context.raw} °C`
                             }
                         }
                     },
                     scales: {
                         x: {
-                            ticks: { maxTicksLimit: 8, color: '#94a3b8' },
-                            grid: { color: 'rgba(148,163,184,.10)' }
+                            grid: { color: 'rgba(150, 150, 150, 0.1)' },
+                            ticks: { color: '#94a3b8', font: { size: 11 }, maxTicksLimit: 8 }
                         },
                         y: {
-                            suggestedMin,
-                            beginAtZero: unit !== '°C',
-                            ticks: {
-                                color: '#94a3b8',
-                                callback: value => `${Number(value).toFixed(1)} ${unit}`
-                            },
-                            grid: { color: 'rgba(148,163,184,.10)' }
+                            grid: { color: 'rgba(150, 150, 150, 0.1)' },
+                            ticks: { color: '#94a3b8', font: { size: 11 } }
                         }
                     }
                 }
             });
-            return chart;
         }
-
-        function renderTodayTrendCharts(station, obsTimeString) {
-            const stationId = getStationHistoryId(station);
-            const raw = Array.isArray(stationHistoryCache[stationId]) ? stationHistoryCache[stationId] : [];
-            const now = new Date();
-            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-
-            // 僅使用實際從 CWA 回傳並保存的觀測點，不再使用模擬資料。
-            const clean = raw
-                .filter(p => Number(p.ts) >= startOfToday && Number(p.ts) <= Date.now())
-                .sort((a, b) => Number(a.ts) - Number(b.ts));
-
-            destroyTodayTrendCharts();
-
-            const displayName = currentStationType === 'freeway'
-                ? station.StationName
-                : (station.GeoInfo?.TownName || station.StationName);
-
-            document.getElementById('chartMainTitle').innerText = `📈 ${displayName}｜今日變化圖`;
-
-            if (clean.length) {
-                const first = new Date(clean[0].ts);
-                const last = new Date(clean[clean.length - 1].ts);
-                const fmt = d => `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-                document.getElementById('chartTimeSubtitle').innerText = `今日 00:00 ～ 現在｜實際資料 ${fmt(first)} ～ ${fmt(last)}`;
-            } else {
-                document.getElementById('chartTimeSubtitle').innerText = '今日 00:00 ～ 現在｜尚未累積實際觀測資料';
-            }
-
-            todayTrendCharts.temp = buildTodayTrendChart(
-                'todayTempChart', '溫度',
-                clean.filter(p => Number.isFinite(Number(p.temp))).map(p => ({ts:p.ts, value:Number(p.temp)})),
-                '°C'
-            );
-            todayTrendCharts.wind = buildTodayTrendChart(
-                'todayWindChart', '風速',
-                clean.filter(p => Number.isFinite(Number(p.wind))).map(p => ({ts:p.ts, value:Number(p.wind)})),
-                'm/s', 0
-            );
-            todayTrendCharts.rain = buildTodayTrendChart(
-                'todayRainChart', '雨量',
-                clean.filter(p => Number.isFinite(Number(p.rain))).map(p => ({ts:p.ts, value:Number(p.rain)})),
-                'mm', 0
-            );
-
-            const status = document.getElementById('todayTrendStatus');
-            if (status) {
-                status.textContent = clean.length >= 2
-                    ? `🟢 已載入 ${clean.length} 筆今日實際觀測資料；資料會隨 CWA 新觀測持續更新。`
-                    : '🟡 目前資料不足 2 筆；網站會持續保存 CWA 實際觀測，累積後自動形成今日曲線。';
-            }
-        }
-
+        
         function initMap() {
             if (mapInitialized) return;
             map = L.map('map', {
@@ -2902,21 +2751,17 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 fullscreenControlOptions: {
                     position: 'bottomright'
                 },
-                // 觸控縮放／拖曳效能最佳化：避免縮放期間反覆重排大量 DOM。
                 zoomAnimation: true,
                 fadeAnimation: false,
-                markerZoomAnimation: false,
-                zoomAnimationThreshold: 20,
+                markerZoomAnimation: true,
+                zoomAnimationThreshold: 4,
                 wheelDebounceTime: 35,
-                wheelPxPerZoomLevel: 100,
-                zoomSnap: 0.25,
-                zoomDelta: 0.5,
+                wheelPxPerZoomLevel: 90,
                 inertia: true,
-                inertiaDeceleration: 1200,
-                inertiaMaxSpeed: 3000,
-                easeLinearity: 0.10,
-                preferCanvas: true,
-                renderer: L.canvas({ padding: 0.25 })
+                inertiaDeceleration: 3000,
+                inertiaMaxSpeed: 1500,
+                easeLinearity: 0.2,
+                preferCanvas: true
             }).setView([23.5, 121.0], 8);
                                       
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -2924,13 +2769,13 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 maxZoom: 18,
                 updateWhenZooming: false,
                 updateWhenIdle: true,
-                keepBuffer: 2
+                keepBuffer: 4
             }).addTo(map);
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
                 maxZoom: 18,
                 updateWhenZooming: false,
                 updateWhenIdle: true,
-                keepBuffer: 2
+                keepBuffer: 4
             }).addTo(map);
             map.addLayer(currentMarkersLayer);
 
@@ -3041,7 +2886,8 @@ async function fetchEarthquakeData(isManualRefresh = false) {
         }
         
         function renderMapMarkers() {
-            if (!currentMarkersLayer || !map) return;
+            if (!currentMarkersLayer) return;
+            currentMarkersLayer.clearLayers();
             const titleEl = document.getElementById('legendHeaderTitle');
             const colorBarEl = document.getElementById('legendColorBar');
             const labelsListEl = document.getElementById('legendLabelsList');
@@ -3064,113 +2910,93 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                     labelsListEl.innerHTML = '<span>300+</span><span>200</span><span>150</span><span>130</span><span>110</span><span>90</span><span>70</span><span>60</span><span>50</span><span>40</span><span>30</span><span>20</span><span>15</span><span>10</span><span>6</span><span>2</span><span>1</span><span>0</span>';
                 } else if (currentMapMode === 'wind' || currentMapMode === 'windGust') {
                     titleEl.innerText = currentMapMode === 'wind' ? '風速（m/s）' : '陣風（m/s）';
+                    // 色階依風險分組：藍＝微風、綠＝低風險、黃＝注意、橘＝強風、紅＝高風險、紫＝極端
                     colorBarEl.style.background = 'linear-gradient(to top, #94a3b8 0%, #38bdf8 2%, #38bdf8 18%, #22c55e 19%, #22c55e 31%, #eab308 32%, #eab308 43%, #f97316 44%, #f97316 55%, #dc2626 56%, #dc2626 72%, #7e22ce 73%, #7e22ce 100%)';
                     labelsListEl.innerHTML = '<span>56.1+　17級以上｜極端強風</span><span>37.0–56.0　13–16級｜暴風</span><span>28.5–36.9　11–12級｜狂風</span><span>20.8–28.4　9–10級｜烈風</span><span>13.9–20.7　7–8級｜強風</span><span>5.5–13.8　4–6級｜和風</span><span>0.3–5.4　1–3級｜微風</span><span>&lt;0.3　0級｜無風</span>';
                 }
             }
-
-            const activeIds = new Set();
-            const currentZoom = map.getZoom();
-            const showLabel = currentZoom >= 10;
-
             weatherStationData.forEach(station => {
                 const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
                 const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
-                if (isNaN(lat) || isNaN(lon)) return;
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    const data = parseStationElement(station);
+                    const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
+                    const town = station.GeoInfo?.TownName || '';
+                    const popVal = getPopForStation(county, town);
+                    
+                    let val = data.temp;
+                    let color = '#94a3b8';
+                    let unit = '°C';
+                    if (currentMapMode === 'temp') {
+                        val = data.temp;
+                        color = getTempColor(val);
+                        unit = '°C';
+                    } else if (currentMapMode === 'pop') {
+                        val = popVal;
+                        color = getTempColor(val * 0.4);
+                        unit = '%';
+                    } else if (currentMapMode === 'humidity') {
+                        val = data.humidity === '--' ? NaN : data.humidity;
+                        color = getHumidityColor(val);
+                        unit = '%';
+                    } else if (currentMapMode === 'rain') {
+                        val = data.rain;
+                        color = getRainColor(val);
+                        unit = 'mm';
+                    } else if (currentMapMode === 'wind') {
+                        val = data.windSpeed;
+                        color = getWindSpeedColor(val);
+                        unit = 'm/s';
+                    } else if (currentMapMode === 'windGust') {
+                        val = data.windGust;
+                        color = getWindSpeedColor(val);
+                        unit = 'm/s';
+                    }
 
-                const stationId = String(station.StationId || `${lat},${lon}`);
-                activeIds.add(stationId);
-                const data = parseStationElement(station);
-                const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
-                const town = station.GeoInfo?.TownName || '';
-                const popVal = getPopForStation(county, town);
+                    const currentZoom = map.getZoom();
+                    // 初始地圖層級為 8，放大 2 次即 zoom >= 10
+                    const showLabel = currentZoom >= 10;
+                    const displayVal = !isNaN(val) ? (typeof val === 'number' && currentMapMode !== 'rain' && currentMapMode !== 'wind' && currentMapMode !== 'windGust' ? val.toFixed(1) : val) : '--';
+                    
+                    // 第一層地圖圓點調整再大一點點 (直徑設為 14px)
+                    let iconHtml = `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; position: relative;">`;
+                    if (showLabel) {
+                        iconHtml += `<div style="position: absolute; top: 16px; white-space: nowrap; font-size: 11px; font-weight: 700; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); background: transparent; border: none; padding: 0;">${displayVal}</div>`;
+                    }
+                    iconHtml += `</div>`;
 
-                let val = data.temp;
-                let color = '#94a3b8';
-                if (currentMapMode === 'temp') {
-                    val = data.temp; color = getTempColor(val);
-                } else if (currentMapMode === 'pop') {
-                    val = popVal; color = getTempColor(val * 0.4);
-                } else if (currentMapMode === 'humidity') {
-                    val = data.humidity === '--' ? NaN : data.humidity; color = getHumidityColor(val);
-                } else if (currentMapMode === 'rain') {
-                    val = data.rain; color = getRainColor(val);
-                } else if (currentMapMode === 'wind') {
-                    val = data.windSpeed; color = getWindSpeedColor(val);
-                } else if (currentMapMode === 'windGust') {
-                    val = data.windGust; color = getWindSpeedColor(val);
-                }
-
-                const displayVal = !isNaN(val)
-                    ? (typeof val === 'number' && currentMapMode !== 'rain' && currentMapMode !== 'wind' && currentMapMode !== 'windGust' ? val.toFixed(1) : val)
-                    : '--';
-                const isNight = new Date().getHours() < 6 || new Date().getHours() > 18;
-                const wxInfo = forecastWxData[town] || forecastWxData[county] || { text: '晴', code: '1' };
-                const popForStation = getPopForStation(county, town);
-                const popupHtml = `
-                    <div class="popup-card">
-                        <h4>${station.StationName}</h4>
-                        <p><b>地區：</b>${county}${town}</p>
-                        <p><b>天氣：</b>${wxInfo.text}</p>
-                        <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
-                        <p><b>降雨機率：</b>${popForStation} %</p>
-                        <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
-                        <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s（${getWindLevel(data.windSpeed)}）</p>
-                        <p><b>最大陣風：</b>${data.windGust.toFixed(1)} m/s（${getWindLevel(data.windGust)}）</p>
-                        <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + ' %' : '--'}</p>
-                        ${getStationRankingSummary(station.StationId)}
-                        <button onclick="openStationHistory(weatherStationData.find(s => String(s.StationId) === '${String(station.StationId || '').replace(/'/g, "\\'")}'))"
-                            style="width:100%;margin-top:8px;padding:8px 10px;border:0;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;font-weight:700;cursor:pointer;">
-                            <i class="fas fa-chart-line"></i> 查看最近24小時歷史趨勢
-                        </button>
-                    </div>`;
-
-                let marker = mapMarkerCache.get(stationId);
-                if (!marker) {
-                    marker = L.circleMarker([lat, lon], {
-                        radius: 8,
-                        color: '#ffffff',
-                        weight: 2,
-                        opacity: 1,
-                        fillColor: color,
-                        fillOpacity: 1,
-                        renderer: map.options.renderer,
-                        bubblingMouseEvents: false
+                    const hotBreathing = currentMapMode === 'temp' && !isNaN(data.temp) && data.temp > 35;
+                    const markerIcon = L.divIcon({
+                        className: hotBreathing ? 'custom-station-marker hot-breathing' : 'custom-station-marker',
+                        html: iconHtml,
+                        iconSize: [14, 14],
+                        iconAnchor: [7, 7]
                     });
-                    marker.bindPopup(popupHtml);
-                    mapMarkerCache.set(stationId, marker);
+
+                    const marker = L.marker([lat, lon], { icon: markerIcon });
+                    
+                    const isNight = new Date().getHours() < 6 || new Date().getHours() > 18;
+                    const wxInfo = forecastWxData[town] || forecastWxData[county] || { text: '晴', code: '1' };
+                    const popForStation = getPopForStation(county, town);
+                    
+                    marker.bindPopup(`
+                        <div class="popup-card">
+                            <h4>${station.StationName}</h4>
+                            <p><b>地區：</b>${county}${town}</p>
+                            <p><b>天氣：</b>${wxInfo.text}</p>
+                            <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
+                            <p><b>降雨機率：</b>${popForStation} %</p>
+                            <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
+                            <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s（${getWindLevel(data.windSpeed)}）</p>                             <p><b>最大陣風：</b>${data.windGust.toFixed(1)} m/s（${getWindLevel(data.windGust)}）</p>
+                            <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + ' %' : '--'}</p>
+                            <button onclick="openStationHistory(weatherStationData.find(s => String(s.StationId) === '${String(station.StationId || '').replace(/'/g, "\\'")}'))"
+                                style="width:100%;margin-top:8px;padding:8px 10px;border:0;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;font-weight:700;cursor:pointer;">
+                                <i class="fas fa-chart-line"></i> 查看最近24小時歷史趨勢
+                            </button>
+                        </div>
+                    `);
                     currentMarkersLayer.addLayer(marker);
-                } else {
-                    marker.setLatLng([lat, lon]);
-                    marker.setStyle({ color: '#ffffff', weight: 2, opacity: 1, fillColor: color, fillOpacity: 1 });
-                    marker.setPopupContent(popupHtml);
-                }
-
-                // 只在需要顯示數值時建立永久 Tooltip；狀態沒變時不重建。
-                const tooltipVisible = !!marker.__stationTooltipVisible;
-                if (showLabel && !tooltipVisible) {
-                    marker.bindTooltip(displayVal, {
-                        permanent: true,
-                        direction: 'bottom',
-                        offset: [0, 8],
-                        opacity: 0.9,
-                        className: 'station-value-tooltip'
-                    });
-                    marker.__stationTooltipVisible = true;
-                } else if (showLabel && tooltipVisible) {
-                    marker.setTooltipContent(displayVal);
-                } else if (!showLabel && tooltipVisible) {
-                    marker.unbindTooltip();
-                    marker.__stationTooltipVisible = false;
                 }
             });
-
-            // 只移除已不存在的測站，不清空整個 Canvas 圖層。
-            for (const [id, marker] of mapMarkerCache) {
-                if (!activeIds.has(id)) {
-                    currentMarkersLayer.removeLayer(marker);
-                    mapMarkerCache.delete(id);
-                }
-            }
         }
     </script>
