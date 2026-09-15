@@ -864,7 +864,11 @@
                 </div>
                 <div class="segment-control" id="rankingTypeToggle" style="margin-bottom: 12px; flex-wrap: nowrap; overflow-x: auto;">
                     <button class="segment-btn active" id="btnRankRain" onclick="switchRankingTab('rain')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">🌧️雨量排行</button>
-                    <button class="segment-btn" id="btnRankHourlyRain" onclick="switchRankingTab('hourlyRain')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">🌧️時雨量排行</button>
+                    <button class="segment-btn" id="btnRankRain1h" onclick="switchRankingTab('rain1h')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">1小時</button>
+                    <button class="segment-btn" id="btnRankRain3h" onclick="switchRankingTab('rain3h')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">3小時</button>
+                    <button class="segment-btn" id="btnRankRain6h" onclick="switchRankingTab('rain6h')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">6小時</button>
+                    <button class="segment-btn" id="btnRankRain12h" onclick="switchRankingTab('rain12h')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">12小時</button>
+                    <button class="segment-btn" id="btnRankRain24h" onclick="switchRankingTab('rain24h')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">24小時</button>
                     <button class="segment-btn" id="btnRankTemp" onclick="switchRankingTab('temp')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">🌡️高溫排行</button>
                     <button class="segment-btn" id="btnRankLowTemp" onclick="switchRankingTab('lowTemp')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">❄️低溫排行</button>
                     <button class="segment-btn" id="btnRankWind" onclick="switchRankingTab('wind')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">💨風速排行</button>
@@ -896,7 +900,7 @@
                     <button id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️氣溫</button>
                     <button id="btnMapPop" onclick="switchMapMode('pop')">📈降雨機率</button>
                     <button id="btnMapHumidity" onclick="switchMapMode('humidity')">💧濕度</button>
-                    <button id="btnMapRain" onclick="switchMapMode('rain')">🌧️日雨量</button>
+                    <button id="btnMapRain" onclick="switchMapMode('rain')">🌧️雨量排行</button>
                     <button id="btnMapWind" onclick="switchMapMode('wind')">💨風速</button>
                     <button id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️陣風</button>
                 </div>
@@ -1304,7 +1308,11 @@
         function switchRankingTab(tab) {
             currentRankingTab = tab;
             document.getElementById('btnRankRain').classList.toggle('active', tab === 'rain');
-            document.getElementById('btnRankHourlyRain').classList.toggle('active', tab === 'hourlyRain');
+            document.getElementById('btnRankRain1h').classList.toggle('active', tab === 'rain1h');
+            document.getElementById('btnRankRain3h').classList.toggle('active', tab === 'rain3h');
+            document.getElementById('btnRankRain6h').classList.toggle('active', tab === 'rain6h');
+            document.getElementById('btnRankRain12h').classList.toggle('active', tab === 'rain12h');
+            document.getElementById('btnRankRain24h').classList.toggle('active', tab === 'rain24h');
             document.getElementById('btnRankTemp').classList.toggle('active', tab === 'temp');
             document.getElementById('btnRankLowTemp').classList.toggle('active', tab === 'lowTemp');
             document.getElementById('btnRankWind').classList.toggle('active', tab === 'wind');
@@ -1900,6 +1908,84 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             return Number.isFinite(value) && value >= 0 ? value : NaN;
         }
 
+        // CWA O-A0002-001：過去 N 小時累積降水量。
+        // 官方欄位：Past1hr / Past3hr / Past6hr / Past12hr / Past24hr / Precipitation。
+        // 0.0 mm 是「有資料但過去 N 小時無降水」，不可視為無資料。
+        function normalizeCwaRainObject(value) {
+            if (value && typeof value === 'string') {
+                const text = value.trim();
+                if (!text) return {};
+                try { return JSON.parse(text); } catch (e) { return {}; }
+            }
+            return value && typeof value === 'object' ? value : {};
+        }
+
+        function findCwaRainfallBlock(station, hours) {
+            const target = `past${hours}hr`;
+            const roots = [
+                station?.RainfallElement,
+                station?.rainfallElement,
+                station?.Rainfall,
+                station?.rainfall
+            ];
+
+            const visited = new Set();
+            const queue = roots.map(v => ({ value: normalizeCwaRainObject(v), depth: 0 }));
+
+            while (queue.length) {
+                const { value, depth } = queue.shift();
+                const obj = normalizeCwaRainObject(value);
+                if (!obj || typeof obj !== 'object' || visited.has(obj) || depth > 5) continue;
+                visited.add(obj);
+
+                for (const [key, rawBlock] of Object.entries(obj)) {
+                    const normalizedKey = String(key).replace(/[_\s-]/g, '').toLowerCase();
+                    if (
+                        normalizedKey === target ||
+                        normalizedKey === `past${hours}hour` ||
+                        normalizedKey === `past${hours}hours`
+                    ) {
+                        const block = normalizeCwaRainObject(rawBlock);
+                        if (block && typeof block === 'object') return block;
+                    }
+                }
+
+                for (const child of Object.values(obj)) {
+                    const normalizedChild = normalizeCwaRainObject(child);
+                    if (normalizedChild && typeof normalizedChild === 'object') {
+                        queue.push({ value: normalizedChild, depth: depth + 1 });
+                    }
+                }
+            }
+            return {};
+        }
+
+        // CWA O-A0002-001：過去 N 小時累積降水量。
+        // 官方欄位路徑：
+        // //Station/RainfallElement/Past1hr/Precipitation
+        // //Station/RainfallElement/Past3hr/Precipitation
+        // //Station/RainfallElement/Past6hr/Precipitation
+        // //Station/RainfallElement/Past12hr/Precipitation
+        // //Station/RainfallElement/Past24hr/Precipitation
+        function parseCwaPastRainfallStation(station, hours) {
+            const block = findCwaRainfallBlock(station, hours);
+            let raw = block?.Precipitation ?? block?.precipitation ?? block?.Value ?? block?.value;
+
+            if (typeof raw === 'string') raw = raw.trim();
+
+            if (raw === undefined || raw === null || raw === '' || raw === 'X' || raw === 'x' || raw === 'T' || raw === 't') {
+                return NaN;
+            }
+
+            // CWA：-99 = 缺值/資料異常。
+            // -98 = 連續 6 小時無降水；只有在「6小時累積」時可確定為 0.0 mm。
+            // 對 3/12/24 小時不能把 -98 直接當成 0，避免錯誤推論。
+            if (String(raw).trim() === '-98' && Number(hours) === 6) return 0;
+
+            const value = Number(raw);
+            return Number.isFinite(value) && value >= 0 ? value : NaN;
+        }
+
         function getCwaRainObservationTime(list) {
             const times = (Array.isArray(list) ? list : [])
                 .map(station => station?.ObsTime?.DateTime || station?.ObsTime?.DateTime || station?.ObsTime)
@@ -2036,19 +2122,25 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
         function renderRankings() {
             const container = document.getElementById('rankingCardsContainer');
             if (!container || weatherStationData.length === 0) return;
-            const rankingSource = currentRankingTab === 'rain'
+            const isRainPeriod = ['rain', 'rain1h', 'rain3h', 'rain6h', 'rain12h', 'rain24h'].includes(currentRankingTab);
+            const rankingSource = isRainPeriod
                 ? ((Array.isArray(cwaRainfallRankingData) && cwaRainfallRankingData.length > 0) ? cwaRainfallRankingData : [])
-                : currentRankingTab === 'hourlyRain'
-                    ? ((Array.isArray(cwaHourlyRainfallRankingData) && cwaHourlyRainfallRankingData.length > 0) ? cwaHourlyRainfallRankingData : [])
-                    : ((Array.isArray(realtimeRankingStationData) && realtimeRankingStationData.length > 0)
-                        ? realtimeRankingStationData
-                        : weatherStationData);
+                : ((Array.isArray(realtimeRankingStationData) && realtimeRankingStationData.length > 0)
+                    ? realtimeRankingStationData
+                    : weatherStationData);
             let parsedList = rankingSource.map(station => {
-                const data = currentRankingTab === 'rain'
-                    ? { temp: NaN, rain: parseCwaRainfallStation(station), hourlyRain: NaN, elevation: 0, windSpeed: NaN, windGust: NaN }
-                    : currentRankingTab === 'hourlyRain'
-                        ? { temp: NaN, rain: NaN, hourlyRain: parseCwaHourlyRainfallStation(station), elevation: 0, windSpeed: NaN, windGust: NaN }
-                        : parseStationElement(station);
+                const data = isRainPeriod
+                    ? {
+                        temp: NaN,
+                        rain: currentRankingTab === 'rain' ? parseCwaRainfallStation(station) : NaN,
+                        hourlyRain: currentRankingTab === 'rain1h' ? parseCwaPastRainfallStation(station, 1) : NaN,
+                        rain3h: currentRankingTab === 'rain3h' ? parseCwaPastRainfallStation(station, 3) : NaN,
+                        rain6h: currentRankingTab === 'rain6h' ? parseCwaPastRainfallStation(station, 6) : NaN,
+                        rain12h: currentRankingTab === 'rain12h' ? parseCwaPastRainfallStation(station, 12) : NaN,
+                        rain24h: currentRankingTab === 'rain24h' ? parseCwaPastRainfallStation(station, 24) : NaN,
+                        elevation: 0, windSpeed: NaN, windGust: NaN
+                    }
+                    : parseStationElement(station);
                 const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
                 const town = station.GeoInfo?.TownName || '';
                 return {
@@ -2059,53 +2151,55 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                     temp: data.temp,
                     rain: data.rain,
                     hourlyRain: data.hourlyRain,
+                    rain3h: data.rain3h,
+                    rain6h: data.rain6h,
+                    rain12h: data.rain12h,
+                    rain24h: data.rain24h,
                     elevation: data.elevation,
                     windSpeed: data.windSpeed,
                     windGust: data.windGust
                 };
             });
-            if (currentRankingTab === 'rain') {
-                parsedList.sort((a, b) => b.rain - a.rain);
-                let top10 = parsedList.slice(0, 10);
-                if (top10.length === 0 || top10[0].rain === 0) {
-                    container.innerHTML = `<div class="my-location-status" style="grid-column: span 2;">目前無降雨數據</div>`;
-                    return;
+            if (isRainPeriod) {
+                const periodConfig = {
+                    rain: { key: 'rain', label: '日雨量', empty: '目前無日雨量資料' },
+                    rain1h: { key: 'hourlyRain', label: '1小時雨量', empty: '目前無1小時雨量資料' },
+                    rain3h: { key: 'rain3h', label: '3小時雨量', empty: '目前無3小時雨量資料' },
+                    rain6h: { key: 'rain6h', label: '6小時雨量', empty: '目前無6小時雨量資料' },
+                    rain12h: { key: 'rain12h', label: '12小時雨量', empty: '目前無12小時雨量資料' },
+                    rain24h: { key: 'rain24h', label: '24小時雨量', empty: '目前無24小時雨量資料' }
+                }[currentRankingTab];
+                const validRainList = parsedList
+                    .filter(item => Number.isFinite(item[periodConfig.key]) && item[periodConfig.key] >= 0)
+                    .sort((a, b) => b[periodConfig.key] - a[periodConfig.key]);
+                const top10 = validRainList.slice(0, 10);
+                if (isRainPeriod && Array.isArray(rankingSource)) {
+                    const diagnosticValidCount = parsedList.filter(item => Number.isFinite(item[periodConfig.key]) && item[periodConfig.key] >= 0).length;
+                    if (currentRankingTab === 'rain6h') {
+                        console.info('[CWA 6小時雨量診斷]', {
+                            stations: rankingSource.length,
+                            valid6hr: diagnosticValidCount,
+                            observationTime: formatCwaSourceObsTime('O-A0002-001')
+                        });
+                    }
                 }
-                let html = '';
-                top10.forEach((item, index) => {
-                    html += `
-                        <div class="ranking-card" onclick="selectStationById('${item.stationId}')" title="點擊檢視測站">
-                            <div class="ranking-card-top">
-                                <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
-                                <span class="ranking-badge-num">#${index + 1}</span>
-                            </div>
-                            <div class="ranking-main-value">${item.rain.toFixed(1)}<span style="font-size: 14px; font-weight: 600; margin-left: 2px;">mm</span></div>
-                            <div class="ranking-sub-info">
-                                <i class="fas fa-cloud-rain"></i> 地點：${item.county}${item.town}
-                            </div>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } else if (currentRankingTab === 'hourlyRain') {
-                // 時雨量排行：使用 CWA 過去1小時累積雨量，排列與雨量／高溫／低溫／陣風排行完全相同的卡片風格。
-                const validHourlyRainList = parsedList
-                    .filter(item => Number.isFinite(item.hourlyRain) && item.hourlyRain >= 0)
-                    .sort((a, b) => b.hourlyRain - a.hourlyRain);
-                const top10 = validHourlyRainList.slice(0, 10);
                 if (top10.length === 0) {
-                    container.innerHTML = `<div class="my-location-status" style="grid-column: span 2;">目前無時雨量數據</div>`;
+                    const emptyExtra = currentRankingTab === 'rain6h'
+                        ? `<div style="font-size:12px;margin-top:6px;color:var(--text-muted);">CWA O-A0002-001：目前回傳資料中未解析到有效 Past6hr.Precipitation</div>`
+                        : '';
+                    container.innerHTML = `<div class="my-location-status" style="grid-column: span 2;">${periodConfig.empty}${emptyExtra}</div>`;
                     return;
                 }
                 let html = '';
                 top10.forEach((item, index) => {
+                    const value = item[periodConfig.key];
                     html += `
                         <div class="ranking-card" onclick="selectStationById('${String(item.stationId || '').replace(/'/g, "\\'")}')" title="點擊檢視測站">
                             <div class="ranking-card-top">
                                 <span class="ranking-station-name">${item.stationName} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.county}</span></span>
                                 <span class="ranking-badge-num">#${index + 1}</span>
                             </div>
-                            <div class="ranking-main-value">${item.hourlyRain.toFixed(1)}<span style="font-size: 14px; font-weight: 600; margin-left: 2px;">mm</span></div>
+                            <div class="ranking-main-value">${value.toFixed(1)}<span style="font-size: 14px; font-weight: 600; margin-left: 2px;">mm</span></div>
                             <div class="ranking-sub-info">
                                 <i class="fas fa-cloud-rain"></i> 地點：${item.county}${item.town}
                             </div>
