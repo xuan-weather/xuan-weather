@@ -848,8 +848,9 @@
             </div>
 
             <div class="quick-ranking-section">
-                <div class="quick-ranking-title">
-                    <i class="fas fa-ranking-star" style="color: #f59e0b;"></i> 台灣即時極值
+                <div class="quick-ranking-title" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;">
+                    <span><i class="fas fa-ranking-star" style="color: #f59e0b;"></i> 台灣即時極值</span>
+                    <span id="quickRankingObsTime" style="font-size:11px;font-weight:500;color:var(--text-muted);white-space:nowrap;">資料時間：--</span>
                 </div>
                 <div id="quickRankingCards" class="quick-ranking-grid">
                     <div class="my-location-status" style="grid-column: 1 / -1;">
@@ -859,8 +860,9 @@
             </div>
 
             <div class="ranking-section-box" style="margin-top: 20px;">
-                <div class="section-divider-title" style="margin-top: 15px;">
-                    <i class="fas fa-trophy" style="color: #f59e0b;"></i> 即時氣象排行榜TOP 10
+                <div class="section-divider-title" style="margin-top: 15px;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;">
+                    <span><i class="fas fa-trophy" style="color: #f59e0b;"></i> 即時氣象排行榜TOP 10</span>
+                    <span id="rankingObsTime" style="font-size:11px;font-weight:500;color:var(--text-muted);white-space:nowrap;">資料時間：--</span>
                 </div>
                 <div class="segment-control" id="rankingTypeToggle" style="margin-bottom: 12px; flex-wrap: nowrap; overflow-x: auto;">
                     <button class="segment-btn active" id="btnRankRain" onclick="switchRankingTab('rain')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">🌧️雨量排行</button>
@@ -2006,12 +2008,34 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                 hour: '2-digit', minute: '2-digit', hour12: false
             }).formatToParts(date);
             const get = type => parts.find(p => p.type === type)?.value || '';
-            return `${get('year')}/${get('month')}/${get('day')} ${get('hour')}:${get('minute')}`;
+            return `${get('hour')}:${get('minute')}`;
+        }
+
+        function getRankingObservationTimeLabel(sourceIds) {
+            const ids = Array.isArray(sourceIds) ? sourceIds : [sourceIds];
+            const dates = ids.map(id => cwaAppliedObsTime[id]).filter(Boolean).map(v => {
+                const d = new Date(v);
+                return Number.isNaN(d.getTime()) ? null : d;
+            }).filter(Boolean).sort((a, b) => b - a);
+            return dates.length ? formatCwaRainObservationTime(dates[0]) : '--';
+        }
+
+        function updateRankingObservationTime() {
+            const quick = document.getElementById('quickRankingObsTime');
+            if (quick) {
+                quick.textContent = `資料時間：${getRankingObservationTimeLabel(['O-A0003-001', 'O-A0002-001'])}`;
+            }
+            const ranking = document.getElementById('rankingObsTime');
+            if (ranking) {
+                const isRain = ['rain', 'rain1h', 'rain3h', 'rain6h', 'rain12h', 'rain24h'].includes(currentRankingTab);
+                ranking.textContent = `資料時間：${getRankingObservationTimeLabel(isRain ? 'O-A0002-001' : 'O-A0003-001')}`;
+            }
         }
 
         function renderQuickRankingCards() {
             const container = document.getElementById('quickRankingCards');
             if (!container) return;
+            updateRankingObservationTime();
             if (!Array.isArray(weatherStationData) || weatherStationData.length === 0) {
                 container.innerHTML = `<div class="my-location-status" style="grid-column: 1 / -1;">目前沒有可用的測站資料</div>`;
                 return;
@@ -2121,6 +2145,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
 
         function renderRankings() {
             const container = document.getElementById('rankingCardsContainer');
+            updateRankingObservationTime();
             if (!container || weatherStationData.length === 0) return;
             const isRainPeriod = ['rain', 'rain1h', 'rain3h', 'rain6h', 'rain12h', 'rain24h'].includes(currentRankingTab);
             const rankingSource = isRainPeriod
