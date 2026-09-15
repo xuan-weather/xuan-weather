@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script data-goatcounter="https://taiwanweather.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+
     <style>
         :root {
             --bg-color: #090d16;
@@ -701,7 +703,14 @@
             .station-history-grid { grid-template-columns: 1fr; }
         }
 
-</style>
+
+        .visitor-stats-widget{margin-top:20px;padding:16px;border:1px solid var(--panel-border);border-radius:18px;background:var(--panel-bg);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+        .visitor-stats-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+        .visitor-stats-title{font-size:16px;font-weight:800}.visitor-stats-status{font-size:11px;color:var(--text-muted);white-space:nowrap}
+        .visitor-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.visitor-stat-card{padding:12px 8px;border-radius:14px;background:var(--action-bg);border:1px solid var(--action-border);text-align:center}
+        .visitor-stat-card span{display:block;font-size:11px;color:var(--text-muted);margin-bottom:5px}.visitor-stat-card b{font-size:20px;color:#38bdf8}
+        @media(max-width:480px){.visitor-stats-grid{grid-template-columns:1fr 1fr}.visitor-stat-card:last-child{grid-column:1 / -1}}
+    </style>
 </head>
 <body>
     <div class="container">
@@ -847,6 +856,7 @@
                 </div>
             </div>
 
+
             <div class="quick-ranking-section">
                 <div class="quick-ranking-title" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;">
                     <span><i class="fas fa-ranking-star" style="color: #f59e0b;"></i> 台灣即時極值</span>
@@ -889,6 +899,9 @@
                 <div class="chart-box">
                     <canvas id="tempChart"></canvas>
                 </div>
+            </div>
+            <div id="visitorInlineStats" style="margin: 8px 4px 0; text-align: center; font-size: 11px; color: var(--text-muted); line-height: 1.5;">
+                👁️ 本站瀏覽人次：<span id="visitorInlineCount" style="font-weight: 600;">--</span>
             </div>
         </div>
         
@@ -3118,4 +3131,87 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 }
             });
         }
-    </script>
+        // ==================== 網站瀏覽人次（GoatCounter） ====================
+    const GOATCOUNTER_CODE = 'taiwanweather';
+    function formatVisitorCount(v){
+        const n=Number(String(v ?? '').replace(/,/g,''));
+        return Number.isFinite(n) ? n.toLocaleString('zh-TW') : '--';
+    }
+    async function fetchGoatCounterTotal(){
+        // GoatCounter 官方支援的網站總計路徑為 TOTAL。
+        // 先用 JSON 取得數字；若瀏覽器環境擋住 JSON，再退回官方 visit_count()。
+        const url=`https://${GOATCOUNTER_CODE}.goatcounter.com/counter/TOTAL.json`;
+        const res=await fetch(url,{cache:'no-store'});
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data=await res.json();
+        const total=data?.count ?? data?.count_unique;
+        if(total === undefined || total === null) throw new Error('GoatCounter JSON 沒有 count');
+        return total;
+    }
+    function waitForGoatCounter(){
+        return new Promise((resolve,reject)=>{
+            const started=Date.now();
+            const timer=setInterval(()=>{
+                if(window.goatcounter && typeof window.goatcounter.visit_count==='function'){
+                    clearInterval(timer);
+                    resolve();
+                }else if(Date.now()-started>10000){
+                    clearInterval(timer);
+                    reject(new Error('GoatCounter count.js 尚未載入'));
+                }
+            },100);
+        });
+    }
+    async function fetchGoatCounterTotalByVisitCount(){
+        await waitForGoatCounter();
+        let holder=document.getElementById('gcVisitorCountHidden');
+        if(!holder){
+            holder=document.createElement('div');
+            holder.id='gcVisitorCountHidden';
+            holder.style.display='none';
+            document.body.appendChild(holder);
+        }
+        holder.innerHTML='';
+        window.goatcounter.visit_count({
+            append:'#gcVisitorCountHidden',
+            path:'TOTAL',
+            no_branding:true,
+            type:'html'
+        });
+        return await new Promise((resolve,reject)=>{
+            const started=Date.now();
+            const timer=setInterval(()=>{
+                const views=holder.querySelector('#gcvc-views');
+                if(views && views.textContent.trim()){
+                    clearInterval(timer);
+                    resolve(views.textContent.trim());
+                }else if(Date.now()-started>10000){
+                    clearInterval(timer);
+                    reject(new Error('GoatCounter visit_count 沒有回傳資料'));
+                }
+            },100);
+        });
+    }
+    async function loadVisitorStats(){
+        const el=document.getElementById('visitorInlineCount');
+        if(!el) return;
+        try{
+            let total;
+            try{
+                total=await fetchGoatCounterTotal();
+            }catch(jsonError){
+                console.warn('GoatCounter JSON 取得失敗，改用官方 visit_count():',jsonError);
+                total=await fetchGoatCounterTotalByVisitCount();
+            }
+            el.textContent=formatVisitorCount(total);
+            el.title='GoatCounter 累計訪問統計（網站總計）';
+        }catch(e){
+            console.warn('GoatCounter visitor count unavailable:',e);
+            el.textContent='--';
+        }
+    }
+    document.addEventListener('DOMContentLoaded',()=>{
+        loadVisitorStats();
+        setInterval(loadVisitorStats,60000);
+    });
+</script>
