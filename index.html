@@ -2272,11 +2272,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             } else if (currentRankingTab === 'lowTemp') {
                 let validList = parsedList.filter(item => {
                     if (isNaN(item.temp)) return false;
-                    const name = item.stationName;
-                    if (name.includes('玉山') || name.includes('阿里山') || name.includes('合歡山') || name.includes('雪霸') || name.includes('太平山') || name.includes('陽明山') || name.includes('鞍部')) {
-                        return false;
-                    }
-                    if (item.elevation > 500) return false;
+                    // 低溫排行榜納入所有有有效氣溫資料的測站，包含阿里山、玉山等高海拔測站。
                     return true;
                 });
                 validList.sort((a, b) => a.temp - b.temp);
