@@ -788,6 +788,70 @@
         .radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
             margin-top:10px !important;
         }
+        /* 雷達圖「📍所在地」定位控制 */
+        .radar-location-control{
+            margin-top:10px !important;
+        }
+        .radar-location-button{
+            width:34px;
+            height:34px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#fff;
+            color:#0f172a;
+            border:2px solid rgba(0,0,0,.18);
+            border-radius:4px;
+            box-shadow:0 1px 5px rgba(0,0,0,.45);
+            cursor:pointer;
+            font-size:18px;
+            line-height:1;
+        }
+        .radar-location-button:hover{background:#f1f5f9;color:#0ea5e9;}
+        .radar-location-button:active{transform:scale(.96);}
+        .radar-location-button.locating{color:#0ea5e9;}
+        .radar-location-button.locating i{animation:radarLocatePulse 1s ease-in-out infinite;}
+        @keyframes radarLocatePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+        /* DPIP 風格所在地定位標記：藍色定位點＋白色外框＋淡藍定位範圍 */
+        .dpip-location-marker-wrap{
+            background:transparent !important;
+            border:0 !important;
+        }
+        .dpip-location-marker{
+            position:relative;
+            width:28px;
+            height:28px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .dpip-location-dot{
+            position:relative;
+            width:14px;
+            height:14px;
+            border-radius:50%;
+            background:#4285f4;
+            border:3px solid #fff;
+            box-shadow:0 1px 4px rgba(0,0,0,.55);
+            z-index:2;
+        }
+        .dpip-location-pulse{
+            position:absolute;
+            width:28px;
+            height:28px;
+            border-radius:50%;
+            background:rgba(66,133,244,.20);
+            border:1px solid rgba(66,133,244,.45);
+            animation:dpipLocationPulse 1.8s ease-out infinite;
+            z-index:1;
+        }
+        @keyframes dpipLocationPulse{
+            0%{transform:scale(.65);opacity:.75;}
+            70%{transform:scale(1.45);opacity:.18;}
+            100%{transform:scale(1.6);opacity:0;}
+        }
+        .radar-location-popup{font-size:13px;line-height:1.55;}
+        .radar-location-popup b{color:#4285f4;}
 
         @media(max-width:700px){.radar-page-header{padding:16px 14px 12px;flex-direction:column}.radar-page-title{font-size:23px}.radar-page-subtitle{font-size:14px}.radar-page-time{font-size:13px;padding-top:0}.radar-page-map-wrap{margin:0 10px 14px;height:72vh;min-height:470px;border-radius:16px}.radar-page-legend{left:10px;top:10px;width:120px;padding:8px 10px;border-radius:12px}.radar-legend-title{font-size:11px;margin-bottom:6px}.radar-legend-body{gap:8px}.radar-legend-gradient{height:205px;width:12px}.radar-legend-labels{font-size:11px}}
 </style></head>
@@ -3369,15 +3433,47 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             if(radarLegend && radarLegend.parentElement !== el){ el.appendChild(radarLegend); }
             // 固定雷達控制順序：＋／－在上，全螢幕在下
             const radarZoomControl = L.control.zoom({position:'bottomright'}).addTo(radarMap);
+
+            // 雷達圖新增「📍所在地」：使用手機/瀏覽器 GPS 定位，並在雷達圖上標示位置與誤差範圍
+            const radarLocationControl = L.control({position:'bottomright'});
+            radarLocationControl.onAdd = function(){
+                const container = L.DomUtil.create('div','leaflet-control radar-location-control');
+                const button = L.DomUtil.create('button','radar-location-button',container);
+                button.type='button';
+                button.title='定位所在地';
+                button.setAttribute('aria-label','定位所在地');
+                button.innerHTML='<i class="fas fa-location-crosshairs"></i>';
+
+                L.DomEvent.disableClickPropagation(container);
+                L.DomEvent.on(button,'click',function(e){
+                    L.DomEvent.stopPropagation(e);
+                    locateRadarUser(button);
+                });
+                return container;
+            };
+            radarLocationControl.addTo(radarMap);
+
             if(L.control.fullscreen){
                 const radarFullscreenControl = L.control.fullscreen({position:'bottomright',forceSeparateButton:true}).addTo(radarMap);
                 const bottomRight = radarMap._controlCorners && radarMap._controlCorners.bottomright;
                 const zoomEl = radarZoomControl.getContainer ? radarZoomControl.getContainer() : null;
+                const locationEl = radarLocationControl.getContainer ? radarLocationControl.getContainer() : null;
                 const fullscreenEl = radarFullscreenControl.getContainer ? radarFullscreenControl.getContainer() : null;
-                if(bottomRight && zoomEl && fullscreenEl){
+                if(bottomRight && zoomEl && locationEl && fullscreenEl){
                     bottomRight.appendChild(zoomEl);
+                    bottomRight.appendChild(locationEl);
                     bottomRight.appendChild(fullscreenEl);
+                    locationEl.style.marginTop='10px';
                     fullscreenEl.style.marginTop='10px';
+                }
+            } else {
+                const bottomRight = radarMap._controlCorners && radarMap._controlCorners.bottomright;
+                const zoomEl = radarZoomControl.getContainer ? radarZoomControl.getContainer() : null;
+                const locationEl = radarLocationControl.getContainer ? radarLocationControl.getContainer() : null;
+                if(bottomRight && zoomEl && locationEl){
+                    bottomRight.appendChild(zoomEl);
+                    bottomRight.appendChild(locationEl);
+                    locationEl.style.marginTop='10px';
                 }
             }
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
@@ -3391,6 +3487,123 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             repairFullscreenMapLayout(radarMap);
             loadCwaRadarImage();
         }
+        let radarUserLocationMarker = null;
+        let radarUserLocationAccuracy = null;
+        let radarImageForDbz = null;
+        let radarImageCanvas = null;
+        let radarImageCtx = null;
+
+        const RADAR_DBZ_PALETTE = [
+            [0,98,231,244],[5,67,168,247],[10,23,69,245],[15,22,240,59],
+            [20,70,198,56],[25,139,213,30],[30,255,255,34],[35,255,211,61],
+            [40,244,127,44],[45,240,46,35],[50,197,31,24],[55,143,18,13],
+            [60,237,45,241],[65,134,24,242]
+        ];
+
+        function nearestDbzFromRgb(r,g,b,a){
+            if(a < 40) return null;
+            // 排除接近底圖灰綠、黑色與白色的非回波像素，避免把底圖當成 dBZ。
+            const sat=Math.max(r,g,b)-Math.min(r,g,b);
+            if((r+g+b)<75 || sat<25) return null;
+            let best=null, bestDist=Infinity;
+            for(const p of RADAR_DBZ_PALETTE){
+                const dr=r-p[1], dg=g-p[2], db=b-p[3];
+                const d=dr*dr+dg*dg+db*db;
+                if(d<bestDist){bestDist=d;best=p[0];}
+            }
+            return bestDist<15000 ? best : null;
+        }
+
+        function getRadarDbzAtLatLng(lat,lng){
+            try{
+                if(!radarImageCanvas || !radarImageCtx || !radarImageForDbz) return null;
+                const imgW=radarImageForDbz.naturalWidth || radarImageForDbz.width;
+                const imgH=radarImageForDbz.naturalHeight || radarImageForDbz.height;
+                if(!imgW || !imgH) return null;
+                const west=17.75; // placeholder overwritten below
+                const south=17.75;
+                const north=29.25, westLon=115.00, eastLon=126.50;
+                if(lat<north && lat>south && lng>westLon && lng<eastLon){
+                    const x=Math.round((lng-westLon)/(eastLon-westLon)*(imgW-1));
+                    const y=Math.round((north-lat)/(north-south)*(imgH-1));
+                    const radius=2;
+                    const data=radarImageCtx.getImageData(Math.max(0,x-radius),Math.max(0,y-radius),Math.min(imgW,x+radius+1)-Math.max(0,x-radius),Math.min(imgH,y+radius+1)-Math.max(0,y-radius)).data;
+                    const vals=[];
+                    for(let i=0;i<data.length;i+=4){
+                        const v=nearestDbzFromRgb(data[i],data[i+1],data[i+2],data[i+3]);
+                        if(v!==null) vals.push(v);
+                    }
+                    if(!vals.length) return 0;
+                    vals.sort((a,b)=>a-b);
+                    return vals[Math.floor(vals.length/2)];
+                }
+            }catch(e){ console.warn('雷達 dBZ 讀取失敗',e); }
+            return null;
+        }
+
+        function getTaiwanLocationName(lat,lng){
+            const url='https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lng)+'&zoom=18&addressdetails=1&accept-language=zh-TW';
+            return fetch(url,{headers:{'Accept':'application/json'}}).then(r=>{
+                if(!r.ok) throw new Error('reverse geocode failed');
+                return r.json();
+            }).then(data=>{
+                const a=data.address||{};
+                const city=a.city || a.municipality || a.county || a.state_district || a.state || '';
+                const town=a.town || a.city_district || a.county_district || a.suburb || a.village || '';
+                let name=(city||'')+(town && town!==city ? town : '');
+                return name || data.display_name || '目前所在地';
+            }).catch(()=> '目前所在地');
+        }
+
+        function locateRadarUser(button){
+            if(!radarMap) return;
+            if(!navigator.geolocation){
+                alert('此瀏覽器不支援所在地定位功能');
+                return;
+            }
+            button.classList.add('locating');
+            button.disabled=true;
+            button.title='正在取得所在地…';
+            navigator.geolocation.getCurrentPosition(function(position){
+                const lat=position.coords.latitude;
+                const lng=position.coords.longitude;
+                const accuracy=Math.max(1,position.coords.accuracy||0);
+                const latlng=[lat,lng];
+                if(radarUserLocationMarker){
+                    radarUserLocationMarker.setLatLng(latlng);
+                }else{
+                    radarUserLocationMarker=L.marker(latlng,{
+                        icon:L.divIcon({className:'dpip-location-marker-wrap',html:'<div class="dpip-location-marker"><span class="dpip-location-pulse"></span><span class="dpip-location-dot"></span></div>',iconSize:[28,28],iconAnchor:[14,14]}),
+                        zIndexOffset:1000
+                    }).addTo(radarMap);
+                    radarUserLocationAccuracy=L.circle(latlng,{radius:accuracy,color:'#4285f4',weight:2,fillColor:'#4285f4',fillOpacity:.14,interactive:false,zIndexOffset:900}).addTo(radarMap);
+                }
+                if(radarUserLocationAccuracy) radarUserLocationAccuracy.setLatLng(latlng).setRadius(accuracy);
+
+                const dbz=getRadarDbzAtLatLng(lat,lng);
+                const dbzText=dbz===null ? '暫無回波資料' : (dbz+' dBZ');
+                getTaiwanLocationName(lat,lng).then(name=>{
+                    radarUserLocationMarker.bindPopup(
+                        '<div class="radar-location-popup"><b>📍 所在地｜'+name+'</b><br><span>🌧️ 雷達回波：約 <strong>'+dbzText+'</strong></span></div>'
+                    );
+                    radarUserLocationMarker.openPopup();
+                });
+                radarMap.setView(latlng,Math.max(radarMap.getZoom(),9),{animate:true});
+                button.classList.remove('locating');
+                button.disabled=false;
+                button.title='重新定位所在地';
+            },function(error){
+                let message='無法取得所在地';
+                if(error&&error.code===1) message='定位權限被拒絕，請到瀏覽器／手機設定允許此網站使用位置';
+                else if(error&&error.code===2) message='目前無法取得位置，請確認 GPS／定位服務已開啟';
+                else if(error&&error.code===3) message='定位逾時，請再按一次 📍';
+                alert(message);
+                button.classList.remove('locating');
+                button.disabled=false;
+                button.title='定位所在地';
+            },{enableHighAccuracy:true,timeout:12000,maximumAge:30000});
+        }
+
         function loadCwaRadarImage(){
             if(!radarMap) return;
             const status=document.getElementById('radarLoadStatus');
@@ -3398,7 +3611,19 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             if(status){status.style.display='block';status.textContent='正在載入 CWA 雷達合成回波...';}
             const url=CWA_RADAR_IMAGE_URL+'?t='+Date.now();
             const testImg=new Image();
+            testImg.crossOrigin='anonymous';
             testImg.onload=function(){
+                radarImageForDbz=testImg;
+                try{
+                    radarImageCanvas=document.createElement('canvas');
+                    radarImageCanvas.width=testImg.naturalWidth||testImg.width;
+                    radarImageCanvas.height=testImg.naturalHeight||testImg.height;
+                    radarImageCtx=radarImageCanvas.getContext('2d',{willReadFrequently:true});
+                    radarImageCtx.drawImage(testImg,0,0);
+                }catch(e){
+                    radarImageCanvas=null; radarImageCtx=null;
+                    console.warn('雷達影像無法讀取像素，dBZ 將顯示暫無回波資料',e);
+                }
                 if(radarOverlay) radarMap.removeLayer(radarOverlay);
                 radarOverlay=L.imageOverlay(url,CWA_RADAR_BOUNDS,{opacity:0.86,interactive:false,zIndex:50}).addTo(radarMap);
                 if(timeEl){
