@@ -497,6 +497,46 @@
             border: 1px solid var(--action-border);
         }
         #map { width: 100%; height: 100%; transform: translateZ(0); will-change: transform; }
+        /* 全螢幕修正：iPhone／Safari 進入全螢幕後，讓地圖真正填滿視窗，並避免控制按鈕被底部安全區裁切 */
+        #map.leaflet-fullscreen-on,
+        #radarMap.leaflet-fullscreen-on {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            max-width: none !important;
+            max-height: none !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            transform: none !important;
+            z-index: 99999 !important;
+        }
+        #map.leaflet-fullscreen-on .leaflet-control-container,
+        #radarMap.leaflet-fullscreen-on .leaflet-control-container {
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-right: env(safe-area-inset-right, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            padding-left: env(safe-area-inset-left, 0px);
+            box-sizing: border-box;
+        }
+        #map.leaflet-fullscreen-on .leaflet-bottom,
+        #radarMap.leaflet-fullscreen-on .leaflet-bottom {
+            bottom: max(18px, env(safe-area-inset-bottom, 0px)) !important;
+        }
+        #map.leaflet-fullscreen-on .leaflet-right,
+        #radarMap.leaflet-fullscreen-on .leaflet-right {
+            right: max(14px, env(safe-area-inset-right, 0px)) !important;
+        }
+        /* 全螢幕時浮動圖例與控制圖案保持在最上層，不被父層裁切 */
+        #radarMap.leaflet-fullscreen-on .radar-page-legend,
+        #radarMap.leaflet-fullscreen-on .radar-load-status,
+        #radarMap.leaflet-fullscreen-on .leaflet-control {
+            z-index: 10000;
+        }
+        
         .leaflet-control-attribution { display: none !important; }
         .leaflet-top.leaflet-left { z-index: 1000; }
         .custom-vertical-legend {
@@ -721,6 +761,11 @@
         .radar-page-subtitle{margin-top:8px;color:var(--text-muted);font-size:16px;}
         .radar-page-time{font-size:16px;font-weight:800;color:#38bdf8;text-align:right;white-space:nowrap;padding-top:8px;}
         .radar-page-map-wrap{position:relative;margin:0 18px 20px;height:min(78vh,760px);min-height:520px;border-radius:16px;overflow:hidden;border:1px solid var(--panel-border);background:#0b1220;}
+        .radar-page-map-wrap:has(#radarMap.leaflet-fullscreen-on),
+        .map-container-wrapper:has(#map.leaflet-fullscreen-on) {
+            overflow: visible !important;
+        }
+        
         #radarMap{width:100%;height:100%;}
         /* 雷達 dBZ 圖例：沿用全台地圖圖例的同款外觀，連續漸層、不使用方格色塊 */
         .radar-page-legend{position:absolute;z-index:1000;left:14px;top:14px;width:120px;padding:8px 10px;border-radius:12px;background:var(--legend-bg);backdrop-filter:blur(8px);border:1px solid var(--action-border);box-shadow:0 8px 20px rgba(0,0,0,.3);pointer-events:none;color:var(--legend-text);font-size:11px;}
@@ -1352,6 +1397,31 @@
             }
         }
         
+        function repairFullscreenMapLayout(mapInstance) {
+            if (!mapInstance) return;
+            // Safari／iPhone 在全螢幕切換後需要數個 frame 才會完成 viewport 尺寸更新。
+            [0, 80, 220, 500].forEach(delay => {
+                setTimeout(() => {
+                    try { mapInstance.invalidateSize({ animate: false, pan: false }); }
+                    catch (e) { try { mapInstance.invalidateSize(false); } catch (_) {} }
+                }, delay);
+            });
+        }
+
+        function bindFullscreenLayoutFix(mapInstance) {
+            if (!mapInstance || mapInstance.__fullscreenLayoutFixBound) return;
+            mapInstance.__fullscreenLayoutFixBound = true;
+            mapInstance.on('fullscreenchange', () => repairFullscreenMapLayout(mapInstance));
+            const el = mapInstance.getContainer ? mapInstance.getContainer() : null;
+            if (el) {
+                ['fullscreenchange', 'webkitfullscreenchange'].forEach(eventName => {
+                    el.addEventListener(eventName, () => repairFullscreenMapLayout(mapInstance), { passive: true });
+                });
+            }
+            document.addEventListener('fullscreenchange', () => repairFullscreenMapLayout(mapInstance), { passive: true });
+            document.addEventListener('webkitfullscreenchange', () => repairFullscreenMapLayout(mapInstance), { passive: true });
+        }
+
         function switchMainPage(pageId) {
             document.getElementById('tabDashboard').classList.toggle('active', pageId === 'dashboard');
             document.getElementById('tabRadar').classList.toggle('active', pageId === 'radar');
@@ -1369,10 +1439,10 @@
             if (pageId === 'map' && !mapInitialized) {
                 setTimeout(initMap, 100);
             } else if (pageId === 'map' && mapInitialized) {
-                setTimeout(() => { map.invalidateSize(); }, 100);
+                setTimeout(() => { map.invalidateSize(); repairFullscreenMapLayout(map); }, 100);
             }
             if (pageId === 'radar') {
-                setTimeout(() => { initRadarMap(); if(radarMap) radarMap.invalidateSize(); }, 100);
+                setTimeout(() => { initRadarMap(); if(radarMap) { radarMap.invalidateSize(); repairFullscreenMapLayout(radarMap); } }, 100);
             }
         }
         
@@ -3015,6 +3085,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             });
             legendControl = new LegendControl().addTo(map);
             mapInitialized = true;
+            bindFullscreenLayoutFix(map);
             renderMapMarkers();
         }
         
@@ -3315,8 +3386,10 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{
                 maxZoom:18,updateWhenZooming:false,updateWhenIdle:true,keepBuffer:3,opacity:.95
             }).addTo(radarMap);
-            loadCwaRadarImage();
             radarInitialized=true;
+            bindFullscreenLayoutFix(radarMap);
+            repairFullscreenMapLayout(radarMap);
+            loadCwaRadarImage();
         }
         function loadCwaRadarImage(){
             if(!radarMap) return;
