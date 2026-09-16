@@ -711,7 +711,18 @@
         .visitor-stat-card span{display:block;font-size:11px;color:var(--text-muted);margin-bottom:5px}.visitor-stat-card b{font-size:20px;color:#38bdf8}
         @media(max-width:480px){.visitor-stats-grid{grid-template-columns:1fr 1fr}.visitor-stat-card:last-child{grid-column:1 / -1}}
     </style>
-</head>
+<style>
+.convection-storm-panel{margin:16px 0;border:1px solid rgba(56,189,248,.30);border-radius:16px;background:var(--card-bg,#fff);box-shadow:0 4px 18px rgba(0,0,0,.07);overflow:hidden}
+.convection-storm-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:linear-gradient(90deg,rgba(56,189,248,.13),rgba(56,189,248,.035))}
+.convection-storm-title{font-size:16px;font-weight:800}.convection-storm-subtitle{margin-top:3px;font-size:11px;color:var(--text-muted,#6b7280)}
+.convection-storm-count{padding:5px 9px;border-radius:999px;background:rgba(56,189,248,.13);color:#0284c7;font-size:12px;font-weight:800}
+.convection-storm-list{display:flex;flex-direction:column;gap:9px;padding:10px 12px 12px}
+.convection-storm-item{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:11px;border-radius:12px;border:1px solid var(--card-border,#e5e7eb);background:rgba(255,255,255,.025);cursor:pointer}
+.convection-storm-icon{font-size:23px;text-align:center}.convection-storm-name{font-size:14px;font-weight:800}.convection-storm-detail{font-size:11px;color:var(--text-muted,#6b7280);margin-top:3px;line-height:1.55}.convection-storm-score{font-size:12px;font-weight:900;white-space:nowrap}
+.convection-storm-red{border-left:4px solid #ef4444;background:rgba(239,68,68,.055)}.convection-storm-orange{border-left:4px solid #f59e0b;background:rgba(245,158,11,.055)}.convection-storm-yellow{border-left:4px solid #facc15;background:rgba(250,204,21,.055)}
+.convection-storm-empty{text-align:center;padding:13px;color:var(--text-muted,#6b7280);font-size:12px}
+@media(max-width:600px){.convection-storm-item{grid-template-columns:28px 1fr auto;padding:9px}}
+</style></head>
 <body>
     <div class="container">
         <div class="page-tabs">
@@ -922,7 +933,13 @@
             </div>
                                       
             <div class="map-container-wrapper">
-                <div id="map"></div>
+                <div id="convectionStormPanel" class="convection-storm-panel">
+<div class="convection-storm-header"><div>
+<div class="convection-storm-title">🌩️ 對流／雷雨警示</div>
+<div id="convectionStormSubtitle" class="convection-storm-subtitle">正在整合 CWA 雷達、雨量、閃電資料...</div>
+</div><div id="convectionStormCount" class="convection-storm-count">0 區</div></div>
+<div id="convectionStormList" class="convection-storm-list"><div class="convection-storm-empty">正在分析最新資料...</div></div></div>
+<div id="map"></div>
             </div>
         </div>
         
@@ -1710,7 +1727,310 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             return formatCwaRainObservationTime(new Date(value));
         }
 
-        async function fetchAllStationData(isManualRefresh = false, callback = null) {
+        
+// ===== 🌩️ CWA 對流／雷雨資料 =====
+// O-A0039-001：閃電資料，每 5 分鐘更新、每次包含過去 1 小時。
+// O-A0059-001：雷達整合回波格點，每 10 分鐘更新，單位 dBZ。
+let latestCwaLightningData = [];
+let latestCwaRadarGrid = null;
+let latestCwaRadarObsTime = null;
+let latestCwaLightningObsTime = null;
+let lastCwaLightningFetchMs = 0;
+let lastCwaRadarFetchMs = 0;
+let convectionAnalysisTimer = null;
+let latestCwaConvectionCells = [];
+let cwaRadarImageLayer = null;
+let cwaConvectionImageLayer = null;
+let cwaRadarImageLoaded = false;
+let cwaConvectionImageLoaded = false;
+
+function cwaConvNum(v){
+    if(v===null||v===undefined||v===''||v==='-99'||v==='-999'||v==='-998'||v==='X') return NaN;
+    const n=Number(String(v).replace(/[^\d.+-]/g,''));
+    return Number.isFinite(n)?n:NaN;
+}
+function cwaConvStationName(s){
+    const county=s?.CountyName||s?.countyName||s?.County||s?.county||'';
+    const town=s?.TownName||s?.townName||s?.Town||s?.town||'';
+    const name=s?.StationName||s?.stationName||s?.LocationName||s?.Location||s?.StationId||'未知測站';
+    return county&&town ? `${county}${town}｜${name}` : name;
+}
+function cwaConvStationId(s){return s?.StationId||s?.stationId||s?.StationID||''}
+function cwaConvLatLon(s){
+    const c=s?.GeoInfo?.Coordinates;
+    let lat=s?.Latitude??s?.latitude,lon=s?.Longitude??s?.longitude;
+    if(Array.isArray(c)){
+        for(const x of c){
+            const la=cwaConvNum(x?.StationLatitude??x?.Latitude);
+            const lo=cwaConvNum(x?.StationLongitude??x?.Longitude);
+            if(Number.isFinite(la)&&Number.isFinite(lo)){lat=la;lon=lo;break}
+        }
+    }
+    return {lat:cwaConvNum(lat),lon:cwaConvNum(lon)};
+}
+function cwaConvRain1(s){
+    const r=s?.RainfallElement||{},p=r?.Past1hr||r?.Past1HR||r?.Past1Hour||{};
+    return cwaConvNum(p?.Precipitation??s?.WeatherElement?.Past1hr?.Precipitation);
+}
+function cwaConvObsTime(s){
+    const d=new Date(s?.ObsTime?.DateTime||s?.ObsTime||s?.DateTime||'');
+    return Number.isFinite(d.getTime())?d:null;
+}
+function cwaConvLightningPoint(l){
+    const lat=cwaConvNum(l?.LightningLatitude??l?.Latitude??l?.latitude??l?.lat);
+    const lon=cwaConvNum(l?.LightningLongitude??l?.Longitude??l?.longitude??l?.lon);
+    const rawTime=l?.LightningTime??l?.Time??l?.time??l?.DateTime;
+    return {lat,lon,time:rawTime,type:l?.LightningAttribute??l?.Type??l?.type};
+}
+function cwaConvFlattenLightning(payload){
+    const out=[];
+    const seen=new Set();
+    function walk(v,depth){
+        if(depth>7||v==null)return;
+        if(typeof v==='string'){
+            // CWA JSON may encode records as strings; do not invent coordinates.
+            return;
+        }
+        if(Array.isArray(v)){for(const x of v)walk(x,depth+1);return}
+        if(typeof v!=='object')return;
+        if(seen.has(v))return;seen.add(v);
+        const lat=cwaConvNum(v.LightningLatitude??v.latitude??v.Latitude??v.lat);
+        const lon=cwaConvNum(v.LightningLongitude??v.longitude??v.Longitude??v.lon);
+        if(Number.isFinite(lat)&&Number.isFinite(lon)){
+            out.push(cwaConvLightningPoint(v));
+            return;
+        }
+        for(const x of Object.values(v))walk(x,depth+1);
+    }
+    walk(payload,0);
+    return out;
+}
+function cwaConvExtractRadarGrid(payload){
+    // CWA O-A0059-001 可能由代理回傳 JSON 或 XML；正式資料為 921×881、0.0125°、dBZ。
+    const root=payload?.records||payload;
+    const candidates=[];
+    const seen=new Set();
+    function walk(v,path,depth){
+        if(depth>10||v==null)return;
+        if(typeof v==='string'){
+            const nums=v.match(/[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?/g);
+            if(nums && nums.length>10000)candidates.push({value:v,path});
+            return;
+        }
+        if(Array.isArray(v)){
+            if(v.length>10000 && v.every(x=>typeof x==='number'||typeof x==='string')) candidates.push({value:v,path});
+            return;
+        }
+        if(typeof v!=='object'||seen.has(v))return;seen.add(v);
+        for(const [k,x] of Object.entries(v)){
+            if(/content|data|grid|value|values|array/i.test(k)) walk(x,path+'.'+k,depth+1);
+            else if(depth<4) walk(x,path+'.'+k,depth+1);
+        }
+    }
+    walk(root,'records',0);
+    if(!candidates.length)return null;
+    let values=candidates.sort((a,b)=>{
+        const len=x=>Array.isArray(x.value)?x.value.length:(String(x.value).match(/[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?/g)||[]).length;
+        return len(b)-len(a);
+    })[0].value;
+    let arr=Array.isArray(values)?values.map(cwaConvNum):String(values).split(/[,\s]+/).map(cwaConvNum);
+    arr=arr.filter(x=>Number.isFinite(x));
+    if(arr.length<10000)return null;
+    return {values:arr,nx:921,ny:881,lon0:115,lat0:18,res:0.0125,unit:'dBZ'};
+}
+function cwaConvExtractRadarXml(text){
+    try{
+        const xml=new DOMParser().parseFromString(text,'application/xml');
+        if(xml.querySelector('parsererror'))return null;
+        const contents=[...xml.getElementsByTagName('content')].map(n=>n.textContent||'').join(',');
+        if(!contents)return null;
+        const arr=contents.match(/[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?/g)?.map(Number)||[];
+        if(arr.length<10000)return null;
+        return {values:arr,nx:921,ny:881,lon0:115,lat0:18,res:0.0125,unit:'dBZ'};
+    }catch(e){return null}
+}
+function cwaConvExtractRadarAny(text,contentType){
+    try{
+        const trimmed=String(text||'').trim();
+        if(/json/i.test(contentType)||trimmed.startsWith('{')||trimmed.startsWith('[')){
+            const obj=JSON.parse(trimmed);
+            return cwaConvExtractRadarGrid(obj);
+        }
+        return cwaConvExtractRadarXml(trimmed);
+    }catch(e){return null}
+}
+function cwaConvExtractLightningFromKml(text){
+    try{
+        const xml=new DOMParser().parseFromString(text,'application/xml');
+        const out=[];
+        const placemarks=[...xml.getElementsByTagName('Placemark')];
+        for(const pm of placemarks){
+            const coord=pm.getElementsByTagName('coordinates')[0]?.textContent?.trim()||'';
+            const parts=coord.split(',').map(Number);
+            if(parts.length>=2 && Number.isFinite(parts[0]) && Number.isFinite(parts[1])){
+                const obj={LightningLongitude:parts[0],LightningLatitude:parts[1]};
+                const name=pm.getElementsByTagName('name')[0]?.textContent||'';
+                const desc=pm.getElementsByTagName('description')[0]?.textContent||'';
+                obj.name=name;obj.description=desc;
+                out.push(cwaConvLightningPoint(obj));
+            }
+        }
+        return out;
+    }catch(e){return []}
+}
+async function cwaConvReadKmz(arrayBuffer){
+    // KMZ 是 ZIP；只讀取其中的 KML。支援 stored(0) 與 deflate(8)。
+    const u8=new Uint8Array(arrayBuffer), dv=new DataView(arrayBuffer);
+    const dec=new TextDecoder('utf-8');
+    for(let i=0;i<u8.length-30;i++){
+        if(dv.getUint32(i,true)!==0x04034b50)continue;
+        const method=dv.getUint16(i+8,true), csize=dv.getUint32(i+18,true), usize=dv.getUint32(i+22,true);
+        const nlen=dv.getUint16(i+26,true), elen=dv.getUint16(i+28,true);
+        const name=dec.decode(u8.slice(i+30,i+30+nlen));
+        const body=u8.slice(i+30+nlen+elen,i+30+nlen+elen+csize);
+        let bytes=body;
+        try{
+            if(method===8 && 'DecompressionStream' in window){
+                const ds=new DecompressionStream('deflate-raw');
+                bytes=new Uint8Array(await new Response(new Blob([body]).stream().pipeThrough(ds)).arrayBuffer());
+            }
+        }catch(e){continue}
+        if(/\.kml$/i.test(name)||/kml/i.test(name))return dec.decode(bytes);
+    }
+    return '';
+}
+function cwaConvRadarAt(lat,lon){
+    const g=latestCwaRadarGrid;
+    if(!g||!Number.isFinite(lat)||!Number.isFinite(lon))return NaN;
+    const ix=Math.round((lon-g.lon0)/g.res), iy=Math.round((lat-g.lat0)/g.res);
+    if(ix<0||iy<0||ix>=g.nx||iy>=g.ny)return NaN;
+    const v=g.values[iy*g.nx+ix];
+    return Number.isFinite(v)&&v>-90?v:NaN;
+}
+function cwaConvLightningNear(lat,lon,radiusKm=25){
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))return 0;
+    return latestCwaLightningData.filter(p=>{
+        if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon))return false;
+        const km=Math.sqrt(Math.pow((p.lat-lat)*111,2)+Math.pow((p.lon-lon)*101,2));
+        return km<=radiusKm;
+    }).length;
+}
+function cwaConvRadarImageUrl(){return `https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-005.png?_=${Date.now()}`;}
+function cwaConvCellImageUrl(){return `https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-B0054-001.png?_=${Date.now()}`;}
+function cwaConvEnsureImageLayers(){
+ if(typeof L==='undefined')return;
+ try{
+  const rb=[[17.75,115],[29.25,126.5]], cb=[[18,115],[29,126.5]];
+  if(!cwaRadarImageLayer){cwaRadarImageLayer=L.imageOverlay(cwaConvRadarImageUrl(),rb,{opacity:.65,interactive:false});cwaRadarImageLayer.on('load',()=>{cwaRadarImageLoaded=true;updateConvectionStormAlerts()});cwaRadarImageLayer.on('error',()=>{cwaRadarImageLoaded=false;updateConvectionStormAlerts()});}
+  if(!cwaConvectionImageLayer){cwaConvectionImageLayer=L.imageOverlay(cwaConvCellImageUrl(),cb,{opacity:.9,interactive:false});cwaConvectionImageLayer.on('load',()=>{cwaConvectionImageLoaded=true;updateConvectionStormAlerts()});cwaConvectionImageLayer.on('error',()=>{cwaConvectionImageLoaded=false;updateConvectionStormAlerts()});}
+ }catch(e){console.warn('CWA image layer',e)}
+}
+function cwaConvTryAddLayersToMap(){try{if(typeof map==='undefined'||!map)return;cwaConvEnsureImageLayers();if(cwaRadarImageLayer&&!map.hasLayer(cwaRadarImageLayer))cwaRadarImageLayer.addTo(map);if(cwaConvectionImageLayer&&!map.hasLayer(cwaConvectionImageLayer))cwaConvectionImageLayer.addTo(map)}catch(e){}}
+function cwaConvRefreshImages(){try{if(cwaRadarImageLayer)cwaRadarImageLayer.setUrl(cwaConvRadarImageUrl());if(cwaConvectionImageLayer)cwaConvectionImageLayer.setUrl(cwaConvCellImageUrl());cwaConvTryAddLayersToMap()}catch(e){}}
+async function fetchCwaConvectionData(){
+    cwaConvTryAddLayersToMap();
+    const now=Date.now(), nonce=now;
+    const tasks=[];
+    // 閃電每 5 分鐘更新；先嘗試代理回傳 KMZ，再支援代理回傳 JSON。
+    if(now-lastCwaLightningFetchMs>=4*60*1000){
+        lastCwaLightningFetchMs=now;
+        const url=`https://mingxuan.904037.xyz/api/v1/rest/datastore/O-A0039-001?_=${nonce}&format=KMZ`;
+        tasks.push(fetch(url,{cache:'no-store'}).then(async r=>{
+            if(!r.ok)throw new Error('HTTP '+r.status);
+            const ct=r.headers.get('content-type')||'';
+            if(/json/i.test(ct)){
+                const x=await r.json();
+                latestCwaLightningData=cwaConvFlattenLightning(x);
+            }else{
+                const buf=await r.arrayBuffer();
+                const kml=await cwaConvReadKmz(buf);
+                latestCwaLightningData=cwaConvExtractLightningFromKml(kml);
+            }
+            latestCwaLightningObsTime=new Date();
+        }).catch(async e=>{
+            console.warn('CWA 閃電 KMZ 載入失敗，改試 JSON',e);
+            try{
+                const r=await fetch(`https://mingxuan.904037.xyz/api/v1/rest/datastore/O-A0039-001?_=${nonce}`,{cache:'no-store'});
+                const x=await r.json();
+                const pts=cwaConvFlattenLightning(x);
+                if(pts.length)latestCwaLightningData=pts;
+            }catch(e2){console.warn('CWA 閃電 JSON 也無法載入',e2)}
+        }));
+    }
+    // 雷達每 10 分鐘更新；支援 CWA JSON 與 XML，避免只接受 JSON 導致「尚未載入」。
+    if(now-lastCwaRadarFetchMs>=8*60*1000){
+        lastCwaRadarFetchMs=now;
+        const url=`https://mingxuan.904037.xyz/api/v1/rest/datastore/O-A0059-001?_=${nonce}`;
+        tasks.push(fetch(url,{cache:'no-store'}).then(async r=>{
+            if(!r.ok)throw new Error('HTTP '+r.status);
+            const ct=r.headers.get('content-type')||'';
+            const text=await r.text();
+            const g=cwaConvExtractRadarAny(text,ct);
+            if(g){latestCwaRadarGrid=g;latestCwaRadarObsTime=new Date()}
+            else throw new Error('找不到 O-A0059-001 雷達 content 格點');
+        }).catch(e=>console.warn('CWA 雷達資料載入失敗',e)));
+    }
+    await Promise.all(tasks);
+    updateConvectionStormAlerts();
+}
+function updateConvectionStormAlerts(){
+    const list=document.getElementById('convectionStormList'),count=document.getElementById('convectionStormCount'),sub=document.getElementById('convectionStormSubtitle');
+    if(!list||!count)return;
+    const stations=Array.isArray(latestRealtimeStationData)?latestRealtimeStationData:[];
+    const rainRows=Array.isArray(latestRainfallStationData)?latestRainfallStationData:[];
+    const lightningCount=latestCwaLightningData.length;
+    const radarLoaded=!!latestCwaRadarGrid;
+    if(!stations.length){
+        list.innerHTML='<div class="convection-storm-empty">等待 CWA O-A0003-001 測站資料...</div>';
+        count.textContent='0 區';
+        if(sub)sub.textContent='CWA O-A0003-001 測站資料尚未載入';
+        return;
+    }
+    const rows=stations.map(s=>{
+        const p=cwaConvLatLon(s),rain=cwaConvRain1((rainRows.find(r=>cwaConvStationId(r)===cwaConvStationId(s))||s));
+        const echo=cwaConvRadarAt(p.lat,p.lon),light=cwaConvLightningNear(p.lat,p.lon);
+        let score=0,ev=[];
+        if(Number.isFinite(echo)){
+            if(echo>=50){score+=4;ev.push(`🛰️ 雷達強回波 ${echo.toFixed(0)} dBZ`)}
+            else if(echo>=35){score+=2;ev.push(`🛰️ 雷達強回波 ${echo.toFixed(0)} dBZ`)}
+            else if(echo>=20){score+=1;ev.push(`🛰️ 雷達回波 ${echo.toFixed(0)} dBZ`)}
+        }
+        if(Number.isFinite(rain)){
+            if(rain>=40){score+=3;ev.push(`💧 1小時雨量 ${rain.toFixed(1)} mm`)}
+            else if(rain>=20){score+=2;ev.push(`💧 1小時雨量 ${rain.toFixed(1)} mm`)}
+        }
+        if(light>0){score+=Math.min(4,Math.ceil(light/2));ev.push(`⚡ 附近閃電 ${light} 次`)}
+        return {s,id:cwaConvStationId(s),name:cwaConvStationName(s),score,ev};
+    }).filter(x=>x.score>=2).sort((a,b)=>b.score-a.score).slice(0,12);
+    if(!rows.length){
+        list.innerHTML='<div class="convection-storm-empty">目前尚未偵測到符合門檻的雷雨／對流活動</div>';
+        count.textContent='0 區';
+    }else{
+        list.innerHTML=rows.map(x=>{
+            const lv=x.score>=6?'red':x.score>=4?'orange':'yellow';
+            const ic=x.score>=6?'🌩️':x.score>=4?'⛈️':'🌦️';
+            return `<div class="convection-storm-item convection-storm-${lv}" onclick="cwaConvFocusStation('${String(x.id).replace(/'/g,"\\'")}','${String(x.name).replace(/'/g,"\\'")}')"><div class="convection-storm-icon">${ic}</div><div><div class="convection-storm-name">${x.name}</div><div class="convection-storm-detail">${x.ev.join('　')}</div></div><div class="convection-storm-score">活動指標 ${x.score}</div></div>`;
+        }).join('');
+        count.textContent=`${rows.length} 區`;
+    }
+    const r=radarLoaded?`雷達格點已載入`: (cwaRadarImageLoaded?'雷達回波圖已載入':'雷達回波圖載入中');
+    const c=cwaConvectionImageLoaded?'對流胞透明圖層已載入':'對流胞透明圖層載入中';
+    const l=lightningCount?`閃電 ${lightningCount} 筆`:'閃電資料需由代理提供 KMZ';
+    const rain=rainRows.length?`雨量 ${rainRows.length} 測站`:'雨量資料尚未載入';
+    if(sub)sub.textContent=`CWA O-A0003-001｜${r}｜${c}｜${l}｜${rain}｜僅供即時監測參考，非官方警報`;
+}
+function cwaConvFocusStation(id,name){
+    try{
+        if(typeof jumpToQuickRankingStation==='function'&&id){jumpToQuickRankingStation(id);return}
+        if(typeof focusStationByName==='function'&&name){focusStationByName(name);return}
+        if(typeof selectStationByName==='function'&&name)selectStationByName(name);
+    }catch(e){}
+}
+setTimeout(fetchCwaConvectionData,2500);
+setInterval(fetchCwaConvectionData,60000);
+setInterval(cwaConvRefreshImages,600000);
+
+async function fetchAllStationData(isManualRefresh = false, callback = null) {
             const btn = document.getElementById('refreshBtn');
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const nonce = Date.now();
@@ -1751,6 +2071,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
                     cwaRainfallRankingData = latestRainfallStationData;
                     cwaHourlyRainfallRankingData = latestRainfallStationData;
                 }
+                fetchCwaConvectionData();
 
                 // 地圖與測站詳細資訊以 O-A0003-001 的最新10分鐘資料為主；
                 // O-A0001-001 僅在 O-A0003 缺少該測站時作為後備。
