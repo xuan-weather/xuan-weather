@@ -714,36 +714,24 @@
 <style>
 @media(max-width:600px){.convection-storm-item{grid-template-columns:28px 1fr auto;padding:9px}}
 
-        .radar-page-panel{padding:0;background:var(--panel-bg);}
+        .radar-page-panel{padding:0;background:var(--panel-bg);border-radius:16px;overflow:hidden;border:1px solid var(--action-border);}
         .radar-page-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px 22px 14px;}
         .radar-page-title{font-size:28px;font-weight:900;color:var(--text-color);display:flex;align-items:center;gap:10px;}
         .radar-page-title i{color:#38bdf8;}
         .radar-page-subtitle{margin-top:8px;color:var(--text-muted);font-size:16px;}
         .radar-page-time{font-size:16px;font-weight:800;color:#38bdf8;text-align:right;white-space:nowrap;padding-top:8px;}
-        .radar-page-map-wrap{position:relative;margin:0 18px 20px;height:min(78vh,760px);min-height:520px;border-radius:24px;overflow:hidden;border:1px solid var(--panel-border);background:#0b1220;}
+        .radar-page-map-wrap{position:relative;margin:0 18px 20px;height:min(78vh,760px);min-height:520px;border-radius:16px;overflow:hidden;border:1px solid var(--panel-border);background:#0b1220;}
         #radarMap{width:100%;height:100%;}
-        /* CWA 風格 dBZ 圖例：縮小尺寸，色階與數值依使用者提供的氣象署圖例排列 */
-        .radar-page-legend{position:absolute;z-index:1000;left:14px;top:14px;width:148px;padding:12px 13px;border-radius:16px;background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 20px rgba(0,0,0,.24);pointer-events:none;}
-        .radar-legend-title{font-size:16px;font-weight:800;color:#f8fafc;margin-bottom:9px;text-align:center;}
-        .radar-legend-body{display:flex;align-items:stretch;justify-content:center;gap:10px;}
+        /* 雷達 dBZ 圖例：沿用全台地圖圖例的同款外觀，連續漸層、不使用方格色塊 */
+        .radar-page-legend{position:absolute;z-index:1000;left:14px;top:14px;width:120px;padding:8px 10px;border-radius:12px;background:var(--legend-bg);backdrop-filter:blur(8px);border:1px solid var(--action-border);box-shadow:0 8px 20px rgba(0,0,0,.3);pointer-events:none;color:var(--legend-text);font-size:11px;}
+        .radar-legend-title{font-weight:700;font-size:11px;margin-bottom:6px;text-align:center;color:#38bdf8;border-bottom:1px solid var(--action-border);padding-bottom:3px;}
+        .radar-legend-body{display:flex;align-items:stretch;gap:8px;justify-content:center;}
         .radar-legend-gradient{width:12px;height:220px;min-height:220px;border-radius:3px;background:linear-gradient(to top,
-            #62e7f4 0%,
-            #43a8f7 8%,
-            #1745f5 16%,
-            #16f03b 24%,
-            #46c638 32%,
-            #8bd51e 38%,
-            #ffff22 46%,
-            #ffd33d 54%,
-            #f47f2c 62%,
-            #f02e23 70%,
-            #c51f18 78%,
-            #8f120d 84%,
-            #ed2df1 92%,
-            #8618f2 100%);}
-        .radar-legend-labels{display:flex;flex-direction:column;justify-content:space-between;font-size:10px;line-height:1;color:#f8fafc;padding:0;}
+            #62e7f4 0%, #43a8f7 8%, #1745f5 16%, #16f03b 24%, #46c638 32%, #8bd51e 38%,
+            #ffff22 46%, #ffd33d 54%, #f47f2c 62%, #f02e23 70%, #c51f18 78%, #8f120d 84%, #ed2df1 92%, #8618f2 100%);}
+        .radar-legend-labels{display:flex;flex-direction:column;justify-content:space-between;font-size:11px;line-height:1;color:var(--legend-text);padding:0;}
         .radar-load-status{position:absolute;z-index:1001;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 16px;border-radius:999px;background:rgba(9,13,22,.82);color:#cbd5e1;font-size:14px;display:none;pointer-events:none;}
-        @media(max-width:700px){.radar-page-header{padding:16px 14px 12px;flex-direction:column}.radar-page-title{font-size:23px}.radar-page-subtitle{font-size:14px}.radar-page-time{font-size:13px;padding-top:0}.radar-page-map-wrap{margin:0 10px 14px;height:72vh;min-height:470px;border-radius:18px}.radar-page-legend{left:10px;top:10px;width:124px;padding:10px 9px;border-radius:14px}.radar-legend-title{font-size:14px;margin-bottom:7px}.radar-legend-body{gap:8px}.radar-legend-gradient{height:205px;width:15px}.radar-legend-labels{font-size:11px}}
+        @media(max-width:700px){.radar-page-header{padding:16px 14px 12px;flex-direction:column}.radar-page-title{font-size:23px}.radar-page-subtitle{font-size:14px}.radar-page-time{font-size:13px;padding-top:0}.radar-page-map-wrap{margin:0 10px 14px;height:72vh;min-height:470px;border-radius:16px}.radar-page-legend{left:10px;top:10px;width:120px;padding:8px 10px;border-radius:12px}.radar-legend-title{font-size:11px;margin-bottom:6px}.radar-legend-body{gap:8px}.radar-legend-gradient{height:205px;width:12px}.radar-legend-labels{font-size:11px}}
 </style></head>
 <body>
     <div class="container">
@@ -752,7 +740,7 @@
                 <i class="fas fa-chart-line"></i> 觀測儀表板
             </button>
             <button id="tabRadar" class="tab-btn" onclick="switchMainPage('radar')">
-                <i class="fas fa-satellite-dish"></i> 🛰️ 雷達回波
+                <i class="fas fa-satellite-dish"></i> 雷達回波
             </button>
             <button id="tabMap" class="tab-btn" onclick="switchMainPage('map')">
                 <i class="fas fa-map-marked-alt"></i> 全台地圖
@@ -945,10 +933,10 @@
         <div id="radarPanel" class="content-panel radar-page-panel">
             <div class="radar-page-header">
                 <div>
-                    <div class="radar-page-title"><i class="fas fa-satellite-dish"></i> 🛰️ 雷達回波</div>
-                    <div class="radar-page-subtitle">僅顯示 CWA 雷達回波，不顯示測站</div>
+                    <div class="radar-page-title"><i class="fas fa-satellite-dish"></i> 雷達合成回波圖</div>
+                    
                 </div>
-                <div id="radarObsTimeTag" class="radar-page-time">CWA 雷達時間：載入中...</div>
+                <div id="radarObsTimeTag" class="radar-page-time">雷達時間：載入中...</div>
             </div>
             <div class="radar-page-map-wrap">
                 <div id="radarMap"></div>
@@ -961,7 +949,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="radarLoadStatus" class="radar-load-status">正在載入 CWA 雷達回波...</div>
+                <div id="radarLoadStatus" class="radar-load-status">正在載入 CWA 雷達合成回波...</div>
             </div>
         </div>
 
@@ -2957,6 +2945,10 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 easeLinearity: 0.2,
                 preferCanvas: true
             }).setView([23.5, 121.0], 8);
+
+            // 全台地圖新增與雷達合成回波圖相同的「＋／－」縮放控制，放在右下角
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
                                       
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-eGP, and the GIS User Community',
@@ -3287,7 +3279,12 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             if(radarInitialized) return;
             const el=document.getElementById('radarMap');
             if(!el || typeof L==='undefined') return;
-            radarMap=L.map('radarMap',{zoomControl:true,fullscreenControl:true,preferCanvas:true}).setView([23.55,121.0],7);
+            radarMap=L.map('radarMap',{zoomControl:false,fullscreenControl:false,preferCanvas:true}).setView([23.55,121.0],7);
+            // 將 dBZ 圖例放進 Leaflet 地圖容器，進入全螢幕時圖例也會一起顯示
+            const radarLegend=document.querySelector('.radar-page-legend');
+            if(radarLegend && radarLegend.parentElement !== el){ el.appendChild(radarLegend); }
+            L.control.zoom({position:'bottomright'}).addTo(radarMap);
+            if(L.control.fullscreen){ L.control.fullscreen({position:'bottomright',forceSeparateButton:true}).addTo(radarMap); }
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
                 attribution:'Tiles © Esri',maxZoom:18,updateWhenZooming:false,updateWhenIdle:true,keepBuffer:3
             }).addTo(radarMap);
@@ -3301,7 +3298,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             if(!radarMap) return;
             const status=document.getElementById('radarLoadStatus');
             const timeEl=document.getElementById('radarObsTimeTag');
-            if(status){status.style.display='block';status.textContent='正在載入 CWA 雷達回波...';}
+            if(status){status.style.display='block';status.textContent='正在載入 CWA 雷達合成回波...';}
             const url=CWA_RADAR_IMAGE_URL+'?t='+Date.now();
             const testImg=new Image();
             testImg.onload=function(){
@@ -3311,13 +3308,13 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                     const now=new Date();
                     const m=Math.floor(now.getMinutes()/10)*10;
                     const ts=new Date(now); ts.setMinutes(m,0,0);
-                    timeEl.textContent='CWA 雷達時間：約 '+ts.toLocaleString('zh-TW',{hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+                    timeEl.textContent='雷達時間：'+String(ts.getMonth()+1).padStart(2,'0')+'/'+String(ts.getDate()).padStart(2,'0')+' '+String(ts.getHours()).padStart(2,'0')+':'+String(ts.getMinutes()).padStart(2,'0');
                 }
                 if(status){status.style.display='none';}
             };
             testImg.onerror=function(){
                 if(status){status.style.display='block';status.textContent='CWA 雷達影像暫時無法載入，請稍後重新整理';}
-                if(timeEl) timeEl.textContent='CWA 雷達時間：暫無可用影像';
+                if(timeEl) timeEl.textContent='雷達時間：暫無可用影像';
             };
             testImg.src=url;
         }
