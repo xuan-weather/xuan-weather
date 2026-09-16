@@ -3493,51 +3493,104 @@ async function fetchEarthquakeData(isManualRefresh = false) {
         let radarImageCanvas = null;
         let radarImageCtx = null;
 
+        // CWA 雷達回波色階：每個顏色就是一個 5 dBZ 級距。
+        // 重要：CWA 透明 PNG 的高回波顏色本身可能只有低 alpha，
+        // 所以不能用 a < 40 排除；否則 45/50/55 dBZ 紅色系會被誤判成無回波。
         const RADAR_DBZ_PALETTE = [
-            [0,98,231,244],[5,67,168,247],[10,23,69,245],[15,22,240,59],
-            [20,70,198,56],[25,139,213,30],[30,255,255,34],[35,255,211,61],
-            [40,244,127,44],[45,240,46,35],[50,197,31,24],[55,143,18,13],
-            [60,237,45,241],[65,134,24,242]
+            [0,98,231,244],
+            [5,67,168,247],
+            [10,23,69,245],
+            [15,22,240,59],
+            [20,70,198,56],
+            [25,139,213,30],
+            [30,255,255,34],
+            [35,255,211,61],
+            [40,244,127,44],
+            [45,240,46,35],   // 紅
+            [50,197,31,24],   // 深紅
+            [55,143,18,13],   // 暗紅
+            [60,237,45,241],  // 桃紅
+            [65,134,24,242]   // 紫
         ];
 
         function nearestDbzFromRgb(r,g,b,a){
-            if(a < 40) return null;
-            // 排除接近底圖灰綠、黑色與白色的非回波像素，避免把底圖當成 dBZ。
+            // 透明 PNG：只排除真正完全透明像素。
+            if(a <= 4) return null;
+
             const sat=Math.max(r,g,b)-Math.min(r,g,b);
-            if((r+g+b)<75 || sat<25) return null;
+            if((r+g+b)<50 || sat<18) return null;
+
             let best=null, bestDist=Infinity;
             for(const p of RADAR_DBZ_PALETTE){
                 const dr=r-p[1], dg=g-p[2], db=b-p[3];
                 const d=dr*dr+dg*dg+db*db;
-                if(d<bestDist){bestDist=d;best=p[0];}
+                if(d<bestDist){
+                    bestDist=d;
+                    best=p[0];
+                }
             }
-            return bestDist<15000 ? best : null;
+            // 允許 PNG 壓縮／瀏覽器取樣造成的小幅 RGB 偏差。
+            return bestDist<18000 ? best : null;
         }
 
         function getRadarDbzAtLatLng(lat,lng){
             try{
                 if(!radarImageCanvas || !radarImageCtx || !radarImageForDbz) return null;
+
                 const imgW=radarImageForDbz.naturalWidth || radarImageForDbz.width;
                 const imgH=radarImageForDbz.naturalHeight || radarImageForDbz.height;
                 if(!imgW || !imgH) return null;
-                const west=17.75; // placeholder overwritten below
+
+                // CWA O-A0058-005 官方範圍：
+                // Longitude 115.00–126.50 / Latitude 17.75–29.25 / 3600×3600。
                 const south=17.75;
-                const north=29.25, westLon=115.00, eastLon=126.50;
+                const north=29.25;
+                const westLon=115.00;
+                const eastLon=126.50;
+
                 if(lat<north && lat>south && lng>westLon && lng<eastLon){
                     const x=Math.round((lng-westLon)/(eastLon-westLon)*(imgW-1));
                     const y=Math.round((north-lat)/(north-south)*(imgH-1));
+
+                    // 先讀游標正中央。只要中央像素就是紅色，就直接回傳 45/50/55 dBZ，
+                    // 不再用 median 把紅色平均掉。
+                    const center=radarImageCtx.getImageData(
+                        Math.max(0,Math.min(imgW-1,x)),
+                        Math.max(0,Math.min(imgH-1,y)),
+                        1,1
+                    ).data;
+                    const centerDbz=nearestDbzFromRgb(center[0],center[1],center[2],center[3]);
+                    if(centerDbz!==null) return centerDbz;
+
+                    // 中央像素若剛好落在透明邊界，再從附近 5×5 像素找最接近的有效回波。
+                    // 若附近同時有不同顏色，取最高 dBZ，避免紅色回波被黃色/綠色中位數吃掉。
                     const radius=2;
-                    const data=radarImageCtx.getImageData(Math.max(0,x-radius),Math.max(0,y-radius),Math.min(imgW,x+radius+1)-Math.max(0,x-radius),Math.min(imgH,y+radius+1)-Math.max(0,y-radius)).data;
-                    const vals=[];
-                    for(let i=0;i<data.length;i+=4){
-                        const v=nearestDbzFromRgb(data[i],data[i+1],data[i+2],data[i+3]);
-                        if(v!==null) vals.push(v);
+                    let bestDbz=null;
+                    let bestDist=Infinity;
+
+                    for(let dy=-radius;dy<=radius;dy++){
+                        for(let dx=-radius;dx<=radius;dx++){
+                            const px=x+dx, py=y+dy;
+                            if(px<0 || py<0 || px>=imgW || py>=imgH) continue;
+
+                            const p=radarImageCtx.getImageData(px,py,1,1).data;
+                            const v=nearestDbzFromRgb(p[0],p[1],p[2],p[3]);
+                            if(v===null) continue;
+
+                            const dist=dx*dx+dy*dy;
+                            if(bestDbz===null || v>bestDbz || (v===bestDbz && dist<bestDist)){
+                                bestDbz=v;
+                                bestDist=dist;
+                            }
+                        }
                     }
-                    if(!vals.length) return 0;
-                    vals.sort((a,b)=>a-b);
-                    return vals[Math.floor(vals.length/2)];
+
+                    // 完全沒有有效回波才視為 0 dBZ。
+                    return bestDbz===null ? 0 : bestDbz;
                 }
-            }catch(e){ console.warn('雷達 dBZ 讀取失敗',e); }
+            }catch(e){
+                console.warn('雷達 dBZ 讀取失敗',e);
+            }
             return null;
         }
 
