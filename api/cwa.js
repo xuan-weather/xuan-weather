@@ -1,6 +1,6 @@
 // Vercel Serverless Function: CWA data proxy
-// GitHub Pages -> Vercel -> CWA
-// 只允許儀表板使用的 CWA 資料集，API Key 不放在前端。
+// GitHub Pages -> Vercel -> CWA Open Data
+// CWA API Key 只存在 Vercel Environment Variables，不放在前端。
 
 const ALLOWED_DATASETS = new Set([
   'O-A0001-001',
@@ -16,27 +16,32 @@ const ALLOWED_DATASETS = new Set([
 function setCors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Accept'
+  );
   res.setHeader('Access-Control-Max-Age', '86400');
 }
 
 module.exports = async function handler(req, res) {
-  // 允許 GitHub Pages 跨網域請求 Vercel API
   setCors(res);
 
-  // 瀏覽器 CORS 預檢
+  // CORS 預檢
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
 
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET, OPTIONS');
+
     return res.status(405).json({
       error: 'Method Not Allowed'
     });
   }
 
-  const dataset = String(req.query?.dataset || '').trim();
+  const dataset = String(
+    req.query?.dataset || ''
+  ).trim();
 
   if (!ALLOWED_DATASETS.has(dataset)) {
     return res.status(400).json({
@@ -45,14 +50,28 @@ module.exports = async function handler(req, res) {
     });
   }
 
+  // 從 Vercel Environment Variables 取得 CWA API Key
+  const apiKey = String(
+    process.env.CWA_API_KEY || ''
+  ).trim();
+
+  if (!apiKey) {
+    return res.status(500).json({
+      error: 'Server configuration error',
+      message: 'Vercel 尚未設定 CWA_API_KEY。'
+    });
+  }
+
+  // 官方中央氣象署 Open Data API
   const upstreamUrl =
-    `https://mingxuan.904037.xyz/api/v1/rest/datastore/${encodeURIComponent(dataset)}`;
+    `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${encodeURIComponent(dataset)}`;
 
   try {
     const upstream = await fetch(upstreamUrl, {
       method: 'GET',
       headers: {
-        Accept: 'application/json'
+        'Accept': 'application/json',
+        'Authorization': apiKey
       },
       cache: 'no-store'
     });
@@ -63,7 +82,10 @@ module.exports = async function handler(req, res) {
 
     try {
       const normalizedText = String(text || '')
-        .replace(/^\s*(?:\uFEFF|\u200B|\u200C|\u200D)+/, '')
+        .replace(
+          /^\s*(?:\uFEFF|\u200B|\u200C|\u200D)+/,
+          ''
+        )
         .trim();
 
       data = normalizedText
@@ -71,11 +93,15 @@ module.exports = async function handler(req, res) {
         : null;
 
     } catch (error) {
-      console.error('CWA JSON parse error:', error);
+      console.error(
+        'CWA JSON parse error:',
+        error
+      );
 
       return res.status(502).json({
         error: 'Bad Gateway',
-        message: `CWA 上游回傳非 JSON（HTTP ${upstream.status}）。`
+        message:
+          `CWA 回傳內容無法解析為 JSON（HTTP ${upstream.status}）。`
       });
     }
 
@@ -104,11 +130,15 @@ module.exports = async function handler(req, res) {
       .send(JSON.stringify(data));
 
   } catch (error) {
-    console.error('CWA proxy error:', error);
+    console.error(
+      'CWA proxy error:',
+      error
+    );
 
     return res.status(502).json({
       error: 'Bad Gateway',
-      message: '無法連線至 CWA 資料服務，請稍後再試。'
+      message:
+        '無法連線至中央氣象署 API，請稍後再試。'
     });
   }
 };
