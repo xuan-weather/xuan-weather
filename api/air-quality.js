@@ -45,14 +45,6 @@ export default async function handler(req, res) {
     let data = null;
 
     try {
-      /*
-       * MOENV 回傳內容有時可能包含：
-       * - UTF-8 BOM
-       * - BOM 前的空白
-       * - Zero Width 字元
-       *
-       * 先清除這些字元，再進行 JSON.parse。
-       */
       const normalizedText = String(rawText || '')
         .replace(/^\s*(?:\uFEFF|\u200B|\u200C|\u200D)+/, '')
         .trim();
@@ -62,7 +54,6 @@ export default async function handler(req, res) {
         : null;
 
     } catch (parseError) {
-
       console.error(
         'MOENV JSON parse error:',
         parseError
@@ -107,7 +98,6 @@ export default async function handler(req, res) {
       .send(JSON.stringify(data));
 
   } catch (error) {
-
     console.error(
       'MOENV AQI proxy error:',
       error
