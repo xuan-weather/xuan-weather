@@ -167,6 +167,68 @@
             color: var(--text-muted);
             font-size: 13px;
         }
+
+        /* 個人化防災警報 */
+        .personal-disaster-widget{
+            background:linear-gradient(135deg,rgba(239,68,68,.10),rgba(15,23,42,.10));
+            border:1px solid rgba(239,68,68,.25);
+            border-radius:18px;
+            padding:16px;
+            margin-bottom:16px;
+        }
+        .personal-disaster-head{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            margin-bottom:12px;
+            border-bottom:1px solid rgba(239,68,68,.20);
+            padding-bottom:8px;
+        }
+        .personal-disaster-title{
+            font-size:14px;
+            font-weight:800;
+            color:#f87171;
+            display:flex;
+            align-items:center;
+            gap:6px;
+        }
+        .personal-disaster-location{
+            font-size:11px;
+            color:var(--text-muted);
+            text-align:right;
+        }
+        .personal-disaster-item{
+            border-radius:12px;
+            padding:10px 12px;
+            margin-bottom:8px;
+            border:1px solid var(--action-border);
+            background:rgba(0,0,0,.10);
+        }
+        .personal-disaster-item:last-child{margin-bottom:0;}
+        .personal-disaster-item-title{
+            font-size:13px;
+            font-weight:800;
+            line-height:1.4;
+        }
+        .personal-disaster-item-desc{
+            font-size:11px;
+            color:var(--text-muted);
+            line-height:1.55;
+            margin-top:4px;
+            white-space:pre-line;
+        }
+        .personal-disaster-safe{
+            background:rgba(16,185,129,.08);
+            border:1px solid rgba(16,185,129,.20);
+            border-radius:12px;
+            padding:12px;
+            font-size:13px;
+            color:#34d399;
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
         .section-divider-title {
             font-size: 14px;
             font-weight: 700;
@@ -976,6 +1038,21 @@
                 </div>
             </div>
 
+            <!-- 個人化防災警報：依 GPS 所在縣市篩選目前警特報／地震資訊 -->
+            <div class="personal-disaster-widget" id="personalDisasterWidget">
+                <div class="personal-disaster-head">
+                    <div class="personal-disaster-title">
+                        <i class="fas fa-bell"></i> 我的所在地防災警報
+                    </div>
+                    <div class="personal-disaster-location" id="personalDisasterLocation">尚未取得所在地</div>
+                </div>
+                <div id="personalDisasterContent">
+                    <div class="my-location-status">
+                        <i class="fas fa-location-crosshairs"></i> 請先更新定位，系統會依所在地顯示相關防災資訊
+                    </div>
+                </div>
+            </div>
+
             <div class="my-location-widget" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(15, 23, 42, 0.1)); border-color: rgba(245, 158, 11, 0.25); margin-top: 16px;">
                 <div class="my-location-header" style="border-bottom-color: rgba(245, 158, 11, 0.2);">
                     <div class="my-location-title" style="color: #f59e0b;">
@@ -1613,6 +1690,7 @@
                         </div>
                     `;
                 }
+                renderPersonalizedDisasterAlert();
             } catch (err) {
                 console.error("警特報載入錯誤:", err);
                 weatherWarnings = [];
@@ -2939,6 +3017,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 });
                 earthquakeData = combinedEq;
                 window.quakeDataList = earthquakeData;
+                renderPersonalizedDisasterAlert();
                 if (earthquakeData.length > 0) {
                     let htmlContent = '';
                     earthquakeData.forEach((eq, index) => {
@@ -2986,6 +3065,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             try {
                 const res = await fetchCwaDataset('W-C0034-001');
                 typhoonData = res.records?.Typhoon || res.records?.location || [];
+                renderPersonalizedDisasterAlert();
                 if (typhoonData.length > 0) {
                     let htmlContent = '';
                     typhoonData.forEach((typhoon) => {
@@ -3081,6 +3161,164 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             modal.style.display = 'flex';
         }
         
+        function escapePersonalDisasterText(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function normalizeTaiwanPlaceText(value) {
+            return String(value ?? '')
+                .replace(/台/g, '臺')
+                .replace(/\s+/g, '');
+        }
+
+        function getPersonalWarningTitle(warning) {
+            return warning?.Phenomena
+                || warning?.Hazards?.Info?.Phenomena
+                || warning?.title
+                || warning?.Title
+                || warning?.event
+                || warning?.Event
+                || '氣象警特報';
+        }
+
+        function getPersonalWarningDescription(warning) {
+            return warning?.Significance
+                || warning?.Description
+                || warning?.description
+                || warning?.text
+                || warning?.Hazards?.Info?.Significance
+                || warning?.Hazards?.Info?.Description
+                || '';
+        }
+
+        function isPersonalWarningRelevant(warning, county) {
+            if (!county || !warning) return false;
+            const raw = normalizeTaiwanPlaceText(JSON.stringify(warning));
+            const countyName = normalizeTaiwanPlaceText(county);
+
+            // 明確寫出全臺／臺灣地區的警報，視為與所在地相關。
+            const nationwide = ['全臺', '全台', '臺灣地區', '台灣地區', '臺灣各地', '台灣各地']
+                .some(keyword => raw.includes(normalizeTaiwanPlaceText(keyword)));
+
+            return nationwide || raw.includes(countyName);
+        }
+
+        function getPersonalEarthquakeAlert(county) {
+            if (!county || !Array.isArray(earthquakeData) || earthquakeData.length === 0) return null;
+
+            const latestEq = earthquakeData[0];
+            const info = latestEq?.EarthquakeInfo || {};
+            const areas = info?.Intensity?.ShakingArea || [];
+            const matches = areas.filter(area => {
+                const areaCounty = normalizeTaiwanPlaceText(area?.CountyName || area?.countyName || '');
+                return areaCounty === normalizeTaiwanPlaceText(county);
+            });
+
+            if (matches.length === 0) return null;
+
+            return {
+                magnitude: info?.EarthquakeMagnitude?.MagnitudeValue || '--',
+                time: info?.OriginTime || '--',
+                location: info?.Epicenter?.Location || '未知震央',
+                areas: matches
+            };
+        }
+
+        function renderPersonalizedDisasterAlert() {
+            const container = document.getElementById('personalDisasterContent');
+            const locationTag = document.getElementById('personalDisasterLocation');
+            if (!container || !locationTag) return;
+
+            const county = (userCurrentCounty || '').replace('台', '臺').trim();
+
+            if (!county) {
+                locationTag.innerText = '尚未取得所在地';
+                container.innerHTML = `
+                    <div class="my-location-status">
+                        <i class="fas fa-location-crosshairs"></i>
+                        請先按「更新定位」，取得所在地後顯示與您有關的防災資訊
+                    </div>
+                `;
+                return;
+            }
+
+            locationTag.innerText = county;
+
+            const relevantWarnings = Array.isArray(weatherWarnings)
+                ? weatherWarnings.filter(w => isPersonalWarningRelevant(w, county))
+                : [];
+
+            const earthquakeAlert = getPersonalEarthquakeAlert(county);
+            const items = [];
+
+            relevantWarnings.slice(0, 4).forEach(warning => {
+                const title = getPersonalWarningTitle(warning);
+                const desc = getPersonalWarningDescription(warning);
+                items.push(`
+                    <div class="personal-disaster-item" style="border-color:rgba(239,68,68,.30);background:rgba(239,68,68,.10);">
+                        <div class="personal-disaster-item-title" style="color:#f87171;">
+                            <i class="fas fa-triangle-exclamation"></i> ${escapePersonalDisasterText(title)}
+                        </div>
+                        ${desc ? `<div class="personal-disaster-item-desc">${escapePersonalDisasterText(desc)}</div>` : ''}
+                    </div>
+                `);
+            });
+
+            if (earthquakeAlert) {
+                const intensityText = earthquakeAlert.areas
+                    .map(area => area?.AreaIntensity || area?.Intensity || area?.areaIntensity || '')
+                    .filter(Boolean)
+                    .join('、');
+
+                items.push(`
+                    <div class="personal-disaster-item" style="border-color:rgba(245,158,11,.30);background:rgba(245,158,11,.10);">
+                        <div class="personal-disaster-item-title" style="color:#f59e0b;">
+                            <i class="fas fa-house-chimney-crack"></i>
+                            ${escapePersonalDisasterText(county)} 有感地震
+                        </div>
+                        <div class="personal-disaster-item-desc">
+                            規模 M${escapePersonalDisasterText(earthquakeAlert.magnitude)}
+                            ｜${escapePersonalDisasterText(intensityText || '已有震度資料')}
+                            ｜${escapePersonalDisasterText(earthquakeAlert.location)}
+                            ｜${escapePersonalDisasterText(earthquakeAlert.time)}
+                        </div>
+                    </div>
+                `);
+            }
+
+            if (Array.isArray(typhoonData) && typhoonData.length > 0) {
+                const typhoon = typhoonData[0] || {};
+                const name = typhoon.TyphoonName || typhoon.name || '目前颱風資訊';
+                items.push(`
+                    <div class="personal-disaster-item" style="border-color:rgba(59,130,246,.30);background:rgba(59,130,246,.10);cursor:pointer;" onclick="switchMainPage('typhoon')">
+                        <div class="personal-disaster-item-title" style="color:#60a5fa;">
+                            <i class="fas fa-hurricane"></i> ${escapePersonalDisasterText(name)}
+                        </div>
+                        <div class="personal-disaster-item-desc">目前有颱風相關資訊，點擊查看完整路徑與詳細資料。</div>
+                    </div>
+                `);
+            }
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="personal-disaster-safe">
+                        <i class="fas fa-shield-halved" style="font-size:16px;"></i>
+                        <div>
+                            <div style="font-weight:800;">${escapePersonalDisasterText(county)} 目前無符合的防災警報</div>
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">系統會隨氣象署資料更新自動重新檢查。</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = items.join('');
+            }
+        }
+
         function initUserLocationWeather() {
             const container = document.getElementById('myLocationContentArea');
             if (weatherStationData.length === 0) {
@@ -3115,6 +3353,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                         const town = closestStation.GeoInfo?.TownName || '';
                                                  
                         userCurrentCounty = county;
+                        renderPersonalizedDisasterAlert();
                         const popVal = getPopForStation(county, town);
                         const isNight = new Date().getHours() < 6 || new Date().getHours() > 18;
                         const wxInfo = forecastWxData[town] || forecastWxData[county] || { text: '晴', code: '1' };
@@ -3154,6 +3393,8 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                     }
                 },
                 error => {
+                    userCurrentCounty = '';
+                    renderPersonalizedDisasterAlert();
                     container.innerHTML = `<div class="my-location-status" style="color: #f87171;"><i class="fas fa-map-marker-slash"></i> 定位失敗或權限遭拒</div>`;
                 },
                 { timeout: 10000, maximumAge: 60000 }
