@@ -522,9 +522,10 @@
             padding-left: env(safe-area-inset-left, 0px);
             box-sizing: border-box;
         }
+        /* iPhone／Safari 全螢幕：整組右下控制往上留出安全距離，避免最下方全螢幕按鈕被裁切 */
         #map.leaflet-fullscreen-on .leaflet-bottom,
         #radarMap.leaflet-fullscreen-on .leaflet-bottom {
-            bottom: max(18px, env(safe-area-inset-bottom, 0px)) !important;
+            bottom: max(34px, calc(env(safe-area-inset-bottom, 0px) + 14px)) !important;
         }
         #map.leaflet-fullscreen-on .leaflet-right,
         #radarMap.leaflet-fullscreen-on .leaflet-right {
@@ -852,6 +853,82 @@
         }
         .radar-location-popup{font-size:13px;line-height:1.55;}
         .radar-location-popup b{color:#4285f4;}
+        /* 雷達回波滑動探測：手指滑到回波位置時顯示十字準星與 dBZ 預覽 */
+        .radar-probe-marker-wrap{
+            background:transparent !important;
+            border:0 !important;
+        }
+        .radar-probe-marker{
+            position:relative;
+            width:30px;
+            height:30px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .radar-probe-crosshair{
+            position:absolute;
+            width:24px;
+            height:24px;
+            border:2px solid #fff;
+            border-radius:50%;
+            box-shadow:0 1px 5px rgba(0,0,0,.7);
+            background:rgba(15,23,42,.16);
+        }
+        .radar-probe-crosshair::before,
+        .radar-probe-crosshair::after{
+            content:"";
+            position:absolute;
+            background:#fff;
+            box-shadow:0 0 2px rgba(0,0,0,.65);
+        }
+        .radar-probe-crosshair::before{
+            width:2px;
+            height:32px;
+            left:9px;
+            top:-6px;
+        }
+        .radar-probe-crosshair::after{
+            width:32px;
+            height:2px;
+            left:-6px;
+            top:9px;
+        }
+        .radar-probe-tooltip{
+            min-width:118px;
+            max-width:180px;
+            padding:7px 9px;
+            border-radius:10px;
+            background:rgba(15,23,42,.94);
+            color:#fff;
+            border:1px solid rgba(255,255,255,.2);
+            box-shadow:0 3px 12px rgba(0,0,0,.35);
+            font-size:12px;
+            line-height:1.45;
+            white-space:nowrap;
+            pointer-events:none;
+        }
+        .radar-probe-tooltip strong{
+            color:#67e8f9;
+            font-size:13px;
+        }
+        .radar-probe-popup{
+            min-width:170px;
+            font-size:13px;
+            line-height:1.6;
+        }
+        .radar-probe-popup .probe-title{
+            color:#4285f4;
+            font-size:16px;
+            font-weight:800;
+            margin-bottom:4px;
+        }
+        .radar-probe-popup .probe-dbz{
+            color:#0f766e;
+            font-weight:800;
+            font-size:14px;
+        }
+
 
         @media(max-width:700px){.radar-page-header{padding:16px 14px 12px;flex-direction:column}.radar-page-title{font-size:23px}.radar-page-subtitle{font-size:14px}.radar-page-time{font-size:13px;padding-top:0}.radar-page-map-wrap{margin:0 10px 14px;height:72vh;min-height:470px;border-radius:16px}.radar-page-legend{left:10px;top:10px;width:120px;padding:8px 10px;border-radius:12px}.radar-legend-title{font-size:11px;margin-bottom:6px}.radar-legend-body{gap:8px}.radar-legend-gradient{height:205px;width:12px}.radar-legend-labels{font-size:11px}}
 </style></head>
@@ -3483,6 +3560,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 maxZoom:18,updateWhenZooming:false,updateWhenIdle:true,keepBuffer:3,opacity:.95
             }).addTo(radarMap);
             radarInitialized=true;
+            bindRadarProbe();
             bindFullscreenLayoutFix(radarMap);
             repairFullscreenMapLayout(radarMap);
             loadCwaRadarImage();
@@ -3493,119 +3571,89 @@ async function fetchEarthquakeData(isManualRefresh = false) {
         let radarImageCanvas = null;
         let radarImageCtx = null;
 
-        // CWA 雷達回波色階：每個顏色就是一個 5 dBZ 級距。
-        // 重要：CWA 透明 PNG 的高回波顏色本身可能只有低 alpha，
-        // 所以不能用 a < 40 排除；否則 45/50/55 dBZ 紅色系會被誤判成無回波。
         const RADAR_DBZ_PALETTE = [
-            [0,98,231,244],
-            [5,67,168,247],
-            [10,23,69,245],
-            [15,22,240,59],
-            [20,70,198,56],
-            [25,139,213,30],
-            [30,255,255,34],
-            [35,255,211,61],
-            [40,244,127,44],
-            [45,240,46,35],   // 紅
-            [50,197,31,24],   // 深紅
-            [55,143,18,13],   // 暗紅
-            [60,237,45,241],  // 桃紅
-            [65,134,24,242]   // 紫
+            [0,98,231,244],[5,67,168,247],[10,23,69,245],[15,22,240,59],
+            [20,70,198,56],[25,139,213,30],[30,255,255,34],[35,255,211,61],
+            [40,244,127,44],[45,240,46,35],[50,197,31,24],[55,143,18,13],
+            [60,237,45,241],[65,134,24,242]
         ];
 
         function nearestDbzFromRgb(r,g,b,a){
-            // 透明 PNG：只排除真正完全透明像素。
-            if(a <= 4) return null;
-
+            if(a < 40) return null;
+            // 排除接近底圖灰綠、黑色與白色的非回波像素，避免把底圖當成 dBZ。
             const sat=Math.max(r,g,b)-Math.min(r,g,b);
-            if((r+g+b)<50 || sat<18) return null;
-
+            if((r+g+b)<75 || sat<25) return null;
             let best=null, bestDist=Infinity;
             for(const p of RADAR_DBZ_PALETTE){
                 const dr=r-p[1], dg=g-p[2], db=b-p[3];
                 const d=dr*dr+dg*dg+db*db;
-                if(d<bestDist){
-                    bestDist=d;
-                    best=p[0];
-                }
+                if(d<bestDist){bestDist=d;best=p[0];}
             }
-            // 允許 PNG 壓縮／瀏覽器取樣造成的小幅 RGB 偏差。
-            return bestDist<18000 ? best : null;
+            return bestDist<15000 ? best : null;
         }
+
+        // CWA 雷達透明圖層的 dBZ 像素讀取。CodePen/iframe 有時會因 CORS
+        // 造成 canvas 無法讀取原圖，因此先嘗試 CWA 原圖，失敗時改用影像代理。
+        const RADAR_PIXEL_PROXY = 'https://images.weserv.nl/?url=';
 
         function getRadarDbzAtLatLng(lat,lng){
             try{
                 if(!radarImageCanvas || !radarImageCtx || !radarImageForDbz) return null;
-
                 const imgW=radarImageForDbz.naturalWidth || radarImageForDbz.width;
                 const imgH=radarImageForDbz.naturalHeight || radarImageForDbz.height;
                 if(!imgW || !imgH) return null;
-
-                // CWA O-A0058-005 官方範圍：
-                // Longitude 115.00–126.50 / Latitude 17.75–29.25 / 3600×3600。
-                const south=17.75;
-                const north=29.25;
-                const westLon=115.00;
-                const eastLon=126.50;
-
+                const south=17.75, north=29.25, westLon=115.00, eastLon=126.50;
                 if(lat<north && lat>south && lng>westLon && lng<eastLon){
                     const x=Math.round((lng-westLon)/(eastLon-westLon)*(imgW-1));
                     const y=Math.round((north-lat)/(north-south)*(imgH-1));
-
-                    // 先讀游標正中央。只要中央像素就是紅色，就直接回傳 45/50/55 dBZ，
-                    // 不再用 median 把紅色平均掉。
-                    const center=radarImageCtx.getImageData(
-                        Math.max(0,Math.min(imgW-1,x)),
-                        Math.max(0,Math.min(imgH-1,y)),
-                        1,1
-                    ).data;
-                    const centerDbz=nearestDbzFromRgb(center[0],center[1],center[2],center[3]);
-                    if(centerDbz!==null) return centerDbz;
-
-                    // 中央像素若剛好落在透明邊界，再從附近 5×5 像素找最接近的有效回波。
-                    // 若附近同時有不同顏色，取最高 dBZ，避免紅色回波被黃色/綠色中位數吃掉。
-                    const radius=2;
-                    let bestDbz=null;
-                    let bestDist=Infinity;
-
-                    for(let dy=-radius;dy<=radius;dy++){
-                        for(let dx=-radius;dx<=radius;dx++){
-                            const px=x+dx, py=y+dy;
-                            if(px<0 || py<0 || px>=imgW || py>=imgH) continue;
-
-                            const p=radarImageCtx.getImageData(px,py,1,1).data;
-                            const v=nearestDbzFromRgb(p[0],p[1],p[2],p[3]);
-                            if(v===null) continue;
-
-                            const dist=dx*dx+dy*dy;
-                            if(bestDbz===null || v>bestDbz || (v===bestDbz && dist<bestDist)){
-                                bestDbz=v;
-                                bestDist=dist;
-                            }
-                        }
+                    const radius=4;
+                    const sx=Math.max(0,x-radius), sy=Math.max(0,y-radius);
+                    const sw=Math.min(imgW,x+radius+1)-sx, sh=Math.min(imgH,y+radius+1)-sy;
+                    const data=radarImageCtx.getImageData(sx,sy,sw,sh).data;
+                    const vals=[];
+                    for(let i=0;i<data.length;i+=4){
+                        const v=nearestDbzFromRgb(data[i],data[i+1],data[i+2],data[i+3]);
+                        if(v!==null) vals.push(v);
                     }
-
-                    // 完全沒有有效回波才視為 0 dBZ。
-                    return bestDbz===null ? 0 : bestDbz;
+                    if(!vals.length) return null;
+                    vals.sort((a,b)=>a-b);
+                    return vals[Math.floor(vals.length/2)];
                 }
-            }catch(e){
-                console.warn('雷達 dBZ 讀取失敗',e);
-            }
+            }catch(e){ console.warn('雷達 dBZ 讀取失敗',e); }
             return null;
         }
 
+        // 依「被點選的位置」反查縣市＋鄉鎮市區。
+        // 先用 NLSC，失敗再用 BigDataCloud，絕不再把失敗結果寫成「目前所在地」。
         function getTaiwanLocationName(lat,lng){
-            const url='https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lng)+'&zoom=18&addressdetails=1&accept-language=zh-TW';
-            return fetch(url,{headers:{'Accept':'application/json'}}).then(r=>{
-                if(!r.ok) throw new Error('reverse geocode failed');
-                return r.json();
-            }).then(data=>{
-                const a=data.address||{};
-                const city=a.city || a.municipality || a.county || a.state_district || a.state || '';
-                const town=a.town || a.city_district || a.county_district || a.suburb || a.village || '';
-                let name=(city||'')+(town && town!==city ? town : '');
-                return name || data.display_name || '目前所在地';
-            }).catch(()=> '目前所在地');
+            const nlscUrl='https://api.nlsc.gov.tw/other/TownVillagePointQuery1/'+encodeURIComponent(lng)+'/'+encodeURIComponent(lat)+'/4326';
+            return fetch(nlscUrl,{headers:{'Accept':'application/xml,text/xml,*/*'}}).then(r=>{
+                if(!r.ok) throw new Error('NLSC reverse geocode failed');
+                return r.text();
+            }).then(text=>{
+                const xml=new DOMParser().parseFromString(text,'application/xml');
+                const getTag=(name)=>{
+                    const el=xml.getElementsByTagName(name)[0];
+                    return el ? String(el.textContent||'').trim() : '';
+                };
+                const city=getTag('ctyName');
+                const town=getTag('townName');
+                const village=getTag('villageName');
+                if(!city || !town) throw new Error('NLSC no district');
+                return {name:city+town,city,town,village};
+            }).catch(()=>{
+                const url='https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lng)+'&localityLanguage=zh-TW';
+                return fetch(url).then(r=>{
+                    if(!r.ok) throw new Error('reverse geocode fallback failed');
+                    return r.json();
+                }).then(d=>{
+                    const admin=Array.isArray(d.localityInfo?.administrative)?d.localityInfo.administrative:[];
+                    const city=d.city || d.principalSubdivision || admin.find(x=>/city|county|municipality|縣|市/i.test(String(x.name||'')))?.name || '';
+                    const town=d.locality || d.district || admin.find(x=>/district|town|township|鄉|鎮|區/i.test(String(x.name||'')))?.name || '';
+                    if(!city || !town) throw new Error('fallback no district');
+                    return {name:String(city)+String(town),city:String(city),town:String(town),village:d.localityInfo?.administrative?.find(x=>/village|里/i.test(String(x.name||'')))?.name||''};
+                });
+            }).catch(()=>({name:'無法取得縣市鄉鎮',city:'',town:'',village:''}));
         }
 
         function locateRadarUser(button){
@@ -3634,10 +3682,10 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 if(radarUserLocationAccuracy) radarUserLocationAccuracy.setLatLng(latlng).setRadius(accuracy);
 
                 const dbz=getRadarDbzAtLatLng(lat,lng);
-                const dbzText=dbz===null ? '暫無回波資料' : (dbz+' dBZ');
-                getTaiwanLocationName(lat,lng).then(name=>{
+                const dbzText=dbz===null ? '無明顯回波' : ('約 '+dbz+' dBZ');
+                getTaiwanLocationName(lat,lng).then(info=>{
                     radarUserLocationMarker.bindPopup(
-                        '<div class="radar-location-popup"><b>📍 所在地｜'+name+'</b><br><span>🌧️ 雷達回波：約 <strong>'+dbzText+'</strong></span></div>'
+                        '<div class="radar-location-popup"><b>📍 所在地｜'+info.name+'</b><br><span>🌧️ 雷達回波：<strong>'+dbzText+'</strong></span></div>'
                     );
                     radarUserLocationMarker.openPopup();
                 });
@@ -3663,19 +3711,20 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             const timeEl=document.getElementById('radarObsTimeTag');
             if(status){status.style.display='block';status.textContent='正在載入 CWA 雷達合成回波...';}
             const url=CWA_RADAR_IMAGE_URL+'?t='+Date.now();
-            const testImg=new Image();
-            testImg.crossOrigin='anonymous';
-            testImg.onload=function(){
-                radarImageForDbz=testImg;
+
+            const finishImage=function(img,overlayUrl){
+                radarImageForDbz=img;
                 try{
                     radarImageCanvas=document.createElement('canvas');
-                    radarImageCanvas.width=testImg.naturalWidth||testImg.width;
-                    radarImageCanvas.height=testImg.naturalHeight||testImg.height;
+                    radarImageCanvas.width=img.naturalWidth||img.width;
+                    radarImageCanvas.height=img.naturalHeight||img.height;
                     radarImageCtx=radarImageCanvas.getContext('2d',{willReadFrequently:true});
-                    radarImageCtx.drawImage(testImg,0,0);
+                    radarImageCtx.drawImage(img,0,0);
+                    // 立即測試像素讀取，若 canvas 被 CORS 污染會在此捕捉。
+                    radarImageCtx.getImageData(0,0,1,1);
                 }catch(e){
                     radarImageCanvas=null; radarImageCtx=null;
-                    console.warn('雷達影像無法讀取像素，dBZ 將顯示暫無回波資料',e);
+                    console.warn('雷達影像像素讀取失敗',e);
                 }
                 if(radarOverlay) radarMap.removeLayer(radarOverlay);
                 radarOverlay=L.imageOverlay(url,CWA_RADAR_BOUNDS,{opacity:0.86,interactive:false,zIndex:50}).addTo(radarMap);
@@ -3687,12 +3736,147 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 }
                 if(status){status.style.display='none';}
             };
-            testImg.onerror=function(){
-                if(status){status.style.display='block';status.textContent='CWA 雷達影像暫時無法載入，請稍後重新整理';}
-                if(timeEl) timeEl.textContent='雷達時間：暫無可用影像';
+
+            const directImg=new Image();
+            directImg.crossOrigin='anonymous';
+            directImg.onload=function(){
+                try{
+                    const c=document.createElement('canvas');
+                    c.width=directImg.naturalWidth||directImg.width; c.height=directImg.naturalHeight||directImg.height;
+                    const x=c.getContext('2d',{willReadFrequently:true});
+                    x.drawImage(directImg,0,0); x.getImageData(0,0,1,1);
+                    finishImage(directImg,url);
+                }catch(e){
+                    const proxyImg=new Image();
+                    proxyImg.crossOrigin='anonymous';
+                    proxyImg.onload=function(){finishImage(proxyImg,proxyImg.src);};
+                    proxyImg.onerror=function(){finishImage(directImg,url);};
+                    proxyImg.src=RADAR_PIXEL_PROXY+encodeURIComponent(CWA_RADAR_IMAGE_URL)+'&output=png&t='+Date.now();
+                }
             };
-            testImg.src=url;
+            directImg.onerror=function(){
+                const proxyImg=new Image();
+                proxyImg.crossOrigin='anonymous';
+                proxyImg.onload=function(){finishImage(proxyImg,proxyImg.src);};
+                proxyImg.onerror=function(){
+                    if(status){status.style.display='block';status.textContent='CWA 雷達影像暫時無法載入，請稍後重新整理';}
+                    if(timeEl) timeEl.textContent='雷達時間：暫無可用影像';
+                };
+                proxyImg.src=RADAR_PIXEL_PROXY+encodeURIComponent(CWA_RADAR_IMAGE_URL)+'&output=png&t='+Date.now();
+            };
+            directImg.src=url;
         }
+
+        // 雷達回波滑動探測：
+        // 手指/滑鼠滑到地圖時，十字準星會跟著位置移動並即時預覽 dBZ；
+        // 點一下後，再反查縣市＋鄉鎮市區並開啟詳細彈窗。
+        let radarProbeMarker = null;
+        let radarProbeTooltip = null;
+        let radarProbeLastLatLng = null;
+        let radarProbeBusy = false;
+
+        function ensureRadarProbeMarker(){
+            if(!radarMap) return null;
+            if(!radarProbeMarker){
+                radarProbeMarker = L.marker([23.55,121.0],{
+                    icon:L.divIcon({
+                        className:'radar-probe-marker-wrap',
+                        html:'<div class="radar-probe-marker"><span class="radar-probe-crosshair"></span></div>',
+                        iconSize:[30,30],
+                        iconAnchor:[15,15]
+                    }),
+                    interactive:false,
+                    zIndexOffset:1500
+                }).addTo(radarMap);
+            }
+            return radarProbeMarker;
+        }
+
+        function updateRadarProbe(latlng, showTooltip=true){
+            if(!radarMap || !latlng) return;
+            const marker=ensureRadarProbeMarker();
+            if(!marker) return;
+            marker.setLatLng(latlng);
+            radarProbeLastLatLng=latlng;
+            const dbz=getRadarDbzAtLatLng(latlng.lat,latlng.lng);
+            const dbzText=dbz===null ? '無明顯回波' : ('約 '+dbz+' dBZ');
+
+            if(showTooltip){
+                if(!radarProbeTooltip){
+                    radarProbeTooltip=L.tooltip({
+                        permanent:false,
+                        direction:'top',
+                        offset:[0,-14],
+                        opacity:.96,
+                        className:'radar-probe-tooltip'
+                    });
+                }
+                radarProbeTooltip
+                    .setLatLng(latlng)
+                    .setContent('🌧️ <strong>'+dbzText+'</strong><br><span>點一下查看所在地</span>')
+                    .addTo(radarMap);
+            }
+        }
+
+        function hideRadarProbe(){
+            if(radarProbeTooltip && radarMap){
+                radarMap.removeLayer(radarProbeTooltip);
+            }
+            if(radarProbeMarker && radarMap){
+                radarMap.removeLayer(radarProbeMarker);
+            }
+            radarProbeMarker=null;
+            radarProbeTooltip=null;
+            radarProbeLastLatLng=null;
+        }
+
+        function bindRadarProbe(){
+            if(!radarMap || radarMap._radarProbeBound) return;
+            radarMap._radarProbeBound=true;
+
+            radarMap.on('mousemove touchmove',function(e){
+                if(e && e.latlng) updateRadarProbe(e.latlng,true);
+            });
+
+            radarMap.on('mouseout',function(){
+                if(!radarMap._touchProbeActive) hideRadarProbe();
+            });
+
+            radarMap.on('touchstart',function(e){
+                radarMap._touchProbeActive=true;
+                if(e && e.latlng) updateRadarProbe(e.latlng,true);
+            });
+
+            radarMap.on('touchend',function(){
+                setTimeout(function(){ radarMap._touchProbeActive=false; },250);
+            });
+
+            radarMap.on('click',function(e){
+                if(!e || !e.latlng || radarProbeBusy) return;
+                radarProbeBusy=true;
+                updateRadarProbe(e.latlng,true);
+
+                const lat=e.latlng.lat;
+                const lng=e.latlng.lng;
+                const dbz=getRadarDbzAtLatLng(lat,lng);
+                const dbzText=dbz===null ? '無明顯回波' : ('約 '+dbz+' dBZ');
+
+                getTaiwanLocationName(lat,lng).then(function(info){
+                    const popupHtml=
+                        '<div class="radar-probe-popup">'+
+                        '<div class="probe-title">📍 所在地｜'+info.name+'</div>'+
+                        '<div class="probe-dbz">🌧️ 雷達回波：'+dbzText+'</div>'+
+                        '</div>';
+                    L.popup({maxWidth:240,closeButton:true,autoClose:true})
+                        .setLatLng(e.latlng)
+                        .setContent(popupHtml)
+                        .openOn(radarMap);
+                }).finally(function(){
+                    radarProbeBusy=false;
+                });
+            });
+        }
+
         function refreshCwaRadar(){
             if(!radarInitialized) initRadarMap();
             setTimeout(loadCwaRadarImage,100);
