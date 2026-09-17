@@ -750,7 +750,52 @@
         .visitor-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.visitor-stat-card{padding:12px 8px;border-radius:14px;background:var(--action-bg);border:1px solid var(--action-border);text-align:center}
         .visitor-stat-card span{display:block;font-size:11px;color:var(--text-muted);margin-bottom:5px}.visitor-stat-card b{font-size:20px;color:#38bdf8}
         @media(max-width:480px){.visitor-stats-grid{grid-template-columns:1fr 1fr}.visitor-stat-card:last-child{grid-column:1 / -1}}
-    </style>
+    
+
+        /* 空氣品質頁面 */
+        .air-quality-panel{padding:0;background:var(--panel-bg);border-radius:16px;overflow:hidden;border:1px solid var(--action-border);}
+        .air-quality-header{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:20px 22px 14px;}
+        .air-quality-title{font-size:26px;font-weight:900;color:var(--text-color);display:flex;align-items:center;gap:10px;}
+        .air-quality-title i{color:#22c55e;}
+        .air-quality-subtitle{margin-top:6px;color:var(--text-muted);font-size:13px;}
+        .air-quality-controls{padding:0 18px 16px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:end;}
+        .air-quality-key-wrap{display:flex;flex-direction:column;gap:5px;}
+        .air-quality-key-label{font-size:11px;color:var(--text-muted);font-weight:700;}
+        .air-quality-key-input{width:100%;padding:10px 12px;border-radius:11px;border:1px solid var(--action-border);background:var(--select-bg);color:var(--text-color);outline:none;font-size:12px;}
+        .air-quality-key-input:focus{border-color:#22c55e;}
+        .air-quality-btn{padding:10px 13px;border:1px solid var(--action-border);border-radius:11px;background:var(--action-bg);color:#38bdf8;font-weight:700;cursor:pointer;white-space:nowrap;}
+        .air-quality-btn:hover{background:rgba(56,189,248,.12);}
+        .air-quality-btn.primary{background:linear-gradient(135deg,#16a34a,#0ea5e9);color:#fff;border-color:transparent;}
+        .air-quality-status{margin:0 18px 14px;padding:10px 12px;border-radius:11px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);font-size:12px;color:var(--text-muted);}
+        .air-quality-status.error{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:#fca5a5;}
+        .air-quality-diagnostic{margin:0 18px 14px;padding:11px 12px;border-radius:11px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.22);color:var(--text-muted);font-size:11px;line-height:1.65;white-space:pre-wrap;word-break:break-word;}
+        .air-quality-diagnostic strong{color:var(--text-color);}
+        .air-quality-diagnostic .ok{color:#4ade80;font-weight:800;}
+        .air-quality-diagnostic .bad{color:#f87171;font-weight:800;}
+        .air-quality-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0 18px 18px;max-height:620px;overflow-y:auto;}
+        .air-quality-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:14px;cursor:pointer;transition:.2s;}
+        .air-quality-card:hover{transform:translateY(-2px);border-color:rgba(34,197,94,.45);}
+        .air-quality-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+        .air-quality-station{font-size:15px;font-weight:800;color:var(--text-color);}
+        .air-quality-county{font-size:11px;color:var(--text-muted);margin-top:3px;}
+        .air-quality-aqi{min-width:48px;text-align:center;padding:5px 7px;border-radius:10px;font-size:18px;font-weight:900;color:#fff;}
+        .aqi-good{background:#22c55e}.aqi-moderate{background:#eab308}.aqi-sensitive{background:#f97316}.aqi-unhealthy{background:#ef4444}.aqi-very{background:#a855f7}.aqi-hazardous{background:#7f1d1d}.aqi-unknown{background:#64748b}
+        .air-quality-status-text{font-size:11px;font-weight:700;margin-top:8px;}
+        .air-quality-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;}
+        .air-quality-metric{padding:7px 5px;border-radius:9px;background:rgba(0,0,0,.10);text-align:center;}
+        .air-quality-metric span{display:block;font-size:10px;color:var(--text-muted);}.air-quality-metric b{display:block;margin-top:2px;font-size:13px;color:var(--text-color);}
+        .air-quality-time{font-size:10px;color:var(--text-muted);margin-top:9px;text-align:right;}
+        .air-quality-empty{grid-column:1/-1;padding:40px 15px;text-align:center;color:var(--text-muted);}
+        .air-quality-source{padding:0 18px 18px;font-size:10px;color:var(--text-muted);line-height:1.5;}
+        @media(max-width:700px){
+            .air-quality-header{padding:16px 14px 12px;flex-direction:column;align-items:flex-start;}
+            .air-quality-title{font-size:22px;}
+            .air-quality-controls{grid-template-columns:1fr 1fr;padding:0 12px 14px;}
+            .air-quality-key-wrap{grid-column:1/-1;}
+            .air-quality-grid{grid-template-columns:1fr;padding:0 12px 14px;}
+            .air-quality-source{padding:0 12px 14px;}
+        }
+</style>
 <style>
 @media(max-width:600px){.convection-storm-item{grid-template-columns:28px 1fr auto;padding:9px}}
 
@@ -861,9 +906,6 @@
             <button id="tabDashboard" class="tab-btn active" onclick="switchMainPage('dashboard')">
                 <i class="fas fa-chart-line"></i> 觀測儀表板
             </button>
-            <button id="tabRadar" class="tab-btn" onclick="switchMainPage('radar')">
-                <i class="fas fa-satellite-dish"></i> 雷達回波
-            </button>
             <button id="tabMap" class="tab-btn" onclick="switchMainPage('map')">
                 <i class="fas fa-map-marked-alt"></i> 全台地圖
             </button>
@@ -875,6 +917,12 @@
             </button>
             <button id="tabTyphoon" class="tab-btn" onclick="switchMainPage('typhoon')">
                  <i class="fas fa-hurricane"></i> 🌀 颱風資訊
+            </button>
+            <button id="tabRadar" class="tab-btn" onclick="switchMainPage('radar')">
+                <i class="fas fa-satellite-dish"></i> 雷達回波
+            </button>
+            <button id="tabAirQuality" class="tab-btn" onclick="switchMainPage('airQuality')">
+                <i class="fas fa-wind"></i> 空氣品質
             </button>
             <button class="tab-btn" id="themeToggleBtn" onclick="toggleTheme()" title="切換主題" style="flex: 0 0 38px;">
                 <i class="fas fa-moon" id="themeIcon"></i>
@@ -1138,6 +1186,38 @@
             </div>
         </div>
 
+        <div id="airQualityPanel" class="content-panel air-quality-panel">
+            <div class="air-quality-header">
+                <div>
+                    <div class="air-quality-title"><i class="fas fa-wind"></i> 空氣品質</div>
+                    <div class="air-quality-subtitle">環境部即時 AQI 測站資料｜每小時更新</div>
+                </div>
+                <button class="action-btn" id="refreshAirQualityBtn" onclick="loadAirQuality(true)">
+                    <i class="fas fa-sync-alt"></i> 重新整理
+                </button>
+            </div>
+            <div class="air-quality-controls">
+                <div class="air-quality-key-wrap">
+                    <label class="air-quality-key-label" for="airQualityApiKey">環境部 API Key</label>
+                    <input id="airQualityApiKey" class="air-quality-key-input" type="password" placeholder="輸入環境部 API Key（只儲存在本機）" autocomplete="off">
+                </div>
+                <button class="air-quality-btn primary" onclick="saveAirQualityApiKey()">儲存 Key</button>
+                <button class="air-quality-btn" onclick="openAirQualityApiPage()">申請 API Key</button>
+            </div>
+            <div id="airQualityStatus" class="air-quality-status">尚未載入空氣品質資料</div>
+            <div id="airQualityDiagnostic" class="air-quality-diagnostic" hidden></div>
+            <div id="airQualityGrid" class="air-quality-grid">
+                <div class="air-quality-empty">
+                    <i class="fas fa-wind" style="font-size:28px;margin-bottom:10px;display:block;"></i>
+                    請先輸入環境部 API Key，再載入即時 AQI
+                </div>
+            </div>
+            <div class="air-quality-source">
+                資料來源：環境部環境資料開放平臺「空氣品質指標(AQI)」AQX_P_432。
+                顯示測站名稱、縣市、AQI、主要污染物、PM2.5、PM10、O₃ 等資料。
+            </div>
+        </div>
+
         <div id="typhoonPanel" class="content-panel modern-dashboard">
             <div class="header">
                 <div class="header-title">
@@ -1238,6 +1318,8 @@
             });
             fetchEarthquakeData(false);
             fetchTyphoonData(false);
+            const aqKeyInput=document.getElementById('airQualityApiKey');
+            if(aqKeyInput) aqKeyInput.value=getAirQualityApiKey();
             fetchWeatherWarnings();
             setInterval(() => {
                 fetchEarthquakeData(false);
@@ -1248,7 +1330,227 @@
             // 網站可以較頻繁檢查，但只有偵測到 CWA 新 ObsTime 才真正套用資料。
             // 因此不會把「網站刷新時間」誤當成「氣象署資料更新時間」。
             startCwaObsTimeSync();
+            setInterval(() => {
+                if(getAirQualityApiKey()) loadAirQuality(false);
+            }, 10 * 60 * 1000);
         });
+
+        // ==================== 空氣品質 AQI ====================
+        let airQualityData = [];
+        let airQualityLoading = false;
+
+        function getAirQualityApiKey(){
+            return (localStorage.getItem('moenv_api_key') || '').trim();
+        }
+
+        function saveAirQualityApiKey(){
+            const input=document.getElementById('airQualityApiKey');
+            const key=(input?.value || '').trim();
+            if(!key){
+                setAirQualityStatus('請先輸入環境部 API Key。', true);
+                return;
+            }
+            localStorage.setItem('moenv_api_key', key);
+            setAirQualityStatus('API Key 已儲存於本機，正在載入空氣品質資料……');
+            loadAirQuality(true);
+        }
+
+        function openAirQualityApiPage(){
+            window.open('https://data.moenv.gov.tw/api_term','_blank','noopener');
+        }
+
+        function setAirQualityStatus(message,isError=false){
+            const el=document.getElementById('airQualityStatus');
+            if(!el) return;
+            el.textContent=message;
+            el.classList.toggle('error',!!isError);
+        }
+
+        function setAirQualityDiagnostic(lines=[],isError=false){
+            const el=document.getElementById('airQualityDiagnostic');
+            if(!el) return;
+            if(!lines || !lines.length){
+                el.hidden=true;
+                el.textContent='';
+                return;
+            }
+            el.hidden=false;
+            el.classList.toggle('error',!!isError);
+            el.innerHTML=lines.map(x=>String(x)).join('<br>');
+        }
+
+        function getAqiInfo(aqi){
+            const n=Number(aqi);
+            if(!Number.isFinite(n)) return {text:'無資料',cls:'aqi-unknown'};
+            if(n<=50) return {text:'良好',cls:'aqi-good'};
+            if(n<=100) return {text:'普通',cls:'aqi-moderate'};
+            if(n<=150) return {text:'對敏感族群不健康',cls:'aqi-sensitive'};
+            if(n<=200) return {text:'對所有族群不健康',cls:'aqi-unhealthy'};
+            if(n<=300) return {text:'非常不健康',cls:'aqi-very'};
+            return {text:'危害',cls:'aqi-hazardous'};
+        }
+
+        function escapeAirQualityHtml(value){
+            return String(value ?? '--').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
+        function airQualityPick(row, names, fallback='--'){
+            const keys=Object.keys(row || {});
+            for(const name of names){
+                const hit=keys.find(k=>String(k).toLowerCase()===String(name).toLowerCase());
+                if(hit!==undefined && row[hit]!==null && row[hit]!==undefined && String(row[hit]).trim()!=='') return row[hit];
+            }
+            return fallback;
+        }
+
+        function normalizeAirQualityRecord(row){
+            return {
+                SiteName:airQualityPick(row,['SiteName','sitename','site_name']),
+                County:airQualityPick(row,['County','county']),
+                AQI:airQualityPick(row,['AQI','aqi']),
+                Pollutant:airQualityPick(row,['Pollutant','pollutant']),
+                Status:airQualityPick(row,['Status','status']),
+                'PM2.5':airQualityPick(row,['PM2.5','pm2.5','PM25','pm25']),
+                PM10:airQualityPick(row,['PM10','pm10']),
+                O3:airQualityPick(row,['O3','o3']),
+                publishtime:airQualityPick(row,['publishtime','PublishTime','DataCreationDate','data_creation_date']),
+                Longitude:airQualityPick(row,['Longitude','longitude']),
+                Latitude:airQualityPick(row,['Latitude','latitude']),
+                SiteId:airQualityPick(row,['SiteId','siteid','site_id'])
+            };
+        }
+
+        function extractAirQualityRecords(result){
+            const candidates=[
+                result?.records,
+                result?.data?.records,
+                result?.result?.records,
+                result?.data,
+                result?.result,
+                result
+            ];
+            for(const candidate of candidates){
+                if(Array.isArray(candidate)) return candidate;
+                if(candidate && Array.isArray(candidate.records)) return candidate.records;
+            }
+            return null;
+        }
+
+        function renderAirQuality(data){
+            const grid=document.getElementById('airQualityGrid');
+            if(!grid) return;
+            const rows=(Array.isArray(data)?data:[]).map(normalizeAirQualityRecord);
+            if(!rows.length){
+                grid.innerHTML='<div class="air-quality-empty">目前沒有可顯示的空氣品質測站資料。</div>';
+                return;
+            }
+            grid.innerHTML=rows.sort((a,b)=>(Number(b.AQI)||-1)-(Number(a.AQI)||-1)).map(s=>{
+                const info=getAqiInfo(s.AQI);
+                const aqi=Number.isFinite(Number(s.AQI)) ? Number(s.AQI) : '--';
+                const status=s.Status || info.text;
+                const pollutant=s.Pollutant || '無主要污染物';
+                const time=s.publishtime || '--';
+                return `
+                    <div class="air-quality-card">
+                        <div class="air-quality-card-top">
+                            <div>
+                                <div class="air-quality-station">${escapeAirQualityHtml(s.SiteName)}</div>
+                                <div class="air-quality-county">${escapeAirQualityHtml(s.County)}</div>
+                            </div>
+                            <div class="air-quality-aqi ${info.cls}">${escapeAirQualityHtml(aqi)}</div>
+                        </div>
+                        <div class="air-quality-status-text">${escapeAirQualityHtml(status)}｜主要污染物：${escapeAirQualityHtml(pollutant)}</div>
+                        <div class="air-quality-metrics">
+                            <div class="air-quality-metric"><span>PM2.5</span><b>${escapeAirQualityHtml(s['PM2.5'])}</b></div>
+                            <div class="air-quality-metric"><span>PM10</span><b>${escapeAirQualityHtml(s.PM10)}</b></div>
+                            <div class="air-quality-metric"><span>O₃</span><b>${escapeAirQualityHtml(s.O3)}</b></div>
+                        </div>
+                        <div class="air-quality-time">發布：${escapeAirQualityHtml(time)}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        async function loadAirQuality(isManual=false){
+            if(airQualityLoading) return;
+            const key=getAirQualityApiKey();
+            const input=document.getElementById('airQualityApiKey');
+            if(input && document.activeElement!==input) input.value=key;
+            if(!key){
+                setAirQualityStatus('尚未設定環境部 API Key。點「申請 API Key」取得金鑰後貼上即可。',true);
+                setAirQualityDiagnostic([]);
+                return;
+            }
+            airQualityLoading=true;
+            const btn=document.getElementById('refreshAirQualityBtn');
+            if(btn && isManual) btn.classList.add('spinning');
+            setAirQualityStatus('正在讀取環境部最新空氣品質資料……');
+            setAirQualityDiagnostic(['正在測試：環境部 AQX_P_432 v2 API……']);
+            try{
+                // 依環境部目前公開文件使用 v2；先不加 sort，避免不同版本對排序欄位的限制。
+                const params=new URLSearchParams({
+                    format:'json',
+                    offset:'0',
+                    limit:'1000',
+                    api_key:key
+                });
+                const url='https://data.moenv.gov.tw/api/v2/aqx_p_432?'+params.toString();
+                const response=await fetch(url,{cache:'no-store'});
+                const rawText=await response.text();
+                let result=null;
+                try{ result=rawText ? JSON.parse(rawText) : null; }catch(parseErr){
+                    throw new Error('API 回傳不是 JSON（HTTP '+response.status+'）');
+                }
+                if(!response.ok){
+                    const apiMessage=result?.message || result?.error || result?.detail || rawText.slice(0,300) || '未提供錯誤訊息';
+                    setAirQualityDiagnostic([
+                        `HTTP 狀態：<span class="bad">${escapeAirQualityHtml(response.status)}</span>`,
+                        `環境部回應：${escapeAirQualityHtml(apiMessage)}`,
+                        '請確認 API Key 完整且仍有效。'
+                    ],true);
+                    throw new Error('HTTP '+response.status+'：'+apiMessage);
+                }
+
+                const records=extractAirQualityRecords(result);
+                if(records===null){
+                    const topKeys=result && typeof result==='object' ? Object.keys(result).join(', ') : typeof result;
+                    setAirQualityDiagnostic([
+                        `HTTP 狀態：<span class="ok">200 OK</span>`,
+                        `回應頂層欄位：${escapeAirQualityHtml(topKeys || '無')}`,
+                        '找不到 records 陣列，請查看上方診斷資訊。'
+                    ],true);
+                    throw new Error('API 回傳格式無法辨識（找不到 records）');
+                }
+
+                airQualityData=records;
+                renderAirQuality(records);
+                const normalized=records.map(normalizeAirQualityRecord);
+                const latest=normalized.map(x=>x.publishtime).filter(Boolean).sort().pop()||'--';
+                const validCount=normalized.filter(x=>Number.isFinite(Number(x.AQI))).length;
+                setAirQualityStatus(`已載入 ${records.length} 個測站｜AQI 有效 ${validCount} 站｜資料發布時間：${latest}`);
+                setAirQualityDiagnostic([
+                    `HTTP 狀態：<span class="ok">200 OK</span>`,
+                    `API：AQX_P_432｜v2`,
+                    `records：<span class="ok">${records.length} 筆</span>`,
+                    `可辨識 AQI：${validCount} 筆`,
+                    `資料發布時間：${escapeAirQualityHtml(latest)}`
+                ]);
+            }catch(err){
+                console.error('空氣品質載入失敗',err);
+                if(!document.getElementById('airQualityDiagnostic')?.textContent){
+                    setAirQualityDiagnostic([`錯誤：<span class="bad">${escapeAirQualityHtml(err?.message||'未知錯誤')}</span>`],true);
+                }
+                setAirQualityStatus('空氣品質資料載入失敗：'+(err?.message||'未知錯誤'),true);
+                const grid=document.getElementById('airQualityGrid');
+                if(grid) grid.innerHTML='<div class="air-quality-empty">尚未取得環境部 AQI 測站資料。請查看上方診斷資訊。</div>';
+            }finally{
+                airQualityLoading=false;
+                if(btn) btn.classList.remove('spinning');
+            }
+        }
+
+        function testAirQualityApi(){
+            loadAirQuality(true);
+        }
 
         function startCwaObsTimeSync() {
             // 初始載入已經完成後，以60秒檢查一次 CWA 是否發布新批次。
@@ -1493,6 +1795,7 @@
             document.getElementById('tabCountyForecast').classList.toggle('active', pageId === 'countyForecast');
             document.getElementById('tabQuake').classList.toggle('active', pageId === 'quake');
             document.getElementById('tabTyphoon').classList.toggle('active', pageId === 'typhoon');
+            document.getElementById('tabAirQuality').classList.toggle('active', pageId === 'airQuality');
                                       
             document.getElementById('dashboardPanel').classList.toggle('active', pageId === 'dashboard');
             document.getElementById('radarPanel').classList.toggle('active', pageId === 'radar');
@@ -1500,6 +1803,10 @@
             document.getElementById('countyForecastPanel').classList.toggle('active', pageId === 'countyForecast');
             document.getElementById('quakePanel').classList.toggle('active', pageId === 'quake');
             document.getElementById('typhoonPanel').classList.toggle('active', pageId === 'typhoon');
+            document.getElementById('airQualityPanel').classList.toggle('active', pageId === 'airQuality');
+            if (pageId === 'airQuality') {
+                setTimeout(() => loadAirQuality(false), 50);
+            }
             if (pageId === 'map' && !mapInitialized) {
                 setTimeout(initMap, 100);
             } else if (pageId === 'map' && mapInitialized) {
