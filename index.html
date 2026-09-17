@@ -624,6 +624,39 @@
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
             background: rgba(0, 0, 0, 0.1); padding: 10px; border-radius: 12px; font-size: 12px; color: var(--text-muted);
         }
+        .quake-upgrade-grid {
+            display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:10px;
+        }
+        .quake-upgrade-item {
+            padding:9px 10px; border-radius:11px; background:rgba(0,0,0,.10);
+            border:1px solid var(--card-border); font-size:12px; color:var(--text-muted);
+        }
+        .quake-upgrade-item b { color:var(--text-color); }
+        .quake-intensity-list {
+            margin-top:10px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px;
+        }
+        .quake-intensity-item {
+            padding:7px 8px; border-radius:9px; background:rgba(0,0,0,.10);
+            font-size:11px; color:var(--text-muted);
+        }
+        .quake-intensity-item b { color:var(--text-color); }
+        .quake-map-wrap {
+            position:relative; height:240px; margin-top:12px; border-radius:14px; overflow:hidden;
+            border:1px solid var(--card-border); background:#dbeafe;
+        }
+        .quake-mini-map { width:100%; height:100%; }
+        .quake-epicenter-icon {
+            background:transparent!important; border:0!important;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .quake-epicenter-x {
+            color:#111827; font-size:30px; line-height:1; font-weight:900;
+            text-shadow:0 1px 2px rgba(255,255,255,.9);
+        }
+        @media(max-width:700px){
+            .quake-upgrade-grid,.quake-intensity-list{grid-template-columns:1fr;}
+            .quake-map-wrap{height:220px;}
+        }
 
 
         @keyframes hotStationBreathing {
@@ -3011,6 +3044,47 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             }
         }
         
+        function getQuakeCoordinate(eq) {
+            const info = eq?.EarthquakeInfo || {};
+            const candidates = [
+                info?.Epicenter?.Position,
+                info?.Epicenter?.Coordinates,
+                info?.Epicenter?.Coordinate,
+                info?.Epicenter?.Location?.Position,
+                info?.Epicenter?.Location?.Coordinates,
+                eq?.Epicenter?.Position,
+                eq?.Epicenter?.Coordinates
+            ];
+            for (const c of candidates) {
+                if (!c) continue;
+                const lat = parseFloat(c?.PositionLatitude ?? c?.Latitude ?? c?.lat ?? c?.[1]);
+                const lon = parseFloat(c?.PositionLongitude ?? c?.Longitude ?? c?.lon ?? c?.lng ?? c?.[0]);
+                if (Number.isFinite(lat) && Number.isFinite(lon)) return [lat, lon];
+            }
+            const lat = parseFloat(info?.Epicenter?.Latitude ?? info?.Epicenter?.lat);
+            const lon = parseFloat(info?.Epicenter?.Longitude ?? info?.Epicenter?.lon ?? info?.Epicenter?.lng);
+            return Number.isFinite(lat) && Number.isFinite(lon) ? [lat,lon] : null;
+        }
+
+        function getQuakeIntensityRank(text) {
+            const m = String(text || '').match(/([0-7](?:級)?)/);
+            if (!m) return -1;
+            return parseInt(m[1],10);
+        }
+
+        function initQuakeMiniMap(mapId, coords, location) {
+            const el=document.getElementById(mapId);
+            if(!el || typeof L==='undefined' || !coords) return;
+            try {
+                const qmap=L.map(el,{zoomControl:false,attributionControl:false}).setView(coords,8);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(qmap);
+                const icon=L.divIcon({className:'quake-epicenter-icon',html:'<div class=\"quake-epicenter-x\">×</div>',iconSize:[34,34],iconAnchor:[17,17]});
+                L.marker(coords,{icon,zIndexOffset:1000}).addTo(qmap).bindPopup('<b>❌ 震央</b><br>'+escapeHtml(String(location||'未知地點'))).openPopup();
+                setTimeout(()=>qmap.invalidateSize(),120);
+                window._quakeMiniMap=qmap;
+            } catch(e) { console.warn('地震小地圖建立失敗',e); }
+        }
+
         function showQuakeDetail(index) {
             const eq = window.quakeDataList?.[index];
             if (!eq) return;
@@ -3021,42 +3095,53 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             const depth = info.FocalDepth || '--';
             const originTime = info.OriginTime || '--';
             const reportImage = eq.ReportImageURI || '';
+            const coords = getQuakeCoordinate(eq);
+            const intensityAreas = Array.isArray(info.Intensity?.ShakingArea) ? info.Intensity.ShakingArea : [];
+            let maxIntensity = '--';
+            if (intensityAreas.length) {
+                const maxArea = [...intensityAreas].sort((a,b)=>getQuakeIntensityRank(b?.AreaIntensity)-getQuakeIntensityRank(a?.AreaIntensity))[0];
+                maxIntensity = maxArea?.AreaIntensity || '--';
+            }
+            const pWave = info?.PWaveArrivalTime || info?.PWave?.ArrivalTime || eq?.PWaveArrivalTime || '--';
+            const sWave = info?.SWaveArrivalTime || info?.SWave?.ArrivalTime || eq?.SWaveArrivalTime || '--';
             let intensityHtml = '';
-            const shakeAreas = info.Intensity?.ShakingArea || [];
-            if (shakeAreas.length > 0) {
-                intensityHtml = `<div style="margin-top: 10px; font-size: 13px; color: var(--text-muted);"><b>各地震度：</b><ul style="margin-left: 20px; margin-top: 4px;">`;
-                shakeAreas.forEach(area => {
-                    intensityHtml += `<li>${area.CountyName} ${area.AreaIntensity}</li>`;
+            if (intensityAreas.length > 0) {
+                const sorted = [...intensityAreas].sort((a,b)=>getQuakeIntensityRank(b?.AreaIntensity)-getQuakeIntensityRank(a?.AreaIntensity));
+                intensityHtml = `<div style=\"margin-top:12px; font-size:13px; color:var(--text-muted);\"><b>各地震度</b><div class=\"quake-intensity-list\">`;
+                sorted.forEach(area => {
+                    intensityHtml += `<div class=\"quake-intensity-item\"><b>${escapeHtml(area?.CountyName || '--')}</b>　${escapeHtml(area?.AreaIntensity || '--')}</div>`;
                 });
-                intensityHtml += `</ul></div>`;
+                intensityHtml += `</div></div>`;
             }
             let modal = document.getElementById('quakeDetailModal');
             if (!modal) {
                 modal = document.createElement('div');
                 modal.id = 'quakeDetailModal';
-                modal.style.cssText = `
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-                    display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px;
-                `;
+                modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);backdrop-filter:blur(5px);display:flex;justify-content:center;align-items:center;z-index:9999;padding:20px;`;
                 document.body.appendChild(modal);
             }
             modal.innerHTML = `
-                <div style="background: var(--panel-bg); border: 1px solid var(--action-border); border-radius: 20px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); color: var(--text-color);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--action-border); padding-bottom: 10px; margin-bottom: 14px;">
-                        <h3 style="font-size: 16px; color: #f59e0b;"><i class="fas fa-house-chimney-crack"></i> 地震詳細報告</h3>
-                        <button onclick="document.getElementById('quakeDetailModal').style.display='none'" style="background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer;"><i class="fas fa-times"></i></button>
+                <div style=\"background:var(--panel-bg);border:1px solid var(--action-border);border-radius:20px;max-width:620px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;box-shadow:0 25px 50px rgba(0,0,0,.5);color:var(--text-color);\">
+                    <div style=\"display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--action-border);padding-bottom:10px;margin-bottom:14px;\">
+                        <h3 style=\"font-size:16px;color:#f59e0b;\"><i class=\"fas fa-house-chimney-crack\"></i> 地震詳細報告</h3>
+                        <button onclick=\"document.getElementById('quakeDetailModal').style.display='none'\" style=\"background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;\"><i class=\"fas fa-times\"></i></button>
                     </div>
-                    <div style="font-size: 14px; margin-bottom: 8px;"><b>發震時間：</b> ${originTime}</div>
-                    <div style="font-size: 14px; margin-bottom: 8px;"><b>震央位置：</b> ${location}</div>
-                    <div style="font-size: 14px; margin-bottom: 8px;"><b>規模：</b> 芮氏規模 ${magnitude} | <b>深度：</b> ${depth} 公里</div>
-                    <div style="font-size: 13px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px; margin-top: 10px; line-height: 1.5; white-space: pre-line;">${reportContent}</div>
+                    <div class=\"quake-upgrade-grid\">
+                        <div class=\"quake-upgrade-item\">🕐 <b>發震時間</b><br>${escapeHtml(originTime)}</div>
+                        <div class=\"quake-upgrade-item\">📍 <b>震央位置</b><br>${escapeHtml(location)}</div>
+                        <div class=\"quake-upgrade-item\">📐 <b>芮氏規模</b><br>M${escapeHtml(magnitude)}</div>
+                        <div class=\"quake-upgrade-item\">⬇️ <b>震源深度</b><br>${escapeHtml(depth)} 公里</div>
+                        <div class=\"quake-upgrade-item\">📊 <b>最大震度</b><br>${escapeHtml(maxIntensity)}</div>
+                        <div class=\"quake-upgrade-item\">📡 <b>P／S 波</b><br>P：${escapeHtml(pWave)}<br>S：${escapeHtml(sWave)}</div>
+                    </div>
+                    ${coords ? `<div class=\"quake-map-wrap\"><div id=\"quakeMiniMap\" class=\"quake-mini-map\"></div></div>` : ''}
+                    <div style=\"font-size:13px;background:rgba(0,0,0,.05);padding:10px;border-radius:10px;margin-top:10px;line-height:1.5;white-space:pre-line;\">${escapeHtml(reportContent)}</div>
                     ${intensityHtml}
-                    ${reportImage ? `<div style="margin-top: 14px; text-align: center;"><img src="${reportImage}" style="max-width: 100%; border-radius: 10px; border: 1px solid var(--action-border);" alt="地震分佈圖"></div>` : ''}
-                    <button onclick="document.getElementById('quakeDetailModal').style.display='none'" style="width: 100%; margin-top: 16px; background: #3b82f6; color: white; border: none; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer;">關閉</button>
-                </div>
-            `;
-            modal.style.display = 'flex';
+                    ${reportImage ? `<div style=\"margin-top:14px;text-align:center;\"><img src=\"${escapeHtml(reportImage)}\" style=\"max-width:100%;border-radius:10px;border:1px solid var(--action-border);\" alt=\"地震分布圖\"></div>` : ''}
+                    <button onclick=\"document.getElementById('quakeDetailModal').style.display='none'\" style=\"width:100%;margin-top:16px;background:#3b82f6;color:white;border:none;padding:10px;border-radius:10px;font-weight:600;cursor:pointer;\">關閉</button>
+                </div>`;
+            modal.style.display='flex';
+            if(coords) setTimeout(()=>initQuakeMiniMap('quakeMiniMap',coords,location),60);
         }
         
         function initUserLocationWeather() {
