@@ -26,7 +26,6 @@ function setCors(res) {
 module.exports = async function handler(req, res) {
   setCors(res);
 
-  // CORS 預檢
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
@@ -50,7 +49,7 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // 從 Vercel Environment Variables 取得 CWA API Key
+  // 從 Vercel Environment Variables 取得 CWA 授權碼
   const apiKey = String(
     process.env.CWA_API_KEY || ''
   ).trim();
@@ -62,16 +61,22 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // 官方中央氣象署 Open Data API
+  // 中央氣象署官方 REST API
+  // 採官方文件所列的 URL Authorization 方式。
+  // API Key 只在 Vercel 後端組合，不會寫入 GitHub 前端程式。
+  const params = new URLSearchParams({
+    Authorization: apiKey,
+    format: 'JSON'
+  });
+
   const upstreamUrl =
-    `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${encodeURIComponent(dataset)}`;
+    `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${encodeURIComponent(dataset)}?${params.toString()}`;
 
   try {
     const upstream = await fetch(upstreamUrl, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
-        'Authorization': apiKey
+        Accept: 'application/json'
       },
       cache: 'no-store'
     });
