@@ -2,7 +2,7 @@
 <html lang="zh-TW" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>臺灣即時氣象與防災儀表板</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -560,49 +560,21 @@
         }
         #map { width: 100%; height: 100%; transform: translateZ(0); will-change: transform; }
         /* 全螢幕修正：iPhone／Safari 進入全螢幕後，讓地圖真正填滿視窗，並避免控制按鈕被底部安全區裁切 */
-        /* 全螢幕修正：iPhone／Safari 讓地圖延伸到最上方安全區，不留下頂部空白 */
         #map.leaflet-fullscreen-on,
         #radarMap.leaflet-fullscreen-on {
             position: fixed !important;
-            top: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            left: 0 !important;
             inset: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            height: 100svh !important;
             height: 100dvh !important;
             max-width: none !important;
             max-height: none !important;
             min-width: 0 !important;
             min-height: 0 !important;
             margin: 0 !important;
-            padding: 0 !important;
-            border: 0 !important;
             border-radius: 0 !important;
             transform: none !important;
             z-index: 99999 !important;
-        }
-
-        /* Leaflet 偽全螢幕模式／iPhone Safari：父層也不可保留原頁面間距 */
-        body:has(#map.leaflet-fullscreen-on),
-        body:has(#radarMap.leaflet-fullscreen-on) {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-            min-height: 100% !important;
-            overflow: hidden !important;
-        }
-
-        html:has(#map.leaflet-fullscreen-on),
-        html:has(#radarMap.leaflet-fullscreen-on) {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-            min-height: 100% !important;
-            overflow: hidden !important;
-            background: #090d16 !important;
         }
         #map.leaflet-fullscreen-on .leaflet-control-container,
         #radarMap.leaflet-fullscreen-on .leaflet-control-container {
@@ -1246,6 +1218,7 @@
                     <button id="btnMapRain" onclick="switchMapMode('rain')">🌧️日雨量</button>
                     <button id="btnMapWind" onclick="switchMapMode('wind')">💨風速</button>
                     <button id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️陣風</button>
+                    <button id="btnMapAQI" onclick="switchMapMode('aqi')">😷空品</button>
                 </div>
             </div>
                                       
@@ -1644,6 +1617,7 @@
                     `資料發布時間：${escapeAirQualityHtml(latest)}`
                 ]);
                 if (currentRankingTab === 'aqi') renderAirQualityRanking();
+                if (mapInitialized && currentMapMode === 'aqi') renderMapMarkers();
             }catch(err){
                 console.error('空氣品質載入失敗',err);
                 if(!document.getElementById('airQualityDiagnostic')?.textContent){
@@ -1877,16 +1851,6 @@
         function repairFullscreenMapLayout(mapInstance) {
             if (!mapInstance) return;
             // Safari／iPhone 在全螢幕切換後需要數個 frame 才會完成 viewport 尺寸更新。
-            // 同時強制重新套用全螢幕尺寸，避免頂部殘留原頁面空白。
-            const container = mapInstance.getContainer ? mapInstance.getContainer() : null;
-            if (container && mapInstance.isFullscreen && mapInstance.isFullscreen()) {
-                container.style.top = '0px';
-                container.style.right = '0px';
-                container.style.bottom = '0px';
-                container.style.left = '0px';
-                container.style.margin = '0px';
-                container.style.padding = '0px';
-            }
             [0, 80, 220, 500].forEach(delay => {
                 setTimeout(() => {
                     try { mapInstance.invalidateSize({ animate: false, pan: false }); }
@@ -4096,8 +4060,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 zoomControl: false,
                 fullscreenControl: true,
                 fullscreenControlOptions: {
-                    position: 'bottomright',
-                    forcePseudoFullscreen: true
+                    position: 'bottomright'
                 },
                 zoomAnimation: true,
                 fadeAnimation: false,
@@ -4174,7 +4137,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
         
         function switchMapMode(mode) {
             currentMapMode = mode;
-            ['temp', 'pop', 'humidity', 'rain', 'wind', 'windGust'].forEach(m => {
+            ['temp', 'pop', 'humidity', 'rain', 'wind', 'windGust', 'aqi'].forEach(m => {
                 const btn = document.getElementById(`btnMap${m.charAt(0).toUpperCase() + m.slice(1)}`);
                 if (btn) btn.classList.toggle('active', m === mode);
             });
@@ -4238,6 +4201,71 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             return '#94a3b8';                   // 0級：無風
         }
         
+        // ==================== 全台地圖 AQI 空品模式 ====================
+        // 使用既有環境部 MOENV AQX_P_432 靜態資料。
+        // 優先用「測站名稱＋縣市」精確配對；若名稱不一致，再用經緯度找最近的 AQI 測站。
+        function getAqiMapColor(aqi) {
+            const n = Number(aqi);
+            if (!Number.isFinite(n)) return '#94a3b8';
+            if (n <= 50) return '#22c55e';       // 良好
+            if (n <= 100) return '#eab308';      // 普通
+            if (n <= 150) return '#f97316';      // 對敏感族群不健康
+            if (n <= 200) return '#ef4444';      // 對所有族群不健康
+            if (n <= 300) return '#a855f7';      // 非常不健康
+            return '#7f1d1d';                    // 危害
+        }
+
+        function normalizeMapStationName(value) {
+            return String(value ?? '')
+                .trim()
+                .replace(/台/g, '臺')
+                .replace(/\s+/g, '');
+        }
+
+        function findAirQualityForMapStation(station) {
+            const rows = (Array.isArray(airQualityData) ? airQualityData : [])
+                .map(normalizeAirQualityRecord)
+                .filter(row => Number.isFinite(Number(row.AQI)));
+
+            if (!rows.length) return null;
+
+            const stationName = normalizeMapStationName(station?.StationName);
+            const stationCounty = normalizeMapStationName(station?.GeoInfo?.CountyName);
+
+            // 第一優先：測站名稱＋縣市完全相同。
+            let match = rows.find(row =>
+                normalizeMapStationName(row.SiteName) === stationName &&
+                normalizeMapStationName(row.County) === stationCounty
+            );
+            if (match) return match;
+
+            // 第二優先：測站名稱完全相同。
+            match = rows.find(row => normalizeMapStationName(row.SiteName) === stationName);
+            if (match) return match;
+
+            // 第三優先：用 AQI 測站經緯度找最近的 CWA 測站，避免少數名稱不同的測站完全沒有 AQI。
+            const lat = parseFloat(station?.GeoInfo?.Coordinates?.[1]?.StationLatitude || station?.Latitude);
+            const lon = parseFloat(station?.GeoInfo?.Coordinates?.[1]?.StationLongitude || station?.Longitude);
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+            let nearest = null;
+            let nearestDistance = Infinity;
+            rows.forEach(row => {
+                const rLat = parseFloat(row.Latitude);
+                const rLon = parseFloat(row.Longitude);
+                if (!Number.isFinite(rLat) || !Number.isFinite(rLon)) return;
+
+                const distance = Math.hypot(lat - rLat, lon - rLon);
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearest = row;
+                }
+            });
+
+            // 約 20 公里內才視為可接受的最近測站，避免錯誤配對。
+            return nearest && nearestDistance <= 0.20 ? nearest : null;
+        }
+
         function renderMapMarkers() {
             if (!currentMarkersLayer) return;
             currentMarkersLayer.clearLayers();
@@ -4266,6 +4294,11 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                     // 色階依風險分組：藍＝微風、綠＝低風險、黃＝注意、橘＝強風、紅＝高風險、紫＝極端
                     colorBarEl.style.background = 'linear-gradient(to top, #94a3b8 0%, #38bdf8 2%, #38bdf8 18%, #22c55e 19%, #22c55e 31%, #eab308 32%, #eab308 43%, #f97316 44%, #f97316 55%, #dc2626 56%, #dc2626 72%, #7e22ce 73%, #7e22ce 100%)';
                     labelsListEl.innerHTML = '<span>56.1+　17級以上｜極端強風</span><span>37.0–56.0　13–16級｜暴風</span><span>28.5–36.9　11–12級｜狂風</span><span>20.8–28.4　9–10級｜烈風</span><span>13.9–20.7　7–8級｜強風</span><span>5.5–13.8　4–6級｜和風</span><span>0.3–5.4　1–3級｜微風</span><span>&lt;0.3　0級｜無風</span>';
+                }
+                } else if (currentMapMode === 'aqi') {
+                    titleEl.innerText = '空氣品質 AQI';
+                    colorBarEl.style.background = 'linear-gradient(to top, #22c55e 0%, #22c55e 16.6%, #eab308 16.7%, #eab308 33.2%, #f97316 33.3%, #f97316 49.8%, #ef4444 49.9%, #ef4444 66.5%, #a855f7 66.6%, #a855f7 83.2%, #7f1d1d 83.3%, #7f1d1d 100%)';
+                    labelsListEl.innerHTML = '<span>301+　危害</span><span>201–300　非常不健康</span><span>151–200　對所有族群不健康</span><span>101–150　對敏感族群不健康</span><span>51–100　普通</span><span>0–50　良好</span>';
                 }
             }
             weatherStationData.forEach(station => {
@@ -4304,12 +4337,21 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                         val = data.windGust;
                         color = getWindSpeedColor(val);
                         unit = 'm/s';
+                    } else if (currentMapMode === 'aqi') {
+                        const aqiStation = findAirQualityForMapStation(station);
+                        val = aqiStation ? Number(aqiStation.AQI) : NaN;
+                        color = getAqiMapColor(val);
+                        unit = 'AQI';
                     }
 
                     const currentZoom = map.getZoom();
                     // 初始地圖層級為 8，放大 2 次即 zoom >= 10
                     const showLabel = currentZoom >= 10;
-                    const displayVal = !isNaN(val) ? (typeof val === 'number' && currentMapMode !== 'rain' && currentMapMode !== 'wind' && currentMapMode !== 'windGust' ? val.toFixed(1) : val) : '--';
+                    const displayVal = !isNaN(val)
+                        ? (currentMapMode === 'aqi'
+                            ? String(Math.round(Number(val)))
+                            : (typeof val === 'number' && currentMapMode !== 'rain' && currentMapMode !== 'wind' && currentMapMode !== 'windGust' ? val.toFixed(1) : val))
+                        : '--';
                     
                     // 第一層地圖圓點調整再大一點點 (直徑設為 14px)
                     let iconHtml = `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; position: relative;">`;
