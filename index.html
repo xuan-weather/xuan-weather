@@ -1157,6 +1157,7 @@
                     <button class="segment-btn" id="btnRankRain6h" onclick="switchRankingTab('rain6h')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">6小時</button>
                     <button class="segment-btn" id="btnRankRain12h" onclick="switchRankingTab('rain12h')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">12小時</button>
                     <button class="segment-btn" id="btnRankRain24h" onclick="switchRankingTab('rain24h')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">24小時</button>
+                    <button class="segment-btn" id="btnRankAQI" onclick="switchRankingTab('aqi')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">🌫️空品排行</button>
                     <button class="segment-btn" id="btnRankTemp" onclick="switchRankingTab('temp')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">🌡️高溫排行</button>
                     <button class="segment-btn" id="btnRankLowTemp" onclick="switchRankingTab('lowTemp')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">❄️低溫排行</button>
                     <button class="segment-btn" id="btnRankWind" onclick="switchRankingTab('wind')" style="white-space: nowrap; font-size: 11px; padding: 8px 4px;">💨風速排行</button>
@@ -1614,6 +1615,7 @@
                     `可辨識 AQI：${validCount} 筆`,
                     `資料發布時間：${escapeAirQualityHtml(latest)}`
                 ]);
+                if (currentRankingTab === 'aqi') renderAirQualityRanking();
             }catch(err){
                 console.error('空氣品質載入失敗',err);
                 if(!document.getElementById('airQualityDiagnostic')?.textContent){
@@ -1622,6 +1624,7 @@
                 setAirQualityStatus('空氣品質資料載入失敗：'+(err?.message||'未知錯誤'),true);
                 const grid=document.getElementById('airQualityGrid');
                 if(grid) grid.innerHTML='<div class="air-quality-empty">尚未取得環境部 AQI 測站資料。請查看上方診斷資訊。</div>';
+                if (currentRankingTab === 'aqi') renderAirQualityRanking();
             }finally{
                 airQualityLoading=false;
                 if(btn) btn.classList.remove('spinning');
@@ -1915,6 +1918,7 @@
             document.getElementById('btnRankRain6h').classList.toggle('active', tab === 'rain6h');
             document.getElementById('btnRankRain12h').classList.toggle('active', tab === 'rain12h');
             document.getElementById('btnRankRain24h').classList.toggle('active', tab === 'rain24h');
+            document.getElementById('btnRankAQI').classList.toggle('active', tab === 'aqi');
             document.getElementById('btnRankTemp').classList.toggle('active', tab === 'temp');
             document.getElementById('btnRankLowTemp').classList.toggle('active', tab === 'lowTemp');
             document.getElementById('btnRankWind').classList.toggle('active', tab === 'wind');
@@ -2629,7 +2633,18 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
             const ranking = document.getElementById('rankingObsTime');
             if (ranking) {
                 const isRain = ['rain', 'rain1h', 'rain3h', 'rain6h', 'rain12h', 'rain24h'].includes(currentRankingTab);
-                ranking.textContent = `資料時間：${getRankingObservationTimeLabel(isRain ? 'O-A0002-001' : 'O-A0003-001')}`;
+                if (currentRankingTab === 'aqi') {
+                    const aqiTimes = (Array.isArray(airQualityData) ? airQualityData : [])
+                        .map(normalizeAirQualityRecord)
+                        .map(x => x.publishtime)
+                        .filter(Boolean)
+                        .map(v => new Date(v))
+                        .filter(d => !Number.isNaN(d.getTime()))
+                        .sort((a,b) => b - a);
+                    ranking.textContent = `資料時間：${aqiTimes.length ? formatCwaRainObservationTime(aqiTimes[0]) : '--'}`;
+                } else {
+                    ranking.textContent = `資料時間：${getRankingObservationTimeLabel(isRain ? 'O-A0002-001' : 'O-A0003-001')}`;
+                }
             }
         }
 
@@ -2744,11 +2759,84 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
             }
         }
 
+        function findWeatherStationForAirQuality(siteName, county) {
+            const site = String(siteName || '').trim().replace(/台/g, '臺');
+            const city = String(county || '').trim().replace(/台/g, '臺');
+            const sources = [
+                realtimeRankingStationData,
+                weatherStationData,
+                cwaRainfallRankingData
+            ];
+            for (const source of sources) {
+                if (!Array.isArray(source)) continue;
+                const exact = source.find(station => {
+                    const stationName = String(station?.StationName || '').trim().replace(/台/g, '臺');
+                    const stationCounty = String(station?.GeoInfo?.CountyName || '').trim().replace(/台/g, '臺');
+                    return stationName === site && (!city || stationCounty === city);
+                });
+                if (exact) return exact;
+            }
+            return null;
+        }
+
+        function renderAirQualityRanking() {
+            const container = document.getElementById('rankingCardsContainer');
+            if (!container) return;
+
+            const rows = (Array.isArray(airQualityData) ? airQualityData : [])
+                .map(normalizeAirQualityRecord)
+                .map(row => ({
+                    ...row,
+                    aqiNumber: Number(row.AQI)
+                }))
+                .filter(row => Number.isFinite(row.aqiNumber) && row.aqiNumber >= 0)
+                .sort((a, b) => b.aqiNumber - a.aqiNumber)
+                .slice(0, 10);
+
+            if (!rows.length) {
+                container.innerHTML = `<div class="my-location-status" style="grid-column: span 2;">目前沒有可用的 AQI 空品排行資料，請稍候更新。</div>`;
+                updateRankingObservationTime();
+                return;
+            }
+
+            let html = '';
+            rows.forEach((item, index) => {
+                const info = getAqiInfo(item.aqiNumber);
+                const targetStation = findWeatherStationForAirQuality(item.SiteName, item.County);
+                const stationId = targetStation?.StationId ? String(targetStation.StationId).replace(/'/g, "\\'") : '';
+                const clickAttr = stationId
+                    ? `onclick="selectStationById('${stationId}')" title="點擊檢視測站"`
+                    : 'title="AQI 空品排行"';
+                const pollutant = item.Pollutant || '無主要污染物';
+                const status = item.Status || info.text;
+
+                html += `
+                    <div class="ranking-card" ${clickAttr}>
+                        <div class="ranking-card-top">
+                            <span class="ranking-station-name">${escapeAirQualityHtml(item.SiteName)} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${escapeAirQualityHtml(item.County)}</span></span>
+                            <span class="ranking-badge-num">#${index + 1}</span>
+                        </div>
+                        <div class="ranking-main-value" style="color: #f59e0b;">${item.aqiNumber}<span style="font-size: 14px; font-weight: 600; margin-left: 5px;">AQI</span></div>
+                        <div class="ranking-sub-info" style="color: #f59e0b;">🌫️ ${escapeAirQualityHtml(status)}｜主要污染物：${escapeAirQualityHtml(pollutant)}</div>
+                        <div class="ranking-sub-info" style="color: #38bdf8; margin-top: 4px;">📍 地點：${escapeAirQualityHtml(item.County)}${escapeAirQualityHtml(targetStation?.GeoInfo?.TownName || '')}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            updateRankingObservationTime();
+        }
+
         function renderRankings() {
             const container = document.getElementById('rankingCardsContainer');
             updateRankingObservationTime();
             if (!container || weatherStationData.length === 0) return;
             const isRainPeriod = ['rain', 'rain1h', 'rain3h', 'rain6h', 'rain12h', 'rain24h'].includes(currentRankingTab);
+            const isAirQualityRanking = currentRankingTab === 'aqi';
+            if (isAirQualityRanking) {
+                renderAirQualityRanking();
+                return;
+            }
             const rankingSource = isRainPeriod
                 ? ((Array.isArray(cwaRainfallRankingData) && cwaRainfallRankingData.length > 0) ? cwaRainfallRankingData : [])
                 : ((Array.isArray(realtimeRankingStationData) && realtimeRankingStationData.length > 0)
