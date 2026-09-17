@@ -1,0 +1,71 @@
+name: MOENV AQI Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '5 * * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-aqi-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch MOENV AQX_P_432
+        env:
+          MOENV_API_KEY: ${{ secrets.MOENV_API_KEY }}
+        run: |
+          set -e
+          mkdir -p data
+
+          curl --fail-with-body \
+            --silent \
+            --show-error \
+            --retry 3 \
+            --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://data.moenv.gov.tw/api/v2/aqx_p_432?format=json&offset=0&limit=1000&api_key=${MOENV_API_KEY}" \
+            -o data/aqx-p-432.json
+
+          echo "MOENV AQX_P_432 資料取得成功"
+          wc -c data/aqx-p-432.json
+
+      - name: Validate AQI JSON
+        run: |
+          python - <<'PY'
+          import json
+
+          path = "data/aqx-p-432.json"
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          if not isinstance(data, dict):
+              raise SystemExit("錯誤：AQI 回傳不是 JSON 物件")
+
+          records = data.get("records")
+          if not isinstance(records, list):
+              raise SystemExit("錯誤：AQI 回傳找不到 records 陣列")
+
+          print(f"AQI records：{len(records)} 筆")
+          if not records:
+              raise SystemExit("錯誤：AQI records 為空")
+          PY
+
+      - name: Commit AQI data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/aqx-p-432.json
+
+          if git diff --cached --quiet; then
+            echo "AQI 資料沒有變化，不需要提交"
+          else
+            git commit -m "Update MOENV AQI data"
+            git push
+          fi
