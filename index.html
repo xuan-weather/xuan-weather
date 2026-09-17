@@ -1262,14 +1262,21 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.js"></script>
     <script>
-        // GitHub Pages 使用 Vercel Serverless API；Vercel 網站本身也可共用同一個 API。
-        // 若未來 Vercel 網域變更，只需要修改這一行，不需要修改其他資料邏輯。
-        const CWA_API_BASE = '';
-        // CWA 資料改由 GitHub Actions 定時抓取後，GitHub Pages 直接讀取 data/*.json。
-        const CWA_DATA_BASE = './data';
-        function cwaDataUrl(dataset){
-            return `${CWA_DATA_BASE}/cwa-${dataset}.json?_=${Date.now()}`;
+        // GitHub Pages 直接讀取 GitHub Actions 定時更新的 CWA 靜態 JSON。
+        // 使用 document.baseURI 是為了正確支援 GitHub Pages 的 /xuan-weather/ 子路徑。
+        const CWA_STATIC_BASE = new URL('data/', document.baseURI).href;
+
+        async function fetchCwaDataset(dataset) {
+            const url = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${Date.now()}`;
+            const response = await fetch(url, { cache: 'no-store', headers: { 'Accept': 'application/json' } });
+            if (!response.ok) {
+                throw new Error(`CWA 靜態資料 HTTP ${response.status}: ${dataset}`);
+            }
+            return response.json();
         }
+
+        // AQI 目前仍使用既有伺服器代理；CWA 天氣/地震/颱風/警特報已改為 GitHub Actions 靜態資料。
+        const AIR_QUALITY_API_BASE = 'https://xuan-weather-yvlx.vercel.app';
 
         let tempChart = null;
         let map = null;
@@ -1463,9 +1470,9 @@
             const btn=document.getElementById('refreshAirQualityBtn');
             if(btn && isManual) btn.classList.add('spinning');
             setAirQualityStatus('正在透過伺服器安全代理讀取環境部最新空氣品質資料……');
-            setAirQualityDiagnostic(['正在讀取 GitHub Actions 產生的環境部 AQX_P_432 v2 資料……']);
+            setAirQualityDiagnostic(['正在透過 Vercel /api/air-quality 讀取環境部 AQX_P_432 v2 API……']);
             try{
-                const response=await fetch('./data/aqi.json?_='+Date.now(),{cache:'no-store',headers:{'Accept':'application/json'}});
+                const response=await fetch(AIR_QUALITY_API_BASE + '/api/air-quality?_='+Date.now(),{cache:'no-store',headers:{'Accept':'application/json'}});
                 const rawText=await response.text();
                 let result=null;
                 try{ result=rawText ? JSON.parse(rawText) : null; }catch(parseErr){
@@ -1531,9 +1538,8 @@
             const countTag = document.getElementById('warningCountTag');
             if (!container) return;
             const nonce = Date.now();
-            const warningUrl = cwaDataUrl('W-C0033-001');
             try {
-                const res = await fetch(warningUrl, { cache: 'no-store' }).then(r => r.json()).catch(() => null);
+                const res = await fetchCwaDataset('W-C0033-001').catch(() => null);
                 const hazards = res?.records?.hazardNotice || res?.records?.record || [];
                 weatherWarnings = Array.isArray(hazards) ? hazards : [];
                 
@@ -2194,16 +2200,12 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
             const btn = document.getElementById('refreshBtn');
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const nonce = Date.now();
-            const url1 = cwaDataUrl('O-A0001-001');
-            const url2 = cwaDataUrl('O-A0003-001');
-            const urlRain = cwaDataUrl('O-A0002-001');
-            const urlPop = cwaDataUrl('F-C0032-001');
             try {
                 const [res1, res2, resRain, resPop] = await Promise.all([
-                    fetch(url1, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Station: [] } })),
-                    fetch(url2, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Station: [] } })),
-                    fetch(urlRain, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Station: [] } })),
-                    fetch(urlPop, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { dataset: { location: [] } } }))
+                    fetchCwaDataset('O-A0001-001').catch(() => ({ records: { Station: [] } })),
+                    fetchCwaDataset('O-A0003-001').catch(() => ({ records: { Station: [] } })),
+                    fetchCwaDataset('O-A0002-001').catch(() => ({ records: { Station: [] } })),
+                    fetchCwaDataset('F-C0032-001').catch(() => ({ records: { dataset: { location: [] } } }))
                 ]);
                 const list1 = res1.records?.Station || [];
                 const list2 = res2.records?.Station || [];
@@ -2900,12 +2902,10 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const container = document.getElementById('quakeListContainer');
             const nonce = Date.now();
-            const majorEqUrl = cwaDataUrl('E-A0015-001');
-            const localEqUrl = cwaDataUrl('E-A0016-001');
             try {
                 const [resMajor, resLocal] = await Promise.all([
-                    fetch(majorEqUrl, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Earthquake: [] } })),
-                    fetch(localEqUrl, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Earthquake: [] } }))
+                    fetchCwaDataset('E-A0015-001').catch(() => ({ records: { Earthquake: [] } })),
+                    fetchCwaDataset('E-A0016-001').catch(() => ({ records: { Earthquake: [] } }))
                 ]);
                 const majorList = resMajor.records?.Earthquake || [];
                 const localList = resLocal.records?.Earthquake || [];
@@ -2961,9 +2961,8 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const container = document.getElementById('typhoonListContainer');
             const nonce = Date.now();
-            const typhoonUrl = cwaDataUrl('W-C0034-001');
             try {
-                const res = await fetch(typhoonUrl, { cache: 'no-store' }).then(r => r.json());
+                const res = await fetchCwaDataset('W-C0034-001');
                 typhoonData = res.records?.Typhoon || res.records?.location || [];
                 if (typhoonData.length > 0) {
                     let htmlContent = '';
