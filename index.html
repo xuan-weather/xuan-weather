@@ -1275,8 +1275,8 @@
             return response.json();
         }
 
-        // AQI 目前仍使用既有伺服器代理；CWA 天氣/地震/颱風/警特報已改為 GitHub Actions 靜態資料。
-        const AIR_QUALITY_API_BASE = 'https://xuan-weather-yvlx.vercel.app';
+        // AQI 由 GitHub Actions 定時更新至 data/aqx-p-432.json，GitHub Pages 直接讀取。
+        const AIR_QUALITY_STATIC_URL = new URL('data/aqx-p-432.json', document.baseURI).href;
 
         let tempChart = null;
         let map = null;
@@ -1464,15 +1464,15 @@
             }).join('');
         }
 
-        async function loadAirQuality(isManual=false){
+        async async function loadAirQuality(isManual=false){
             if(airQualityLoading) return;
             airQualityLoading=true;
             const btn=document.getElementById('refreshAirQualityBtn');
             if(btn && isManual) btn.classList.add('spinning');
-            setAirQualityStatus('正在透過伺服器安全代理讀取環境部最新空氣品質資料……');
-            setAirQualityDiagnostic(['正在透過 Vercel /api/air-quality 讀取環境部 AQX_P_432 v2 API……']);
+            setAirQualityStatus('正在讀取 GitHub Actions 最新環境部 AQI 資料……');
+            setAirQualityDiagnostic(['正在讀取 data/aqx-p-432.json ……']);
             try{
-                const response=await fetch(AIR_QUALITY_API_BASE + '/api/air-quality?_='+Date.now(),{cache:'no-store',headers:{'Accept':'application/json'}});
+                const response=await fetch(AIR_QUALITY_STATIC_URL+'?_='+Date.now(),{cache:'no-store',headers:{'Accept':'application/json'}});
                 const rawText=await response.text();
                 let result=null;
                 try{ result=rawText ? JSON.parse(rawText) : null; }catch(parseErr){
@@ -1504,7 +1504,7 @@
                 setAirQualityStatus(`已載入 ${records.length} 個測站｜AQI 有效 ${validCount} 站｜資料發布時間：${latest}`);
                 setAirQualityDiagnostic([
                     `HTTP 狀態：<span class="ok">200 OK</span>`,
-                    `API：AQX_P_432｜v2｜伺服器代理`,
+                    `API：AQX_P_432｜v2｜GitHub Actions 靜態資料`,
                     `records：<span class="ok">${records.length} 筆</span>`,
                     `可辨識 AQI：${validCount} 筆`,
                     `資料發布時間：${escapeAirQualityHtml(latest)}`
