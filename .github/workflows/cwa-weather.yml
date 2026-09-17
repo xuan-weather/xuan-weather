@@ -1,0 +1,67 @@
+name: CWA Weather Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/10 * * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-cwa-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch CWA O-A0003-001
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          mkdir -p data
+
+          curl --fail-with-body \
+            -H "Accept: application/json" \
+            -H "Authorization: ${CWA_API_KEY}" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001" \
+            -o data/cwa-O-A0003-001.json
+
+          echo "CWA 資料取得成功"
+          wc -c data/cwa-O-A0003-001.json
+
+      - name: Validate JSON
+        run: |
+          python - <<'PY'
+          import json
+
+          path = "data/cwa-O-A0003-001.json"
+
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          print("JSON 格式正常")
+
+          records = data.get("records", {})
+          stations = records.get("Station", [])
+
+          print(f"測站數量：{len(stations)}")
+
+          if not stations:
+              raise SystemExit("錯誤：CWA 回傳中沒有 Station 資料")
+          PY
+
+      - name: Commit CWA data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/cwa-O-A0003-001.json
+
+          if git diff --cached --quiet; then
+            echo "資料沒有變化，不需要提交"
+          else
+            git commit -m "Update CWA weather data"
+            git push
+          fi
