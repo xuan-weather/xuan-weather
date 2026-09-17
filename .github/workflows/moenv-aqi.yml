@@ -37,9 +37,15 @@ jobs:
           echo "===== FILE SIZE ====="
           wc -c data/aqx-p-432.json
 
-          echo "===== RESPONSE PREVIEW ====="
-          head -c 500 data/aqx-p-432.json
-          echo
+                    echo "===== RESPONSE PREVIEW ====="
+          python - <<'PY'
+          path = "data/aqx-p-432.json"
+
+          with open(path, "rb") as f:
+              content = f.read(1000)
+
+          print(content.decode("utf-8", errors="replace"))
+          PY
 
       - name: Validate AQI JSON
         run: |
