@@ -1,8 +1,0 @@
-{
-  "version": 2,
-  "functions": {
-    "api/air-quality.js": {
-      "runtime": "nodejs22.x"
-    }
-  }
-}
