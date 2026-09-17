@@ -16,48 +16,80 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Fetch CWA O-A0003-001
+      - name: Fetch all CWA datasets
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
+          set -e
+
           mkdir -p data
 
-          curl --fail-with-body \
-            -H "Accept: application/json" \
-            -H "Authorization: ${CWA_API_KEY}" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001" \
-            -o data/cwa-O-A0003-001.json
+          datasets=(
+            O-A0001-001
+            O-A0002-001
+            O-A0003-001
+            F-C0032-001
+            W-C0033-001
+            W-C0034-001
+            E-A0015-001
+            E-A0016-001
+          )
 
-          echo "CWA 資料取得成功"
-          wc -c data/cwa-O-A0003-001.json
+          for dataset in "${datasets[@]}"; do
+            echo "========================================"
+            echo "正在取得 CWA：${dataset}"
+            echo "========================================"
 
-      - name: Validate JSON
-        run: |
-          python - <<'PY'
+            curl --fail-with-body \
+              --silent \
+              --show-error \
+              --retry 3 \
+              --retry-delay 2 \
+              -H "Accept: application/json" \
+              -H "Authorization: ${CWA_API_KEY}" \
+              "https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}" \
+              -o "data/cwa-${dataset}.json"
+
+            echo "CWA ${dataset} 資料取得成功"
+            wc -c "data/cwa-${dataset}.json"
+
+            python - "${dataset}" <<'PY'
           import json
+          import sys
 
-          path = "data/cwa-O-A0003-001.json"
+          dataset = sys.argv[1]
+          path = f"data/cwa-{dataset}.json"
 
           with open(path, "r", encoding="utf-8") as f:
               data = json.load(f)
 
-          print("JSON 格式正常")
+          print(f"{dataset}：JSON 格式正常")
 
-          records = data.get("records", {})
-          stations = records.get("Station", [])
+          if not isinstance(data, dict):
+              raise SystemExit(f"{dataset}：錯誤，回傳資料不是 JSON 物件")
 
-          print(f"測站數量：{len(stations)}")
+          if "records" not in data:
+              raise SystemExit(f"{dataset}：錯誤，找不到 records")
 
-          if not stations:
-              raise SystemExit("錯誤：CWA 回傳中沒有 Station 資料")
+          print(f"{dataset}：records 存在")
           PY
+
+          done
+
+      - name: Show downloaded files
+        run: |
+          echo "========================================"
+          echo "CWA 資料檔案"
+          echo "========================================"
+
+          ls -lh data/cwa-*.json
 
       - name: Commit CWA data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add data/cwa-O-A0003-001.json
+          git add data/cwa-*.json
 
           if git diff --cached --quiet; then
             echo "資料沒有變化，不需要提交"
