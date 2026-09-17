@@ -759,8 +759,6 @@
         .air-quality-title i{color:#22c55e;}
         .air-quality-subtitle{margin-top:6px;color:var(--text-muted);font-size:13px;}
         .air-quality-controls{padding:0 18px 16px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:end;}
-        .air-quality-backend-note{padding:10px 12px;border-radius:11px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.20);color:var(--text-muted);font-size:12px;line-height:1.5;}
-        .air-quality-backend-note i{color:#38bdf8;margin-right:6px;}
         .air-quality-key-wrap{display:flex;flex-direction:column;gap:5px;}
         .air-quality-key-label{font-size:11px;color:var(--text-muted);font-weight:700;}
         .air-quality-key-input{width:100%;padding:10px 12px;border-radius:11px;border:1px solid var(--action-border);background:var(--select-bg);color:var(--text-color);outline:none;font-size:12px;}
@@ -1198,11 +1196,8 @@
                     <i class="fas fa-sync-alt"></i> 重新整理
                 </button>
             </div>
-            <div class="air-quality-controls" style="display:block;">
-                <div class="air-quality-backend-note">
-                    <i class="fas fa-shield-halved"></i>
-                    API Key 已由伺服器安全管理，使用者不需要輸入或儲存 API Key。
-                </div>
+            <div class="air-quality-controls">
+                <div class="air-quality-server-note">API Key 已由伺服器安全管理，使用者不需要輸入或儲存 API Key。</div>
             </div>
             <div id="airQualityStatus" class="air-quality-status">尚未載入空氣品質資料</div>
             <div id="airQualityDiagnostic" class="air-quality-diagnostic" hidden></div>
@@ -1318,7 +1313,7 @@
             });
             fetchEarthquakeData(false);
             fetchTyphoonData(false);
-
+            loadAirQuality(false);
             fetchWeatherWarnings();
             setInterval(() => {
                 fetchEarthquakeData(false);
@@ -1338,8 +1333,6 @@
         let airQualityData = [];
         let airQualityLoading = false;
 
-        // AQI API Key is kept on the Vercel server only.
-        // The browser calls the same-origin backend proxy and never receives the key.
         function setAirQualityStatus(message,isError=false){
             const el=document.getElementById('airQualityStatus');
             if(!el) return;
@@ -1456,12 +1449,10 @@
             airQualityLoading=true;
             const btn=document.getElementById('refreshAirQualityBtn');
             if(btn && isManual) btn.classList.add('spinning');
-            setAirQualityStatus('正在讀取環境部最新空氣品質資料……');
-            setAirQualityDiagnostic(['正在透過伺服器安全代理讀取：環境部 AQX_P_432 v2 API……']);
+            setAirQualityStatus('正在透過伺服器安全代理讀取環境部最新空氣品質資料……');
+            setAirQualityDiagnostic(['正在透過 /api/air-quality 讀取環境部 AQX_P_432 v2 API……']);
             try{
-                // API Key 只存在 Vercel Environment Variables。
-                // 瀏覽器只請求同源的 /api/air-quality，不會取得或傳送 API Key。
-                const response=await fetch('/api/air-quality',{cache:'no-store'});
+                const response=await fetch('/api/air-quality?_='+Date.now(),{cache:'no-store',headers:{'Accept':'application/json'}});
                 const rawText=await response.text();
                 let result=null;
                 try{ result=rawText ? JSON.parse(rawText) : null; }catch(parseErr){
@@ -1471,12 +1462,10 @@
                     const apiMessage=result?.message || result?.error || result?.detail || rawText.slice(0,300) || '未提供錯誤訊息';
                     setAirQualityDiagnostic([
                         `HTTP 狀態：<span class="bad">${escapeAirQualityHtml(response.status)}</span>`,
-                        `伺服器回應：${escapeAirQualityHtml(apiMessage)}`,
-                        '請確認 Vercel 的 MOENV_API_KEY 環境變數已設定，並重新部署。'
+                        `後端回應：${escapeAirQualityHtml(apiMessage)}`
                     ],true);
                     throw new Error('HTTP '+response.status+'：'+apiMessage);
                 }
-
                 const records=extractAirQualityRecords(result);
                 if(records===null){
                     const topKeys=result && typeof result==='object' ? Object.keys(result).join(', ') : typeof result;
@@ -1485,9 +1474,8 @@
                         `回應頂層欄位：${escapeAirQualityHtml(topKeys || '無')}`,
                         '找不到 records 陣列，請查看上方診斷資訊。'
                     ],true);
-                    throw new Error('API 回傳格式無法辨識（找不到 records）');
+                    throw new Error('後端回傳格式無法辨識（找不到 records）');
                 }
-
                 airQualityData=records;
                 renderAirQuality(records);
                 const normalized=records.map(normalizeAirQualityRecord);
@@ -1496,7 +1484,7 @@
                 setAirQualityStatus(`已載入 ${records.length} 個測站｜AQI 有效 ${validCount} 站｜資料發布時間：${latest}`);
                 setAirQualityDiagnostic([
                     `HTTP 狀態：<span class="ok">200 OK</span>`,
-                    `API：AQX_P_432｜v2`,
+                    `API：AQX_P_432｜v2｜伺服器代理`,
                     `records：<span class="ok">${records.length} 筆</span>`,
                     `可辨識 AQI：${validCount} 筆`,
                     `資料發布時間：${escapeAirQualityHtml(latest)}`
@@ -1530,7 +1518,7 @@
             const countTag = document.getElementById('warningCountTag');
             if (!container) return;
             const nonce = Date.now();
-            const warningUrl = `https://mingxuan.904037.xyz/api/v1/rest/datastore/W-C0033-001?_=${nonce}`;
+            const warningUrl = `/api/cwa?dataset=W-C0033-001&_=${nonce}`;
             try {
                 const res = await fetch(warningUrl, { cache: 'no-store' }).then(r => r.json()).catch(() => null);
                 const hazards = res?.records?.hazardNotice || res?.records?.record || [];
@@ -2189,10 +2177,10 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
             const btn = document.getElementById('refreshBtn');
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const nonce = Date.now();
-            const url1 = `https://mingxuan.904037.xyz/api/v1/rest/datastore/O-A0001-001?_=${nonce}`;
-            const url2 = `https://mingxuan.904037.xyz/api/v1/rest/datastore/O-A0003-001?_=${nonce}`;
-            const urlRain = `https://mingxuan.904037.xyz/api/v1/rest/datastore/O-A0002-001?_=${nonce}`;
-            const urlPop = `https://mingxuan.904037.xyz/api/v1/rest/datastore/F-C0032-001?_=${nonce}`;
+            const url1 = `/api/cwa?dataset=O-A0001-001&_=${nonce}`;
+            const url2 = `/api/cwa?dataset=O-A0003-001&_=${nonce}`;
+            const urlRain = `/api/cwa?dataset=O-A0002-001&_=${nonce}`;
+            const urlPop = `/api/cwa?dataset=F-C0032-001&_=${nonce}`;
             try {
                 const [res1, res2, resRain, resPop] = await Promise.all([
                     fetch(url1, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Station: [] } })),
@@ -2895,8 +2883,8 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const container = document.getElementById('quakeListContainer');
             const nonce = Date.now();
-            const majorEqUrl = `https://mingxuan.904037.xyz/api/v1/rest/datastore/E-A0015-001?_=${nonce}`;
-            const localEqUrl = `https://mingxuan.904037.xyz/api/v1/rest/datastore/E-A0016-001?_=${nonce}`;
+            const majorEqUrl = `/api/cwa?dataset=E-A0015-001&_=${nonce}`;
+            const localEqUrl = `/api/cwa?dataset=E-A0016-001&_=${nonce}`;
             try {
                 const [resMajor, resLocal] = await Promise.all([
                     fetch(majorEqUrl, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Earthquake: [] } })),
@@ -2956,7 +2944,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const container = document.getElementById('typhoonListContainer');
             const nonce = Date.now();
-            const typhoonUrl = `https://mingxuan.904037.xyz/api/v1/rest/datastore/W-C0034-001?_=${nonce}`;
+            const typhoonUrl = `/api/cwa?dataset=W-C0034-001&_=${nonce}`;
             try {
                 const res = await fetch(typhoonUrl, { cache: 'no-store' }).then(r => r.json());
                 typhoonData = res.records?.Typhoon || res.records?.location || [];
