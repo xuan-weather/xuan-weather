@@ -1486,7 +1486,7 @@
             }).join('');
         }
 
-        async async function loadAirQuality(isManual=false){
+        async function loadAirQuality(isManual=false){
             if(airQualityLoading) return;
             airQualityLoading=true;
             const btn=document.getElementById('refreshAirQualityBtn');
