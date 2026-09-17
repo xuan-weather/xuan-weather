@@ -3044,6 +3044,11 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             }
         }
         
+        // 地震詳細報告共用的 HTML 轉義，避免報告文字中的特殊字元破壞畫面。
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
         function getQuakeCoordinate(eq) {
             const info = eq?.EarthquakeInfo || {};
             const candidates = [
