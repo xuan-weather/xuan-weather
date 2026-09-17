@@ -1048,6 +1048,10 @@
                         <span>🌧️日累積雨量</span>
                         <b id="liveRain" style="color: #38bdf8;">-- mm</b>
                     </div>
+                    <div class="info-card-item" style="grid-column: span 2;">
+                        <span>☀️紫外線指數</span>
+                        <b id="liveUVIndex" style="color: #f59e0b;">--</b>
+                    </div>
                 </div>
             </div>
 
@@ -1258,6 +1262,10 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.js"></script>
     <script>
+        // GitHub Pages 使用 Vercel Serverless API；Vercel 網站本身也可共用同一個 API。
+        // 若未來 Vercel 網域變更，只需要修改這一行，不需要修改其他資料邏輯。
+        const CWA_API_BASE = 'https://xuan-weather-yvlx.vercel.app';
+
         let tempChart = null;
         let map = null;
         let mapInitialized = false;
@@ -1450,9 +1458,9 @@
             const btn=document.getElementById('refreshAirQualityBtn');
             if(btn && isManual) btn.classList.add('spinning');
             setAirQualityStatus('正在透過伺服器安全代理讀取環境部最新空氣品質資料……');
-            setAirQualityDiagnostic(['正在透過 /api/air-quality 讀取環境部 AQX_P_432 v2 API……']);
+            setAirQualityDiagnostic(['正在透過 Vercel /api/air-quality 讀取環境部 AQX_P_432 v2 API……']);
             try{
-                const response=await fetch('/api/air-quality?_='+Date.now(),{cache:'no-store',headers:{'Accept':'application/json'}});
+                const response=await fetch(CWA_API_BASE + '/api/air-quality?_='+Date.now(),{cache:'no-store',headers:{'Accept':'application/json'}});
                 const rawText=await response.text();
                 let result=null;
                 try{ result=rawText ? JSON.parse(rawText) : null; }catch(parseErr){
@@ -1518,7 +1526,7 @@
             const countTag = document.getElementById('warningCountTag');
             if (!container) return;
             const nonce = Date.now();
-            const warningUrl = `/api/cwa?dataset=W-C0033-001&_=${nonce}`;
+            const warningUrl = `${CWA_API_BASE}/api/cwa?dataset=W-C0033-001&_=${nonce}`;
             try {
                 const res = await fetch(warningUrl, { cache: 'no-store' }).then(r => r.json()).catch(() => null);
                 const hazards = res?.records?.hazardNotice || res?.records?.record || [];
@@ -1859,6 +1867,10 @@
             if (isNaN(windGust) || windGust < 0) windGust = windSpeed;
             let windDir = parseFloat(we.WindDirection ?? we.WDIR);
             if (isNaN(windDir) || windDir < 0) windDir = -1;
+            let uvIndexRaw = we.UVIndex ?? we.UV ?? we.UVINDEX;
+            let uvIndex = parseFloat(uvIndexRaw);
+            if (isNaN(uvIndex) || uvIndex < 0) uvIndex = NaN;
+
             let humidityRaw = we.RelativeHumidity ?? we.HUMD;
             let humidity = parseFloat(humidityRaw);
             if (isNaN(humidity) || humidity < 0 || humidity > 100) {
@@ -1867,7 +1879,7 @@
                 humidity = Math.round(humidity);
             }
             let elevation = parseFloat(station.Elevation || station.GeoInfo?.Elevation || 0);
-            return { temp, rain, windSpeed, windGust, windDir, humidity, elevation, obsTime: rawObsTime };
+            return { temp, rain, windSpeed, windGust, windDir, humidity, uvIndex, elevation, obsTime: rawObsTime };
         }
                   
         function isFreewayStation(stationName) {
@@ -2177,10 +2189,10 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
             const btn = document.getElementById('refreshBtn');
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const nonce = Date.now();
-            const url1 = `/api/cwa?dataset=O-A0001-001&_=${nonce}`;
-            const url2 = `/api/cwa?dataset=O-A0003-001&_=${nonce}`;
-            const urlRain = `/api/cwa?dataset=O-A0002-001&_=${nonce}`;
-            const urlPop = `/api/cwa?dataset=F-C0032-001&_=${nonce}`;
+            const url1 = `${CWA_API_BASE}/api/cwa?dataset=O-A0001-001&_=${nonce}`;
+            const url2 = `${CWA_API_BASE}/api/cwa?dataset=O-A0003-001&_=${nonce}`;
+            const urlRain = `${CWA_API_BASE}/api/cwa?dataset=O-A0002-001&_=${nonce}`;
+            const urlPop = `${CWA_API_BASE}/api/cwa?dataset=F-C0032-001&_=${nonce}`;
             try {
                 const [res1, res2, resRain, resPop] = await Promise.all([
                     fetch(url1, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Station: [] } })),
@@ -2883,8 +2895,8 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const container = document.getElementById('quakeListContainer');
             const nonce = Date.now();
-            const majorEqUrl = `/api/cwa?dataset=E-A0015-001&_=${nonce}`;
-            const localEqUrl = `/api/cwa?dataset=E-A0016-001&_=${nonce}`;
+            const majorEqUrl = `${CWA_API_BASE}/api/cwa?dataset=E-A0015-001&_=${nonce}`;
+            const localEqUrl = `${CWA_API_BASE}/api/cwa?dataset=E-A0016-001&_=${nonce}`;
             try {
                 const [resMajor, resLocal] = await Promise.all([
                     fetch(majorEqUrl, { cache: 'no-store' }).then(r => r.json()).catch(() => ({ records: { Earthquake: [] } })),
@@ -2944,7 +2956,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const container = document.getElementById('typhoonListContainer');
             const nonce = Date.now();
-            const typhoonUrl = `/api/cwa?dataset=W-C0034-001&_=${nonce}`;
+            const typhoonUrl = `${CWA_API_BASE}/api/cwa?dataset=W-C0034-001&_=${nonce}`;
             try {
                 const res = await fetch(typhoonUrl, { cache: 'no-store' }).then(r => r.json());
                 typhoonData = res.records?.Typhoon || res.records?.location || [];
@@ -3222,6 +3234,8 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 document.getElementById('liveHumidity').innerText = '-- %';
                 document.getElementById('livePop').innerText = '-- %';
                 document.getElementById('liveRain').innerText = '-- mm';
+                const uvElEmpty = document.getElementById('liveUVIndex');
+                if (uvElEmpty) uvElEmpty.innerText = '--';
             }
         }
         
@@ -3255,6 +3269,22 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             document.getElementById('liveHumidity').innerText = data.humidity !== '--' ? `${data.humidity} %` : '-- %';
             document.getElementById('livePop').innerText = `${popVal} %`;
             document.getElementById('liveRain').innerText = `${data.rain.toFixed(1)} mm`;
+
+            const uvEl = document.getElementById('liveUVIndex');
+            if (uvEl) {
+                if (Number.isFinite(data.uvIndex)) {
+                    const uv = data.uvIndex;
+                    let uvLevel = '低量級';
+                    if (uv >= 11) uvLevel = '危險級';
+                    else if (uv >= 8) uvLevel = '過量級';
+                    else if (uv >= 6) uvLevel = '高量級';
+                    else if (uv >= 3) uvLevel = '中量級';
+                    uvEl.innerText = `${uv.toFixed(0)}（${uvLevel}）`;
+                } else {
+                    uvEl.innerText = '--';
+                }
+            }
+
             renderPast24hChart(targetStation, data.obsTime);
         }
         
