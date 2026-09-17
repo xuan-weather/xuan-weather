@@ -1,26 +1,58 @@
+name: MOENV AQI Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '5 * * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-aqi-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch MOENV AQX_P_432
+        env:
+          MOENV_API_KEY: ${{ secrets.MOENV_API_KEY }}
+        run: |
+          set -e
+          mkdir -p data
+
+          echo "開始讀取 MOENV AQX_P_432..."
+
+          curl \
+            --silent \
+            --show-error \
+            --fail \
+            --retry 3 \
+            --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://data.moenv.gov.tw/api/v2/aqx_p_432?format=json&offset=0&limit=1000&api_key=${MOENV_API_KEY}" \
+            -o data/aqx-p-432.json
+
+          echo "AQI 資料下載完成"
+          echo "檔案大小："
+          wc -c data/aqx-p-432.json
+
       - name: Validate AQI JSON
         run: |
-          python -c "
-          import json
+          python -c "import json; d=json.load(open('data/aqx-p-432.json',encoding='utf-8')); assert isinstance(d,list), 'AQI 回傳不是 JSON 陣列'; assert len(d)>0, 'AQI 資料為空'; assert isinstance(d[0],dict), 'AQI 測站資料格式錯誤'; print('AQI records：',len(d)); print('第一個測站：',d[0].get('sitename','-')); print('第一筆 AQI：',d[0].get('aqi','-'))"
 
-          path = 'data/aqx-p-432.json'
+      - name: Commit AQI data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          with open(path, 'r', encoding='utf-8') as f:
-              data = json.load(f)
+          git add data/aqx-p-432.json
 
-          if not isinstance(data, list):
-              raise SystemExit('錯誤：AQI 回傳不是 JSON 陣列')
-
-          print(f'AQI records：{len(data)} 筆')
-
-          if not data:
-              raise SystemExit('錯誤：AQI 資料為空')
-
-          first = data[0]
-
-          if not isinstance(first, dict):
-              raise SystemExit('錯誤：AQI 測站資料格式錯誤')
-
-          print(f'第一個測站：{first.get(\"sitename\", \"未知\")}')
-          print(f'第一筆 AQI：{first.get(\"aqi\", \"-\")}')
-          "
+          if git diff --cached --quiet; then
+            echo "AQI 資料沒有變化，不需要提交"
+          else
+            git commit -m "Update MOENV AQI data"
+            git push
+          fi
