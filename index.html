@@ -1268,11 +1268,33 @@
 
         async function fetchCwaDataset(dataset) {
             const url = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${Date.now()}`;
-            const response = await fetch(url, { cache: 'no-store', headers: { 'Accept': 'application/json' } });
+            const response = await fetch(url, {
+                cache: 'no-store',
+                headers: { 'Accept': 'application/json' }
+            });
             if (!response.ok) {
                 throw new Error(`CWA 靜態資料 HTTP ${response.status}: ${dataset}`);
             }
-            return response.json();
+
+            const payload = await response.json();
+
+            // 氣象署 API 的完整回傳格式：
+            // { success: true, result: { resource_id: "...", records: {...} } }
+            // GitHub Actions 將完整 JSON 原樣存到 data/，因此在這裡
+            // 統一把 result.records 正規化成前端原本使用的 records。
+            if (payload?.result?.records) {
+                return {
+                    ...payload,
+                    records: payload.result.records
+                };
+            }
+
+            // 相容原本已經是 { records: ... } 的資料格式。
+            if (payload?.records) {
+                return payload;
+            }
+
+            throw new Error(`CWA 靜態資料格式無法辨識：${dataset}`);
         }
 
         // AQI 由 GitHub Actions 定時更新至 data/aqx-p-432.json，GitHub Pages 直接讀取。
