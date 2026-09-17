@@ -31,44 +31,44 @@ jobs:
             --retry 3 \
             --retry-delay 2 \
             -H "Accept: application/json" \
+            -w "\nHTTP_STATUS:%{http_code}\n" \
             "https://data.moenv.gov.tw/api/v2/aqx_p_432?format=json&offset=0&limit=1000&api_key=${MOENV_API_KEY}" \
-            -o data/aqx-p-432.json
+            -o data/aqx-p-432.json \
+            2>curl-error.txt
+
+          echo "===== CURL ERROR ====="
+          cat curl-error.txt || true
 
           echo "===== FILE SIZE ====="
           wc -c data/aqx-p-432.json
 
-                    echo "===== RESPONSE PREVIEW ====="
-          python - <<'PY'
-          path = "data/aqx-p-432.json"
-
-          with open(path, "rb") as f:
-              content = f.read(1000)
-
-          print(content.decode("utf-8", errors="replace"))
-          PY
+          echo "===== RESPONSE PREVIEW ====="
+          head -c 1000 data/aqx-p-432.json || true
+          echo
 
       - name: Validate AQI JSON
         run: |
-          python - <<'PY'
+          python -c "
           import json
 
-          path = "data/aqx-p-432.json"
+          path = 'data/aqx-p-432.json'
 
-          with open(path, "r", encoding="utf-8") as f:
+          with open(path, 'r', encoding='utf-8') as f:
               data = json.load(f)
 
           if not isinstance(data, dict):
-              raise SystemExit("錯誤：AQI 回傳不是 JSON 物件")
+              raise SystemExit('錯誤：AQI 回傳不是 JSON 物件')
 
-          records = data.get("records")
+          records = data.get('records')
 
           if not isinstance(records, list):
-              raise SystemExit("錯誤：AQI 回傳找不到 records 陣列")
+              raise SystemExit('錯誤：AQI 回傳找不到 records 陣列')
 
-          print(f"AQI records：{len(records)} 筆")
+          print(f'AQI records：{len(records)} 筆')
 
           if not records:
-              raise SystemExit("錯誤：AQI records 為空")
+              raise SystemExit('錯誤：AQI records 為空')
+          "
 
       - name: Commit AQI data
         run: |
