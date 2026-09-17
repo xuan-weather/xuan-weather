@@ -2817,7 +2817,7 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
                             <span class="ranking-badge-num">#${index + 1}</span>
                         </div>
                         <div class="ranking-main-value" style="color: #f59e0b;">${item.aqiNumber}<span style="font-size: 14px; font-weight: 600; margin-left: 5px;">AQI</span></div>
-                        <div class="ranking-sub-info" style="color: #f59e0b;">🌫️ ${escapeAirQualityHtml(status)}｜主要污染物：${escapeAirQualityHtml(pollutant)}</div>
+                        <div class="ranking-sub-info" style="color: #f59e0b;">😷 ${escapeAirQualityHtml(status)}｜主要污染物：${escapeAirQualityHtml(pollutant)}</div>
                         <div class="ranking-sub-info" style="color: #38bdf8; margin-top: 4px;">📍 地點：${escapeAirQualityHtml(item.County)}${escapeAirQualityHtml(targetStation?.GeoInfo?.TownName || '')}</div>
                     </div>
                 `;
