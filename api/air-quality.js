@@ -39,7 +39,14 @@ export default async function handler(req, res) {
     let data;
 
     try {
-      data = text ? JSON.parse(text) : null;
+      // MOENV may return UTF-8 BOM before the JSON body.
+      // Strip BOM/leading whitespace before parsing so a valid HTTP 200
+      // JSON response is not incorrectly reported as "non-JSON".
+      const normalizedText = String(text || '')
+        .replace(/^\uFEFF/, '')
+        .trim();
+
+      data = normalizedText ? JSON.parse(normalizedText) : null;
     } catch {
       return res.status(502).json({
         error: 'Bad Gateway',
