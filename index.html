@@ -1753,11 +1753,22 @@
                 return;
             }
             closeAirQualityDetail();
+            // 從 AQI 卡片定位時，固定切換到「全台地圖 → 😷空品」模式，
+            // 不再落到預設的 CWA 氣溫測站地圖。
             switchMainPage('map');
-            setTimeout(()=>{
-                if(!map) return;
-                map.setView([lat,lon],10,{animate:true});
-                // AQI 測站定位不再另外繪製藍色外框；直接使用環境部 AQI 彩色測站標記。
+            switchMapMode('aqi');
+
+            const finishAirQualityMapJump = () => {
+                if(!map || !mapInitialized) {
+                    setTimeout(finishAirQualityMapJump, 150);
+                    return;
+                }
+
+                map.invalidateSize();
+                // 確保目前顯示的是環境部 MOENV AQI 測站，而不是 CWA 氣象測站。
+                renderMapMarkers();
+                map.setView([lat,lon], Math.max(map.getZoom(), 10), {animate:true});
+
                 const popup=`<b>😷 ${escapeAirQualityHtml(row.SiteName)}</b><br>AQI：${escapeAirQualityHtml(row.AQI)}<br>${escapeAirQualityHtml(row.County)}`;
                 const targetMarker = (currentMarkersLayer && currentMarkersLayer.getLayers ? currentMarkersLayer.getLayers().find(layer => {
                     const ll = layer.getLatLng?.();
@@ -1768,7 +1779,9 @@
                 } else {
                     L.popup().setLatLng([lat,lon]).setContent(popup).openOn(map);
                 }
-            },250);
+            };
+
+            setTimeout(finishAirQualityMapJump, mapInitialized ? 120 : 350);
         }
 
         function renderAirQuality(data){
