@@ -4524,8 +4524,72 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             return nearest && nearestDistance <= 0.20 ? nearest : null;
         }
 
+        // 環境部 AQI 測站專用地圖標記：
+        // 與中央氣象署測站分開顯示；顏色依 AQI 分級，數字直接顯示在圓點內。
+        function renderAirQualityMapMarkers() {
+            if (!currentMarkersLayer) return;
+            const rows = (Array.isArray(airQualityData) ? airQualityData : [])
+                .map(normalizeAirQualityRecord)
+                .filter(row => Number.isFinite(Number(row.AQI)));
+
+            const currentZoom = map.getZoom();
+            rows.forEach(row => {
+                const lat = Number(row.Latitude);
+                const lon = Number(row.Longitude);
+                const aqi = Number(row.AQI);
+                if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(aqi)) return;
+
+                const color = getAqiMapColor(aqi);
+                const label = String(Math.round(aqi));
+                const fontSize = label.length >= 3 ? '9px' : '10px';
+                const markerSize = currentZoom >= 10 ? 30 : 26;
+                const iconHtml = `
+                    <div style="background:${color};width:${markerSize}px;height:${markerSize}px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 8px rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:${fontSize};font-weight:900;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,.65);box-sizing:border-box;">${label}</div>`;
+
+                const markerIcon = L.divIcon({
+                    className: 'moenv-aqi-station-marker',
+                    html: iconHtml,
+                    iconSize: [markerSize, markerSize],
+                    iconAnchor: [markerSize / 2, markerSize / 2],
+                    popupAnchor: [0, -markerSize / 2]
+                });
+
+                const marker = L.marker([lat, lon], { icon: markerIcon });
+                marker.bindPopup(`
+                    <div class="popup-card">
+                        <h4>😷 ${escapeAirQualityHtml(row.SiteName || '空品測站')}</h4>
+                        <p><b>AQI：</b><span style="color:${color};font-weight:900;">${escapeAirQualityHtml(label)}</span></p>
+                        <p><b>等級：</b>${escapeAirQualityHtml(row.Status || getAqiInfo(aqi).text)}</p>
+                        <p><b>主要污染物：</b>${escapeAirQualityHtml(row.Pollutant || '無主要污染物')}</p>
+                        <p><b>PM2.5：</b>${escapeAirQualityHtml(row['PM2.5'] ?? '--')}</p>
+                        <p><b>PM10：</b>${escapeAirQualityHtml(row.PM10 ?? '--')}</p>
+                        <p><b>O₃：</b>${escapeAirQualityHtml(row.O3 ?? '--')}</p>
+                        <p><b>資料時間：</b>${escapeAirQualityHtml(row.publishtime || '--')}</p>
+                        <button onclick="openAirQualityDetail('${escapeAirQualityHtml(String(row.SiteId || row.SiteName)).replace(/'/g, "&#39;")}')"
+                            style="width:100%;margin-top:8px;padding:8px 10px;border:0;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;font-weight:700;cursor:pointer;">
+                            📋 查看測站詳細資訊
+                        </button>
+                    </div>
+                `);
+                currentMarkersLayer.addLayer(marker);
+            });
+        }
+
         function renderMapMarkers() {
             if (!currentMarkersLayer) return;
+            if (currentMapMode === 'aqi') {
+                const titleEl = document.getElementById('legendHeaderTitle');
+                const colorBarEl = document.getElementById('legendColorBar');
+                const labelsListEl = document.getElementById('legendLabelsList');
+                if (titleEl && colorBarEl && labelsListEl) {
+                    titleEl.innerText = '空氣品質 AQI';
+                    colorBarEl.style.background = 'linear-gradient(to top, #22c55e 0%, #22c55e 16.6%, #eab308 16.7%, #eab308 33.2%, #f97316 33.3%, #f97316 49.8%, #ef4444 49.9%, #ef4444 66.5%, #a855f7 66.6%, #a855f7 83.2%, #7f1d1d 83.3%, #7f1d1d 100%)';
+                    labelsListEl.innerHTML = '<span>301+　危害</span><span>201–300　非常不健康</span><span>151–200　對所有族群不健康</span><span>101–150　對敏感族群不健康</span><span>51–100　普通</span><span>0–50　良好</span>';
+                }
+                currentMarkersLayer.clearLayers();
+                renderAirQualityMapMarkers();
+                return;
+            }
             currentMarkersLayer.clearLayers();
             const titleEl = document.getElementById('legendHeaderTitle');
             const colorBarEl = document.getElementById('legendColorBar');
