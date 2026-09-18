@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>臺灣即時氣象與防災儀表板</title>
     
+    <script>
+        // 僅辨識 Safari 網站版；PWA standalone 不加 .safari-web。
+        (function () {
+            try {
+                const standalone =
+                    window.matchMedia('(display-mode: standalone)').matches ||
+                    window.navigator.standalone === true;
+                if (!standalone) document.documentElement.classList.add('safari-web');
+            } catch (e) {
+                // 若瀏覽器無法判斷，維持原本版面，不影響網站功能。
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -12,6 +25,19 @@
     <script data-goatcounter="https://taiwanweather.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 
     <style>
+        /* Safari 網站版頂部裁切強化修正。
+           透過 JS 加上的 .safari-web 類別，只套用到一般 Safari 網站版；
+           PWA（standalone）完全不套用。
+           這裡預留約一個 iPhone Safari 頂部工具列的安全空間，避免網站
+           第一個標題／卡片被半透明網址列覆蓋。 */
+        html.safari-web body {
+            padding-top: 96px !important;
+        }
+        html.safari-web body:has(#map.leaflet-fullscreen-on),
+        html.safari-web body:has(#radarMap.leaflet-fullscreen-on) {
+            padding-top: 0 !important;
+        }
+
         :root {
             --bg-color: #090d16;
             --text-color: #f1f5f9;
@@ -358,6 +384,89 @@
         .ranking-section-box {
             margin-bottom: 24px;
         }
+
+        .nationwide-attention-widget {
+            margin-top: 16px;
+            margin-bottom: 16px;
+            padding: 16px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.10), rgba(15, 23, 42, 0.18));
+            border: 1px solid rgba(239, 68, 68, 0.28);
+        }
+        .nationwide-attention-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .nationwide-attention-title {
+            font-size: 17px;
+            font-weight: 900;
+            color: var(--text-color);
+        }
+        .nationwide-attention-title i {
+            color: #f59e0b;
+            margin-right: 4px;
+        }
+        #nationwideAttentionTime {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .nationwide-attention-list {
+            display: grid;
+            gap: 8px;
+        }
+        .nationwide-attention-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.34);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            cursor: pointer;
+        }
+        .nationwide-attention-badge {
+            flex: 0 0 auto;
+            font-size: 13px;
+            font-weight: 900;
+            min-width: 24px;
+            text-align: center;
+        }
+        .nationwide-attention-main {
+            min-width: 0;
+            flex: 1;
+        }
+        .nationwide-attention-main strong {
+            display: block;
+            font-size: 13px;
+            color: var(--text-color);
+            line-height: 1.35;
+        }
+        .nationwide-attention-main span {
+            display: block;
+            margin-top: 2px;
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.35;
+        }
+        .nationwide-attention-empty {
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.20);
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        .nationwide-attention-note {
+            margin-top: 10px;
+            color: var(--text-muted);
+            font-size: 10px;
+            line-height: 1.45;
+        }
+
         .quick-ranking-section {
             margin-top: 20px;
             margin-bottom: 20px;
@@ -1103,6 +1212,25 @@
                     <div class="my-location-status">
                         <i class="fas fa-location-crosshairs"></i> 請先更新定位，系統會依所在地顯示相關防災資訊
                     </div>
+                </div>
+            </div>
+
+
+            <!-- 全台即時異常：只整理目前已取得的官方 CWA／MOENV 觀測資料，不做預測 -->
+            <div class="nationwide-attention-widget" id="nationwideAttentionWidget">
+                <div class="nationwide-attention-head">
+                    <div class="nationwide-attention-title">
+                        <i class="fas fa-triangle-exclamation"></i> ⚠️ 全台即時異常
+                    </div>
+                    <div id="nationwideAttentionTime">資料時間：--</div>
+                </div>
+                <div id="nationwideAttentionContent">
+                    <div class="my-location-status">
+                        <i class="fas fa-spinner fa-spin"></i> 正在整理全台即時觀測資料...
+                    </div>
+                </div>
+                <div class="nationwide-attention-note">
+                    僅整理氣象署 CWA 與環境部 MOENV 已發布的即時觀測資料，不進行天氣預測。
                 </div>
             </div>
 
@@ -1865,6 +1993,7 @@
                     `資料發布時間：${escapeAirQualityHtml(latest)}`
                 ]);
                 if (currentRankingTab === 'aqi') renderAirQualityRanking();
+                renderNationwideAttention();
                 if (mapInitialized && currentMapMode === 'aqi') renderMapMarkers();
             }catch(err){
                 console.error('空氣品質載入失敗',err);
@@ -2696,6 +2825,7 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
                         renderCurrentStationData();
                     }
                     renderQuickRankingCards();
+                    renderNationwideAttention();
                     renderRankings();
                     renderCountyForecastGrid();
                     renderFavoritesSection();
@@ -2921,6 +3051,164 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
                     ranking.textContent = `資料時間：${getRankingObservationTimeLabel(isRain ? 'O-A0002-001' : 'O-A0003-001')}`;
                 }
             }
+        }
+
+
+        // ⚠️ 全台即時異常
+        // 只使用目前已載入的官方觀測資料：
+        // CWA：O-A0003-001 即時氣象、O-A0002-001 過去1小時雨量
+        // MOENV：AQX_P_432 即時 AQI
+        // 這裡只做「目前觀測值達到設定門檻」的整理，不做未來預測。
+        function renderNationwideAttention() {
+            const container = document.getElementById('nationwideAttentionContent');
+            const timeEl = document.getElementById('nationwideAttentionTime');
+            if (!container) return;
+
+            const items = [];
+
+            const cwaSource = (Array.isArray(realtimeRankingStationData) && realtimeRankingStationData.length)
+                ? realtimeRankingStationData
+                : (Array.isArray(weatherStationData) ? weatherStationData : []);
+
+            const tempCandidates = cwaSource.map(station => {
+                const d = parseStationElement(station);
+                return {
+                    station,
+                    stationId: station?.StationId || '',
+                    name: station?.StationName || '--',
+                    county: (station?.GeoInfo?.CountyName || '').replace('台', '臺'),
+                    town: station?.GeoInfo?.TownName || '',
+                    temp: d.temp
+                };
+            }).filter(x => Number.isFinite(x.temp) && x.temp >= 35)
+              .sort((a,b) => b.temp - a.temp);
+
+            if (tempCandidates.length) {
+                const x = tempCandidates[0];
+                items.push({
+                    level: x.temp >= 36 ? '🔴' : '🟠',
+                    color: x.temp >= 36 ? '#ef4444' : '#f97316',
+                    title: `${x.county}${x.town} ${x.name} ${x.temp.toFixed(1)}°C`,
+                    detail: x.temp >= 36
+                        ? '目前觀測氣溫已達 36°C 以上'
+                        : '目前觀測氣溫達 35°C 以上',
+                    action: `jumpToQuickRankingStation('${String(x.stationId).replace(/'/g, "\\'")}')`
+                });
+            }
+
+            const rainSource = Array.isArray(cwaHourlyRainfallRankingData)
+                ? cwaHourlyRainfallRankingData : [];
+            const rainCandidates = rainSource.map(station => {
+                const rain = parseCwaHourlyRainfallStation(station);
+                return {
+                    station,
+                    stationId: station?.StationId || '',
+                    name: station?.StationName || '--',
+                    county: (station?.GeoInfo?.CountyName || '').replace('台', '臺'),
+                    town: station?.GeoInfo?.TownName || '',
+                    rain
+                };
+            }).filter(x => Number.isFinite(x.rain) && x.rain >= 40)
+              .sort((a,b) => b.rain - a.rain);
+
+            if (rainCandidates.length) {
+                const x = rainCandidates[0];
+                items.push({
+                    level: x.rain >= 80 ? '🔴' : '🟠',
+                    color: x.rain >= 80 ? '#ef4444' : '#f97316',
+                    title: `${x.county}${x.town} ${x.name} 1小時雨量 ${x.rain.toFixed(1)} mm`,
+                    detail: 'CWA 過去 1 小時累積降水量觀測',
+                    action: `jumpToQuickRankingStation('${String(x.stationId).replace(/'/g, "\\'")}')`
+                });
+            }
+
+            const aqiCandidates = (Array.isArray(airQualityData) ? airQualityData : [])
+                .map(normalizeAirQualityRecord)
+                .map(row => ({
+                    row,
+                    aqi: Number(row.AQI),
+                    name: row.SiteName || '--',
+                    county: (row.County || '').replace('台', '臺')
+                }))
+                .filter(x => Number.isFinite(x.aqi) && x.aqi >= 101)
+                .sort((a,b) => b.aqi - a.aqi);
+
+            if (aqiCandidates.length) {
+                const x = aqiCandidates[0];
+                items.push({
+                    level: x.aqi >= 151 ? '🔴' : '🟠',
+                    color: x.aqi >= 151 ? '#ef4444' : '#f97316',
+                    title: `${x.county}${x.name} AQI ${Math.round(x.aqi)}`,
+                    detail: `環境部 AQX_P_432｜${getAqiInfo(x.aqi).text}`,
+                    action: `locateAirQualityStation('${String(x.row.SiteId || x.row.SiteName).replace(/'/g, "\\'")}')`
+                });
+            }
+
+            const gustCandidates = cwaSource.map(station => {
+                const d = parseStationElement(station);
+                return {
+                    stationId: station?.StationId || '',
+                    name: station?.StationName || '--',
+                    county: (station?.GeoInfo?.CountyName || '').replace('台', '臺'),
+                    town: station?.GeoInfo?.TownName || '',
+                    gust: d.windGust
+                };
+            }).filter(x => Number.isFinite(x.gust) && x.gust >= 15)
+              .sort((a,b) => b.gust - a.gust);
+
+            if (gustCandidates.length) {
+                const x = gustCandidates[0];
+                items.push({
+                    level: x.gust >= 20 ? '🔴' : '🟡',
+                    color: x.gust >= 20 ? '#ef4444' : '#eab308',
+                    title: `${x.county}${x.town} ${x.name} 陣風 ${x.gust.toFixed(1)} m/s`,
+                    detail: 'CWA 即時最大瞬間風觀測',
+                    action: `jumpToQuickRankingStation('${String(x.stationId).replace(/'/g, "\\'")}')`
+                });
+            }
+
+            // 固定最多顯示四項，並依嚴重程度與數值排序。
+            const levelWeight = {'🔴': 3, '🟠': 2, '🟡': 1};
+            items.sort((a,b) => (levelWeight[b.level] || 0) - (levelWeight[a.level] || 0));
+            const visible = items.slice(0, 4);
+
+            const obsTimes = cwaSource.map(s => s?.ObsTime?.DateTime || s?.ObsTime)
+                .filter(Boolean)
+                .map(v => Date.parse(v))
+                .filter(Number.isFinite);
+            const aqTimes = (Array.isArray(airQualityData) ? airQualityData : [])
+                .map(normalizeAirQualityRecord)
+                .map(x => Date.parse(x.publishtime || ''))
+                .filter(Number.isFinite);
+            const allTimes = [...obsTimes, ...aqTimes];
+            if (timeEl && allTimes.length) {
+                const d = new Date(Math.max(...allTimes));
+                timeEl.textContent = `資料時間：${d.toLocaleString('zh-TW', {
+                    year:'numeric', month:'2-digit', day:'2-digit',
+                    hour:'2-digit', minute:'2-digit', hour12:false
+                })}`;
+            }
+
+            if (!visible.length) {
+                container.innerHTML = `
+                    <div class="nationwide-attention-empty">
+                        🟢 目前沒有達到本站即時觀測提醒門檻的資料。
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="nationwide-attention-list">
+                    ${visible.map(x => `
+                        <div class="nationwide-attention-item" onclick="${x.action}" title="查看相關測站">
+                            <div class="nationwide-attention-badge">${x.level}</div>
+                            <div class="nationwide-attention-main">
+                                <strong>${escapeQuickRankingText(x.title)}</strong>
+                                <span>${escapeQuickRankingText(x.detail)}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`;
         }
 
         function renderQuickRankingCards() {
