@@ -2028,9 +2028,19 @@
             if (isNaN(windGust) || windGust < 0) windGust = windSpeed;
             let windDir = parseFloat(we.WindDirection ?? we.WDIR);
             if (isNaN(windDir) || windDir < 0) windDir = -1;
-            let uvIndexRaw = we.UVIndex ?? we.UV ?? we.UVINDEX;
+            // CWA O-A0003-001 官方欄位為 WeatherElement.UVIndex；
+            // 同時兼容部分資料轉換後可能出現的 UVI／站點層級欄位。
+            let uvIndexRaw =
+                we.UVIndex ??
+                we.UVI ??
+                we.UV ??
+                we.UVINDEX ??
+                station.UVIndex ??
+                station.UVI;
+            if (typeof uvIndexRaw === 'string') uvIndexRaw = uvIndexRaw.trim();
             let uvIndex = parseFloat(uvIndexRaw);
-            if (isNaN(uvIndex) || uvIndex < 0) uvIndex = NaN;
+            // CWA：-99 代表缺值／資料異常，X 代表儀器故障，不能當成 0。
+            if (!Number.isFinite(uvIndex) || uvIndex < 0) uvIndex = NaN;
 
             let humidityRaw = we.RelativeHumidity ?? we.HUMD;
             let humidity = parseFloat(humidityRaw);
@@ -4000,6 +4010,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
 
             const uvEl = document.getElementById('liveUVIndex');
             if (uvEl) {
+                // 顯示 CWA O-A0003-001 實測 UVI；無有效觀測值時保留 --，不虛構數值。
                 if (Number.isFinite(data.uvIndex)) {
                     const uv = data.uvIndex;
                     let uvLevel = '低量級';
@@ -4402,7 +4413,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                     }
                     iconHtml += `</div>`;
 
-                    const hotBreathing = currentMapMode === 'temp' && !isNaN(data.temp) && data.temp > 35;
+                    const hotBreathing = currentMapMode === 'temp' && !isNaN(data.temp) && data.temp >= 35;
                     const markerIcon = L.divIcon({
                         className: hotBreathing ? 'custom-station-marker hot-breathing' : 'custom-station-marker',
                         html: iconHtml,
