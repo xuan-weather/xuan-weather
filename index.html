@@ -12,6 +12,17 @@
     <script data-goatcounter="https://taiwanweather.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 
     <style>
+        /* Safari 網站版頂部安全區修正：
+           僅補足一般網頁內容與 iPhone Safari 瀏覽器頂部區域的距離。
+           不改變 PWA 顯示；全螢幕地圖仍沿用原本的 full-screen CSS。 */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            @media (display-mode: browser) {
+                body {
+                    padding-top: env(safe-area-inset-top);
+                }
+            }
+        }
+
         :root {
             --bg-color: #090d16;
             --text-color: #f1f5f9;
