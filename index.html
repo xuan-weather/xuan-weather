@@ -1757,9 +1757,17 @@
             setTimeout(()=>{
                 if(!map) return;
                 map.setView([lat,lon],10,{animate:true});
-                if(window.__aqiLocateMarker){try{map.removeLayer(window.__aqiLocateMarker);}catch(e){}}
-                window.__aqiLocateMarker=L.circleMarker([lat,lon],{radius:12,weight:3,fillOpacity:.12}).addTo(map);
-                window.__aqiLocateMarker.bindPopup(`<b>😷 ${escapeAirQualityHtml(row.SiteName)}</b><br>AQI：${escapeAirQualityHtml(row.AQI)}<br>${escapeAirQualityHtml(row.County)}`).openPopup();
+                // AQI 測站定位不再另外繪製藍色外框；直接使用環境部 AQI 彩色測站標記。
+                const popup=`<b>😷 ${escapeAirQualityHtml(row.SiteName)}</b><br>AQI：${escapeAirQualityHtml(row.AQI)}<br>${escapeAirQualityHtml(row.County)}`;
+                const targetMarker = (currentMarkersLayer && currentMarkersLayer.getLayers ? currentMarkersLayer.getLayers().find(layer => {
+                    const ll = layer.getLatLng?.();
+                    return ll && Math.abs(ll.lat-lat)<0.00001 && Math.abs(ll.lng-lon)<0.00001;
+                }) : null);
+                if(targetMarker && targetMarker.bindPopup){
+                    targetMarker.bindPopup(popup).openPopup();
+                } else {
+                    L.popup().setLatLng([lat,lon]).setContent(popup).openOn(map);
+                }
             },250);
         }
 
