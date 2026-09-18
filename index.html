@@ -169,67 +169,7 @@
         }
 
         /* 個人化防災警報 */
-        .personal-disaster-widget{
-            background:linear-gradient(135deg,rgba(239,68,68,.10),rgba(15,23,42,.10));
-            border:1px solid rgba(239,68,68,.25);
-            border-radius:18px;
-            padding:16px;
-            margin-bottom:16px;
-        }
-        .personal-disaster-head{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:10px;
-            margin-bottom:12px;
-            border-bottom:1px solid rgba(239,68,68,.20);
-            padding-bottom:8px;
-        }
-        .personal-disaster-title{
-            font-size:14px;
-            font-weight:800;
-            color:#f87171;
-            display:flex;
-            align-items:center;
-            gap:6px;
-        }
-        .personal-disaster-location{
-            font-size:11px;
-            color:var(--text-muted);
-            text-align:right;
-        }
-        .personal-disaster-item{
-            border-radius:12px;
-            padding:10px 12px;
-            margin-bottom:8px;
-            border:1px solid var(--action-border);
-            background:rgba(0,0,0,.10);
-        }
-        .personal-disaster-item:last-child{margin-bottom:0;}
-        .personal-disaster-item-title{
-            font-size:13px;
-            font-weight:800;
-            line-height:1.4;
-        }
-        .personal-disaster-item-desc{
-            font-size:11px;
-            color:var(--text-muted);
-            line-height:1.55;
-            margin-top:4px;
-            white-space:pre-line;
-        }
-        .personal-disaster-safe{
-            background:rgba(16,185,129,.08);
-            border:1px solid rgba(16,185,129,.20);
-            border-radius:12px;
-            padding:12px;
-            font-size:13px;
-            color:#34d399;
-            display:flex;
-            align-items:center;
-            gap:8px;
-        }
-        .section-divider-title {
+.section-divider-title {
             font-size: 14px;
             font-weight: 700;
             color: var(--text-muted);
@@ -1173,24 +1113,7 @@
                     </div>
                 </div>
             </div>
-
-            <!-- 個人化防災警報：依 GPS 所在縣市篩選目前警特報／地震資訊 -->
-            <div class="personal-disaster-widget" id="personalDisasterWidget">
-                <div class="personal-disaster-head">
-                    <div class="personal-disaster-title">
-                        <i class="fas fa-bell"></i> 我的所在地防災警報
-                    </div>
-                    <div class="personal-disaster-location" id="personalDisasterLocation">尚未取得所在地</div>
-                </div>
-                <div id="personalDisasterContent">
-                    <div class="my-location-status">
-                        <i class="fas fa-location-crosshairs"></i> 請先更新定位，系統會依所在地顯示相關防災資訊
-                    </div>
-                </div>
-            </div>
-
-
-            <!-- 全台即時異常：只整理目前已取得的官方 CWA／MOENV 觀測資料，不做預測 -->
+<!-- 全台即時異常：只整理目前已取得的官方 CWA／MOENV 觀測資料，不做預測 -->
             <div class="nationwide-attention-widget" id="nationwideAttentionWidget">
                 <div class="nationwide-attention-head">
                     <div class="nationwide-attention-title">
@@ -1580,13 +1503,9 @@
         let earthquakeData = [];
         let typhoonData = [];
         let weatherWarnings = [];
-        // CWA W-C0033-005：高溫資訊，依 GPS 所在「縣市＋鄉鎮市區」精準比對。
-        let highTemperatureData = [];
-        let userCurrentTown = '';
-        let cityStationMapping = {};
+let cityStationMapping = {};
         let currentStationType = 'normal';
         let currentRankingTab = 'rain';
-        let userCurrentCounty = '';
                   
         const TAIWAN_REGIONS_ORDER = [
             "基隆市", "臺北市", "新北市", "桃園市", "新竹市", "新竹縣", "苗栗縣",
@@ -1608,12 +1527,10 @@
             fetchTyphoonData(false);
             loadAirQuality(false);
             fetchWeatherWarnings();
-            fetchHighTemperatureInfo();
             setInterval(() => {
                 fetchEarthquakeData(false);
                 fetchWeatherWarnings();
-                fetchHighTemperatureInfo();
-            }, 30000);
+                }, 30000);
             // CWA 資料源各自依官方更新頻率更新：
             // O-A0001-001＝整點逐時、O-A0003-001＝每10分鐘、O-A0002-001＝每10分鐘。
             // 網站可以較頻繁檢查，但只有偵測到 CWA 新 ObsTime 才真正套用資料。
@@ -2052,7 +1969,6 @@
                         </div>
                     `;
                 }
-                renderPersonalizedDisasterAlert();
             } catch (err) {
                 console.error("警特報載入錯誤:", err);
                 weatherWarnings = [];
@@ -3648,7 +3564,6 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 });
                 earthquakeData = combinedEq;
                 window.quakeDataList = earthquakeData;
-                renderPersonalizedDisasterAlert();
                 if (earthquakeData.length > 0) {
                     let htmlContent = '';
                     earthquakeData.forEach((eq, index) => {
@@ -3696,7 +3611,6 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             try {
                 const res = await fetchCwaDataset('W-C0034-001');
                 typhoonData = res.records?.Typhoon || res.records?.location || [];
-                renderPersonalizedDisasterAlert();
                 if (typhoonData.length > 0) {
                     let htmlContent = '';
                     typhoonData.forEach((typhoon) => {
@@ -3792,476 +3706,6 @@ async function fetchEarthquakeData(isManualRefresh = false) {
             modal.style.display = 'flex';
         }
         
-        // ==================== CWA 高溫資訊 W-C0033-005 ====================
-        //
-        // GitHub Pages 版本直接讀取：
-        // data/cwa-W-C0033-005.json
-        //
-        // 重要：
-        // 不能只用「臺南市」判斷。
-        // 必須精確比對 GPS 所在的縣市＋鄉鎮市區。
-        //
-        // 例如：
-        // 臺南市新營區 → 只判斷新營區
-        // 臺南市安南區 → 只判斷安南區
-        //
-        function normalizePersonalPlace(value) {
-            return String(value ?? '')
-                .replace(/台/g, '臺')
-                .replace(/臺灣/g, '')
-                .replace(/台灣/g, '')
-                .replace(/\s+/g, '')
-                .replace(/區域/g, '');
-        }
-
-        function collectHighTemperatureRecords(value, output = [], seen = new Set()) {
-            if (value === null || value === undefined) return output;
-
-            if (typeof value !== 'object') return output;
-
-            if (seen.has(value)) return output;
-            seen.add(value);
-
-            if (Array.isArray(value)) {
-                value.forEach(item => collectHighTemperatureRecords(item, output, seen));
-                return output;
-            }
-
-            // CWA/CAP 高溫資料可能以 areaDesc、area、valueName 等欄位描述發布區域。
-            const area =
-                value.areaDesc ||
-                value.AreaDesc ||
-                value.area ||
-                value.Area ||
-                value.location ||
-                value.Location ||
-                value.valueName ||
-                value.ValueName ||
-                value.countyTown ||
-                value.CountyTown ||
-                '';
-
-            const event =
-                value.event ||
-                value.Event ||
-                value.headline ||
-                value.Headline ||
-                value.Phenomena ||
-                value.phenomena ||
-                '';
-
-            const color =
-                value.alert_color ||
-                value.alertColor ||
-                value.website_color ||
-                value.websiteColor ||
-                value.severity_level ||
-                value.severityLevel ||
-                value.color ||
-                value.Color ||
-                '';
-
-            // 只有具備高溫相關區域／事件／燈號資訊時才建立候選紀錄。
-            if (area || event || color) {
-                const rawText = JSON.stringify(value);
-                const isHighTemp =
-                    String(event).includes('高溫') ||
-                    String(value.eventCode || '').toUpperCase().includes('W29') ||
-                    rawText.includes('高溫') ||
-                    rawText.toLowerCase().includes('high temperature');
-
-                if (isHighTemp && area) {
-                    output.push(value);
-                }
-            }
-
-            Object.values(value).forEach(child => {
-                if (child && typeof child === 'object') {
-                    collectHighTemperatureRecords(child, output, seen);
-                }
-            });
-
-            return output;
-        }
-
-        function getHighTemperatureArea(record) {
-            return normalizePersonalPlace(
-                record?.areaDesc ||
-                record?.AreaDesc ||
-                record?.area ||
-                record?.Area ||
-                record?.location ||
-                record?.Location ||
-                record?.valueName ||
-                record?.ValueName ||
-                record?.countyTown ||
-                record?.CountyTown ||
-                ''
-            );
-        }
-
-        function getHighTemperatureColor(record) {
-            const raw = String(
-                record?.alert_color ||
-                record?.alertColor ||
-                record?.website_color ||
-                record?.websiteColor ||
-                record?.severity_level ||
-                record?.severityLevel ||
-                record?.color ||
-                record?.Color ||
-                ''
-            ).toLowerCase();
-
-            if (raw.includes('red') || raw.includes('紅')) {
-                return { cls: 'red', icon: '🔴', name: '紅燈' };
-            }
-
-            if (raw.includes('orange') || raw.includes('橙')) {
-                return { cls: 'orange', icon: '🟠', name: '橙燈' };
-            }
-
-            return { cls: 'yellow', icon: '🟡', name: '黃燈' };
-        }
-
-        function getHighTemperatureDescription(record) {
-            return record?.description ||
-                record?.Description ||
-                record?.desc ||
-                record?.Desc ||
-                record?.headline ||
-                record?.Headline ||
-                record?.alert_criteria ||
-                record?.alertCriteria ||
-                '';
-        }
-
-        function getHighTemperatureEffective(record) {
-            return record?.effective ||
-                record?.Effective ||
-                record?.startTime ||
-                record?.StartTime ||
-                record?.onset ||
-                record?.Onset ||
-                '';
-        }
-
-        function getHighTemperatureExpires(record) {
-            return record?.expires ||
-                record?.Expires ||
-                record?.endTime ||
-                record?.EndTime ||
-                '';
-        }
-
-        async function fetchHighTemperatureInfo() {
-            try {
-                const res = await fetchCwaDataset('W-C0033-005');
-                const root = res?.records ?? res;
-                const records = collectHighTemperatureRecords(root);
-
-                // 去除同一筆 CAP 物件可能因巢狀結構被重複收集的情況。
-                const unique = [];
-                const keys = new Set();
-
-                records.forEach(record => {
-                    const key = [
-                        getHighTemperatureArea(record),
-                        getHighTemperatureColor(record).name,
-                        getHighTemperatureEffective(record),
-                        getHighTemperatureExpires(record),
-                        getHighTemperatureDescription(record)
-                    ].join('|');
-
-                    if (!keys.has(key)) {
-                        keys.add(key);
-                        unique.push(record);
-                    }
-                });
-
-                highTemperatureData = unique;
-                renderPersonalizedDisasterAlert();
-            } catch (err) {
-                console.warn('CWA 高溫資訊載入失敗:', err);
-                highTemperatureData = [];
-                renderPersonalizedDisasterAlert();
-            }
-        }
-
-        function findPersonalHighTemperatureAlerts(county, town) {
-            const countyName = normalizePersonalPlace(county);
-            const townName = normalizePersonalPlace(town);
-
-            if (!countyName || !townName || !Array.isArray(highTemperatureData)) {
-                return [];
-            }
-
-            const exactTarget = normalizePersonalPlace(`${countyName}${townName}`);
-
-            return highTemperatureData.filter(record => {
-                const area = getHighTemperatureArea(record);
-
-                // ★ 生產版採「完整行政區名稱」精準比對。
-                // 不使用「只要包含臺南市」的寬鬆判斷。
-                if (area === exactTarget) return true;
-
-                // CWA 部分資料可能只把縣市與鄉鎮拆成不同欄位。
-                const recordCounty = normalizePersonalPlace(
-                    record?.county ||
-                    record?.County ||
-                    record?.countyName ||
-                    record?.CountyName ||
-                    ''
-                );
-
-                const recordTown = normalizePersonalPlace(
-                    record?.town ||
-                    record?.Town ||
-                    record?.townName ||
-                    record?.TownName ||
-                    record?.district ||
-                    record?.District ||
-                    record?.districtName ||
-                    record?.DistrictName ||
-                    ''
-                );
-
-                return recordCounty === countyName && recordTown === townName;
-            });
-        }
-
-        function parseReverseGeocodeTaiwanArea(name) {
-            const normalized = normalizePersonalPlace(name);
-
-            const counties = TAIWAN_REGIONS_ORDER
-                .slice()
-                .sort((a, b) => b.length - a.length);
-
-            const county = counties.find(c => normalized.includes(normalizePersonalPlace(c))) || '';
-
-            if (!county) {
-                return { county: '', town: '' };
-            }
-
-            let rest = normalized.replace(normalizePersonalPlace(county), '');
-
-            // 臺北市／新北市／桃園市／臺中市／臺南市／高雄市等使用「區」；
-            // 縣轄區域也以實際反向地理編碼結果為準。
-            const townMatch = rest.match(/(.+?(?:區|鄉|鎮|市))/);
-            const town = townMatch ? townMatch[1] : '';
-
-            return { county, town };
-        }
-
-        function escapePersonalDisasterText(value) {
-            return String(value ?? '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
-
-        function normalizeTaiwanPlaceText(value) {
-            return String(value ?? '')
-                .replace(/台/g, '臺')
-                .replace(/\s+/g, '');
-        }
-
-        function getPersonalWarningTitle(warning) {
-            return warning?.Phenomena
-                || warning?.Hazards?.Info?.Phenomena
-                || warning?.title
-                || warning?.Title
-                || warning?.event
-                || warning?.Event
-                || '氣象警特報';
-        }
-
-        function getPersonalWarningDescription(warning) {
-            return warning?.Significance
-                || warning?.Description
-                || warning?.description
-                || warning?.text
-                || warning?.Hazards?.Info?.Significance
-                || warning?.Hazards?.Info?.Description
-                || '';
-        }
-
-        function isPersonalWarningRelevant(warning, county) {
-            if (!county || !warning) return false;
-            const raw = normalizeTaiwanPlaceText(JSON.stringify(warning));
-            const countyName = normalizeTaiwanPlaceText(county);
-
-            // 明確寫出全臺／臺灣地區的警報，視為與所在地相關。
-            const nationwide = ['全臺', '全台', '臺灣地區', '台灣地區', '臺灣各地', '台灣各地']
-                .some(keyword => raw.includes(normalizeTaiwanPlaceText(keyword)));
-
-            return nationwide || raw.includes(countyName);
-        }
-
-        function getPersonalEarthquakeAlert(county) {
-            if (!county || !Array.isArray(earthquakeData) || earthquakeData.length === 0) return null;
-
-            const latestEq = earthquakeData[0];
-            const info = latestEq?.EarthquakeInfo || {};
-            const areas = info?.Intensity?.ShakingArea || [];
-            const matches = areas.filter(area => {
-                const areaCounty = normalizeTaiwanPlaceText(area?.CountyName || area?.countyName || '');
-                return areaCounty === normalizeTaiwanPlaceText(county);
-            });
-
-            if (matches.length === 0) return null;
-
-            return {
-                magnitude: info?.EarthquakeMagnitude?.MagnitudeValue || '--',
-                time: info?.OriginTime || '--',
-                location: info?.Epicenter?.Location || '未知震央',
-                areas: matches
-            };
-        }
-
-        function renderPersonalizedDisasterAlert() {
-            const container = document.getElementById('personalDisasterContent');
-            const locationTag = document.getElementById('personalDisasterLocation');
-            if (!container || !locationTag) return;
-
-            const county = normalizePersonalPlace(userCurrentCounty);
-            const town = normalizePersonalPlace(userCurrentTown);
-
-            if (!county) {
-                locationTag.innerText = '尚未取得所在地';
-                container.innerHTML = `
-                    <div class="my-location-status">
-                        <i class="fas fa-location-crosshairs"></i>
-                        請先按「更新定位」，取得所在地後顯示與您有關的防災資訊
-                    </div>
-                `;
-                return;
-            }
-
-            const displayLocation = town ? `${county}${town}` : county;
-            locationTag.innerText = displayLocation;
-
-            const relevantWarnings = Array.isArray(weatherWarnings)
-                ? weatherWarnings.filter(w => isPersonalWarningRelevant(w, county))
-                : [];
-
-            const highTempAlerts = town
-                ? findPersonalHighTemperatureAlerts(county, town)
-                : [];
-
-            const earthquakeAlert = getPersonalEarthquakeAlert(county);
-            const items = [];
-
-            // ★ 高溫資訊優先顯示，且只顯示 GPS 所在鄉鎮市區。
-            highTempAlerts.slice(0, 4).forEach(record => {
-                const color = getHighTemperatureColor(record);
-                const desc = getHighTemperatureDescription(record);
-                const effective = getHighTemperatureEffective(record);
-                const expires = getHighTemperatureExpires(record);
-
-                const timeHtml = (effective || expires)
-                    ? `
-                        <div class="personal-disaster-item-desc">
-                            ${effective ? `生效：${escapePersonalDisasterText(formatObsTime(effective))}` : ''}
-                            ${effective && expires ? ' ｜ ' : ''}
-                            ${expires ? `結束：${escapePersonalDisasterText(formatObsTime(expires))}` : ''}
-                        </div>
-                      `
-                    : '';
-
-                items.push(`
-                    <div class="personal-disaster-item"
-                         style="border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10);">
-                        <div class="personal-disaster-item-title" style="color:#fbbf24;">
-                            ${color.icon}
-                            高溫資訊｜${escapePersonalDisasterText(color.name)}
-                        </div>
-                        <div class="personal-disaster-item-desc">
-                            📍 ${escapePersonalDisasterText(displayLocation)}
-                        </div>
-                        ${desc ? `<div class="personal-disaster-item-desc">${escapePersonalDisasterText(desc)}</div>` : ''}
-                        ${timeHtml}
-                    </div>
-                `);
-            });
-
-            relevantWarnings.slice(0, 4).forEach(warning => {
-                const title = getPersonalWarningTitle(warning);
-                const desc = getPersonalWarningDescription(warning);
-                items.push(`
-                    <div class="personal-disaster-item" style="border-color:rgba(239,68,68,.30);background:rgba(239,68,68,.10);">
-                        <div class="personal-disaster-item-title" style="color:#f87171;">
-                            <i class="fas fa-triangle-exclamation"></i>
-                            ${escapePersonalDisasterText(title)}
-                        </div>
-                        ${desc ? `<div class="personal-disaster-item-desc">${escapePersonalDisasterText(desc)}</div>` : ''}
-                    </div>
-                `);
-            });
-
-            if (earthquakeAlert) {
-                const intensityText = earthquakeAlert.areas
-                    .map(area => area?.AreaIntensity || area?.Intensity || area?.areaIntensity || '')
-                    .filter(Boolean)
-                    .join('、');
-
-                items.push(`
-                    <div class="personal-disaster-item" style="border-color:rgba(245,158,11,.30);background:rgba(245,158,11,.10);">
-                        <div class="personal-disaster-item-title" style="color:#f59e0b;">
-                            <i class="fas fa-house-chimney-crack"></i>
-                            ${escapePersonalDisasterText(county)} 有感地震
-                        </div>
-                        <div class="personal-disaster-item-desc">
-                            規模 M${escapePersonalDisasterText(earthquakeAlert.magnitude)}
-                            ｜${escapePersonalDisasterText(intensityText || '已有震度資料')}
-                            ｜${escapePersonalDisasterText(earthquakeAlert.location)}
-                            ｜${escapePersonalDisasterText(earthquakeAlert.time)}
-                        </div>
-                    </div>
-                `);
-            }
-
-            if (Array.isArray(typhoonData) && typhoonData.length > 0) {
-                const typhoon = typhoonData[0] || {};
-                const name = typhoon.TyphoonName || typhoon.name || '目前颱風資訊';
-                items.push(`
-                    <div class="personal-disaster-item"
-                         style="border-color:rgba(59,130,246,.30);background:rgba(59,130,246,.10);cursor:pointer;"
-                         onclick="switchMainPage('typhoon')">
-                        <div class="personal-disaster-item-title" style="color:#60a5fa;">
-                            <i class="fas fa-hurricane"></i>
-                            ${escapePersonalDisasterText(name)}
-                        </div>
-                        <div class="personal-disaster-item-desc">
-                            目前有颱風相關資訊，點擊查看完整路徑與詳細資料。
-                        </div>
-                    </div>
-                `);
-            }
-
-            if (items.length === 0) {
-                const scopeText = town
-                    ? `${escapePersonalDisasterText(displayLocation)}`
-                    : `${escapePersonalDisasterText(county)}（尚未取得鄉鎮市區）`;
-
-                container.innerHTML = `
-                    <div class="personal-disaster-safe">
-                        <i class="fas fa-shield-halved" style="font-size:16px;"></i>
-                        <div>
-                            <div style="font-weight:800;">${scopeText} 目前無符合的防災警報</div>
-                            <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">
-                                高溫資訊採縣市＋鄉鎮市區精準比對，不會因同縣市其他行政區發布而誤判。
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = items.join('');
-            }
-        }
-
         function initUserLocationWeather() {
             const container = document.getElementById('myLocationContentArea');
             if (weatherStationData.length === 0) {
@@ -4294,25 +3738,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                         const data = parseStationElement(closestStation);
                         const county = (closestStation.GeoInfo?.CountyName || '').replace('台', '臺');
                         const town = closestStation.GeoInfo?.TownName || '';
-                                                 
-                        userCurrentCounty = county;
-                        userCurrentTown = town;
-                        renderPersonalizedDisasterAlert();
-
-                        // 優先使用 GPS 座標反向地理編碼取得真正所在地鄉鎮市區，
-                        // 避免「最近測站所屬行政區」與使用者實際所在行政區不同。
-                        getTaiwanLocationName(userLat, userLon).then(locationName => {
-                            const parsedArea = parseReverseGeocodeTaiwanArea(locationName);
-                            if (parsedArea.county) {
-                                userCurrentCounty = parsedArea.county;
-                            }
-                            if (parsedArea.town) {
-                                userCurrentTown = parsedArea.town;
-                            }
-                            renderPersonalizedDisasterAlert();
-                        }).catch(() => {});
-
-                        const popVal = getPopForStation(county, town);
+const popVal = getPopForStation(county, town);
                         const isNight = new Date().getHours() < 6 || new Date().getHours() > 18;
                         const wxInfo = forecastWxData[town] || forecastWxData[county] || { text: '晴', code: '1' };
                         const iconObj = getCWAWeatherIconObj(wxInfo.code, isNight);
@@ -4351,8 +3777,6 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                     }
                 },
                 error => {
-                    userCurrentCounty = '';
-                    renderPersonalizedDisasterAlert();
                     container.innerHTML = `<div class="my-location-status" style="color: #f87171;"><i class="fas fa-map-marker-slash"></i> 定位失敗或權限遭拒</div>`;
                 },
                 { timeout: 10000, maximumAge: 60000 }
