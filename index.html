@@ -4548,6 +4548,8 @@ const popVal = getPopForStation(county, town);
                                 font: { size: 12 },
                                 stepSize: 1,
                                 precision: 0,
+                                autoSkip: false,
+                                maxTicksLimit: 100,
                                 callback: value => `${Number(value).toFixed(0)}`
                             },
                             suggestedMin: Math.floor(dataMin - 1),
