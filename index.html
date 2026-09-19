@@ -4237,21 +4237,20 @@ const popVal = getPopForStation(county, town);
             const dataMin = Math.min(...values);
             const dataMax = Math.max(...values);
 
-            // 主曲線仍使用 CWA 每 10 分鐘資料，確保曲線細節不消失。
-            // 另外建立「每小時」的隱形互動點：
-            // - X 軸文字維持 DPIP 類似的每 2 小時顯示
-            // - 手指滑動/點擊時只會吸附到每小時資料
-            // - Tooltip 顯示整點氣溫，而不是每 10 分鐘跳一次
+            // 每小時互動資料：
+            // 主曲線仍保留 CWA 10 分鐘資料，但手指滑動只吸附到每小時。
             let hourlyPoints = [];
 
             if (hasTimeValues) {
                 const hourlyMap = new Map();
+                const oneHour = 60 * 60 * 1000;
+                const byHour = new Map();
 
                 for (const point of validPoints) {
                     const ts = Number(point.x);
                     const d = new Date(ts);
 
-                    // 只取整點資料；CWA 10 分鐘資料正常情況會有 HH:00。
+                    // 優先使用真正的整點 CWA 觀測。
                     if (
                         d.getMinutes() === 0 &&
                         d.getSeconds() === 0 &&
@@ -4262,24 +4261,15 @@ const popVal = getPopForStation(county, town);
                             y: Number(point.y)
                         });
                     }
-                }
 
-                // 如果某個整點剛好沒有資料，使用該小時最近的一筆
-                // 10 分鐘觀測補上，避免滑動時缺一個小時。
-                const oneHour = 60 * 60 * 1000;
-                const byHour = new Map();
-
-                for (const point of validPoints) {
-                    const hourTs = Math.floor(Number(point.x) / oneHour) * oneHour;
-                    const distance = Math.abs(Number(point.x) - hourTs);
+                    // 如果整點缺資料，找該小時最接近整點的一筆 10 分鐘資料。
+                    const hourTs = Math.floor(ts / oneHour) * oneHour;
+                    const distance = Math.abs(ts - hourTs);
                     const old = byHour.get(hourTs);
 
                     if (!old || distance < old.distance) {
                         byHour.set(hourTs, {
-                            point: {
-                                x: Number(point.x),
-                                y: Number(point.y)
-                            },
+                            point: { x: ts, y: Number(point.y) },
                             distance
                         });
                     }
@@ -4299,18 +4289,73 @@ const popVal = getPopForStation(county, town);
                     .sort((a, b) => a.x - b.x);
             }
 
+            const formatHour = (ts) => {
+                const d = new Date(Number(ts));
+                if (Number.isNaN(d.getTime())) return '';
+                return `${String(d.getHours()).padStart(2, '0')}:00`;
+            };
+
             const formatTooltipTime = (ts) => {
                 const d = new Date(Number(ts));
                 if (Number.isNaN(d.getTime())) return '';
                 return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:00`;
             };
 
+            // DPIP 類似的「滑動點＋垂直虛線」：
+            // 手指滑動時，Chart.js 的 tooltip 會鎖定每小時資料點，
+            // 這個 plugin 再把該整點畫成大圓點並從圖頂到底畫虛線。
+            const dpipCursorPlugin = {
+                id: 'dpipHourlyCursor',
+                afterDraw(chart) {
+                    const tooltip = chart.tooltip;
+                    if (!tooltip || !tooltip.getActiveElements) return;
+
+                    const active = tooltip.getActiveElements();
+                    if (!active || !active.length) return;
+
+                    const activeElement = active.find(item => item.datasetIndex === 1) || active[0];
+                    if (!activeElement || !activeElement.element) return;
+
+                    const element = activeElement.element;
+                    const x = element.x;
+                    const y = element.y;
+                    const chartArea = chart.chartArea;
+
+                    if (!Number.isFinite(x) || !Number.isFinite(y) || !chartArea) return;
+
+                    const c = chart.ctx;
+                    c.save();
+
+                    // 垂直虛線：由圖表頂端一路連到目前整點。
+                    c.beginPath();
+                    c.setLineDash([7, 7]);
+                    c.lineWidth = 2;
+                    c.strokeStyle = 'rgba(220, 38, 38, 0.42)';
+                    c.moveTo(x, chartArea.top);
+                    c.lineTo(x, chartArea.bottom);
+                    c.stroke();
+
+                    // DPIP 類似的滑動大圓點。
+                    c.setLineDash([]);
+                    c.beginPath();
+                    c.arc(x, y, 9, 0, Math.PI * 2);
+                    c.fillStyle = '#dc2626';
+                    c.fill();
+                    c.lineWidth = 4;
+                    c.strokeStyle = '#ffffff';
+                    c.stroke();
+
+                    c.restore();
+                }
+            };
+
             tempChart = new Chart(ctx, {
                 type: 'line',
+                plugins: [dpipCursorPlugin],
                 data: {
                     datasets: [
                         {
-                            // ① CWA 10 分鐘主曲線：只負責畫線，不負責滑動吸附。
+                            // CWA 10 分鐘主曲線：完整保留，不改成每小時資料。
                             label: 'CWA 10分鐘氣溫',
                             data: points,
                             borderColor: '#06b6d4',
@@ -4326,8 +4371,7 @@ const popVal = getPopForStation(county, town);
                             pointHitRadius: 0
                         },
                         {
-                            // ② 每小時互動點：透明、不破壞 DPIP 外觀，
-                            // 但手指滑動時只吸附整點。
+                            // 每小時互動點：平常隱藏，滑動時由 DPIP cursor plugin 顯示。
                             label: '每小時氣溫',
                             data: hourlyPoints,
                             borderColor: 'rgba(0,0,0,0)',
@@ -4336,8 +4380,8 @@ const popVal = getPopForStation(county, town);
                             fill: false,
                             showLine: false,
                             pointRadius: 0,
-                            pointHoverRadius: 5,
-                            pointHitRadius: 22
+                            pointHoverRadius: 0,
+                            pointHitRadius: 24
                         }
                     ]
                 },
@@ -4345,6 +4389,7 @@ const popVal = getPopForStation(county, town);
                     responsive: true,
                     maintainAspectRatio: false,
                     parsing: false,
+                    events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'touchend'],
                     interaction: {
                         mode: 'nearest',
                         intersect: false,
@@ -4354,16 +4399,24 @@ const popVal = getPopForStation(county, town);
                         legend: { display: false },
                         tooltip: {
                             filter: (context) => context.datasetIndex === 1,
+                            displayColors: false,
+                            backgroundColor: '#ffffff',
+                            titleColor: '#111827',
+                            bodyColor: '#111827',
+                            borderColor: 'rgba(220, 38, 38, 0.55)',
+                            borderWidth: 2,
+                            padding: 12,
+                            cornerRadius: 14,
                             callbacks: {
                                 title: (context) => {
                                     const raw = context[0]?.raw;
                                     return raw && Number.isFinite(Number(raw.x))
-                                        ? formatTooltipTime(raw.x)
+                                        ? formatHour(raw.x)
                                         : '';
                                 },
                                 label: context =>
                                     Number.isFinite(context.parsed.y)
-                                        ? `氣溫：${Number(context.parsed.y).toFixed(1)} °C`
+                                        ? `${Number(context.parsed.y).toFixed(1)} °C`
                                         : ''
                             }
                         }
@@ -4377,8 +4430,8 @@ const popVal = getPopForStation(county, town);
                             ticks: {
                                 color: '#475569',
                                 font: { size: 12 },
-                                // DPIP 類似：畫面上的時間文字每 2 小時一格，
-                                // 但實際滑動資料每 1 小時一格。
+                                // 底部只顯示每 2 小時一個刻度，但格式為 16:00，
+                                // 不再顯示「16時」。
                                 stepSize: 2 * 60 * 60 * 1000,
                                 autoSkip: false,
                                 maxTicksLimit: 13,
@@ -4388,7 +4441,7 @@ const popVal = getPopForStation(county, town);
                                 callback: function(value) {
                                     const d = new Date(Number(value));
                                     if (Number.isNaN(d.getTime())) return '';
-                                    return `${String(d.getHours()).padStart(2, '0')}時`;
+                                    return `${String(d.getHours()).padStart(2, '0')}:00`;
                                 }
                             }
                         } : {
