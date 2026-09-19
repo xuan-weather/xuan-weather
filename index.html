@@ -972,17 +972,33 @@
             #ffff22 46%, #ffd33d 54%, #f47f2c 62%, #f02e23 70%, #c51f18 78%, #8f120d 84%, #ed2df1 92%, #8618f2 100%);}
         .radar-legend-labels{display:flex;flex-direction:column;justify-content:space-between;font-size:11px;line-height:1;color:var(--legend-text);padding:0;}
         .radar-load-status{position:absolute;z-index:1001;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 16px;border-radius:999px;background:rgba(9,13,22,.82);color:#cbd5e1;font-size:14px;display:none;pointer-events:none;}
-        /* 全台地圖「📍所在地」定位控制：放在右下角＋／－上方 */
+        /* 全台地圖右下角控制固定排列：
+           上：📍定位
+           中：＋／－
+           下：全螢幕
+           使用 flex + order，避免 Leaflet／Safari 因加入順序造成排列顛倒。 */
         .map-container-wrapper .leaflet-bottom.leaflet-right{
-            display:block;
+            display:flex !important;
+            flex-direction:column !important;
+            align-items:flex-end !important;
+            gap:10px !important;
         }
         .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control{
-            float:none;
-            clear:both;
-            margin-right:0;
+            float:none !important;
+            clear:both !important;
+            margin-right:0 !important;
+            margin-left:0 !important;
+            margin-top:0 !important;
+            margin-bottom:0 !important;
         }
-        .map-location-control{
-            margin-bottom:10px !important;
+        .map-container-wrapper .leaflet-bottom.leaflet-right .map-location-control{
+            order:1 !important;
+        }
+        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-zoom{
+            order:2 !important;
+        }
+        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
+            order:3 !important;
         }
         .map-location-button{
             width:34px;
@@ -4715,7 +4731,8 @@ const popVal = getPopForStation(county, town);
             };
             mapLocationControl.addTo(map);
 
-            // 明確排列：📍定位 → ＋／－ → 全螢幕，避免 Leaflet／Safari 依加入順序改變位置。
+            // 明確排列：上方 📍定位 → 中間 ＋／－ → 下方 全螢幕。
+            // 同時用 CSS order 固定視覺順序，避免 Leaflet／Safari 改變控制項加入順序。
             const mapBottomRight = map._controlCorners && map._controlCorners.bottomright;
             const mapZoomEl = mapZoomControl.getContainer ? mapZoomControl.getContainer() : null;
             const mapLocationEl = mapLocationControl.getContainer ? mapLocationControl.getContainer() : null;
@@ -4725,8 +4742,10 @@ const popVal = getPopForStation(county, town);
                 mapBottomRight.appendChild(mapZoomEl);
                 if (mapFullscreenEl) {
                     mapBottomRight.appendChild(mapFullscreenEl);
-                    mapFullscreenEl.style.marginTop = '10px';
                 }
+                if (mapLocationEl) mapLocationEl.style.order = '1';
+                if (mapZoomEl) mapZoomEl.style.order = '2';
+                if (mapFullscreenEl) mapFullscreenEl.style.order = '3';
             }
 
                                       
