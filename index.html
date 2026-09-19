@@ -3890,6 +3890,16 @@ const popVal = getPopForStation(county, town);
         
         function updateDashboardWithStation(targetStation) {
             const data = parseStationElement(targetStation);
+            // 測站詳細頁的「日累積雨量」必須使用 CWA O-A0002-001，
+            // 不使用 O-A0003-001 的 WeatherElement.Now.Precipitation，
+            // 避免同一測站出現「排行榜有雨量、詳細頁卻是 0.0 mm」的情況。
+            const targetRainStation = latestRainfallStationData.find(s =>
+                String(s?.StationId ?? '') === String(targetStation?.StationId ?? '')
+            );
+            const rainfallNow = targetRainStation ? parseCwaRainfallStation(targetRainStation) : NaN;
+            if (Number.isFinite(rainfallNow)) {
+                data.rain = rainfallNow;
+            }
             const county = (targetStation.GeoInfo?.CountyName || '').replace('台', '臺');
             const town = targetStation.GeoInfo?.TownName || '';
             const townName = town ? ` (${town})` : '';
@@ -4357,6 +4367,13 @@ const popVal = getPopForStation(county, town);
                 const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
                 if (!isNaN(lat) && !isNaN(lon)) {
                     const data = parseStationElement(station);
+                    // 地圖「日雨量」改用 CWA O-A0002-001 的正式雨量測站資料，
+                    // 以 StationId 精準對應，不再拿 O-A0003-001 的雨量欄位代替。
+                    const rainStation = latestRainfallStationData.find(s =>
+                        String(s?.StationId ?? '') === String(station?.StationId ?? '')
+                    );
+                    const rainfallNow = rainStation ? parseCwaRainfallStation(rainStation) : NaN;
+                    const mapRain = Number.isFinite(rainfallNow) ? rainfallNow : data.rain;
                     const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
                     const town = station.GeoInfo?.TownName || '';
                     const popVal = getPopForStation(county, town);
@@ -4377,7 +4394,7 @@ const popVal = getPopForStation(county, town);
                         color = getHumidityColor(val);
                         unit = '%';
                     } else if (currentMapMode === 'rain') {
-                        val = data.rain;
+                        val = mapRain;
                         color = getRainColor(val);
                         unit = 'mm';
                     } else if (currentMapMode === 'wind') {
@@ -4427,7 +4444,7 @@ const popVal = getPopForStation(county, town);
                             <p><b>天氣：</b>${wxInfo.text}</p>
                             <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
                             <p><b>降雨機率：</b>${popForStation} %</p>
-                            <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
+                            <p><b>日雨量：</b>${mapRain.toFixed(1)} mm</p>
                             <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s（${getWindLevel(data.windSpeed)}）</p>                             <p><b>最大陣風：</b>${data.windGust.toFixed(1)} m/s（${getWindLevel(data.windGust)}）</p>
                             <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + ' %' : '--'}</p>
                             <button onclick="openStationHistory(weatherStationData.find(s => String(s.StationId) === '${String(station.StationId || '').replace(/'/g, "\\'")}'))"
