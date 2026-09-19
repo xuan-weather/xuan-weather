@@ -1010,9 +1010,9 @@
         .map-location-button.locating i{animation:radarLocatePulse 1s ease-in-out infinite;}
 /* 全台地圖右下角：全螢幕 → ＋／－ → 定位 */
 #map .leaflet-bottom.leaflet-right{display:flex!important;flex-direction:column!important;align-items:flex-end!important;}
-#map .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{order:1!important;margin-top:0!important;}
+#map .leaflet-bottom.leaflet-right .map-location-control{order:1!important;margin-top:0!important;}
 #map .leaflet-bottom.leaflet-right .leaflet-control-zoom{order:2!important;margin-top:10px!important;}
-#map .leaflet-bottom.leaflet-right .map-location-control{order:3!important;margin-top:10px!important;}
+#map .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{order:3!important;margin-top:10px!important;}
 
         .map-location-popup{font-size:13px;line-height:1.55;}
         .map-location-popup b{color:#4285f4;}
@@ -1042,9 +1042,9 @@
         .radar-location-button.locating i{animation:radarLocatePulse 1s ease-in-out infinite;}
 /* 雷達回波右下角：全螢幕 → ＋／－ → 定位 */
 .radar-page-map-wrap .leaflet-bottom.leaflet-right{display:flex!important;flex-direction:column!important;align-items:flex-end!important;}
-.radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{order:1!important;margin-top:0!important;}
+.radar-page-map-wrap .leaflet-bottom.leaflet-right .radar-location-control{order:1!important;margin-top:0!important;}
 .radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-zoom{order:2!important;margin-top:10px!important;}
-.radar-page-map-wrap .leaflet-bottom.leaflet-right .radar-location-control{order:3!important;margin-top:10px!important;}
+.radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{order:3!important;margin-top:10px!important;}
 
         @keyframes radarLocatePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
         /* DPIP 風格所在地定位標記：藍色定位點＋白色外框＋淡藍定位範圍 */
