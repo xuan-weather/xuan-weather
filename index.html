@@ -2425,6 +2425,20 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             }
         }
 
+        function cleanInvalidStationHistoryZeros() {
+            if (!stationHistoryCache || typeof stationHistoryCache !== 'object') return;
+            let changed = false;
+            Object.keys(stationHistoryCache).forEach(id => {
+                const arr = Array.isArray(stationHistoryCache[id]) ? stationHistoryCache[id] : [];
+                const cleaned = arr.filter(point => Number(point?.temp) !== 0);
+                if (cleaned.length !== arr.length) {
+                    stationHistoryCache[id] = cleaned;
+                    changed = true;
+                }
+            });
+            if (changed) saveStationHistoryCache();
+        }
+
         function getStationHistoryId(station) {
             return String(station.StationId || station.StationName || '');
         }
@@ -2435,7 +2449,9 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
             const ts = Date.parse(obsRaw || '') || Date.now();
             return {
                 ts,
-                temp: Number.isFinite(data.temp) ? data.temp : null,
+                // 0°C 在這個低海拔測站歷史資料中是缺值殘留，不作為有效氣溫保存。
+                // 真正沒有氣溫時一律保存為 null，避免圖表畫出假的 0°C。
+                temp: Number.isFinite(data.temp) && data.temp !== 0 ? data.temp : null,
                 rain: Number.isFinite(data.rain) ? data.rain : null,
                 humidity: data.humidity === '--' ? null : Number(data.humidity),
                 wind: Number.isFinite(data.windSpeed) ? data.windSpeed : null
@@ -2632,6 +2648,7 @@ const STATION_HISTORY_SAMPLE_MS = 10 * 60 * 1000;
         });
 
         loadStationHistoryCache();
+        cleanInvalidStationHistoryZeros();
         loadAirQualityHistoryCache();
 
         document.addEventListener('keydown', event => {
@@ -4050,14 +4067,15 @@ const popVal = getPopForStation(county, town);
                     const temp = Number(point?.temp);
                     return Number.isFinite(ts) &&
                            ts >= cutoff &&
-                           Number.isFinite(temp);
+                           Number.isFinite(temp) &&
+                           temp !== 0;
                 })
                 .sort((a, b) => Number(a.ts) - Number(b.ts));
 
             // 補入目前這一筆實際 CWA 觀測。
             const currentObsRaw = station.ObsTime?.DateTime || station.ObsTime || obsTimeString;
             const currentObsTs = Date.parse(currentObsRaw || '');
-            if (Number.isFinite(currentObsTs) && Number.isFinite(currentTemp)) {
+            if (Number.isFinite(currentObsTs) && Number.isFinite(currentTemp) && currentTemp !== 0) {
                 const exists = history.some(point => Math.abs(Number(point.ts) - currentObsTs) < 30000);
                 if (!exists) {
                     history.push({ ts: currentObsTs, temp: currentTemp });
