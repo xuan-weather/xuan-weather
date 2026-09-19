@@ -93,7 +93,6 @@
             color: #fff;
             box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
         }
-
         .content-panel { display: none; }
         .content-panel.active { display: block; }
         .modern-dashboard {
@@ -985,38 +984,6 @@
         .radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
             margin-top:10px !important;
         }
-        /* 全台地圖「📍所在地」定位控制 */
-        .map-location-control{
-            margin-top:10px !important;
-        }
-        .map-location-button{
-            width:34px;
-            height:34px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            background:#fff;
-            color:#0f172a;
-            border:2px solid rgba(0,0,0,.18);
-            border-radius:4px;
-            box-shadow:0 1px 5px rgba(0,0,0,.45);
-            cursor:pointer;
-            font-size:18px;
-            line-height:1;
-        }
-        .map-location-button:hover{background:#f1f5f9;color:#0ea5e9;}
-        .map-location-button:active{transform:scale(.96);}
-        .map-location-button.locating{color:#0ea5e9;}
-        .map-location-button.locating i{animation:radarLocatePulse 1s ease-in-out infinite;}
-/* 全台地圖右下角：全螢幕 → ＋／－ → 定位 */
-#map .leaflet-bottom.leaflet-right{display:flex!important;flex-direction:column!important;align-items:flex-end!important;}
-#map .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{order:1!important;margin-top:0!important;}
-#map .leaflet-bottom.leaflet-right .leaflet-control-zoom{order:2!important;margin-top:10px!important;}
-#map .leaflet-bottom.leaflet-right .map-location-control{order:3!important;margin-top:10px!important;}
-
-        .map-location-popup{font-size:13px;line-height:1.55;}
-        .map-location-popup b{color:#4285f4;}
-
         /* 雷達圖「📍所在地」定位控制 */
         .radar-location-control{
             margin-top:10px !important;
@@ -1040,12 +1007,6 @@
         .radar-location-button:active{transform:scale(.96);}
         .radar-location-button.locating{color:#0ea5e9;}
         .radar-location-button.locating i{animation:radarLocatePulse 1s ease-in-out infinite;}
-/* 雷達回波右下角：全螢幕 → ＋／－ → 定位 */
-.radar-page-map-wrap .leaflet-bottom.leaflet-right{display:flex!important;flex-direction:column!important;align-items:flex-end!important;}
-.radar-page-map-wrap .leaflet-bottom.leaflet-right .radar-location-control{order:1!important;margin-top:0!important;}
-.radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-zoom{order:2!important;margin-top:10px!important;}
-.radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{order:3!important;margin-top:10px!important;}
-
         @keyframes radarLocatePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
         /* DPIP 風格所在地定位標記：藍色定位點＋白色外框＋淡藍定位範圍 */
         .dpip-location-marker-wrap{
@@ -1312,12 +1273,6 @@
                 <div class="chart-box">
                     <canvas id="tempChart"></canvas>
                 </div>
-            </div>
-            <div id="dashboardSourceInfo" style="margin: 14px 4px 0; padding-top: 10px; border-top: 1px solid var(--panel-border); text-align: center; font-size: 11px; color: var(--text-muted); line-height: 1.8;">
-                📚 資料來源：
-                <span style="display:inline-block; margin:0 4px;">交通部中央氣象署</span>
-                <span style="display:inline-block; margin:0 4px;">環境部空氣品質監測網</span>
-                <span style="display:inline-block; margin:0 4px;">政府資料開放平台</span>
             </div>
             <div id="visitorInlineStats" style="margin: 8px 4px 0; text-align: center; font-size: 11px; color: var(--text-muted); line-height: 1.5;">
                 👁️ 本站瀏覽人次：<span id="visitorInlineCount" style="font-weight: 600;">--</span>
@@ -2208,7 +2163,6 @@ let cityStationMapping = {};
             if (timeEl) timeEl.innerText = timeStr;
         }
         
-
         function toggleTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -4641,43 +4595,9 @@ const popVal = getPopForStation(county, town);
             }).setView([23.5, 121.0], 8);
 
             // 全台地圖新增與雷達合成回波圖相同的「＋／－」縮放控制，放在右下角
-            const mapZoomControl = L.control.zoom({ position: 'bottomright' }).addTo(map);
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-            // 恢復全台地圖「📍所在地」定位：使用手機／瀏覽器 GPS，將所在地標示在地圖上。
-            const mapLocationControl = L.control({ position: 'bottomright' });
-            mapLocationControl.onAdd = function(){
-                const container = L.DomUtil.create('div','leaflet-control map-location-control');
-                const button = L.DomUtil.create('button','map-location-button',container);
-                button.type='button';
-                button.title='定位所在地';
-                button.setAttribute('aria-label','定位所在地');
-                button.innerHTML='<i class="fas fa-location-crosshairs"></i>';
-                L.DomEvent.disableClickPropagation(container);
-                L.DomEvent.on(button,'click',function(e){
-                    L.DomEvent.stopPropagation(e);
-                    locateMapUser(button);
-                });
-                return container;
-            };
-            mapLocationControl.addTo(map);
-
-            // 右下角固定排列：＋／－ → 📍所在地 → 全螢幕。
-            const mapBottomRight = map._controlCorners && map._controlCorners.bottomright;
-            const mapZoomEl = mapZoomControl.getContainer ? mapZoomControl.getContainer() : null;
-            const mapLocationEl = mapLocationControl.getContainer ? mapLocationControl.getContainer() : null;
-            const mapFullscreenEl = mapBottomRight ? mapBottomRight.querySelector('.leaflet-control-fullscreen') : null;
-            if(mapBottomRight && mapZoomEl && mapLocationEl && mapFullscreenEl){
-                mapBottomRight.appendChild(mapZoomEl);
-                mapBottomRight.appendChild(mapLocationEl);
-                mapBottomRight.appendChild(mapFullscreenEl);
-                mapLocationEl.style.marginTop='10px';
-                mapFullscreenEl.style.marginTop='10px';
-            } else if(mapBottomRight && mapZoomEl && mapLocationEl){
-                mapBottomRight.appendChild(mapZoomEl);
-                mapBottomRight.appendChild(mapLocationEl);
-                mapLocationEl.style.marginTop='10px';
-            }
-
+                                      
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-eGP, and the GIS User Community',
                 maxZoom: 18,
@@ -5183,7 +5103,7 @@ const popVal = getPopForStation(county, town);
             // 將 dBZ 圖例放進 Leaflet 地圖容器，進入全螢幕時圖例也會一起顯示
             const radarLegend=document.querySelector('.radar-page-legend');
             if(radarLegend && radarLegend.parentElement !== el){ el.appendChild(radarLegend); }
-            // 固定雷達控制順序：最上方定位，中間＋／－，最下方全螢幕
+            // 固定雷達控制順序：＋／－在上，全螢幕在下
             const radarZoomControl = L.control.zoom({position:'bottomright'}).addTo(radarMap);
 
             // 雷達圖新增「📍所在地」：使用手機/瀏覽器 GPS 定位，並在雷達圖上標示位置與誤差範圍
@@ -5239,56 +5159,6 @@ const popVal = getPopForStation(county, town);
             repairFullscreenMapLayout(radarMap);
             loadCwaRadarImage();
         }
-        let mapUserLocationMarker = null;
-        let mapUserLocationAccuracy = null;
-
-        function locateMapUser(button){
-            if(!map) return;
-            if(!navigator.geolocation){
-                alert('此瀏覽器不支援所在地定位功能');
-                return;
-            }
-            button.classList.add('locating');
-            button.disabled=true;
-            button.title='正在取得所在地…';
-            navigator.geolocation.getCurrentPosition(function(position){
-                const lat=position.coords.latitude;
-                const lng=position.coords.longitude;
-                const accuracy=Math.max(1,position.coords.accuracy||0);
-                const latlng=[lat,lng];
-                if(mapUserLocationMarker){
-                    mapUserLocationMarker.setLatLng(latlng);
-                }else{
-                    mapUserLocationMarker=L.marker(latlng,{
-                        icon:L.divIcon({className:'dpip-location-marker-wrap',html:'<div class="dpip-location-marker"><span class="dpip-location-pulse"></span><span class="dpip-location-dot"></span></div>',iconSize:[28,28],iconAnchor:[14,14]}),
-                        zIndexOffset:1000
-                    }).addTo(map);
-                    mapUserLocationAccuracy=L.circle(latlng,{radius:accuracy,color:'#4285f4',weight:2,fillColor:'#4285f4',fillOpacity:.14,interactive:false,zIndexOffset:900}).addTo(map);
-                }
-                if(mapUserLocationAccuracy) mapUserLocationAccuracy.setLatLng(latlng).setRadius(accuracy);
-
-                getTaiwanLocationName(lat,lng).then(name=>{
-                    mapUserLocationMarker.bindPopup(
-                        '<div class="map-location-popup"><b>📍 所在地｜'+name+'</b></div>'
-                    );
-                    mapUserLocationMarker.openPopup();
-                });
-                map.setView(latlng,Math.max(map.getZoom(),10),{animate:true});
-                button.classList.remove('locating');
-                button.disabled=false;
-                button.title='重新定位所在地';
-            },function(error){
-                let message='無法取得所在地';
-                if(error&&error.code===1) message='定位權限被拒絕，請到瀏覽器／手機設定允許此網站使用位置';
-                else if(error&&error.code===2) message='目前無法取得位置，請確認 GPS／定位服務已開啟';
-                else if(error&&error.code===3) message='定位逾時，請再按一次 📍';
-                alert(message);
-                button.classList.remove('locating');
-                button.disabled=false;
-                button.title='定位所在地';
-            },{enableHighAccuracy:true,timeout:12000,maximumAge:30000});
-        }
-
         let radarUserLocationMarker = null;
         let radarUserLocationAccuracy = null;
         let radarImageForDbz = null;
