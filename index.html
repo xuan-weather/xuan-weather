@@ -651,6 +651,45 @@
             z-index: 10000;
         }
         
+        /* 右下角控制固定為：定位 → ＋／－ → 全螢幕。
+           使用獨立 stack，避免 Leaflet 的 float/外掛重新排序。 */
+        #map .leaflet-bottom.leaflet-right,
+        .radar-page-map-wrap .leaflet-bottom.leaflet-right {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-end !important;
+            justify-content: flex-end !important;
+        }
+        #map .leaflet-bottom.leaflet-right > .map-control-stack,
+        .radar-page-map-wrap .leaflet-bottom.leaflet-right > .map-control-stack {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-end !important;
+            justify-content: flex-end !important;
+            gap: 10px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            float: none !important;
+            clear: both !important;
+        }
+        #map .map-control-stack > .leaflet-control,
+        .radar-page-map-wrap .map-control-stack > .leaflet-control {
+            float: none !important;
+            clear: none !important;
+            margin: 0 !important;
+            position: relative !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
+            bottom: auto !important;
+        }
+        #map .map-control-stack > .map-location-control,
+        .radar-page-map-wrap .map-control-stack > .radar-location-control { order: 1 !important; }
+        #map .map-control-stack > .leaflet-control-zoom,
+        .radar-page-map-wrap .map-control-stack > .leaflet-control-zoom { order: 2 !important; }
+        #map .map-control-stack > .leaflet-control-fullscreen,
+        .radar-page-map-wrap .map-control-stack > .leaflet-control-fullscreen { order: 3 !important; }
+
         .leaflet-control-attribution { display: none !important; }
         .leaflet-top.leaflet-left { z-index: 1000; }
         .custom-vertical-legend {
@@ -1011,8 +1050,7 @@
         .map-location-popup{font-size:13px;line-height:1.55;}
         .map-location-popup b{color:#4285f4;}
         .map-location-popup span{color:#334155;}
-/* 右下角控制固定排列：①定位 → ②＋／－ → ③全螢幕
-   全台地圖與雷達回波完全使用相同順序。 */
+/* 右下角控制固定排列：定位 → ＋／－ → 全螢幕 */
 #map .leaflet-bottom.leaflet-right,
 .radar-page-map-wrap .leaflet-bottom.leaflet-right{
     display:flex !important;
@@ -1022,33 +1060,18 @@
     gap:10px !important;
     float:none !important;
 }
-
-/* Leaflet 預設會用 float 排列控制項；這裡強制取消，交給 flex + order。 */
 #map .leaflet-bottom.leaflet-right > .leaflet-control,
 .radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control{
     float:none !important;
     clear:none !important;
     margin:0 !important;
-    position:relative !important;
 }
-
-/* 明確鎖定實際顯示順序 */
 #map .leaflet-bottom.leaflet-right > .map-location-control,
-.radar-page-map-wrap .leaflet-bottom.leaflet-right > .radar-location-control{
-    order:1 !important;
-}
-
+.radar-page-map-wrap .leaflet-bottom.leaflet-right > .radar-location-control{ order:1 !important; }
 #map .leaflet-bottom.leaflet-right > .leaflet-control-zoom,
-.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-zoom{
-    order:2 !important;
-}
-
+.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-zoom{ order:2 !important; }
 #map .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen,
-.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen{
-    order:3 !important;
-}
-
-/* 三個控制按鈕保持一致尺寸 */
+.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen{ order:3 !important; }
 #map .map-location-button,
 #map .leaflet-control-fullscreen a,
 .radar-page-map-wrap .radar-location-button,
@@ -4652,44 +4675,54 @@ const popVal = getPopForStation(county, town);
         }
 
 
-        // 強制鎖定兩張地圖右下角的實際 DOM + CSS 順序：
-        // ① 定位 → ② ＋／－ → ③ 全螢幕。
-        // Leaflet 外掛可能在初始化後重新插入控制項，因此同時設定 DOM 順序與 flex order。
+        // 強制把全台地圖與雷達回波右下角三個控制項放進同一個控制列，
+        // 固定視覺順序：① 定位 → ② ＋／－ → ③ 全螢幕。
+        // 使用獨立 wrapper，不依賴 Leaflet 原本的 float 排版，因此不會再出現全螢幕跑到最上面的情況。
         function forceMapControlOrder(mapInstance, locationClass){
             if(!mapInstance || !mapInstance._controlCorners || !mapInstance._controlCorners.bottomright) return;
-
             const corner = mapInstance._controlCorners.bottomright;
             const locationEl = corner.querySelector('.' + locationClass);
             const zoomEl = corner.querySelector('.leaflet-control-zoom');
             const fullscreenEl = corner.querySelector('.leaflet-control-fullscreen');
+            if(!locationEl || !zoomEl || !fullscreenEl) return;
 
-            corner.style.display='flex';
-            corner.style.flexDirection='column';
-            corner.style.alignItems='flex-end';
-            corner.style.justifyContent='flex-end';
-            corner.style.gap='10px';
-            corner.style.float='none';
+            let stack = corner.querySelector('.map-control-stack');
+            if(!stack){
+                stack = document.createElement('div');
+                stack.className = 'map-control-stack';
+                corner.appendChild(stack);
+            }
 
-            const controls = [
-                [locationEl, '1'],
-                [zoomEl, '2'],
-                [fullscreenEl, '3']
-            ];
-
-            controls.forEach(([el, order]) => {
-                if(!el) return;
-                el.style.float='none';
-                el.style.clear='none';
-                el.style.margin='0';
-                el.style.order=order;
-                el.style.position='relative';
+            // 固定 DOM 順序，並清除 Leaflet 控制項自己的浮動間距。
+            [locationEl, zoomEl, fullscreenEl].forEach(el => {
+                el.style.float = 'none';
+                el.style.clear = 'none';
+                el.style.margin = '0';
+                el.style.position = 'relative';
+                el.style.left = 'auto';
+                el.style.right = 'auto';
+                el.style.top = 'auto';
+                el.style.bottom = 'auto';
             });
 
-            // 重新 append 一次，確保 Leaflet 後續沒有把控制項插到錯的位置。
-            [locationEl, zoomEl, fullscreenEl]
-                .filter(Boolean)
-                .forEach(el => corner.appendChild(el));
+            stack.appendChild(locationEl);
+            stack.appendChild(zoomEl);
+            stack.appendChild(fullscreenEl);
         }
+
+        // Leaflet 全螢幕切換後可能重新整理控制項，重新套用相同排列。
+        document.addEventListener('fullscreenchange', () => {
+            setTimeout(() => {
+                forceMapControlOrder(map, 'map-location-control');
+                forceMapControlOrder(radarMap, 'radar-location-control');
+            }, 50);
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+            setTimeout(() => {
+                forceMapControlOrder(map, 'map-location-control');
+                forceMapControlOrder(radarMap, 'radar-location-control');
+            }, 50);
+        });
 
         function initMap() {
             if (mapInitialized) return;
@@ -4734,24 +4767,13 @@ const popVal = getPopForStation(county, town);
             };
             mapLocationControl.addTo(map);
 
-            // 右下角固定排列（依照指定順序）：最上方📍定位 → 中間＋／－ → 最下方全螢幕。
-            const mapBottomRight = map._controlCorners && map._controlCorners.bottomright;
-            const mapZoomEl = mapZoomControl.getContainer ? mapZoomControl.getContainer() : null;
-            const mapLocationEl = mapLocationControl.getContainer ? mapLocationControl.getContainer() : null;
-            const mapFullscreenEl = mapBottomRight ? mapBottomRight.querySelector('.leaflet-control-fullscreen') : null;
-            if(mapBottomRight && mapZoomEl && mapLocationEl && mapFullscreenEl){
-                mapBottomRight.appendChild(mapLocationEl);
-                mapBottomRight.appendChild(mapZoomEl);
-                mapBottomRight.appendChild(mapFullscreenEl);
-                mapLocationEl.style.marginTop='0';
-                mapZoomEl.style.marginTop='10px';
-                mapFullscreenEl.style.marginTop='10px';
-            } else if(mapBottomRight && mapZoomEl && mapLocationEl){
-                mapBottomRight.appendChild(mapLocationEl);
-                mapBottomRight.appendChild(mapZoomEl);
-                mapLocationEl.style.marginTop='0';
-                mapZoomEl.style.marginTop='10px';
-            }
+            // 右下角固定排列：定位 → ＋／－ → 全螢幕。
+            // forceMapControlOrder 會在全螢幕控制項存在後建立 stack。
+            forceMapControlOrder(map, 'map-location-control');
+            setTimeout(() => forceMapControlOrder(map, 'map-location-control'), 0);
+            setTimeout(() => forceMapControlOrder(map, 'map-location-control'), 100);
+            setTimeout(() => forceMapControlOrder(map, 'map-location-control'), 500);
+            setTimeout(() => forceMapControlOrder(map, 'map-location-control'), 1000);
 
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-eGP, and the GIS User Community',
@@ -4807,6 +4829,8 @@ const popVal = getPopForStation(county, town);
             forceMapControlOrder(map, 'map-location-control');
             setTimeout(() => forceMapControlOrder(map, 'map-location-control'), 0);
             setTimeout(() => forceMapControlOrder(map, 'map-location-control'), 300);
+            setTimeout(() => forceMapControlOrder(map, 'map-location-control'), 500);
+            setTimeout(() => forceMapControlOrder(map, 'map-location-control'), 1000);
             mapInitialized = true;
             bindFullscreenLayoutFix(map);
             renderMapMarkers();
@@ -5285,28 +5309,10 @@ const popVal = getPopForStation(county, town);
 
             if(L.control.fullscreen){
                 const radarFullscreenControl = L.control.fullscreen({position:'bottomright',forceSeparateButton:true}).addTo(radarMap);
-                const bottomRight = radarMap._controlCorners && radarMap._controlCorners.bottomright;
-                const zoomEl = radarZoomControl.getContainer ? radarZoomControl.getContainer() : null;
-                const locationEl = radarLocationControl.getContainer ? radarLocationControl.getContainer() : null;
-                const fullscreenEl = radarFullscreenControl.getContainer ? radarFullscreenControl.getContainer() : null;
-                if(bottomRight && zoomEl && locationEl && fullscreenEl){
-                    bottomRight.appendChild(locationEl);
-                    bottomRight.appendChild(zoomEl);
-                    bottomRight.appendChild(fullscreenEl);
-                    locationEl.style.marginTop='0';
-                    zoomEl.style.marginTop='10px';
-                    fullscreenEl.style.marginTop='10px';
-                }
+                // 全螢幕控制項建立後，再由統一 stack 固定順序。
+                forceMapControlOrder(radarMap, 'radar-location-control');
             } else {
-                const bottomRight = radarMap._controlCorners && radarMap._controlCorners.bottomright;
-                const zoomEl = radarZoomControl.getContainer ? radarZoomControl.getContainer() : null;
-                const locationEl = radarLocationControl.getContainer ? radarLocationControl.getContainer() : null;
-                if(bottomRight && zoomEl && locationEl){
-                    bottomRight.appendChild(locationEl);
-                    bottomRight.appendChild(zoomEl);
-                    locationEl.style.marginTop='0';
-                    zoomEl.style.marginTop='10px';
-                }
+                forceMapControlOrder(radarMap, 'radar-location-control');
             }
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
                 attribution:'Tiles © Esri',maxZoom:18,updateWhenZooming:false,updateWhenIdle:true,keepBuffer:3
@@ -5317,6 +5323,8 @@ const popVal = getPopForStation(county, town);
             forceMapControlOrder(radarMap, 'radar-location-control');
             setTimeout(() => forceMapControlOrder(radarMap, 'radar-location-control'), 0);
             setTimeout(() => forceMapControlOrder(radarMap, 'radar-location-control'), 300);
+            setTimeout(() => forceMapControlOrder(radarMap, 'radar-location-control'), 500);
+            setTimeout(() => forceMapControlOrder(radarMap, 'radar-location-control'), 1000);
             radarInitialized=true;
             bindFullscreenLayoutFix(radarMap);
             repairFullscreenMapLayout(radarMap);
