@@ -985,21 +985,6 @@
         .radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
             margin-top:10px !important;
         }
-        /* 全台地圖與雷達回波右下控制順序：
-           由上到下＝定位 → ＋／－ → 全螢幕（最下面） */
-        #map .leaflet-bottom.leaflet-right,
-        .radar-page-map-wrap .leaflet-bottom.leaflet-right{
-            display:flex !important;
-            flex-direction:column !important;
-            align-items:flex-end !important;
-        }
-        #map .leaflet-bottom.leaflet-right .leaflet-control,
-        .radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control{
-            float:none !important;
-            clear:none !important;
-            margin-right:0 !important;
-        }
-
         /* 全台地圖「📍所在地」定位控制 */
         .map-location-control{
             margin-top:10px !important;
@@ -1023,6 +1008,12 @@
         .map-location-button:active{transform:scale(.96);}
         .map-location-button.locating{color:#0ea5e9;}
         .map-location-button.locating i{animation:radarLocatePulse 1s ease-in-out infinite;}
+/* 全台地圖右下角：全螢幕 → ＋／－ → 定位 */
+#map .leaflet-bottom.leaflet-right{display:flex!important;flex-direction:column!important;align-items:flex-end!important;}
+#map .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{order:1!important;margin-top:0!important;}
+#map .leaflet-bottom.leaflet-right .leaflet-control-zoom{order:2!important;margin-top:10px!important;}
+#map .leaflet-bottom.leaflet-right .map-location-control{order:3!important;margin-top:10px!important;}
+
         .map-location-popup{font-size:13px;line-height:1.55;}
         .map-location-popup b{color:#4285f4;}
 
@@ -1049,6 +1040,12 @@
         .radar-location-button:active{transform:scale(.96);}
         .radar-location-button.locating{color:#0ea5e9;}
         .radar-location-button.locating i{animation:radarLocatePulse 1s ease-in-out infinite;}
+/* 雷達回波右下角：全螢幕 → ＋／－ → 定位 */
+.radar-page-map-wrap .leaflet-bottom.leaflet-right{display:flex!important;flex-direction:column!important;align-items:flex-end!important;}
+.radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{order:1!important;margin-top:0!important;}
+.radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-zoom{order:2!important;margin-top:10px!important;}
+.radar-page-map-wrap .leaflet-bottom.leaflet-right .radar-location-control{order:3!important;margin-top:10px!important;}
+
         @keyframes radarLocatePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
         /* DPIP 風格所在地定位標記：藍色定位點＋白色外框＋淡藍定位範圍 */
         .dpip-location-marker-wrap{
@@ -4664,22 +4661,21 @@ const popVal = getPopForStation(county, town);
             };
             mapLocationControl.addTo(map);
 
-            // 右下角固定排列（由上到下）：📍所在地 → ＋／－ → 全螢幕。
-            // 與雷達回波圖完全相同：最上面定位、中間縮放、最下面全螢幕。
+            // 右下角固定排列：＋／－ → 📍所在地 → 全螢幕。
             const mapBottomRight = map._controlCorners && map._controlCorners.bottomright;
             const mapZoomEl = mapZoomControl.getContainer ? mapZoomControl.getContainer() : null;
             const mapLocationEl = mapLocationControl.getContainer ? mapLocationControl.getContainer() : null;
             const mapFullscreenEl = mapBottomRight ? mapBottomRight.querySelector('.leaflet-control-fullscreen') : null;
             if(mapBottomRight && mapZoomEl && mapLocationEl && mapFullscreenEl){
-                mapBottomRight.appendChild(mapLocationEl);
                 mapBottomRight.appendChild(mapZoomEl);
+                mapBottomRight.appendChild(mapLocationEl);
                 mapBottomRight.appendChild(mapFullscreenEl);
-                mapZoomEl.style.marginTop='10px';
+                mapLocationEl.style.marginTop='10px';
                 mapFullscreenEl.style.marginTop='10px';
             } else if(mapBottomRight && mapZoomEl && mapLocationEl){
-                mapBottomRight.appendChild(mapLocationEl);
                 mapBottomRight.appendChild(mapZoomEl);
-                mapZoomEl.style.marginTop='10px';
+                mapBottomRight.appendChild(mapLocationEl);
+                mapLocationEl.style.marginTop='10px';
             }
 
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -5187,7 +5183,7 @@ const popVal = getPopForStation(county, town);
             // 將 dBZ 圖例放進 Leaflet 地圖容器，進入全螢幕時圖例也會一起顯示
             const radarLegend=document.querySelector('.radar-page-legend');
             if(radarLegend && radarLegend.parentElement !== el){ el.appendChild(radarLegend); }
-            // 固定雷達控制順序（由上到下）：📍所在地 → ＋／－ → 全螢幕
+            // 固定雷達控制順序：＋／－在上，全螢幕在下
             const radarZoomControl = L.control.zoom({position:'bottomright'}).addTo(radarMap);
 
             // 雷達圖新增「📍所在地」：使用手機/瀏覽器 GPS 定位，並在雷達圖上標示位置與誤差範圍
@@ -5216,10 +5212,10 @@ const popVal = getPopForStation(county, town);
                 const locationEl = radarLocationControl.getContainer ? radarLocationControl.getContainer() : null;
                 const fullscreenEl = radarFullscreenControl.getContainer ? radarFullscreenControl.getContainer() : null;
                 if(bottomRight && zoomEl && locationEl && fullscreenEl){
-                    bottomRight.appendChild(locationEl);
                     bottomRight.appendChild(zoomEl);
+                    bottomRight.appendChild(locationEl);
                     bottomRight.appendChild(fullscreenEl);
-                    zoomEl.style.marginTop='10px';
+                    locationEl.style.marginTop='10px';
                     fullscreenEl.style.marginTop='10px';
                 }
             } else {
@@ -5227,9 +5223,9 @@ const popVal = getPopForStation(county, town);
                 const zoomEl = radarZoomControl.getContainer ? radarZoomControl.getContainer() : null;
                 const locationEl = radarLocationControl.getContainer ? radarLocationControl.getContainer() : null;
                 if(bottomRight && zoomEl && locationEl){
-                    bottomRight.appendChild(locationEl);
                     bottomRight.appendChild(zoomEl);
-                    zoomEl.style.marginTop='10px';
+                    bottomRight.appendChild(locationEl);
+                    locationEl.style.marginTop='10px';
                 }
             }
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
