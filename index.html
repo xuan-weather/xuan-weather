@@ -4303,10 +4303,13 @@ const popVal = getPopForStation(county, town);
 
             // DPIP 類似的「滑動點＋垂直虛線」：
             // 不再依賴 tooltip 是否剛好存在，改由 afterEvent 自己記住
-            // 目前滑到的「整點」；因此滑動過程中圓點與虛線不會忽隱忽現。
+            // 目前滑到的「10 分鐘資料點」；因此滑動過程中圓點與虛線不會忽隱忽現。
             let dpipSelectedIndex = -1;
 
-            const findNearestHourlyIndex = (chart, eventX) => {
+            const findNearestTemperatureIndex = (chart, eventX) => {
+                // 滑動選取改用「完整 10 分鐘資料」，而不是只吸附整點。
+                // 這樣最高溫若發生在 12:20、12:30、12:40 等非整點時間，
+                // 手指仍然可以滑到真正的最高溫資料點。
                 const meta = chart.getDatasetMeta(1);
                 const elements = meta?.data || [];
                 if (!elements.length) return -1;
@@ -4333,19 +4336,19 @@ const popVal = getPopForStation(county, town);
                     const event = args?.event;
                     if (!event) return;
 
-                    // 滑鼠與觸控都使用同一套整點吸附邏輯。
+                    // 滑鼠與觸控都使用同一套 10 分鐘資料吸附邏輯。
                     if (
                         event.type === 'mousemove' ||
                         event.type === 'touchstart' ||
                         event.type === 'touchmove'
                     ) {
-                        const index = findNearestHourlyIndex(chart, event.x);
+                        const index = findNearestTemperatureIndex(chart, event.x);
 
                         if (index >= 0) {
                             dpipSelectedIndex = index;
 
                             // 同步 Chart.js tooltip 的 active element，
-                            // 讓數值框與我們自己畫的圓點／虛線永遠是同一個整點。
+                            // 讓數值框、圓點與虛線永遠對準同一筆 10 分鐘資料。
                             chart.setActiveElements([
                                 {
                                     datasetIndex: 1,
@@ -4417,7 +4420,7 @@ const popVal = getPopForStation(county, town);
                     c.lineTo(x, chartArea.bottom);
                     c.stroke();
 
-                    // DPIP 類似的滑動大圓點：永遠跟目前整點同步。
+                    // DPIP 類似的滑動大圓點：永遠跟目前選取的 10 分鐘資料同步。
                     c.setLineDash([]);
                     c.beginPath();
                     c.arc(x, y, 9, 0, Math.PI * 2);
@@ -4453,9 +4456,10 @@ const popVal = getPopForStation(county, town);
                             pointHitRadius: 0
                         },
                         {
-                            // 每小時互動點：平常隱藏，滑動時由 DPIP cursor plugin 顯示。
-                            label: '每小時氣溫',
-                            data: hourlyPoints,
+                            // 完整 10 分鐘互動點：平常隱藏，滑動時由 DPIP cursor plugin 顯示。
+                            // 不再限制只能滑到整點，避免錯過非整點的最高溫／最低溫。
+                            label: '10分鐘互動氣溫',
+                            data: points,
                             borderColor: 'rgba(0,0,0,0)',
                             backgroundColor: 'rgba(0,0,0,0)',
                             borderWidth: 0,
@@ -4492,9 +4496,10 @@ const popVal = getPopForStation(county, town);
                             callbacks: {
                                 title: (context) => {
                                     const raw = context[0]?.raw;
-                                    return raw && Number.isFinite(Number(raw.x))
-                                        ? formatHour(raw.x)
-                                        : '';
+                                    if (!raw || !Number.isFinite(Number(raw.x))) return '';
+                                    const d = new Date(Number(raw.x));
+                                    if (Number.isNaN(d.getTime())) return '';
+                                    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
                                 },
                                 label: context =>
                                     Number.isFinite(context.parsed.y)
