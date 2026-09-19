@@ -4302,31 +4302,113 @@ const popVal = getPopForStation(county, town);
             };
 
             // DPIP 類似的「滑動點＋垂直虛線」：
-            // 手指滑動時，Chart.js 的 tooltip 會鎖定每小時資料點，
-            // 這個 plugin 再把該整點畫成大圓點並從圖頂到底畫虛線。
+            // 不再依賴 tooltip 是否剛好存在，改由 afterEvent 自己記住
+            // 目前滑到的「整點」；因此滑動過程中圓點與虛線不會忽隱忽現。
+            let dpipSelectedIndex = -1;
+
+            const findNearestHourlyIndex = (chart, eventX) => {
+                const meta = chart.getDatasetMeta(1);
+                const elements = meta?.data || [];
+                if (!elements.length) return -1;
+
+                let nearestIndex = -1;
+                let nearestDistance = Infinity;
+
+                for (let i = 0; i < elements.length; i++) {
+                    const el = elements[i];
+                    if (!el || !Number.isFinite(el.x)) continue;
+                    const distance = Math.abs(el.x - eventX);
+                    if (distance < nearestDistance) {
+                        nearestDistance = distance;
+                        nearestIndex = i;
+                    }
+                }
+                return nearestIndex;
+            };
+
             const dpipCursorPlugin = {
                 id: 'dpipHourlyCursor',
+
+                afterEvent(chart, args) {
+                    const event = args?.event;
+                    if (!event) return;
+
+                    // 滑鼠與觸控都使用同一套整點吸附邏輯。
+                    if (
+                        event.type === 'mousemove' ||
+                        event.type === 'touchstart' ||
+                        event.type === 'touchmove'
+                    ) {
+                        const index = findNearestHourlyIndex(chart, event.x);
+
+                        if (index >= 0) {
+                            dpipSelectedIndex = index;
+
+                            // 同步 Chart.js tooltip 的 active element，
+                            // 讓數值框與我們自己畫的圓點／虛線永遠是同一個整點。
+                            chart.setActiveElements([
+                                {
+                                    datasetIndex: 1,
+                                    index: dpipSelectedIndex
+                                }
+                            ]);
+
+                            if (chart.tooltip) {
+                                chart.tooltip.setActiveElements(
+                                    [{
+                                        datasetIndex: 1,
+                                        index: dpipSelectedIndex
+                                    }],
+                                    {
+                                        x: chart.getDatasetMeta(1).data[index].x,
+                                        y: chart.getDatasetMeta(1).data[index].y
+                                    }
+                                );
+                            }
+
+                            args.changed = true;
+                        }
+                    }
+
+                    // touchend 不清除選取點。
+                    // 這樣 iPhone 手指稍微離開螢幕時，圓點與虛線不會立刻消失。
+                    if (event.type === 'touchend' && dpipSelectedIndex >= 0) {
+                        chart.setActiveElements([
+                            {
+                                datasetIndex: 1,
+                                index: dpipSelectedIndex
+                            }
+                        ]);
+                        if (chart.tooltip) {
+                            chart.tooltip.setActiveElements([
+                                {
+                                    datasetIndex: 1,
+                                    index: dpipSelectedIndex
+                                }
+                            ]);
+                        }
+                        args.changed = true;
+                    }
+                },
+
                 afterDraw(chart) {
-                    const tooltip = chart.tooltip;
-                    if (!tooltip || !tooltip.getActiveElements) return;
+                    if (dpipSelectedIndex < 0) return;
 
-                    const active = tooltip.getActiveElements();
-                    if (!active || !active.length) return;
-
-                    const activeElement = active.find(item => item.datasetIndex === 1) || active[0];
-                    if (!activeElement || !activeElement.element) return;
-
-                    const element = activeElement.element;
-                    const x = element.x;
-                    const y = element.y;
+                    const meta = chart.getDatasetMeta(1);
+                    const element = meta?.data?.[dpipSelectedIndex];
                     const chartArea = chart.chartArea;
 
-                    if (!Number.isFinite(x) || !Number.isFinite(y) || !chartArea) return;
+                    if (!element || !chartArea) return;
+
+                    const x = element.x;
+                    const y = element.y;
+
+                    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
 
                     const c = chart.ctx;
                     c.save();
 
-                    // 垂直虛線：由圖表頂端一路連到目前整點。
+                    // 垂直虛線：固定由圖表頂端到底部。
                     c.beginPath();
                     c.setLineDash([7, 7]);
                     c.lineWidth = 2;
@@ -4335,7 +4417,7 @@ const popVal = getPopForStation(county, town);
                     c.lineTo(x, chartArea.bottom);
                     c.stroke();
 
-                    // DPIP 類似的滑動大圓點。
+                    // DPIP 類似的滑動大圓點：永遠跟目前整點同步。
                     c.setLineDash([]);
                     c.beginPath();
                     c.arc(x, y, 9, 0, Math.PI * 2);
@@ -4421,6 +4503,11 @@ const popVal = getPopForStation(county, town);
                             }
                         }
                     },
+                    layout: {
+                        padding: {
+                            bottom: 18
+                        }
+                    },
                     scales: {
                         x: hasTimeValues ? {
                             type: 'linear',
@@ -4435,9 +4522,10 @@ const popVal = getPopForStation(county, town);
                                 stepSize: 2 * 60 * 60 * 1000,
                                 autoSkip: false,
                                 maxTicksLimit: 13,
-                                minRotation: 0,
-                                maxRotation: 0,
-                                padding: 10,
+                                // 時間刻度改成斜 45°，避免 iPhone 寬度不足時互相吃字。
+                                minRotation: 45,
+                                maxRotation: 45,
+                                padding: 12,
                                 callback: function(value) {
                                     const d = new Date(Number(value));
                                     if (Number.isNaN(d.getTime())) return '';
