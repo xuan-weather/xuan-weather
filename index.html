@@ -5261,7 +5261,7 @@ const popVal = getPopForStation(county, town);
 
                 getTaiwanLocationName(lat,lng).then(name=>{
                     mapUserLocationMarker.bindPopup(
-                        '<div class="map-location-popup"><b>📍 所在地｜'+name+'</b><br><span>定位精度：±'+Math.round(accuracy)+' 公尺</span></div>'
+                        '<div class="map-location-popup"><b>📍 所在地｜'+name+'</b><br><span>🎯 定位精度範圍：約 ±'+Math.round(accuracy)+' 公尺</span></div>'
                     );
                     mapUserLocationMarker.openPopup();
                 });
@@ -5431,7 +5431,7 @@ const popVal = getPopForStation(county, town);
                 const dbzText=dbz===null ? '暫無回波資料' : (dbz+' dBZ');
                 getTaiwanLocationName(lat,lng).then(name=>{
                     radarUserLocationMarker.bindPopup(
-                        '<div class="radar-location-popup"><b>📍 所在地｜'+name+'</b><br><span>定位精度：±'+Math.round(accuracy)+' 公尺</span><br><span>🌧️ 雷達回波：約 <strong>'+dbzText+'</strong></span></div>'
+                        '<div class="radar-location-popup"><b>📍 所在地｜'+name+'</b><br><span>🎯 定位精度範圍：約 ±'+Math.round(accuracy)+' 公尺</span><br><span>🌧️ 雷達回波：約 <strong>'+dbzText+'</strong></span></div>'
                     );
                     radarUserLocationMarker.openPopup();
                 });
