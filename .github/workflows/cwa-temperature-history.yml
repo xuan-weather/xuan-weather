@@ -1,0 +1,129 @@
+name: CWA 10-Minute Temperature History
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/10 * * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-temperature-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch CWA O-A0003-001
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -e
+          mkdir -p data/history
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-o-a0003-001.json
+
+      - name: Update rolling 30-hour history
+        run: |
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timedelta, timezone
+
+          source = "/tmp/cwa-o-a0003-001.json"
+          output = "data/history/cwa-o-a0003-001-history.json"
+
+          with open(source, "r", encoding="utf-8") as f:
+              payload = json.load(f)
+
+          stations = (
+              payload.get("records", {}).get("Station")
+              or payload.get("result", {}).get("records", {}).get("Station")
+              or []
+          )
+          if not isinstance(stations, list):
+              raise SystemExit("CWA O-A0003-001 找不到 records.Station")
+
+          history = {"generatedAt": None, "stations": {}}
+          if os.path.exists(output):
+              try:
+                  with open(output, "r", encoding="utf-8") as f:
+                      old = json.load(f)
+                  if isinstance(old, dict) and isinstance(old.get("stations"), dict):
+                      history = old
+              except Exception:
+                  pass
+
+          cutoff_ms = int((datetime.now(timezone.utc) - timedelta(hours=30)).timestamp() * 1000)
+
+          for station in stations:
+              if not isinstance(station, dict):
+                  continue
+              station_id = str(station.get("StationId") or "").strip()
+              if not station_id:
+                  continue
+
+              obs = station.get("ObsTime")
+              if isinstance(obs, dict):
+                  obs = obs.get("DateTime") or obs.get("dateTime")
+              if not obs:
+                  continue
+
+              try:
+                  dt = datetime.fromisoformat(str(obs).replace("Z", "+00:00"))
+                  if dt.tzinfo is None:
+                      dt = dt.replace(tzinfo=timezone.utc)
+                  ts_ms = int(dt.timestamp() * 1000)
+              except Exception:
+                  continue
+
+              weather = station.get("WeatherElement") or {}
+              try:
+                  temp = float(weather.get("AirTemperature", weather.get("TEMP")))
+              except (TypeError, ValueError):
+                  continue
+
+              if temp == 0 or temp < -50 or temp > 60:
+                  continue
+
+              history["stations"].setdefault(station_id, []).append({
+                  "ts": ts_ms,
+                  "temp": round(temp, 1)
+              })
+
+          for station_id, arr in list(history["stations"].items()):
+              unique = {}
+              for point in arr:
+                  try:
+                      ts = int(point["ts"])
+                      temp = float(point["temp"])
+                  except (KeyError, TypeError, ValueError):
+                      continue
+                  if ts >= cutoff_ms and temp != 0:
+                      unique[ts] = {"ts": ts, "temp": round(temp, 1)}
+              cleaned = [unique[k] for k in sorted(unique)]
+              if cleaned:
+                  history["stations"][station_id] = cleaned
+              else:
+                  del history["stations"][station_id]
+
+          history["generatedAt"] = datetime.now(timezone.utc).isoformat()
+          with open(output, "w", encoding="utf-8") as f:
+              json.dump(history, f, ensure_ascii=False, separators=(",", ":"))
+
+          print("CWA 10分鐘歷史測站數：", len(history["stations"]))
+          PY
+
+      - name: Commit history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/history/cwa-o-a0003-001-history.json
+          if git diff --cached --quiet; then
+            echo "歷史資料沒有變化，不需要提交"
+          else
+            git commit -m "Update CWA 10-minute temperature history"
+            git push
+          fi
