@@ -4037,10 +4037,7 @@ const popVal = getPopForStation(county, town);
                 return;
             }
 
-            // 重要：不再使用人工模擬的 sin() 溫度。
-            // 直接使用網站已保存的 CWA 實際觀測資料。
-            // 目前網站維持每 1 小時同步一次，因此這裡會依目前網站實際
-            // 已取得的觀測批次形成約每小時一筆的 24 小時曲線。
+            // 使用網站已保存的 CWA 實際觀測資料，不再使用人工模擬溫度。
             const historyId = getStationHistoryId(station);
             const rawHistory = Array.isArray(stationHistoryCache?.[historyId])
                 ? stationHistoryCache[historyId]
@@ -4057,16 +4054,13 @@ const popVal = getPopForStation(county, town);
                 })
                 .sort((a, b) => Number(a.ts) - Number(b.ts));
 
-            // 目前這一筆若尚未被快取，再補入實際觀測值。
+            // 補入目前這一筆實際觀測，避免尚未寫入 localStorage 時圖表少最新點。
             const currentObsRaw = station.ObsTime?.DateTime || station.ObsTime || obsTimeString;
             const currentObsTs = Date.parse(currentObsRaw || '');
             if (Number.isFinite(currentObsTs) && Number.isFinite(currentTemp)) {
                 const exists = history.some(point => Math.abs(Number(point.ts) - currentObsTs) < 30000);
                 if (!exists) {
-                    history.push({
-                        ts: currentObsTs,
-                        temp: currentTemp
-                    });
+                    history.push({ ts: currentObsTs, temp: currentTemp });
                     history.sort((a, b) => Number(a.ts) - Number(b.ts));
                 }
             }
@@ -4086,47 +4080,57 @@ const popVal = getPopForStation(county, town);
                 return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
             });
 
-            // X 軸顯示「整點」，但曲線仍保留每一筆實際觀測資料。
-            // 每個小時只在該小時的第一筆資料位置顯示一次 HH:00，
-            // 因此即使實際觀測時間是 16:20、17:20、18:20，也會正確顯示
-            // 16:00、17:00、18:00，而不要求資料本身剛好落在 :00。
-            const xAxisLabels = [];
-            let lastHourKey = '';
-            cleanHistory.forEach(point => {
-                const d = new Date(Number(point.ts));
-                const hourKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`;
-                if (hourKey !== lastHourKey) {
-                    xAxisLabels.push(`${String(d.getHours()).padStart(2, '0')}:00`);
-                    lastHourKey = hourKey;
-                } else {
-                    xAxisLabels.push('');
-                }
-            });
-
+            const timeValues = cleanHistory.map(point => Number(point.ts));
             const temps = cleanHistory.map(point => Number(Number(point.temp).toFixed(1)));
 
             if (subtitleEl) {
                 subtitleEl.innerText = `${fullDateLabels[0]} ~ ${fullDateLabels[fullDateLabels.length - 1]}`;
             }
 
-            initPastChart(xAxisLabels, temps, fullDateLabels);
+            // 曲線使用每一筆實際觀測時間；X 軸刻度另外固定在整點。
+            initPastChart([], temps, fullDateLabels, timeValues);
         }
 
-        function initPastChart(labels, dataValues, fullDates) {
-            const ctx = document.getElementById('tempChart').getContext('2d');
+        function initPastChart(labels, dataValues, fullDates, timeValues = []) {
+            const canvas = document.getElementById('tempChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
             if (tempChart) tempChart.destroy();
+
+            const hasTimeValues =
+                Array.isArray(timeValues) &&
+                timeValues.length === dataValues.length &&
+                timeValues.length > 1;
+
+            const points = hasTimeValues
+                ? dataValues.map((value, index) => ({
+                    x: Number(timeValues[index]),
+                    y: value
+                }))
+                : dataValues;
+
+            const firstTs = hasTimeValues ? Number(timeValues[0]) : NaN;
+            const lastTs = hasTimeValues ? Number(timeValues[timeValues.length - 1]) : NaN;
+
+            const firstHour = Number.isFinite(firstTs)
+                ? new Date(firstTs).setMinutes(0, 0, 0)
+                : NaN;
+            const lastHour = Number.isFinite(lastTs)
+                ? new Date(lastTs).setMinutes(0, 0, 0) + 60 * 60 * 1000
+                : NaN;
+
             tempChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
                     datasets: [{
                         label: '氣溫 (°C)',
-                        data: dataValues,
+                        data: points,
                         borderColor: '#06b6d4',
                         backgroundColor: 'rgba(6, 182, 212, 0.1)',
                         borderWidth: 2.5,
                         fill: true,
-                        tension: 0.4,
+                        tension: 0.25,
                         pointRadius: 3,
                         pointBackgroundColor: '#38bdf8'
                     }]
@@ -4134,26 +4138,48 @@ const popVal = getPopForStation(county, town);
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    parsing: hasTimeValues ? false : true,
                     plugins: {
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
-                                title: (context) => fullDates[context[0].dataIndex] || context[0].label,
-                                label: (context) => `氣溫: ${context.raw} °C`
+                                title: (context) => {
+                                    if (hasTimeValues && context[0]?.raw?.x) {
+                                        const d = new Date(Number(context[0].raw.x));
+                                        return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                                    }
+                                    return fullDates[context[0].dataIndex] || context[0].label;
+                                },
+                                label: (context) => `氣溫: ${context.parsed.y} °C`
                             }
                         }
                     },
                     scales: {
-                        x: {
+                        x: hasTimeValues ? {
+                            type: 'linear',
+                            min: firstHour,
+                            max: lastHour,
+                            grid: { color: 'rgba(150, 150, 150, 0.1)' },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 10 },
+                                stepSize: 60 * 60 * 1000,
+                                autoSkip: false,
+                                maxTicksLimit: 25,
+                                minRotation: 45,
+                                maxRotation: 45,
+                                callback: function(value) {
+                                    const d = new Date(Number(value));
+                                    if (Number.isNaN(d.getTime())) return '';
+                                    return `${String(d.getHours()).padStart(2, '0')}:00`;
+                                }
+                            }
+                        } : {
                             grid: { color: 'rgba(150, 150, 150, 0.1)' },
                             ticks: {
                                 color: '#94a3b8',
                                 font: { size: 11 },
-                                autoSkip: false,
-                                maxTicksLimit: 25,
-                                callback: function(value) {
-                                    return this.getLabelForValue(value) || '';
-                                }
+                                maxTicksLimit: 8
                             }
                         },
                         y: {
@@ -4164,7 +4190,7 @@ const popVal = getPopForStation(county, town);
                 }
             });
         }
-        
+
         function initMap() {
             if (mapInitialized) return;
             map = L.map('map', {
