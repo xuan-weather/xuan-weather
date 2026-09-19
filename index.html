@@ -4103,29 +4103,49 @@ const popVal = getPopForStation(county, town);
             const now = Date.now();
             const cutoff = now - STATION_HISTORY_MAX_MS;
 
-            // 優先使用 GitHub Actions 保存的 CWA O-A0003-001 真正 10 分鐘資料。
-            let history = await loadCwaTemperatureHistory(historyId);
+            // CWA GitHub 歷史檔會逐步累積；剛啟用時可能只有 1～2 筆。
+            // 不能因為遠端目前只有兩筆，就把本機已累積的 24 小時資料丟掉。
+            // 合併「GitHub CWA 10分鐘歷史」＋「本機歷史快取」，
+            // 同一時間戳以 GitHub 的 CWA 資料優先。
+            const remoteHistory = await loadCwaTemperatureHistory(historyId);
 
-            // 歷史檔尚未建立或該測站尚未累積時，暫時使用本機快取。
-            if (history.length < 2) {
-                const localHistory = Array.isArray(stationHistoryCache?.[historyId])
-                    ? stationHistoryCache[historyId]
-                    : [];
+            const localHistory = Array.isArray(stationHistoryCache?.[historyId])
+                ? stationHistoryCache[historyId]
+                : [];
 
-                history = localHistory
-                    .map(point => ({
-                        ts: Number(point?.ts),
-                        temp: Number(point?.temp)
-                    }))
-                    .filter(point =>
-                        Number.isFinite(point.ts) &&
-                        Number.isFinite(point.temp) &&
-                        point.temp !== 0
-                    )
-                    .sort((a, b) => a.ts - b.ts);
+            const historyByTs = new Map();
+
+            for (const point of localHistory) {
+                const ts = Number(point?.ts);
+                const temp = Number(point?.temp);
+                if (
+                    Number.isFinite(ts) &&
+                    Number.isFinite(temp) &&
+                    temp !== 0 &&
+                    ts >= cutoff
+                ) {
+                    historyByTs.set(ts, { ts, temp });
+                }
             }
 
-            // 直接保留最近 24 小時的每 10 分鐘資料，不再壓成每小時一筆。
+            // GitHub Actions 的 CWA 資料覆蓋同時間的本機資料。
+            for (const point of remoteHistory) {
+                const ts = Number(point?.ts);
+                const temp = Number(point?.temp);
+                if (
+                    Number.isFinite(ts) &&
+                    Number.isFinite(temp) &&
+                    temp !== 0 &&
+                    ts >= cutoff
+                ) {
+                    historyByTs.set(ts, { ts, temp });
+                }
+            }
+
+            let history = Array.from(historyByTs.values())
+                .sort((a, b) => a.ts - b.ts);
+
+            // 保留最近 24 小時的 10 分鐘資料，不再壓成每小時一筆。
             history = history.filter(point =>
                 point.ts >= cutoff &&
                 Number.isFinite(point.temp) &&
@@ -4231,6 +4251,7 @@ const popVal = getPopForStation(county, town);
                         // 不再以兩個觀測點之間的直線段呈現。
                         cubicInterpolationMode: 'monotone',
                         tension: 0.42,
+                        stepped: false,
                         spanGaps: false,
                         pointRadius: 0,
                         pointHoverRadius: 5,
