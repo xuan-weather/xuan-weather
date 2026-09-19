@@ -1010,6 +1010,7 @@
         .map-location-button.locating i{animation:radarLocatePulse 1s ease-in-out infinite;}
         .map-location-popup{font-size:13px;line-height:1.55;}
         .map-location-popup b{color:#4285f4;}
+        .map-location-popup span{color:#334155;}
 
         /* 雷達圖「📍所在地」定位控制 */
         .radar-location-control{
@@ -1075,6 +1076,7 @@
         }
         .radar-location-popup{font-size:13px;line-height:1.55;}
         .radar-location-popup b{color:#4285f4;}
+        .radar-location-popup span{color:#334155;}
 
         @media(max-width:700px){.radar-page-header{padding:16px 14px 12px;flex-direction:column}.radar-page-title{font-size:23px}.radar-page-subtitle{font-size:14px}.radar-page-time{font-size:13px;padding-top:0}.radar-page-map-wrap{margin:0 10px 14px;height:72vh;min-height:470px;border-radius:16px}.radar-page-legend{left:10px;top:10px;width:120px;padding:8px 10px;border-radius:12px}.radar-legend-title{font-size:11px;margin-bottom:6px}.radar-legend-body{gap:8px}.radar-legend-gradient{height:205px;width:12px}.radar-legend-labels{font-size:11px}}
 </style></head>
@@ -4649,17 +4651,18 @@ const popVal = getPopForStation(county, town);
             };
             mapLocationControl.addTo(map);
 
-            // 右下角固定排列：＋／－ → 📍所在地 → 全螢幕。
+            // 右下角固定排列（依照指定順序）：最上方全螢幕 → 中間＋／－ → 最下方📍所在地。
             const mapBottomRight = map._controlCorners && map._controlCorners.bottomright;
             const mapZoomEl = mapZoomControl.getContainer ? mapZoomControl.getContainer() : null;
             const mapLocationEl = mapLocationControl.getContainer ? mapLocationControl.getContainer() : null;
             const mapFullscreenEl = mapBottomRight ? mapBottomRight.querySelector('.leaflet-control-fullscreen') : null;
             if(mapBottomRight && mapZoomEl && mapLocationEl && mapFullscreenEl){
+                mapBottomRight.appendChild(mapFullscreenEl);
                 mapBottomRight.appendChild(mapZoomEl);
                 mapBottomRight.appendChild(mapLocationEl);
-                mapBottomRight.appendChild(mapFullscreenEl);
+                mapZoomEl.style.marginTop='10px';
                 mapLocationEl.style.marginTop='10px';
-                mapFullscreenEl.style.marginTop='10px';
+                mapFullscreenEl.style.marginTop='0';
             } else if(mapBottomRight && mapZoomEl && mapLocationEl){
                 mapBottomRight.appendChild(mapZoomEl);
                 mapBottomRight.appendChild(mapLocationEl);
@@ -5200,11 +5203,12 @@ const popVal = getPopForStation(county, town);
                 const locationEl = radarLocationControl.getContainer ? radarLocationControl.getContainer() : null;
                 const fullscreenEl = radarFullscreenControl.getContainer ? radarFullscreenControl.getContainer() : null;
                 if(bottomRight && zoomEl && locationEl && fullscreenEl){
+                    bottomRight.appendChild(fullscreenEl);
                     bottomRight.appendChild(zoomEl);
                     bottomRight.appendChild(locationEl);
-                    bottomRight.appendChild(fullscreenEl);
+                    zoomEl.style.marginTop='10px';
                     locationEl.style.marginTop='10px';
-                    fullscreenEl.style.marginTop='10px';
+                    fullscreenEl.style.marginTop='0';
                 }
             } else {
                 const bottomRight = radarMap._controlCorners && radarMap._controlCorners.bottomright;
@@ -5257,7 +5261,7 @@ const popVal = getPopForStation(county, town);
 
                 getTaiwanLocationName(lat,lng).then(name=>{
                     mapUserLocationMarker.bindPopup(
-                        '<div class="map-location-popup"><b>📍 所在地｜'+name+'</b></div>'
+                        '<div class="map-location-popup"><b>📍 所在地｜'+name+'</b><br><span>定位精度：±'+Math.round(accuracy)+' 公尺</span></div>'
                     );
                     mapUserLocationMarker.openPopup();
                 });
@@ -5427,7 +5431,7 @@ const popVal = getPopForStation(county, town);
                 const dbzText=dbz===null ? '暫無回波資料' : (dbz+' dBZ');
                 getTaiwanLocationName(lat,lng).then(name=>{
                     radarUserLocationMarker.bindPopup(
-                        '<div class="radar-location-popup"><b>📍 所在地｜'+name+'</b><br><span>🌧️ 雷達回波：約 <strong>'+dbzText+'</strong></span></div>'
+                        '<div class="radar-location-popup"><b>📍 所在地｜'+name+'</b><br><span>定位精度：±'+Math.round(accuracy)+' 公尺</span><br><span>🌧️ 雷達回波：約 <strong>'+dbzText+'</strong></span></div>'
                     );
                     radarUserLocationMarker.openPopup();
                 });
