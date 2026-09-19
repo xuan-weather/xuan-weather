@@ -4227,12 +4227,16 @@ const popVal = getPopForStation(county, town);
                         backgroundColor: 'rgba(6, 182, 212, 0.10)',
                         borderWidth: 3,
                         fill: true,
-                        tension: 0.28,
+                        // DPIP 類似的平滑曲線：使用 monotone cubic，
+                        // 不再以兩個觀測點之間的直線段呈現。
+                        cubicInterpolationMode: 'monotone',
+                        tension: 0.42,
                         spanGaps: false,
                         pointRadius: 0,
                         pointHoverRadius: 5,
                         pointHitRadius: 10,
-                        pointBackgroundColor: '#06b6d4'
+                        pointBackgroundColor: '#06b6d4',
+                        stepped: false
                     }]
                 },
                 options: {
