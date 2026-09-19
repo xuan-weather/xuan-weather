@@ -943,6 +943,7 @@
 .local-weather-report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.local-weather-report-btn{border:0;border-radius:11px;padding:10px 13px;font-weight:800;cursor:pointer;color:#fff;background:linear-gradient(135deg,#06b6d4,#3b82f6)}.local-weather-report-btn.secondary{background:rgba(51,65,85,.75);border:1px solid rgba(148,163,184,.18)}.local-weather-report-btn:disabled{opacity:.55;cursor:not-allowed}
 .local-weather-report-status{font-size:12px;margin-top:9px;color:#94a3b8}.local-weather-report-status.ok{color:#34d399}.local-weather-report-status.bad{color:#f87171}
 .local-weather-report-list{display:grid;gap:9px;margin-top:14px}.local-weather-report-item{padding:12px;border-radius:13px;background:rgba(15,23,42,.72);border:1px solid rgba(148,163,184,.13)}.local-weather-report-item-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.local-weather-report-place{font-weight:800;color:#e2e8f0}.local-weather-report-time{font-size:10px;color:#64748b;white-space:nowrap}.local-weather-report-condition{font-size:13px;color:#38bdf8;font-weight:800;margin-top:4px}.local-weather-report-text{font-size:12px;line-height:1.55;color:#cbd5e1;margin-top:5px;white-space:pre-line}.local-weather-report-meta{font-size:11px;color:#94a3b8;margin-top:6px}.local-weather-report-photo{display:block;max-width:100%;max-height:220px;border-radius:10px;margin-top:9px;object-fit:cover}
+.local-weather-report-item-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:9px}.local-weather-report-delete-btn{border:1px solid rgba(248,113,113,.28);background:rgba(127,29,29,.28);color:#fca5a5;border-radius:9px;padding:6px 9px;font-size:11px;font-weight:800;cursor:pointer}.local-weather-report-delete-btn:disabled{opacity:.55;cursor:not-allowed}.local-weather-report-delete-note{font-size:10px;color:#64748b;margin-top:5px}
 @media(max-width:600px){.local-weather-report-form{grid-template-columns:1fr}.local-weather-report-field.full{grid-column:auto}}
 
 </style>
@@ -1074,6 +1075,9 @@
             <button id="tabAirQuality" class="tab-btn" onclick="switchMainPage('airQuality')">
                 <i class="fas fa-wind"></i> 空氣品質
             </button>
+            <button id="tabLocalWeatherReport" class="tab-btn" onclick="switchMainPage('localWeatherReport')">
+                <i class="fas fa-location-dot"></i> 在地回報
+            </button>
             <button class="tab-btn" id="themeToggleBtn" onclick="toggleTheme()" title="切換主題" style="flex: 0 0 38px;">
                 <i class="fas fa-moon" id="themeIcon"></i>
             </button>
@@ -1156,50 +1160,7 @@
             </div>
 
             
-<div class="local-weather-report-widget" id="localWeatherReportWidget">
-  <div class="local-weather-report-head">
-    <div>
-      <div class="local-weather-report-title">📍 在地天氣回報</div>
-      <div class="local-weather-report-sub">大家都可以回報目前所在地天氣，提交後會同步到雲端，其他人也能看到。</div>
-    </div>
-  </div>
-  <div class="local-weather-report-form">
-    <div class="local-weather-report-field">
-      <label>📍 地點（縣市／鄉鎮）</label>
-      <input id="localReportPlace" class="local-weather-report-input" maxlength="60" placeholder="例如：南投縣竹山鎮" />
-    </div>
-    <div class="local-weather-report-field">
-      <label>🌤️ 目前天氣</label>
-      <select id="localReportCondition" class="local-weather-report-select">
-        <option value="晴">☀️ 晴</option><option value="多雲">🌤️ 多雲</option><option value="陰">☁️ 陰</option><option value="小雨">🌦️ 小雨</option><option value="下雨">🌧️ 下雨</option><option value="大雨">⛈️ 大雨</option><option value="雷雨">⚡ 雷雨</option><option value="霧">🌫️ 霧</option><option value="其他">📋 其他</option>
-      </select>
-    </div>
-    <div class="local-weather-report-field">
-      <label>🌡️ 體感／氣溫（可選）</label>
-      <input id="localReportTemp" class="local-weather-report-input" inputmode="decimal" maxlength="6" placeholder="例如：32.5" />
-    </div>
-    <div class="local-weather-report-field">
-      <label>👤 暱稱（可選）</label>
-      <input id="localReportNickname" class="local-weather-report-input" maxlength="30" placeholder="例如：小明" />
-    </div>
-    <div class="local-weather-report-field full">
-      <label>📝 天氣狀況</label>
-      <textarea id="localReportText" class="local-weather-report-textarea" maxlength="500" placeholder="例如：目前有短暫雨，風很大。"></textarea>
-    </div>
-    <div class="local-weather-report-field full">
-      <label>📷 現場照片（可選，會先壓縮再上傳）</label>
-      <input id="localReportPhoto" class="local-weather-report-input" type="file" accept="image/*" />
-    </div>
-  </div>
-  <div class="local-weather-report-actions">
-    <button class="local-weather-report-btn" id="submitLocalWeatherReportBtn" type="button" onclick="submitLocalWeatherReport()">☁️ 上傳天氣回報</button>
-    <button class="local-weather-report-btn secondary" type="button" onclick="loadLocalWeatherReports()">🔄 查看最新回報</button>
-  </div>
-  <div id="localWeatherReportStatus" class="local-weather-report-status">雲端回報功能尚未連接。</div>
-  <div id="localWeatherReportList" class="local-weather-report-list">
-    <div class="my-location-status">正在讀取大家的最新天氣回報……</div>
-  </div>
-</div>
+
 
 <div id="stationDetailSection" style="margin-top: 20px;">
                 <div class="section-divider-title" style="margin-top: 15px;">
@@ -1431,6 +1392,53 @@
                 顯示測站名稱、縣市、AQI、主要污染物、PM2.5、PM10、O₃ 等資料。
             </div>
         </div>
+
+<div id="localWeatherReportPanel" class="content-panel modern-dashboard">
+<div class="local-weather-report-widget" id="localWeatherReportWidget" style="margin-top:0;">
+  <div class="local-weather-report-head">
+    <div>
+      <div class="local-weather-report-title">📍 在地天氣回報</div>
+      <div class="local-weather-report-sub">大家都可以回報目前所在地天氣，提交後會同步到雲端，其他人也能看到。</div>
+    </div>
+  </div>
+  <div class="local-weather-report-form">
+    <div class="local-weather-report-field">
+      <label>📍 地點（縣市／鄉鎮）</label>
+      <input id="localReportPlace" class="local-weather-report-input" maxlength="60" placeholder="例如：南投縣竹山鎮" />
+    </div>
+    <div class="local-weather-report-field">
+      <label>🌤️ 目前天氣</label>
+      <select id="localReportCondition" class="local-weather-report-select">
+        <option value="晴">☀️ 晴</option><option value="多雲">🌤️ 多雲</option><option value="陰">☁️ 陰</option><option value="小雨">🌦️ 小雨</option><option value="下雨">🌧️ 下雨</option><option value="大雨">⛈️ 大雨</option><option value="雷雨">⚡ 雷雨</option><option value="霧">🌫️ 霧</option><option value="其他">📋 其他</option>
+      </select>
+    </div>
+    <div class="local-weather-report-field">
+      <label>🌡️ 體感／氣溫（可選）</label>
+      <input id="localReportTemp" class="local-weather-report-input" inputmode="decimal" maxlength="6" placeholder="例如：32.5" />
+    </div>
+    <div class="local-weather-report-field">
+      <label>👤 暱稱（可選）</label>
+      <input id="localReportNickname" class="local-weather-report-input" maxlength="30" placeholder="例如：小明" />
+    </div>
+    <div class="local-weather-report-field full">
+      <label>📝 天氣狀況</label>
+      <textarea id="localReportText" class="local-weather-report-textarea" maxlength="500" placeholder="例如：目前有短暫雨，風很大。"></textarea>
+    </div>
+    <div class="local-weather-report-field full">
+      <label>📷 現場照片（可選，會先壓縮再上傳）</label>
+      <input id="localReportPhoto" class="local-weather-report-input" type="file" accept="image/*" />
+    </div>
+  </div>
+  <div class="local-weather-report-actions">
+    <button class="local-weather-report-btn" id="submitLocalWeatherReportBtn" type="button" onclick="submitLocalWeatherReport()">☁️ 上傳天氣回報</button>
+    <button class="local-weather-report-btn secondary" type="button" onclick="loadLocalWeatherReports()">🔄 查看最新回報</button>
+  </div>
+  <div id="localWeatherReportStatus" class="local-weather-report-status">正在連接雲端回報服務……</div>
+  <div id="localWeatherReportList" class="local-weather-report-list">
+    <div class="my-location-status">正在讀取大家的最新天氣回報……</div>
+  </div>
+</div>
+</div>
 
         <div id="typhoonPanel" class="content-panel modern-dashboard">
             <div class="header">
@@ -2217,6 +2225,7 @@ let cityStationMapping = {};
             document.getElementById('tabQuake').classList.toggle('active', pageId === 'quake');
             document.getElementById('tabTyphoon').classList.toggle('active', pageId === 'typhoon');
             document.getElementById('tabAirQuality').classList.toggle('active', pageId === 'airQuality');
+            document.getElementById('tabLocalWeatherReport').classList.toggle('active', pageId === 'localWeatherReport');
                                       
             document.getElementById('dashboardPanel').classList.toggle('active', pageId === 'dashboard');
             document.getElementById('radarPanel').classList.toggle('active', pageId === 'radar');
@@ -2225,6 +2234,7 @@ let cityStationMapping = {};
             document.getElementById('quakePanel').classList.toggle('active', pageId === 'quake');
             document.getElementById('typhoonPanel').classList.toggle('active', pageId === 'typhoon');
             document.getElementById('airQualityPanel').classList.toggle('active', pageId === 'airQuality');
+            document.getElementById('localWeatherReportPanel').classList.toggle('active', pageId === 'localWeatherReport');
             if (pageId === 'airQuality') {
                 setTimeout(() => loadAirQuality(false), 50);
             }
@@ -4960,11 +4970,47 @@ async function submitLocalWeatherReport(){
         const response=await fetch(LOCAL_WEATHER_REPORT_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
         const result=await response.json().catch(()=>({}));
         if(!response.ok || result.ok===false) throw new Error(result.message || `雲端回報失敗（HTTP ${response.status}）`);
+        if(result.reportId && result.deleteToken) saveLocalWeatherDeleteToken(result.reportId,result.deleteToken);
         document.getElementById('localReportText').value=''; document.getElementById('localReportTemp').value=''; document.getElementById('localReportNickname').value=''; document.getElementById('localReportPhoto').value='';
         setLocalWeatherReportStatus('✅ 已上傳到雲端，大家都可以看到這筆天氣回報。','ok');
         await loadLocalWeatherReports();
     }catch(err){ console.error('在地天氣回報失敗',err); setLocalWeatherReportStatus(`❌ ${err?.message || '上傳失敗，請稍後再試。'}`,'bad'); }
     finally{ btn.disabled=false; }
+}
+
+function getLocalWeatherDeleteTokens(){
+    try { return JSON.parse(localStorage.getItem('xuanWeatherLocalReportDeleteTokens') || '{}') || {}; }
+    catch(e) { return {}; }
+}
+
+function saveLocalWeatherDeleteToken(reportId, token){
+    if(!reportId || !token) return;
+    const tokens=getLocalWeatherDeleteTokens();
+    tokens[String(reportId)]=String(token);
+    localStorage.setItem('xuanWeatherLocalReportDeleteTokens',JSON.stringify(tokens));
+}
+
+async function deleteLocalWeatherReport(reportId){
+    if(!reportId) return;
+    const tokens=getLocalWeatherDeleteTokens();
+    const token=tokens[String(reportId)];
+    if(!token){
+        alert('這筆回報不是目前這台裝置建立的，沒有可用的刪除碼。若要刪除舊回報，請到 Google 試算表刪除該筆資料。');
+        return;
+    }
+    if(!confirm('確定要刪除這筆在地天氣回報嗎？刪除後其他人也會看不到。')) return;
+    try{
+        const response=await fetch(LOCAL_WEATHER_REPORT_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'delete',reportId:String(reportId),deleteToken:String(token)})});
+        const result=await response.json().catch(()=>({}));
+        if(!response.ok || result.ok===false) throw new Error(result.message || `刪除失敗（HTTP ${response.status}）`);
+        delete tokens[String(reportId)];
+        localStorage.setItem('xuanWeatherLocalReportDeleteTokens',JSON.stringify(tokens));
+        setLocalWeatherReportStatus('🗑️ 已刪除這筆天氣回報。','ok');
+        await loadLocalWeatherReports();
+    }catch(err){
+        console.error('刪除在地天氣回報失敗',err);
+        setLocalWeatherReportStatus(`❌ ${err?.message || '刪除失敗，請稍後再試。'}`,'bad');
+    }
 }
 
 async function loadLocalWeatherReports(){
@@ -4979,7 +5025,8 @@ async function loadLocalWeatherReports(){
         const result=await response.json();
         if(!response.ok || result.ok===false) throw new Error(result.message || '讀取雲端回報失敗');
         const rows=Array.isArray(result.reports)?result.reports:[];
-        if(!rows.length){ list.innerHTML='<div class="my-location-status">目前還沒有大家的天氣回報。</div>'; return; }
+        if(!rows.length){ setLocalWeatherReportStatus('☁️ 雲端已連接，目前還沒有大家的天氣回報。','ok'); list.innerHTML='<div class="my-location-status">目前還沒有大家的天氣回報。</div>'; return; }
+        setLocalWeatherReportStatus('☁️ 雲端已連接，以下是最新回報。','ok');
         list.innerHTML=rows.map(row=>{
             const place=escapeLocalWeatherReportText(row.place||'未知地點');
             const cond=escapeLocalWeatherReportText(row.condition||'未提供');
@@ -4987,7 +5034,9 @@ async function loadLocalWeatherReports(){
             const nick=escapeLocalWeatherReportText(row.nickname||'匿名');
             const temp=row.temp!==''&&row.temp!==null&&Number.isFinite(Number(row.temp))?`${Number(row.temp).toFixed(1)}°C`:'';
             const photo=row.photoUrl?`<img class="local-weather-report-photo" src="${escapeLocalWeatherReportText(row.photoUrl)}" alt="在地天氣回報照片" loading="lazy">`:'';
-            return `<div class="local-weather-report-item"><div class="local-weather-report-item-head"><div class="local-weather-report-place">📍 ${place}</div><div class="local-weather-report-time">${escapeLocalWeatherReportText(formatLocalWeatherReportTime(row.time))}</div></div><div class="local-weather-report-condition">${cond}${temp?` · 🌡️ ${temp}`:''}</div>${report?`<div class="local-weather-report-text">${report}</div>`:''}<div class="local-weather-report-meta">👤 ${nick}</div>${photo}</div>`;
+            const canDelete=!!row.id && !!getLocalWeatherDeleteTokens()[String(row.id)];
+            const deleteAction=canDelete?`<div class="local-weather-report-item-actions"><button class="local-weather-report-delete-btn" type="button" onclick="deleteLocalWeatherReport('${escapeLocalWeatherReportText(row.id)}')">🗑️ 刪除我的回報</button></div>`:'';
+            return `<div class="local-weather-report-item"><div class="local-weather-report-item-head"><div class="local-weather-report-place">📍 ${place}</div><div class="local-weather-report-time">${escapeLocalWeatherReportText(formatLocalWeatherReportTime(row.time))}</div></div><div class="local-weather-report-condition">${cond}${temp?` · 🌡️ ${temp}`:''}</div>${report?`<div class="local-weather-report-text">${report}</div>`:''}<div class="local-weather-report-meta">👤 ${nick}</div>${photo}${deleteAction}</div>`;
         }).join('');
     }catch(err){ console.error('讀取在地天氣回報失敗',err); list.innerHTML='<div class="my-location-status" style="color:#f87171;">目前無法讀取雲端回報，請稍後再試。</div>'; }
 }
