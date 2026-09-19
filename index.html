@@ -4163,13 +4163,21 @@ const popVal = getPopForStation(county, town);
                             ticks: {
                                 color: '#94a3b8',
                                 font: { size: 10 },
+                                // 參照 DPIP 24 小時圖：每 1 小時保留一條時間網格，
+                                // 但底部文字每 2 小時顯示一次。
                                 stepSize: 60 * 60 * 1000,
                                 autoSkip: false,
                                 maxTicksLimit: 25,
-                                minRotation: 45,
-                                maxRotation: 45,
+                                minRotation: 0,
+                                maxRotation: 0,
                                 callback: function(value) {
-                                    const d = new Date(Number(value));
+                                    const ts = Number(value);
+                                    if (!Number.isFinite(ts) || !Number.isFinite(firstHour)) return '';
+
+                                    const hourIndex = Math.round((ts - firstHour) / (60 * 60 * 1000));
+                                    if (hourIndex % 2 !== 0) return '';
+
+                                    const d = new Date(ts);
                                     if (Number.isNaN(d.getTime())) return '';
                                     return `${String(d.getHours()).padStart(2, '0')}:00`;
                                 }
