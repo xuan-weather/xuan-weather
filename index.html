@@ -973,7 +973,7 @@
             #ffff22 46%, #ffd33d 54%, #f47f2c 62%, #f02e23 70%, #c51f18 78%, #8f120d 84%, #ed2df1 92%, #8618f2 100%);}
         .radar-legend-labels{display:flex;flex-direction:column;justify-content:space-between;font-size:11px;line-height:1;color:var(--legend-text);padding:0;}
         .radar-load-status{position:absolute;z-index:1001;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 16px;border-radius:999px;background:rgba(9,13,22,.82);color:#cbd5e1;font-size:14px;display:none;pointer-events:none;}
-        /* 雷達地圖控制：＋／－在上、全螢幕按鈕固定在＋／－下面 */
+        /* 雷達地圖控制：📍定位在上、＋／－在中、全螢幕在下 */
         .radar-page-map-wrap .leaflet-bottom.leaflet-right{
             display:block;
         }
@@ -4651,22 +4651,23 @@ const popVal = getPopForStation(county, town);
             };
             mapLocationControl.addTo(map);
 
-            // 右下角固定排列（依照指定順序）：最上方全螢幕 → 中間＋／－ → 最下方📍所在地。
+            // 右下角固定排列（依照指定順序）：最上方📍定位 → 中間＋／－ → 最下方全螢幕。
             const mapBottomRight = map._controlCorners && map._controlCorners.bottomright;
             const mapZoomEl = mapZoomControl.getContainer ? mapZoomControl.getContainer() : null;
             const mapLocationEl = mapLocationControl.getContainer ? mapLocationControl.getContainer() : null;
             const mapFullscreenEl = mapBottomRight ? mapBottomRight.querySelector('.leaflet-control-fullscreen') : null;
             if(mapBottomRight && mapZoomEl && mapLocationEl && mapFullscreenEl){
+                mapBottomRight.appendChild(mapLocationEl);
+                mapBottomRight.appendChild(mapZoomEl);
                 mapBottomRight.appendChild(mapFullscreenEl);
-                mapBottomRight.appendChild(mapZoomEl);
-                mapBottomRight.appendChild(mapLocationEl);
+                mapLocationEl.style.marginTop='0';
                 mapZoomEl.style.marginTop='10px';
-                mapLocationEl.style.marginTop='10px';
-                mapFullscreenEl.style.marginTop='0';
+                mapFullscreenEl.style.marginTop='10px';
             } else if(mapBottomRight && mapZoomEl && mapLocationEl){
-                mapBottomRight.appendChild(mapZoomEl);
                 mapBottomRight.appendChild(mapLocationEl);
-                mapLocationEl.style.marginTop='10px';
+                mapBottomRight.appendChild(mapZoomEl);
+                mapLocationEl.style.marginTop='0';
+                mapZoomEl.style.marginTop='10px';
             }
 
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -5261,7 +5262,7 @@ const popVal = getPopForStation(county, town);
 
                 getTaiwanLocationName(lat,lng).then(name=>{
                     mapUserLocationMarker.bindPopup(
-                        '<div class="map-location-popup"><b>📍 所在地｜'+name+'</b><br><span>🎯 定位精度範圍：約 ±'+Math.round(accuracy)+' 公尺</span></div>'
+                        '<div class="map-location-popup"><b>📍 所在地｜'+name+'</b><br><span>定位精度：約 '+Math.round(accuracy)+' 公尺</span></div>'
                     );
                     mapUserLocationMarker.openPopup();
                 });
@@ -5431,7 +5432,7 @@ const popVal = getPopForStation(county, town);
                 const dbzText=dbz===null ? '暫無回波資料' : (dbz+' dBZ');
                 getTaiwanLocationName(lat,lng).then(name=>{
                     radarUserLocationMarker.bindPopup(
-                        '<div class="radar-location-popup"><b>📍 所在地｜'+name+'</b><br><span>🎯 定位精度範圍：約 ±'+Math.round(accuracy)+' 公尺</span><br><span>🌧️ 雷達回波：約 <strong>'+dbzText+'</strong></span></div>'
+                        '<div class="radar-location-popup"><b>📍 所在地｜'+name+'</b><br><span>定位精度：約 '+Math.round(accuracy)+' 公尺</span><br><span>🌧️ 雷達回波：約 <strong>'+dbzText+'</strong></span></div>'
                     );
                     radarUserLocationMarker.openPopup();
                 });
