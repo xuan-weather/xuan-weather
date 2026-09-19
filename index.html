@@ -4546,6 +4546,8 @@ const popVal = getPopForStation(county, town);
                             ticks: {
                                 color: '#64748b',
                                 font: { size: 12 },
+                                stepSize: 1,
+                                precision: 0,
                                 callback: value => `${Number(value).toFixed(0)}`
                             },
                             suggestedMin: Math.floor(dataMin - 1),
