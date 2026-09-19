@@ -4086,9 +4086,21 @@ const popVal = getPopForStation(county, town);
                 return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
             });
 
-            const xAxisLabels = cleanHistory.map(point => {
+            // X 軸顯示「整點」，但曲線仍保留每一筆實際觀測資料。
+            // 每個小時只在該小時的第一筆資料位置顯示一次 HH:00，
+            // 因此即使實際觀測時間是 16:20、17:20、18:20，也會正確顯示
+            // 16:00、17:00、18:00，而不要求資料本身剛好落在 :00。
+            const xAxisLabels = [];
+            let lastHourKey = '';
+            cleanHistory.forEach(point => {
                 const d = new Date(Number(point.ts));
-                return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                const hourKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`;
+                if (hourKey !== lastHourKey) {
+                    xAxisLabels.push(`${String(d.getHours()).padStart(2, '0')}:00`);
+                    lastHourKey = hourKey;
+                } else {
+                    xAxisLabels.push('');
+                }
             });
 
             const temps = cleanHistory.map(point => Number(Number(point.temp).toFixed(1)));
@@ -4139,11 +4151,8 @@ const popVal = getPopForStation(county, town);
                                 font: { size: 11 },
                                 autoSkip: false,
                                 maxTicksLimit: 25,
-                                callback: function(value, index) {
-                                    const label = this.getLabelForValue(value);
-                                    // 底部時間軸只顯示整點，例如 19:00、20:00、21:00。
-                                    // 實際曲線資料仍維持目前已取得的 CWA 觀測資料。
-                                    return /:00$/.test(String(label)) ? label : '';
+                                callback: function(value) {
+                                    return this.getLabelForValue(value) || '';
                                 }
                             }
                         },
