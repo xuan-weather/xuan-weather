@@ -4447,10 +4447,10 @@ const popVal = getPopForStation(county, town);
                             backgroundColor: 'rgba(6, 182, 212, 0.10)',
                             borderWidth: 3,
                             fill: true,
-                            // 使用真正的 10 分鐘觀測點逐點直線連接，不做曲線平滑。
-                            // 這樣前半夜的每一筆 CWA 實測變化都會如實呈現。
-                            tension: 0,
-                            cubicInterpolationMode: 'default',
+                            // 保留完整 CWA 10 分鐘觀測資料，但恢復原本平滑的溫度曲線。
+                            // 平滑只改「線條呈現方式」，不會新增、刪除或修改任何實測資料點。
+                            tension: 0.4,
+                            cubicInterpolationMode: 'monotone',
                             stepped: false,
                             spanGaps: false,
                             pointRadius: 0,
