@@ -985,6 +985,32 @@
         .radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
             margin-top:10px !important;
         }
+        /* 全台地圖「📍所在地」定位控制 */
+        .map-location-control{
+            margin-top:10px !important;
+        }
+        .map-location-button{
+            width:34px;
+            height:34px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#fff;
+            color:#0f172a;
+            border:2px solid rgba(0,0,0,.18);
+            border-radius:4px;
+            box-shadow:0 1px 5px rgba(0,0,0,.45);
+            cursor:pointer;
+            font-size:18px;
+            line-height:1;
+        }
+        .map-location-button:hover{background:#f1f5f9;color:#0ea5e9;}
+        .map-location-button:active{transform:scale(.96);}
+        .map-location-button.locating{color:#0ea5e9;}
+        .map-location-button.locating i{animation:radarLocatePulse 1s ease-in-out infinite;}
+        .map-location-popup{font-size:13px;line-height:1.55;}
+        .map-location-popup b{color:#4285f4;}
+
         /* 雷達圖「📍所在地」定位控制 */
         .radar-location-control{
             margin-top:10px !important;
@@ -4603,9 +4629,43 @@ const popVal = getPopForStation(county, town);
             }).setView([23.5, 121.0], 8);
 
             // 全台地圖新增與雷達合成回波圖相同的「＋／－」縮放控制，放在右下角
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
+            const mapZoomControl = L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-                                      
+            // 恢復全台地圖「📍所在地」定位：使用手機／瀏覽器 GPS，將所在地標示在地圖上。
+            const mapLocationControl = L.control({ position: 'bottomright' });
+            mapLocationControl.onAdd = function(){
+                const container = L.DomUtil.create('div','leaflet-control map-location-control');
+                const button = L.DomUtil.create('button','map-location-button',container);
+                button.type='button';
+                button.title='定位所在地';
+                button.setAttribute('aria-label','定位所在地');
+                button.innerHTML='<i class="fas fa-location-crosshairs"></i>';
+                L.DomEvent.disableClickPropagation(container);
+                L.DomEvent.on(button,'click',function(e){
+                    L.DomEvent.stopPropagation(e);
+                    locateMapUser(button);
+                });
+                return container;
+            };
+            mapLocationControl.addTo(map);
+
+            // 右下角固定排列：＋／－ → 📍所在地 → 全螢幕。
+            const mapBottomRight = map._controlCorners && map._controlCorners.bottomright;
+            const mapZoomEl = mapZoomControl.getContainer ? mapZoomControl.getContainer() : null;
+            const mapLocationEl = mapLocationControl.getContainer ? mapLocationControl.getContainer() : null;
+            const mapFullscreenEl = mapBottomRight ? mapBottomRight.querySelector('.leaflet-control-fullscreen') : null;
+            if(mapBottomRight && mapZoomEl && mapLocationEl && mapFullscreenEl){
+                mapBottomRight.appendChild(mapZoomEl);
+                mapBottomRight.appendChild(mapLocationEl);
+                mapBottomRight.appendChild(mapFullscreenEl);
+                mapLocationEl.style.marginTop='10px';
+                mapFullscreenEl.style.marginTop='10px';
+            } else if(mapBottomRight && mapZoomEl && mapLocationEl){
+                mapBottomRight.appendChild(mapZoomEl);
+                mapBottomRight.appendChild(mapLocationEl);
+                mapLocationEl.style.marginTop='10px';
+            }
+
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-eGP, and the GIS User Community',
                 maxZoom: 18,
@@ -5167,6 +5227,56 @@ const popVal = getPopForStation(county, town);
             repairFullscreenMapLayout(radarMap);
             loadCwaRadarImage();
         }
+        let mapUserLocationMarker = null;
+        let mapUserLocationAccuracy = null;
+
+        function locateMapUser(button){
+            if(!map) return;
+            if(!navigator.geolocation){
+                alert('此瀏覽器不支援所在地定位功能');
+                return;
+            }
+            button.classList.add('locating');
+            button.disabled=true;
+            button.title='正在取得所在地…';
+            navigator.geolocation.getCurrentPosition(function(position){
+                const lat=position.coords.latitude;
+                const lng=position.coords.longitude;
+                const accuracy=Math.max(1,position.coords.accuracy||0);
+                const latlng=[lat,lng];
+                if(mapUserLocationMarker){
+                    mapUserLocationMarker.setLatLng(latlng);
+                }else{
+                    mapUserLocationMarker=L.marker(latlng,{
+                        icon:L.divIcon({className:'dpip-location-marker-wrap',html:'<div class="dpip-location-marker"><span class="dpip-location-pulse"></span><span class="dpip-location-dot"></span></div>',iconSize:[28,28],iconAnchor:[14,14]}),
+                        zIndexOffset:1000
+                    }).addTo(map);
+                    mapUserLocationAccuracy=L.circle(latlng,{radius:accuracy,color:'#4285f4',weight:2,fillColor:'#4285f4',fillOpacity:.14,interactive:false,zIndexOffset:900}).addTo(map);
+                }
+                if(mapUserLocationAccuracy) mapUserLocationAccuracy.setLatLng(latlng).setRadius(accuracy);
+
+                getTaiwanLocationName(lat,lng).then(name=>{
+                    mapUserLocationMarker.bindPopup(
+                        '<div class="map-location-popup"><b>📍 所在地｜'+name+'</b></div>'
+                    );
+                    mapUserLocationMarker.openPopup();
+                });
+                map.setView(latlng,Math.max(map.getZoom(),10),{animate:true});
+                button.classList.remove('locating');
+                button.disabled=false;
+                button.title='重新定位所在地';
+            },function(error){
+                let message='無法取得所在地';
+                if(error&&error.code===1) message='定位權限被拒絕，請到瀏覽器／手機設定允許此網站使用位置';
+                else if(error&&error.code===2) message='目前無法取得位置，請確認 GPS／定位服務已開啟';
+                else if(error&&error.code===3) message='定位逾時，請再按一次 📍';
+                alert(message);
+                button.classList.remove('locating');
+                button.disabled=false;
+                button.title='定位所在地';
+            },{enableHighAccuracy:true,timeout:12000,maximumAge:30000});
+        }
+
         let radarUserLocationMarker = null;
         let radarUserLocationAccuracy = null;
         let radarImageForDbz = null;
