@@ -4020,34 +4020,86 @@ const popVal = getPopForStation(county, town);
         function renderPast24hChart(station, obsTimeString) {
             const currentData = parseStationElement(station);
             const currentTemp = currentData.temp;
-            const displayName = currentStationType === 'freeway' ? station.StationName : (station.GeoInfo?.TownName || station.StationName);
-            document.getElementById('chartMainTitle').innerText = `${displayName} 24小時溫度變化趨勢`;
-            if (isNaN(currentTemp)) {
-                document.getElementById('chartTimeSubtitle').innerText = `目前無有效氣溫`;
+            const displayName = currentStationType === 'freeway'
+                ? station.StationName
+                : (station.GeoInfo?.TownName || station.StationName);
+
+            const titleEl = document.getElementById('chartMainTitle');
+            const subtitleEl = document.getElementById('chartTimeSubtitle');
+
+            if (titleEl) {
+                titleEl.innerText = `${displayName} 24小時溫度變化趨勢`;
+            }
+
+            if (!Number.isFinite(currentTemp)) {
+                if (subtitleEl) subtitleEl.innerText = '目前無有效氣溫';
                 initPastChart([], [], []);
                 return;
             }
-            let fullDateLabels = [];
-            let xAxisLabels = [];
-            let temps = [];
-            let baseDate = obsTimeString && obsTimeString !== '--' ? new Date(obsTimeString) : new Date();
-            if (isNaN(baseDate.getTime())) {
-                baseDate = new Date();
+
+            // 重要：不再使用人工模擬的 sin() 溫度。
+            // 直接使用網站已保存的 CWA 實際觀測資料。
+            // 目前網站維持每 1 小時同步一次，因此這裡會依目前網站實際
+            // 已取得的觀測批次形成約每小時一筆的 24 小時曲線。
+            const historyId = getStationHistoryId(station);
+            const rawHistory = Array.isArray(stationHistoryCache?.[historyId])
+                ? stationHistoryCache[historyId]
+                : [];
+
+            const cutoff = Date.now() - STATION_HISTORY_MAX_MS;
+            const history = rawHistory
+                .filter(point => {
+                    const ts = Number(point?.ts);
+                    const temp = Number(point?.temp);
+                    return Number.isFinite(ts) &&
+                           ts >= cutoff &&
+                           Number.isFinite(temp);
+                })
+                .sort((a, b) => Number(a.ts) - Number(b.ts));
+
+            // 目前這一筆若尚未被快取，再補入實際觀測值。
+            const currentObsRaw = station.ObsTime?.DateTime || station.ObsTime || obsTimeString;
+            const currentObsTs = Date.parse(currentObsRaw || '');
+            if (Number.isFinite(currentObsTs) && Number.isFinite(currentTemp)) {
+                const exists = history.some(point => Math.abs(Number(point.ts) - currentObsTs) < 30000);
+                if (!exists) {
+                    history.push({
+                        ts: currentObsTs,
+                        temp: currentTemp
+                    });
+                    history.sort((a, b) => Number(a.ts) - Number(b.ts));
+                }
             }
-            baseDate.setMinutes(0, 0, 0);
-            const baseTime = baseDate.getTime();
-            const formatDateStr = (d) => `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:00`;
-            for (let i = 24; i >= 0; i--) {
-                const d = new Date(baseTime - i * 60 * 60 * 1000);
-                fullDateLabels.push(formatDateStr(d));
-                xAxisLabels.push(`${String(d.getHours()).padStart(2,'0')}:00`);
-                let simulatedTemp = currentTemp + Math.sin(i / 3) * 1.5;
-                temps.push(Number(simulatedTemp.toFixed(1)));
+
+            const cleanHistory = history.slice(-25);
+
+            if (cleanHistory.length < 2) {
+                if (subtitleEl) {
+                    subtitleEl.innerText = '實際 CWA 歷史資料正在累積';
+                }
+                initPastChart([], [], []);
+                return;
             }
-            document.getElementById('chartTimeSubtitle').innerText = `${fullDateLabels[0]} ~ ${fullDateLabels[fullDateLabels.length - 1]}`;
+
+            const fullDateLabels = cleanHistory.map(point => {
+                const d = new Date(Number(point.ts));
+                return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            });
+
+            const xAxisLabels = cleanHistory.map(point => {
+                const d = new Date(Number(point.ts));
+                return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            });
+
+            const temps = cleanHistory.map(point => Number(Number(point.temp).toFixed(1)));
+
+            if (subtitleEl) {
+                subtitleEl.innerText = `${fullDateLabels[0]} ~ ${fullDateLabels[fullDateLabels.length - 1]}`;
+            }
+
             initPastChart(xAxisLabels, temps, fullDateLabels);
         }
-        
+
         function initPastChart(labels, dataValues, fullDates) {
             const ctx = document.getElementById('tempChart').getContext('2d');
             if (tempChart) tempChart.destroy();
