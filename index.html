@@ -1010,9 +1010,9 @@
         .map-location-button.locating i{animation:radarLocatePulse 1s ease-in-out infinite;}
 /* 全台地圖右下角：全螢幕 → ＋／－ → 定位 */
 #map .leaflet-bottom.leaflet-right{display:flex!important;flex-direction:column!important;align-items:flex-end!important;}
-#map .leaflet-bottom.leaflet-right .map-location-control{order:1!important;margin-top:0!important;}
+#map .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{order:1!important;margin-top:0!important;}
 #map .leaflet-bottom.leaflet-right .leaflet-control-zoom{order:2!important;margin-top:10px!important;}
-#map .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{order:3!important;margin-top:10px!important;}
+#map .leaflet-bottom.leaflet-right .map-location-control{order:3!important;margin-top:10px!important;}
 
         .map-location-popup{font-size:13px;line-height:1.55;}
         .map-location-popup b{color:#4285f4;}
@@ -5183,7 +5183,7 @@ const popVal = getPopForStation(county, town);
             // 將 dBZ 圖例放進 Leaflet 地圖容器，進入全螢幕時圖例也會一起顯示
             const radarLegend=document.querySelector('.radar-page-legend');
             if(radarLegend && radarLegend.parentElement !== el){ el.appendChild(radarLegend); }
-            // 固定雷達控制順序：＋／－在上，全螢幕在下
+            // 固定雷達控制順序：最上方定位，中間＋／－，最下方全螢幕
             const radarZoomControl = L.control.zoom({position:'bottomright'}).addTo(radarMap);
 
             // 雷達圖新增「📍所在地」：使用手機/瀏覽器 GPS 定位，並在雷達圖上標示位置與誤差範圍
