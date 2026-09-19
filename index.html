@@ -1011,6 +1011,25 @@
         .map-location-popup{font-size:13px;line-height:1.55;}
         .map-location-popup b{color:#4285f4;}
         .map-location-popup span{color:#334155;}
+/* 全台地圖右下角控制固定視覺順序：定位 → ＋／－ → 全螢幕 */
+#map .leaflet-bottom.leaflet-right{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:flex-end !important;
+}
+#map .leaflet-bottom.leaflet-right .map-location-control{
+    order:1 !important;
+    margin-top:0 !important;
+}
+#map .leaflet-bottom.leaflet-right .leaflet-control-zoom{
+    order:2 !important;
+    margin-top:10px !important;
+}
+#map .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
+    order:3 !important;
+    margin-top:10px !important;
+}
+
 
         /* 雷達圖「📍所在地」定位控制 */
         .radar-location-control{
