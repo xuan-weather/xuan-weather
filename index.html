@@ -4137,74 +4137,111 @@ const popVal = getPopForStation(county, town);
                 timeValues.length === dataValues.length &&
                 timeValues.length > 1;
 
-            const points = hasTimeValues
-                ? dataValues.map((value, index) => ({
-                    x: Number(timeValues[index]),
-                    y: Number.isFinite(Number(value)) ? Number(value) : null
-                }))
-                : dataValues;
-
             const firstTs = hasTimeValues ? Number(timeValues[0]) : NaN;
             const lastTs = hasTimeValues ? Number(timeValues[timeValues.length - 1]) : NaN;
 
-            const firstHour = Number.isFinite(firstTs)
-                ? firstTs
-                : NaN;
-            const lastHour = Number.isFinite(lastTs)
-                ? lastTs
-                : NaN;
+            /*
+             * 每小時一個資料槽，但「沒有實際 CWA 資料」的時段完全不畫。
+             * 這裡將有效資料切成連續區段，避免 Chart.js 把缺值誤畫成 0°C，
+             * 也避免跨越數小時直接連成一條長斜線。
+             */
+            const buildSegments = () => {
+                if (!hasTimeValues) {
+                    const segment = [];
+                    dataValues.forEach((value, index) => {
+                        const n = Number(value);
+                        if (Number.isFinite(n)) {
+                            segment.push({ x: index, y: n });
+                        }
+                    });
+                    return segment.length ? [segment] : [];
+                }
+
+                const segments = [];
+                let current = [];
+
+                dataValues.forEach((value, index) => {
+                    const n = Number(value);
+                    const ts = Number(timeValues[index]);
+
+                    if (Number.isFinite(n) && Number.isFinite(ts)) {
+                        current.push({
+                            x: ts,
+                            y: Number(n.toFixed(1))
+                        });
+                    } else if (current.length) {
+                        segments.push(current);
+                        current = [];
+                    }
+                });
+
+                if (current.length) segments.push(current);
+                return segments;
+            };
+
+            const segments = buildSegments();
+
+            // 每一段都是獨立 dataset，所以缺資料時線會真正斷開，不會掉到 0°C。
+            const datasets = segments.map((segment, index) => ({
+                label: index === 0 ? '氣溫 (°C)' : '',
+                data: segment,
+                borderColor: '#06b6d4',
+                backgroundColor: index === 0 ? 'rgba(6, 182, 212, 0.1)' : 'transparent',
+                borderWidth: 2.5,
+                fill: index === 0,
+                tension: 0.25,
+                spanGaps: false,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: '#38bdf8',
+                pointBorderColor: '#06b6d4'
+            }));
 
             tempChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    datasets: [{
-                        label: '氣溫 (°C)',
-                        data: points,
-                        borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        borderWidth: 2.5,
-                        fill: true,
-                        tension: 0.25,
-                        spanGaps: false,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#38bdf8'
-                    }]
+                    datasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    parsing: hasTimeValues ? false : true,
+                    parsing: false,
                     plugins: {
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
                                 title: (context) => {
-                                    if (hasTimeValues && context[0]?.raw?.x) {
-                                        const d = new Date(Number(context[0].raw.x));
+                                    const raw = context[0]?.raw;
+                                    if (raw && Number.isFinite(Number(raw.x))) {
+                                        const d = new Date(Number(raw.x));
                                         return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:00`;
                                     }
-                                    return fullDates[context[0].dataIndex] || context[0].label;
+                                    return fullDates[context[0]?.dataIndex] || '';
                                 },
-                                label: (context) => Number.isFinite(context.parsed.y)
-                                    ? `氣溫: ${context.parsed.y.toFixed(1)} °C`
-                                    : '該小時目前沒有實際資料'
+                                label: (context) =>
+                                    Number.isFinite(context.parsed.y)
+                                        ? `氣溫: ${Number(context.parsed.y).toFixed(1)} °C`
+                                        : ''
                             }
                         }
                     },
                     scales: {
                         x: hasTimeValues ? {
                             type: 'linear',
-                            min: firstHour,
-                            max: lastHour,
-                            grid: { color: 'rgba(150, 150, 150, 0.1)' },
+                            min: firstTs,
+                            max: lastTs,
+                            grid: {
+                                color: 'rgba(150, 150, 150, 0.1)'
+                            },
                             ticks: {
                                 color: '#94a3b8',
-                                font: { size: 10 },
-                                stepSize: 2 * 60 * 60 * 1000,
+                                font: { size: 11 },
+                                stepSize: 3 * 60 * 60 * 1000,
                                 autoSkip: false,
-                                maxTicksLimit: 13,
+                                maxTicksLimit: 9,
                                 minRotation: 0,
                                 maxRotation: 0,
+                                padding: 8,
                                 callback: function(value) {
                                     const d = new Date(Number(value));
                                     if (Number.isNaN(d.getTime())) return '';
@@ -4216,12 +4253,16 @@ const popVal = getPopForStation(county, town);
                             ticks: {
                                 color: '#94a3b8',
                                 font: { size: 11 },
-                                maxTicksLimit: 8
+                                maxTicksLimit: 8,
+                                padding: 8
                             }
                         },
                         y: {
                             grid: { color: 'rgba(150, 150, 150, 0.1)' },
-                            ticks: { color: '#94a3b8', font: { size: 11 } }
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 11 }
+                            }
                         }
                     }
                 }
