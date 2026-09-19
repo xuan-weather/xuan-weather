@@ -4134,7 +4134,18 @@ const popVal = getPopForStation(county, town);
                     scales: {
                         x: {
                             grid: { color: 'rgba(150, 150, 150, 0.1)' },
-                            ticks: { color: '#94a3b8', font: { size: 11 }, maxTicksLimit: 8 }
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 11 },
+                                autoSkip: false,
+                                maxTicksLimit: 25,
+                                callback: function(value, index) {
+                                    const label = this.getLabelForValue(value);
+                                    // 底部時間軸只顯示整點，例如 19:00、20:00、21:00。
+                                    // 實際曲線資料仍維持目前已取得的 CWA 觀測資料。
+                                    return /:00$/.test(String(label)) ? label : '';
+                                }
+                            }
                         },
                         y: {
                             grid: { color: 'rgba(150, 150, 150, 0.1)' },
