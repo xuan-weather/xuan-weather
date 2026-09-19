@@ -1011,7 +1011,8 @@
         .map-location-popup{font-size:13px;line-height:1.55;}
         .map-location-popup b{color:#4285f4;}
         .map-location-popup span{color:#334155;}
-/* 右下角控制固定排列：定位 → ＋／－ → 全螢幕 */
+/* 右下角控制固定排列：①定位 → ②＋／－ → ③全螢幕
+   全台地圖與雷達回波完全使用相同順序。 */
 #map .leaflet-bottom.leaflet-right,
 .radar-page-map-wrap .leaflet-bottom.leaflet-right{
     display:flex !important;
@@ -1021,18 +1022,33 @@
     gap:10px !important;
     float:none !important;
 }
+
+/* Leaflet 預設會用 float 排列控制項；這裡強制取消，交給 flex + order。 */
 #map .leaflet-bottom.leaflet-right > .leaflet-control,
 .radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control{
     float:none !important;
     clear:none !important;
     margin:0 !important;
+    position:relative !important;
 }
+
+/* 明確鎖定實際顯示順序 */
 #map .leaflet-bottom.leaflet-right > .map-location-control,
-.radar-page-map-wrap .leaflet-bottom.leaflet-right > .radar-location-control{ order:1 !important; }
+.radar-page-map-wrap .leaflet-bottom.leaflet-right > .radar-location-control{
+    order:1 !important;
+}
+
 #map .leaflet-bottom.leaflet-right > .leaflet-control-zoom,
-.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-zoom{ order:2 !important; }
+.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-zoom{
+    order:2 !important;
+}
+
 #map .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen,
-.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen{ order:3 !important; }
+.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen{
+    order:3 !important;
+}
+
+/* 三個控制按鈕保持一致尺寸 */
 #map .map-location-button,
 #map .leaflet-control-fullscreen a,
 .radar-page-map-wrap .radar-location-button,
@@ -4636,19 +4652,43 @@ const popVal = getPopForStation(county, town);
         }
 
 
-        // 強制鎖定兩張地圖右下角的實際 DOM 順序，避免 Leaflet 外掛重新排序。
+        // 強制鎖定兩張地圖右下角的實際 DOM + CSS 順序：
+        // ① 定位 → ② ＋／－ → ③ 全螢幕。
+        // Leaflet 外掛可能在初始化後重新插入控制項，因此同時設定 DOM 順序與 flex order。
         function forceMapControlOrder(mapInstance, locationClass){
             if(!mapInstance || !mapInstance._controlCorners || !mapInstance._controlCorners.bottomright) return;
+
             const corner = mapInstance._controlCorners.bottomright;
             const locationEl = corner.querySelector('.' + locationClass);
             const zoomEl = corner.querySelector('.leaflet-control-zoom');
             const fullscreenEl = corner.querySelector('.leaflet-control-fullscreen');
-            [locationEl, zoomEl, fullscreenEl].filter(Boolean).forEach(el => {
+
+            corner.style.display='flex';
+            corner.style.flexDirection='column';
+            corner.style.alignItems='flex-end';
+            corner.style.justifyContent='flex-end';
+            corner.style.gap='10px';
+            corner.style.float='none';
+
+            const controls = [
+                [locationEl, '1'],
+                [zoomEl, '2'],
+                [fullscreenEl, '3']
+            ];
+
+            controls.forEach(([el, order]) => {
+                if(!el) return;
                 el.style.float='none';
                 el.style.clear='none';
                 el.style.margin='0';
+                el.style.order=order;
+                el.style.position='relative';
             });
-            [locationEl, zoomEl, fullscreenEl].filter(Boolean).forEach(el => corner.appendChild(el));
+
+            // 重新 append 一次，確保 Leaflet 後續沒有把控制項插到錯的位置。
+            [locationEl, zoomEl, fullscreenEl]
+                .filter(Boolean)
+                .forEach(el => corner.appendChild(el));
         }
 
         function initMap() {
