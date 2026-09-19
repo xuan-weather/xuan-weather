@@ -1296,7 +1296,6 @@
                     <button id="btnMapRain" onclick="switchMapMode('rain')">🌧️日雨量</button>
                     <button id="btnMapWind" onclick="switchMapMode('wind')">💨風速</button>
                     <button id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️陣風</button>
-                    <button id="btnMapWindField" onclick="switchMapMode('windField')">🧭風場</button>
                     <button id="btnMapAqi" onclick="switchMapMode('aqi')">😷空品</button>
                 </div>
             </div>
@@ -4099,7 +4098,7 @@ const popVal = getPopForStation(county, town);
         
         function switchMapMode(mode) {
             currentMapMode = mode;
-            ['temp', 'pop', 'humidity', 'rain', 'wind', 'windGust', 'windField', 'aqi'].forEach(m => {
+            ['temp', 'pop', 'humidity', 'rain', 'wind', 'windGust', 'aqi'].forEach(m => {
                 const btn = document.getElementById(`btnMap${m.charAt(0).toUpperCase() + m.slice(1)}`);
                 if (btn) btn.classList.toggle('active', m === mode);
             });
@@ -4342,8 +4341,8 @@ const popVal = getPopForStation(county, town);
                     titleEl.innerText = '日雨量 (mm)';
                     colorBarEl.style.background = 'linear-gradient(to top, #C0C0C0 0%, #99FFFF 6.25%, #00CCFF 12.5%, #0066FF 18.75%, #0000CC 25%, #00CC00 31.25%, #009900 37.5%, #FFFF00 43.75%, #FFCC00 50%, #FF9900 56.25%, #FF6600 62.5%, #FF0000 68.75%, #CC0000 75%, #990000 81.25%, #990099 87.5%, #660066 93.75%, #FF66FF 100%)';
                     labelsListEl.innerHTML = '<span>300+</span><span>200</span><span>150</span><span>130</span><span>110</span><span>90</span><span>70</span><span>60</span><span>50</span><span>40</span><span>30</span><span>20</span><span>15</span><span>10</span><span>6</span><span>2</span><span>1</span><span>0</span>';
-                } else if (currentMapMode === 'wind' || currentMapMode === 'windGust' || currentMapMode === 'windField') {
-                    titleEl.innerText = currentMapMode === 'wind' ? '風速（m/s）' : (currentMapMode === 'windGust' ? '陣風（m/s）' : '風場（風速 m/s）');
+                } else if (currentMapMode === 'wind' || currentMapMode === 'windGust') {
+                    titleEl.innerText = currentMapMode === 'wind' ? '風速（m/s）' : '陣風（m/s）';
                     // 色階依風險分組：藍＝微風、綠＝低風險、黃＝注意、橘＝強風、紅＝高風險、紫＝極端
                     colorBarEl.style.background = 'linear-gradient(to top, #94a3b8 0%, #38bdf8 2%, #38bdf8 18%, #22c55e 19%, #22c55e 31%, #eab308 32%, #eab308 43%, #f97316 44%, #f97316 55%, #dc2626 56%, #dc2626 72%, #7e22ce 73%, #7e22ce 100%)';
                     labelsListEl.innerHTML = '<span>56.1+　17級以上｜極端強風</span><span>37.0–56.0　13–16級｜暴風</span><span>28.5–36.9　11–12級｜狂風</span><span>20.8–28.4　9–10級｜烈風</span><span>13.9–20.7　7–8級｜強風</span><span>5.5–13.8　4–6級｜和風</span><span>0.3–5.4　1–3級｜微風</span><span>&lt;0.3　0級｜無風</span>';
@@ -4389,11 +4388,6 @@ const popVal = getPopForStation(county, town);
                         val = data.windGust;
                         color = getWindSpeedColor(val);
                         unit = 'm/s';
-                    } else if (currentMapMode === 'windField') {
-                        // 風場模式使用 CWA O-A0003-001 的實測風向與風速。
-                        val = data.windSpeed;
-                        color = getWindSpeedColor(val);
-                        unit = 'm/s';
                     }
 
                     const currentZoom = map.getZoom();
@@ -4402,41 +4396,22 @@ const popVal = getPopForStation(county, town);
                     const displayVal = !isNaN(val)
                         ? (currentMapMode === 'aqi'
                             ? String(Math.round(Number(val)))
-                            : (typeof val === 'number' && currentMapMode !== 'rain' && currentMapMode !== 'wind' && currentMapMode !== 'windGust' && currentMapMode !== 'windField' ? val.toFixed(1) : val))
+                            : (typeof val === 'number' && currentMapMode !== 'rain' && currentMapMode !== 'wind' && currentMapMode !== 'windGust' ? val.toFixed(1) : val))
                         : '--';
                     
-                    // 風場模式：以箭頭顯示實測風向，箭頭指向風實際移動的方向；下方顯示風速。
-                    // CWA 的風向度數代表「風從哪個方向吹來」，因此視覺箭頭需 +180°。
-                    let iconHtml;
-                    let markerIconSize = [14, 14];
-                    let markerIconAnchor = [7, 7];
-                    if (currentMapMode === 'windField') {
-                        const windDirRotation = !isNaN(data.windDir) && data.windDir >= 0 ? (data.windDir + 90) : 0;
-                        const windArrow = !isNaN(data.windDir) && data.windDir >= 0
-                            ? `<span style="display:inline-block;color:${color};font-size:25px;line-height:25px;font-weight:900;text-shadow:0 1px 3px rgba(0,0,0,.85);transform:rotate(${windDirRotation}deg);transform-origin:50% 50%;">➤</span>`
-                            : `<span style="display:inline-block;color:#94a3b8;font-size:22px;line-height:25px;font-weight:900;">•</span>`;
-                        iconHtml = `<div style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;position:relative;">${windArrow}`;
-                        if (showLabel) {
-                            iconHtml += `<div style="position:absolute;top:27px;white-space:nowrap;font-size:10px;font-weight:800;color:#fff;text-shadow:1px 1px 3px rgba(0,0,0,.9);">${displayVal} m/s</div>`;
-                        }
-                        iconHtml += `</div>`;
-                        markerIconSize = [34, 34];
-                        markerIconAnchor = [17, 17];
-                    } else {
-                        // 第一層地圖圓點調整再大一點點 (直徑設為 14px)
-                        iconHtml = `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; position: relative;">`;
-                        if (showLabel) {
-                            iconHtml += `<div style="position: absolute; top: 16px; white-space: nowrap; font-size: 11px; font-weight: 700; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); background: transparent; border: none; padding: 0;">${displayVal}</div>`;
-                        }
-                        iconHtml += `</div>`;
+                    // 第一層地圖圓點調整再大一點點 (直徑設為 14px)
+                    let iconHtml = `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; position: relative;">`;
+                    if (showLabel) {
+                        iconHtml += `<div style="position: absolute; top: 16px; white-space: nowrap; font-size: 11px; font-weight: 700; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); background: transparent; border: none; padding: 0;">${displayVal}</div>`;
                     }
+                    iconHtml += `</div>`;
 
                     const hotBreathing = currentMapMode === 'temp' && !isNaN(data.temp) && data.temp >= 35;
                     const markerIcon = L.divIcon({
                         className: hotBreathing ? 'custom-station-marker hot-breathing' : 'custom-station-marker',
                         html: iconHtml,
-                        iconSize: markerIconSize,
-                        iconAnchor: markerIconAnchor
+                        iconSize: [14, 14],
+                        iconAnchor: [7, 7]
                     });
 
                     const marker = L.marker([lat, lon], { icon: markerIcon });
@@ -4453,7 +4428,7 @@ const popVal = getPopForStation(county, town);
                             <p><b>氣溫：</b>${!isNaN(data.temp) ? data.temp.toFixed(1) + ' °C' : '--'}</p>
                             <p><b>降雨機率：</b>${popForStation} %</p>
                             <p><b>日雨量：</b>${data.rain.toFixed(1)} mm</p>
-                            <p><b>🌬️ 風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s（${getWindLevel(data.windSpeed)}）</p>                             <p><b>最大陣風：</b>${data.windGust.toFixed(1)} m/s（${getWindLevel(data.windGust)}）</p>
+                            <p><b>風向風速：</b>${getWindDirectionText(data.windDir)} ${data.windSpeed.toFixed(1)} m/s（${getWindLevel(data.windSpeed)}）</p>                             <p><b>最大陣風：</b>${data.windGust.toFixed(1)} m/s（${getWindLevel(data.windGust)}）</p>
                             <p><b>相對濕度：</b>${data.humidity !== '--' ? data.humidity + ' %' : '--'}</p>
                             <button onclick="openStationHistory(weatherStationData.find(s => String(s.StationId) === '${String(station.StationId || '').replace(/'/g, "\\'")}'))"
                                 style="width:100%;margin-top:8px;padding:8px 10px;border:0;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;font-weight:700;cursor:pointer;">
