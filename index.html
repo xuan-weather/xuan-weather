@@ -973,19 +973,17 @@
             #ffff22 46%, #ffd33d 54%, #f47f2c 62%, #f02e23 70%, #c51f18 78%, #8f120d 84%, #ed2df1 92%, #8618f2 100%);}
         .radar-legend-labels{display:flex;flex-direction:column;justify-content:space-between;font-size:11px;line-height:1;color:var(--legend-text);padding:0;}
         .radar-load-status{position:absolute;z-index:1001;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 16px;border-radius:999px;background:rgba(9,13,22,.82);color:#cbd5e1;font-size:14px;display:none;pointer-events:none;}
-        /* 雷達／全台地圖右下角控制：定位 → ＋／－ → 全螢幕 */
-        .radar-page-map-wrap .leaflet-bottom.leaflet-right,
-        #map .leaflet-bottom.leaflet-right{
-            display:flex !important;
-            flex-direction:column !important;
-            align-items:flex-end !important;
-            gap:10px !important;
+        /* 雷達地圖控制：📍定位在上、＋／－在中、全螢幕在下 */
+        .radar-page-map-wrap .leaflet-bottom.leaflet-right{
+            display:block;
         }
-        .radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control,
-        #map .leaflet-bottom.leaflet-right .leaflet-control{
-            float:none !important;
-            clear:none !important;
-            margin:0 !important;
+        .radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control{
+            float:none;
+            clear:both;
+            margin-right:0;
+        }
+        .radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
+            margin-top:10px !important;
         }
         /* 全台地圖「📍所在地」定位控制 */
         .map-location-control{
@@ -1013,32 +1011,36 @@
         .map-location-popup{font-size:13px;line-height:1.55;}
         .map-location-popup b{color:#4285f4;}
         .map-location-popup span{color:#334155;}
-/* 全台地圖與雷達回波：右下角固定順序「定位 → ＋／－ → 全螢幕」 */
+/* 右下角控制固定排列：定位 → ＋／－ → 全螢幕 */
 #map .leaflet-bottom.leaflet-right,
 .radar-page-map-wrap .leaflet-bottom.leaflet-right{
     display:flex !important;
     flex-direction:column !important;
     align-items:flex-end !important;
+    justify-content:flex-end !important;
     gap:10px !important;
+    float:none !important;
 }
-#map .leaflet-bottom.leaflet-right .map-location-control,
-.radar-page-map-wrap .leaflet-bottom.leaflet-right .radar-location-control{
-    order:1 !important;
+#map .leaflet-bottom.leaflet-right > .leaflet-control,
+.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control{
+    float:none !important;
+    clear:none !important;
     margin:0 !important;
 }
-#map .leaflet-bottom.leaflet-right .leaflet-control-zoom,
-.radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-zoom{
-    order:2 !important;
-    margin:0 !important;
+#map .leaflet-bottom.leaflet-right > .map-location-control,
+.radar-page-map-wrap .leaflet-bottom.leaflet-right > .radar-location-control{ order:1 !important; }
+#map .leaflet-bottom.leaflet-right > .leaflet-control-zoom,
+.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-zoom{ order:2 !important; }
+#map .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen,
+.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen{ order:3 !important; }
+#map .map-location-button,
+#map .leaflet-control-fullscreen a,
+.radar-page-map-wrap .radar-location-button,
+.radar-page-map-wrap .leaflet-control-fullscreen a{
+    width:34px !important;
+    height:34px !important;
 }
-#map .leaflet-bottom.leaflet-right .leaflet-control-fullscreen,
-.radar-page-map-wrap .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
-    order:3 !important;
-    margin:0 !important;
-}
-
-
-        /* 雷達圖「📍所在地」定位控制 */
+/* 雷達圖「📍所在地」定位控制 */
         .radar-location-control{
             margin-top:10px !important;
         }
@@ -4634,6 +4636,21 @@ const popVal = getPopForStation(county, town);
         }
 
 
+        // 強制鎖定兩張地圖右下角的實際 DOM 順序，避免 Leaflet 外掛重新排序。
+        function forceMapControlOrder(mapInstance, locationClass){
+            if(!mapInstance || !mapInstance._controlCorners || !mapInstance._controlCorners.bottomright) return;
+            const corner = mapInstance._controlCorners.bottomright;
+            const locationEl = corner.querySelector('.' + locationClass);
+            const zoomEl = corner.querySelector('.leaflet-control-zoom');
+            const fullscreenEl = corner.querySelector('.leaflet-control-fullscreen');
+            [locationEl, zoomEl, fullscreenEl].filter(Boolean).forEach(el => {
+                el.style.float='none';
+                el.style.clear='none';
+                el.style.margin='0';
+            });
+            [locationEl, zoomEl, fullscreenEl].filter(Boolean).forEach(el => corner.appendChild(el));
+        }
+
         function initMap() {
             if (mapInitialized) return;
             map = L.map('map', {
@@ -4677,13 +4694,23 @@ const popVal = getPopForStation(county, town);
             };
             mapLocationControl.addTo(map);
 
-            // 右下角固定排列：最上方📍定位 → 中間＋／－ → 最下方全螢幕。
+            // 右下角固定排列（依照指定順序）：最上方📍定位 → 中間＋／－ → 最下方全螢幕。
             const mapBottomRight = map._controlCorners && map._controlCorners.bottomright;
             const mapZoomEl = mapZoomControl.getContainer ? mapZoomControl.getContainer() : null;
             const mapLocationEl = mapLocationControl.getContainer ? mapLocationControl.getContainer() : null;
             const mapFullscreenEl = mapBottomRight ? mapBottomRight.querySelector('.leaflet-control-fullscreen') : null;
-            if(mapBottomRight){
-                [mapLocationEl, mapZoomEl, mapFullscreenEl].filter(Boolean).forEach(el => mapBottomRight.appendChild(el));
+            if(mapBottomRight && mapZoomEl && mapLocationEl && mapFullscreenEl){
+                mapBottomRight.appendChild(mapLocationEl);
+                mapBottomRight.appendChild(mapZoomEl);
+                mapBottomRight.appendChild(mapFullscreenEl);
+                mapLocationEl.style.marginTop='0';
+                mapZoomEl.style.marginTop='10px';
+                mapFullscreenEl.style.marginTop='10px';
+            } else if(mapBottomRight && mapZoomEl && mapLocationEl){
+                mapBottomRight.appendChild(mapLocationEl);
+                mapBottomRight.appendChild(mapZoomEl);
+                mapLocationEl.style.marginTop='0';
+                mapZoomEl.style.marginTop='10px';
             }
 
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -4737,6 +4764,9 @@ const popVal = getPopForStation(county, town);
                 }
             });
             legendControl = new LegendControl().addTo(map);
+            forceMapControlOrder(map, 'map-location-control');
+            setTimeout(() => forceMapControlOrder(map, 'map-location-control'), 0);
+            setTimeout(() => forceMapControlOrder(map, 'map-location-control'), 300);
             mapInitialized = true;
             bindFullscreenLayoutFix(map);
             renderMapMarkers();
@@ -5219,15 +5249,23 @@ const popVal = getPopForStation(county, town);
                 const zoomEl = radarZoomControl.getContainer ? radarZoomControl.getContainer() : null;
                 const locationEl = radarLocationControl.getContainer ? radarLocationControl.getContainer() : null;
                 const fullscreenEl = radarFullscreenControl.getContainer ? radarFullscreenControl.getContainer() : null;
-                if(bottomRight){
-                    [locationEl, zoomEl, fullscreenEl].filter(Boolean).forEach(el => bottomRight.appendChild(el));
+                if(bottomRight && zoomEl && locationEl && fullscreenEl){
+                    bottomRight.appendChild(locationEl);
+                    bottomRight.appendChild(zoomEl);
+                    bottomRight.appendChild(fullscreenEl);
+                    locationEl.style.marginTop='0';
+                    zoomEl.style.marginTop='10px';
+                    fullscreenEl.style.marginTop='10px';
                 }
             } else {
                 const bottomRight = radarMap._controlCorners && radarMap._controlCorners.bottomright;
                 const zoomEl = radarZoomControl.getContainer ? radarZoomControl.getContainer() : null;
                 const locationEl = radarLocationControl.getContainer ? radarLocationControl.getContainer() : null;
-                if(bottomRight){
-                    [locationEl, zoomEl].filter(Boolean).forEach(el => bottomRight.appendChild(el));
+                if(bottomRight && zoomEl && locationEl){
+                    bottomRight.appendChild(locationEl);
+                    bottomRight.appendChild(zoomEl);
+                    locationEl.style.marginTop='0';
+                    zoomEl.style.marginTop='10px';
                 }
             }
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
@@ -5236,6 +5274,9 @@ const popVal = getPopForStation(county, town);
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{
                 maxZoom:18,updateWhenZooming:false,updateWhenIdle:true,keepBuffer:3,opacity:.95
             }).addTo(radarMap);
+            forceMapControlOrder(radarMap, 'radar-location-control');
+            setTimeout(() => forceMapControlOrder(radarMap, 'radar-location-control'), 0);
+            setTimeout(() => forceMapControlOrder(radarMap, 'radar-location-control'), 300);
             radarInitialized=true;
             bindFullscreenLayoutFix(radarMap);
             repairFullscreenMapLayout(radarMap);
