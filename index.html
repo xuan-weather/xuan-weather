@@ -4037,13 +4037,13 @@ const popVal = getPopForStation(county, town);
                 return;
             }
 
-            // 使用網站已保存的 CWA 實際觀測資料，不再使用人工模擬溫度。
             const historyId = getStationHistoryId(station);
             const rawHistory = Array.isArray(stationHistoryCache?.[historyId])
                 ? stationHistoryCache[historyId]
                 : [];
 
-            const cutoff = Date.now() - STATION_HISTORY_MAX_MS;
+            const now = Date.now();
+            const cutoff = now - STATION_HISTORY_MAX_MS;
             const history = rawHistory
                 .filter(point => {
                     const ts = Number(point?.ts);
@@ -4054,7 +4054,7 @@ const popVal = getPopForStation(county, town);
                 })
                 .sort((a, b) => Number(a.ts) - Number(b.ts));
 
-            // 補入目前這一筆實際觀測，避免尚未寫入 localStorage 時圖表少最新點。
+            // 補入目前這一筆實際 CWA 觀測。
             const currentObsRaw = station.ObsTime?.DateTime || station.ObsTime || obsTimeString;
             const currentObsTs = Date.parse(currentObsRaw || '');
             if (Number.isFinite(currentObsTs) && Number.isFinite(currentTemp)) {
@@ -4065,29 +4065,63 @@ const popVal = getPopForStation(county, town);
                 }
             }
 
-            const cleanHistory = history.slice(-25);
-
-            if (cleanHistory.length < 2) {
-                if (subtitleEl) {
-                    subtitleEl.innerText = '實際 CWA 歷史資料正在累積';
-                }
+            if (history.length < 2) {
+                if (subtitleEl) subtitleEl.innerText = '實際 CWA 歷史資料正在累積';
                 initPastChart([], [], []);
                 return;
             }
 
-            const fullDateLabels = cleanHistory.map(point => {
-                const d = new Date(Number(point.ts));
-                return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-            });
+            /*
+             * DPIP 風格：24 小時圖以「每小時」為一個等距資料槽。
+             * 同一小時如果有多筆 CWA 觀測，取該小時最後一筆實際觀測值。
+             * 沒有資料的整點不補假數字，保留為空值，避免把兩個不相鄰時段
+             * 的資料錯誤連成一條長斜線。
+             */
+            const latestTs = Number(history[history.length - 1].ts);
+            const latestHour = new Date(latestTs);
+            latestHour.setMinutes(0, 0, 0, 0);
 
-            const timeValues = cleanHistory.map(point => Number(point.ts));
-            const temps = cleanHistory.map(point => Number(Number(point.temp).toFixed(1)));
+            const firstHour = new Date(latestHour.getTime() - 24 * 60 * 60 * 1000);
 
-            if (subtitleEl) {
-                subtitleEl.innerText = `${fullDateLabels[0]} ~ ${fullDateLabels[fullDateLabels.length - 1]}`;
+            const hourlyPoints = [];
+            for (let i = 0; i <= 24; i++) {
+                const hourTs = firstHour.getTime() + i * 60 * 60 * 1000;
+                const hourEnd = hourTs + 60 * 60 * 1000;
+
+                const candidates = history.filter(point => {
+                    const ts = Number(point.ts);
+                    return ts >= hourTs && ts < hourEnd;
+                });
+
+                const point = candidates.length ? candidates[candidates.length - 1] : null;
+
+                hourlyPoints.push({
+                    ts: hourTs,
+                    temp: point ? Number(Number(point.temp).toFixed(1)) : null
+                });
             }
 
-            // 曲線使用每一筆實際觀測時間；X 軸刻度另外固定在整點。
+            const valid = hourlyPoints.filter(p => Number.isFinite(p.temp));
+            if (valid.length < 2) {
+                if (subtitleEl) subtitleEl.innerText = '每小時實際 CWA 歷史資料正在累積';
+                initPastChart([], [], []);
+                return;
+            }
+
+            const firstLabelDate = new Date(firstHour.getTime());
+            const lastLabelDate = new Date(latestHour.getTime());
+
+            const formatDateTime = d =>
+                `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:00`;
+
+            if (subtitleEl) {
+                subtitleEl.innerText = `${formatDateTime(firstLabelDate)} ~ ${formatDateTime(lastLabelDate)}`;
+            }
+
+            const timeValues = hourlyPoints.map(p => p.ts);
+            const temps = hourlyPoints.map(p => p.temp);
+            const fullDateLabels = hourlyPoints.map(p => formatDateTime(new Date(p.ts)));
+
             initPastChart([], temps, fullDateLabels, timeValues);
         }
 
@@ -4106,7 +4140,7 @@ const popVal = getPopForStation(county, town);
             const points = hasTimeValues
                 ? dataValues.map((value, index) => ({
                     x: Number(timeValues[index]),
-                    y: value
+                    y: Number.isFinite(Number(value)) ? Number(value) : null
                 }))
                 : dataValues;
 
@@ -4114,10 +4148,10 @@ const popVal = getPopForStation(county, town);
             const lastTs = hasTimeValues ? Number(timeValues[timeValues.length - 1]) : NaN;
 
             const firstHour = Number.isFinite(firstTs)
-                ? new Date(firstTs).setMinutes(0, 0, 0)
+                ? firstTs
                 : NaN;
             const lastHour = Number.isFinite(lastTs)
-                ? new Date(lastTs).setMinutes(0, 0, 0) + 60 * 60 * 1000
+                ? lastTs
                 : NaN;
 
             tempChart = new Chart(ctx, {
@@ -4131,6 +4165,7 @@ const popVal = getPopForStation(county, town);
                         borderWidth: 2.5,
                         fill: true,
                         tension: 0.25,
+                        spanGaps: false,
                         pointRadius: 3,
                         pointBackgroundColor: '#38bdf8'
                     }]
@@ -4146,11 +4181,13 @@ const popVal = getPopForStation(county, town);
                                 title: (context) => {
                                     if (hasTimeValues && context[0]?.raw?.x) {
                                         const d = new Date(Number(context[0].raw.x));
-                                        return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                                        return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:00`;
                                     }
                                     return fullDates[context[0].dataIndex] || context[0].label;
                                 },
-                                label: (context) => `氣溫: ${context.parsed.y} °C`
+                                label: (context) => Number.isFinite(context.parsed.y)
+                                    ? `氣溫: ${context.parsed.y.toFixed(1)} °C`
+                                    : '該小時目前沒有實際資料'
                             }
                         }
                     },
@@ -4163,21 +4200,13 @@ const popVal = getPopForStation(county, town);
                             ticks: {
                                 color: '#94a3b8',
                                 font: { size: 10 },
-                                // 參照 DPIP 24 小時圖：每 1 小時保留一條時間網格，
-                                // 但底部文字每 2 小時顯示一次。
-                                stepSize: 60 * 60 * 1000,
+                                stepSize: 2 * 60 * 60 * 1000,
                                 autoSkip: false,
-                                maxTicksLimit: 25,
+                                maxTicksLimit: 13,
                                 minRotation: 0,
                                 maxRotation: 0,
                                 callback: function(value) {
-                                    const ts = Number(value);
-                                    if (!Number.isFinite(ts) || !Number.isFinite(firstHour)) return '';
-
-                                    const hourIndex = Math.round((ts - firstHour) / (60 * 60 * 1000));
-                                    if (hourIndex % 2 !== 0) return '';
-
-                                    const d = new Date(ts);
+                                    const d = new Date(Number(value));
                                     if (Number.isNaN(d.getTime())) return '';
                                     return `${String(d.getHours()).padStart(2, '0')}:00`;
                                 }
@@ -4198,6 +4227,7 @@ const popVal = getPopForStation(county, town);
                 }
             });
         }
+
 
         function initMap() {
             if (mapInitialized) return;
