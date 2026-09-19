@@ -651,6 +651,20 @@
             z-index: 10000;
         }
         
+        body.xuan-map-pseudo-fullscreen{
+            overflow:hidden !important;
+        }
+        #map.xuan-map-pseudo-fullscreen,
+        #radarMap.xuan-map-pseudo-fullscreen{
+            position:fixed !important;
+            inset:0 !important;
+            width:100vw !important;
+            height:100vh !important;
+            z-index:99999 !important;
+            margin:0 !important;
+            border-radius:0 !important;
+        }
+
         .leaflet-control-attribution { display: none !important; }
         .leaflet-top.leaflet-left { z-index: 1000; }
         .custom-vertical-legend {
@@ -1058,8 +1072,22 @@
 /* 最下：全螢幕 */
 #map .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen,
 .radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen{
-    top:122px !important;
+    top:132px !important;
     bottom:auto !important;
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    z-index:10001 !important;
+}
+#map .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen a,
+.radar-page-map-wrap .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen a{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    width:34px !important;
+    height:34px !important;
 }
 
 /* 清掉舊版 margin，避免舊樣式把按鈕推回錯誤位置 */
@@ -4674,21 +4702,25 @@ const popVal = getPopForStation(county, town);
         }
 
 
-        // 右下角控制項使用固定座標，不依賴 Leaflet DOM 插入順序。
-        // 由上往下永遠是：①定位 → ②＋／－ → ③全螢幕。
+        // 右下角控制項固定為：①定位 → ②＋／－ → ③全螢幕。
+        // 若 Leaflet.fullscreen 外掛沒有成功插入按鈕，建立備援全螢幕按鈕，
+        // 確保最下方一定看得到 ⛶，不會只留下空白區域。
         function forceMapControlOrder(mapInstance, locationClass){
             if(!mapInstance || !mapInstance._controlCorners || !mapInstance._controlCorners.bottomright) return;
+
             const corner = mapInstance._controlCorners.bottomright;
             const locationEl = corner.querySelector('.' + locationClass);
             const zoomEl = corner.querySelector('.leaflet-control-zoom');
-            const fullscreenEl = corner.querySelector('.leaflet-control-fullscreen');
+            let fullscreenEl = corner.querySelector('.leaflet-control-fullscreen');
 
             corner.style.position='absolute';
             corner.style.right='0';
             corner.style.bottom='0';
-            corner.style.width='46px';
-            corner.style.height='166px';
+            corner.style.width='56px';
+            corner.style.height='178px';
             corner.style.display='block';
+            corner.style.overflow='visible';
+            corner.style.zIndex='10000';
 
             if(locationEl){
                 locationEl.style.position='absolute';
@@ -4697,7 +4729,9 @@ const popVal = getPopForStation(county, town);
                 locationEl.style.bottom='auto';
                 locationEl.style.margin='0';
                 locationEl.style.float='none';
+                locationEl.style.zIndex='10001';
             }
+
             if(zoomEl){
                 zoomEl.style.position='absolute';
                 zoomEl.style.right='0';
@@ -4705,16 +4739,73 @@ const popVal = getPopForStation(county, town);
                 zoomEl.style.bottom='auto';
                 zoomEl.style.margin='0';
                 zoomEl.style.float='none';
+                zoomEl.style.zIndex='10001';
             }
-            if(fullscreenEl){
-                fullscreenEl.style.position='absolute';
-                fullscreenEl.style.right='0';
-                fullscreenEl.style.top='122px';
-                fullscreenEl.style.bottom='auto';
-                fullscreenEl.style.margin='0';
-                fullscreenEl.style.float='none';
+
+            // 全螢幕控制永遠固定在最下方；若外掛控制項不存在則建立備援。
+            if(!fullscreenEl){
+                fullscreenEl=document.createElement('div');
+                fullscreenEl.className='leaflet-control leaflet-control-fullscreen';
+                const fullscreenButton=document.createElement('a');
+                fullscreenButton.href='#';
+                fullscreenButton.title='全螢幕';
+                fullscreenButton.setAttribute('aria-label','全螢幕');
+                fullscreenButton.setAttribute('role','button');
+                fullscreenButton.innerHTML='<i class="fas fa-expand"></i>';
+                fullscreenEl.appendChild(fullscreenButton);
+                corner.appendChild(fullscreenEl);
+
+                L.DomEvent.disableClickPropagation(fullscreenEl);
+                L.DomEvent.on(fullscreenButton,'click',function(e){
+                    L.DomEvent.stopPropagation(e);
+                    e.preventDefault();
+
+                    // 優先使用 Leaflet.fullscreen 外掛已存在的控制項。
+                    const pluginButton=corner.querySelector('.leaflet-control-fullscreen:not(.xuan-fallback-fullscreen) a');
+                    if(pluginButton && pluginButton !== fullscreenButton){
+                        pluginButton.click();
+                        return;
+                    }
+
+                    // 外掛不存在時使用原生 fullscreen；iPhone 等不支援時使用網站的偽全螢幕 class。
+                    const mapEl=mapInstance.getContainer();
+                    if(document.fullscreenElement){
+                        document.exitFullscreen?.();
+                        mapEl.classList.remove('leaflet-fullscreen-on');
+                        document.body.classList.remove('xuan-map-pseudo-fullscreen');
+                    }else if(mapEl.requestFullscreen){
+                        mapEl.requestFullscreen().catch(()=>{
+                            mapEl.classList.add('leaflet-fullscreen-on');
+                            document.body.classList.add('xuan-map-pseudo-fullscreen');
+                        });
+                    }else{
+                        mapEl.classList.add('leaflet-fullscreen-on');
+                        document.body.classList.add('xuan-map-pseudo-fullscreen');
+                    }
+                });
+            }
+
+            fullscreenEl.style.position='absolute';
+            fullscreenEl.style.right='0';
+            fullscreenEl.style.top='132px';
+            fullscreenEl.style.bottom='auto';
+            fullscreenEl.style.margin='0';
+            fullscreenEl.style.float='none';
+            fullscreenEl.style.zIndex='10001';
+            fullscreenEl.style.display='block';
+            fullscreenEl.style.visibility='visible';
+            fullscreenEl.style.opacity='1';
+
+            const fullscreenLink=fullscreenEl.querySelector('a');
+            if(fullscreenLink){
+                fullscreenLink.style.display='flex';
+                fullscreenLink.style.visibility='visible';
+                fullscreenLink.style.opacity='1';
+                fullscreenLink.style.alignItems='center';
+                fullscreenLink.style.justifyContent='center';
             }
         }
+
 
         function initMap() {
             if (mapInitialized) return;
