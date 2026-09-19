@@ -1008,6 +1008,31 @@
         .radar-location-button.locating{color:#0ea5e9;}
         .radar-location-button.locating i{animation:radarLocatePulse 1s ease-in-out infinite;}
         @keyframes radarLocatePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+        /* 全台地圖「📍所在地」定位控制 */
+        .main-map-location-control{
+            margin-top:10px !important;
+        }
+        .main-map-location-button{
+            width:34px;
+            height:34px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#fff;
+            color:#0f172a;
+            border:2px solid rgba(0,0,0,.18);
+            border-radius:4px;
+            box-shadow:0 1px 5px rgba(0,0,0,.45);
+            cursor:pointer;
+            font-size:18px;
+            line-height:1;
+        }
+        .main-map-location-button:hover{background:#f1f5f9;color:#0ea5e9;}
+        .main-map-location-button:active{transform:scale(.96);}
+        .main-map-location-button.locating{color:#0ea5e9;}
+        .main-map-location-button.locating i{animation:mainMapLocatePulse 1s ease-in-out infinite;}
+        @keyframes mainMapLocatePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+
         /* DPIP 風格所在地定位標記：藍色定位點＋白色外框＋淡藍定位範圍 */
         .dpip-location-marker-wrap{
             background:transparent !important;
@@ -4572,6 +4597,72 @@ const popVal = getPopForStation(county, town);
         }
 
 
+        let mainMapLocationControl = null;
+        let mainMapLocationMarker = null;
+        let mainMapLocationAccuracy = null;
+
+        function locateMainMapUser(button){
+            if(!map) return;
+            if(!navigator.geolocation){
+                alert('此瀏覽器不支援所在地定位功能');
+                return;
+            }
+            button.classList.add('locating');
+            button.disabled=true;
+            button.title='正在取得所在地…';
+
+            navigator.geolocation.getCurrentPosition(function(position){
+                const lat=position.coords.latitude;
+                const lng=position.coords.longitude;
+                const accuracy=Math.max(1,position.coords.accuracy||0);
+                const latlng=[lat,lng];
+
+                if(mainMapLocationMarker){
+                    mainMapLocationMarker.setLatLng(latlng);
+                }else{
+                    mainMapLocationMarker=L.marker(latlng,{
+                        icon:L.divIcon({
+                            className:'dpip-location-marker-wrap',
+                            html:'<div class="dpip-location-marker"><span class="dpip-location-pulse"></span><span class="dpip-location-dot"></span></div>',
+                            iconSize:[28,28],
+                            iconAnchor:[14,14]
+                        }),
+                        zIndexOffset:2000
+                    }).addTo(map);
+                    mainMapLocationAccuracy=L.circle(latlng,{
+                        radius:accuracy,
+                        color:'#4285f4',
+                        weight:2,
+                        fillColor:'#4285f4',
+                        fillOpacity:.14,
+                        interactive:false
+                    }).addTo(map);
+                }
+
+                if(mainMapLocationAccuracy){
+                    mainMapLocationAccuracy.setLatLng(latlng).setRadius(accuracy);
+                }
+
+                mainMapLocationMarker.bindPopup(
+                    '<div class="radar-location-popup"><b>📍 我的位置</b><br><span>定位精度：約 <strong>'+Math.round(accuracy)+' 公尺</strong></span></div>'
+                ).openPopup();
+
+                map.setView(latlng,Math.max(map.getZoom(),10),{animate:true});
+                button.classList.remove('locating');
+                button.disabled=false;
+                button.title='重新定位所在地';
+            },function(error){
+                let message='無法取得所在地';
+                if(error&&error.code===1) message='定位權限被拒絕，請到瀏覽器／手機設定允許此網站使用位置';
+                else if(error&&error.code===2) message='目前無法取得位置，請確認 GPS／定位服務已開啟';
+                else if(error&&error.code===3) message='定位逾時，請再按一次 📍';
+                alert(message);
+                button.classList.remove('locating');
+                button.disabled=false;
+                button.title='定位所在地';
+            },{enableHighAccuracy:true,timeout:12000,maximumAge:30000});
+        }
+
         function initMap() {
             if (mapInitialized) return;
             map = L.map('map', {
@@ -4596,6 +4687,28 @@ const popVal = getPopForStation(county, town);
 
             // 全台地圖新增與雷達合成回波圖相同的「＋／－」縮放控制，放在右下角
             L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            // 全台地圖新增「📍所在地」定位按鈕，位置固定在右下角縮放控制下方。
+            const MainMapLocationControl = L.Control.extend({
+                options: { position: 'bottomright' },
+                onAdd: function(){
+                    const container=L.DomUtil.create('div','leaflet-control main-map-location-control');
+                    const button=L.DomUtil.create('button','main-map-location-button',container);
+                    button.type='button';
+                    button.title='定位所在地';
+                    button.setAttribute('aria-label','定位所在地');
+                    button.innerHTML='<i class="fas fa-location-crosshairs"></i>';
+                    L.DomEvent.disableClickPropagation(container);
+                    L.DomEvent.on(button,'click',function(e){
+                        L.DomEvent.stopPropagation(e);
+                        locateMainMapUser(button);
+                    });
+                    mainMapLocationControl=this;
+                    this._button=button;
+                    return container;
+                }
+            });
+            new MainMapLocationControl().addTo(map);
 
                                       
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
