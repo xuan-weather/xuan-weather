@@ -1339,8 +1339,9 @@
                 </div>
                 <div id="weatherWarningsContent">
                     <div class="my-location-status"><i class="fas fa-spinner fa-spin"></i> 正在檢查豪大雨特報、強風與地震報告...</div>
-                    <div id="ncdrAlertSection" style="display:none; margin-top:8px;"></div>
                 </div>
+                <!-- NCDR／氣象署即時示警獨立於 CWA 警特報容器，避免 fetchWeatherWarnings() 重建 innerHTML 時被清除 -->
+                <div id="ncdrAlertSection" style="display:none; margin-top:8px;"></div>
             </div>
             
 
