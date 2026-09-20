@@ -16,93 +16,81 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 抓取 NCDR 生效中的政府／氣象示警
+      - name: 抓取 NCDR 生效中的政府／氣象署示警
         shell: python
         run: |
           import json
           import re
           import urllib.request
           from datetime import datetime, timezone, timedelta
-          from concurrent.futures import ThreadPoolExecutor, as_completed
           from pathlib import Path
 
           TZ = timezone(timedelta(hours=8))
-          BASE = "https://alerts.ncdr.nat.gov.tw/JSONAtomFeed.ashx?AlertType={}"
+          FEED_URL = "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx"
 
+          # 只納入目前網站需要的重大災害示警類別。
           TARGET_CATEGORIES = {
-              "地震", "海嘯", "颱風", "雷雨", "降雨",
-              "強風", "濃霧", "高溫", "火山", "巨浪"
+              "地震",
+              "海嘯",
+              "颱風",
+              "雷雨",
+              "降雨",
+              "強風",
+              "濃霧",
+              "高溫",
+              "低溫",
+              "火山",
+              "巨浪",
           }
 
-          def fetch_one(alert_type):
-              url = BASE.format(alert_type)
-              try:
-                  req = urllib.request.Request(
-                      url,
-                      headers={
-                          "User-Agent": "Xuan-Weather-National-Alert/1.0",
-                          "Accept": "application/json"
-                      }
-                  )
-                  with urllib.request.urlopen(req, timeout=8) as r:
-                      if r.status != 200:
-                          return []
-                      payload = json.loads(
-                          r.read().decode("utf-8-sig", "replace")
-                      )
+          # NCDR 的總 JSON Feed 也包含其他政府機關資料。
+          # 這裡只保留中央氣象署（CWA）相關示警。
+          CWA_KEYWORDS = (
+              "中央氣象署",
+              "氣象署",
+              "交通部中央氣象署",
+              "CWA",
+          )
 
-                  entries = payload.get("entry", [])
-                  if isinstance(entries, dict):
-                      entries = [entries]
+          def clean_text(value):
+              if isinstance(value, dict):
+                  value = value.get("#text", value.get("value", ""))
+              return re.sub(r"\s+", " ", str(value or "")).strip()
 
-                  return entries if isinstance(entries, list) else []
-
-              except Exception:
-                  return []
-
-          def val(x, *keys):
-              for k in keys:
-                  if isinstance(x, dict) and k in x:
-                      v = x[k]
-
-                      if isinstance(v, dict):
-                          v = v.get("#text", v.get("value", ""))
-
-                      return str(v or "").strip()
-
+          def val(obj, *keys):
+              for key in keys:
+                  if isinstance(obj, dict) and key in obj:
+                      value = obj[key]
+                      if isinstance(value, dict):
+                          value = value.get("#text", value.get("value", ""))
+                      return str(value or "").strip()
               return ""
 
-          def parse_time(s):
-              s = str(s or "").strip()
-
+          def parse_time(value):
+              s = str(value or "").strip()
               if not s:
                   return None
 
+              # ISO 8601
               try:
-                  d = datetime.fromisoformat(
-                      s.replace("Z", "+00:00")
-                  )
-
+                  d = datetime.fromisoformat(s.replace("Z", "+00:00"))
                   if d.tzinfo is None:
                       d = d.replace(tzinfo=TZ)
-
                   return d.astimezone(TZ)
-
               except Exception:
                   pass
 
+              # NCDR 常見中文日期：
+              # 2026/9/21 上午 09:21:00
+              # 2026/9/21 下午 03:21:00
               m = re.search(
-                  r"(\d{4})[/-](\d{1,2})[/-](\d{1,2}).*?"
-                  r"(上午|下午)?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?",
+                  r"(\d{4})[/-](\d{1,2})[/-](\d{1,2})"
+                  r".*?(上午|下午)?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?",
                   s
               )
 
               if m:
-                  y, mo, day = map(
-                      int,
-                      m.group(1, 2, 3)
-                  )
-
+                  y, mo, day = map(int, m.group(1, 2, 3))
                   ap = m.group(4) or ""
                   hh = int(m.group(5))
                   mm = int(m.group(6))
@@ -110,242 +98,216 @@ jobs:
 
                   if ap == "下午" and hh < 12:
                       hh += 12
-
                   if ap == "上午" and hh == 12:
                       hh = 0
 
                   return datetime(
-                      y, mo, day,
-                      hh, mm, ss,
-                      tzinfo=TZ
+                      y, mo, day, hh, mm, ss, tzinfo=TZ
                   )
 
               return None
 
-          def normalize(entry):
+          def get_category(entry):
+              category = entry.get("category", "")
 
-              category = val(
-                  entry,
-                  "category",
-                  "title"
-              )
-
-              if isinstance(entry.get("category"), dict):
-                  category = val(
-                      entry["category"],
-                      "@term",
-                      "term",
-                      "#text",
-                      "value"
+              if isinstance(category, dict):
+                  return (
+                      category.get("@term")
+                      or category.get("term")
+                      or category.get("#text")
+                      or category.get("value")
+                      or ""
                   )
 
-              if category not in TARGET_CATEGORIES:
-                  return None
+              if isinstance(category, list):
+                  for item in category:
+                      if isinstance(item, dict):
+                          value = (
+                              item.get("@term")
+                              or item.get("term")
+                              or item.get("#text")
+                              or item.get("value")
+                              or ""
+                          )
+                          if value:
+                              return str(value)
+                      elif item:
+                          return str(item)
 
-              status = val(
-                  entry,
-                  "cap:status",
-                  "status"
-              ) or "Actual"
+              return str(category or "")
 
-              msg_type = val(
-                  entry,
-                  "cap:msgType",
-                  "msgType"
-              ) or "Alert"
+          def get_author(entry):
+              author = entry.get("author", "")
 
-              if str(msg_type).lower() == "cancel":
-                  return None
-
-              if str(status).lower() not in {
-                  "actual",
-                  "test"
-              }:
-                  return None
-
-              updated = val(entry, "updated")
-              effective = val(
-                  entry,
-                  "cap:effective",
-                  "effective"
-              )
-              expires = val(
-                  entry,
-                  "cap:expires",
-                  "expires"
-              )
-
-              now = datetime.now(TZ)
-
-              eff_dt = (
-                  parse_time(effective)
-                  or parse_time(updated)
-              )
-
-              exp_dt = parse_time(expires)
-
-              if eff_dt and eff_dt > now:
-                  return None
-
-              if exp_dt and exp_dt < now:
-                  return None
-
-              summary = entry.get("summary", "")
-
-              if isinstance(summary, dict):
-                  summary = summary.get(
-                      "#text",
-                      summary.get("value", "")
+              if isinstance(author, dict):
+                  return clean_text(
+                      author.get("name")
+                      or author.get("#text")
+                      or author.get("value")
                   )
 
-              summary = re.sub(
-                  r"<[^>]+>",
-                  " ",
-                  str(summary or "")
-              )
+              return clean_text(author)
 
-              summary = re.sub(
-                  r"\s+",
-                  " ",
-                  summary
-              ).strip()
-
-              link = ""
-
+          def get_link(entry):
               raw_link = entry.get("link", "")
 
               if isinstance(raw_link, dict):
-                  link = (
+                  return (
                       raw_link.get("@href")
                       or raw_link.get("href")
                       or ""
                   )
 
-              elif isinstance(raw_link, list):
+              if isinstance(raw_link, list):
+                  for item in raw_link:
+                      if not isinstance(item, dict):
+                          continue
+                      rel = item.get("@rel") or item.get("rel")
+                      href = item.get("@href") or item.get("href") or ""
+                      if rel in (None, "alternate") and href:
+                          return href
 
                   for item in raw_link:
+                      if isinstance(item, dict):
+                          href = item.get("@href") or item.get("href") or ""
+                          if href:
+                              return href
 
-                      if isinstance(item, dict) and (
-                          item.get("@rel")
-                          in (None, "alternate")
-                      ):
+              return str(raw_link or "")
 
-                          link = (
-                              item.get("@href")
-                              or item.get("href")
-                              or ""
-                          )
+          def normalize(entry):
+              if not isinstance(entry, dict):
+                  return None
 
-                          if link:
-                              break
+              category = get_category(entry).strip()
+              title = clean_text(entry.get("title", ""))
+              author = get_author(entry)
+              summary = clean_text(entry.get("summary", ""))
+              status = val(entry, "cap:status", "status") or "Actual"
+              msg_type = val(entry, "cap:msgType", "msgType") or "Alert"
 
-              else:
-                  link = str(raw_link or "")
+              # 只接受實際警報，不把演練 Test 當成真正警報。
+              if str(status).lower() != "actual":
+                  return None
+
+              if str(msg_type).lower() == "cancel":
+                  return None
+
+              if category not in TARGET_CATEGORIES:
+                  return None
+
+              # 只保留中央氣象署相關資料。
+              cwa_text = " ".join([author, title, summary, category])
+              if not any(k.lower() in cwa_text.lower() for k in CWA_KEYWORDS):
+                  return None
+
+              updated = val(entry, "updated")
+              effective = val(entry, "cap:effective", "effective")
+              expires = val(entry, "cap:expires", "expires")
+
+              now = datetime.now(TZ)
+              eff_dt = parse_time(effective) or parse_time(updated)
+              exp_dt = parse_time(expires)
+
+              # 尚未生效
+              if eff_dt and eff_dt > now:
+                  return None
+
+              # 已過期
+              if exp_dt and exp_dt < now:
+                  return None
 
               return {
                   "id": val(entry, "id")
-                        or f"{category}|{updated}|{summary}",
-
+                        or f"{category}|{updated}|{title}|{summary}",
                   "category": category,
-
-                  "title": val(
-                      entry,
-                      "title"
-                  ) or category,
-
+                  "title": title or category,
                   "status": status,
-
                   "msgType": msg_type,
-
+                  "author": author,
                   "updated": updated,
-
                   "effective": effective,
-
                   "expires": expires,
-
                   "summary": summary,
-
-                  "link": link
+                  "link": get_link(entry),
               }
 
-          entries = []
+          # 下載 NCDR 最新完整 JSON Feed
+          request = urllib.request.Request(
+              FEED_URL,
+              headers={
+                  "User-Agent": "Xuan-Weather-National-Alert/2.0",
+                  "Accept": "application/json",
+              },
+          )
 
-          with ThreadPoolExecutor(
-              max_workers=20
-          ) as pool:
-
-              futures = [
-                  pool.submit(fetch_one, i)
-                  for i in range(1, 121)
-              ]
-
-              for future in as_completed(futures):
-                  entries.extend(
-                      future.result()
+          with urllib.request.urlopen(request, timeout=20) as response:
+              if response.status != 200:
+                  raise RuntimeError(
+                      f"NCDR HTTP 狀態碼：{response.status}"
                   )
+
+              raw = response.read().decode(
+                  "utf-8-sig", "replace"
+              )
+
+          payload = json.loads(raw)
+
+          entries = payload.get("entry", [])
+          if isinstance(entries, dict):
+              entries = [entries]
+          if not isinstance(entries, list):
+              entries = []
 
           normalized = []
 
           for entry in entries:
-
               item = normalize(entry)
-
               if item:
                   normalized.append(item)
 
+          # 相同 ID 只保留最新一筆
           latest = {}
 
           for item in normalized:
-
               key = item["id"]
-
               old = latest.get(key)
 
-              if (
-                  not old
-                  or (
-                      parse_time(item["updated"])
-                      or datetime.min.replace(tzinfo=TZ)
-                  )
-                  >
-                  (
-                      parse_time(old["updated"])
-                      or datetime.min.replace(tzinfo=TZ)
-                  )
-              ):
+              if not old:
+                  latest[key] = item
+                  continue
 
+              new_time = (
+                  parse_time(item["updated"])
+                  or datetime.min.replace(tzinfo=TZ)
+              )
+              old_time = (
+                  parse_time(old["updated"])
+                  or datetime.min.replace(tzinfo=TZ)
+              )
+
+              if new_time > old_time:
                   latest[key] = item
 
-          alerts = list(
-              latest.values()
-          )
+          alerts = list(latest.values())
 
           alerts.sort(
-              key=lambda x:
+              key=lambda x: (
                   parse_time(x["updated"])
-                  or datetime.min.replace(tzinfo=TZ),
-              reverse=True
+                  or datetime.min.replace(tzinfo=TZ)
+              ),
+              reverse=True,
           )
 
           output = {
-              "updatedAt":
-                  datetime.now(TZ).isoformat(),
-
-              "source":
-                  "NCDR 民生示警公開資料平台／中央氣象署等政府示警",
-
-              "alerts":
-                  alerts
+              "updatedAt": datetime.now(TZ).isoformat(),
+              "source": "NCDR 民生示警公開資料平台／中央氣象署",
+              "feed": FEED_URL,
+              "alerts": alerts,
           }
 
-          out = Path(
-              "data/national-alerts.json"
-          )
-
-          out.parent.mkdir(
-              parents=True,
-              exist_ok=True
-          )
+          out = Path("data/national-alerts.json")
+          out.parent.mkdir(parents=True, exist_ok=True)
 
           out.write_text(
               json.dumps(
@@ -356,16 +318,13 @@ jobs:
               encoding="utf-8"
           )
 
-          print(
-              f"生效中的重要示警：{len(alerts)}"
-          )
+          print(f"NCDR 生效中的 CWA 重大示警：{len(alerts)}")
 
-          for x in alerts:
+          for item in alerts:
               print(
-                  f"- {x['category']} | "
-                  f"{x['status']} | "
-                  f"{x['updated']} | "
-                  f"{x['summary'][:80]}"
+                  f"- {item['category']} | "
+                  f"{item['title']} | "
+                  f"{item['effective']} ~ {item['expires']}"
               )
 
       - name: Commit and push
