@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T04:30:36.387356+08:00",
+  "updatedAt": "2026-09-21T04:47:42.645007+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_strong-wind_202609210432001",
+      "category": "強風",
+      "title": "強風",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-21T04:32:11+08:00",
+      "effective": "2026/9/21 上午 04:32:00",
+      "expires": "2026/9/22 下午 11:00:00",
+      "summary": "風力偏強，21日下午至22日晚上桃園市、苗栗縣、臺中市、彰化縣、雲林縣、臺南市、屏東縣、臺東縣(含蘭嶼)、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609210432.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260921031840_0000",
       "category": "水庫放流",
@@ -29,20 +43,6 @@
       "expires": "2026/9/21 上午 05:19:00",
       "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260921021840_0000.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_strong-wind_202609202246001",
-      "category": "強風",
-      "title": "強風",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-20T22:46:04+08:00",
-      "effective": "2026/9/20 下午 10:45:00",
-      "expires": "2026/9/21 下午 10:00:00",
-      "summary": "風力偏強，20日晚上至21日晚上苗栗縣、臺中市、宜蘭縣、臺東縣(含蘭嶼)局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609202246.cap",
       "isDrill": false
     },
     {
