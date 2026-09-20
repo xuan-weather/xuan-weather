@@ -1005,21 +1005,27 @@
         .radar-legend-labels{display:flex;flex-direction:column;justify-content:space-between;font-size:11px;line-height:1;color:var(--legend-text);padding:0;}
         .radar-load-status{position:absolute;z-index:1001;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 16px;border-radius:999px;background:rgba(9,13,22,.82);color:#cbd5e1;font-size:14px;display:none;pointer-events:none;}
         /* 全台地圖控制順序：📍所在地 → ＋／－ → 全螢幕，與 DPIP 風格一致 */
+        /* 全台地圖右下控制項固定由上到下：
+           1. 📍定位　2. ＋／－縮放　3. 全螢幕 */
         .map-container-wrapper .leaflet-bottom.leaflet-right{
-            display:block;
+            display:flex !important;
+            flex-direction:column !important;
+            align-items:flex-end !important;
+            gap:10px !important;
         }
         .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control{
-            float:none;
-            clear:both;
-            margin-right:0;
-        }
-        .map-container-wrapper .leaflet-bottom.leaflet-right .main-map-location-control,
-        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-zoom,
-        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
-            margin-top:10px !important;
+            float:none !important;
+            clear:none !important;
+            margin:0 !important;
         }
         .map-container-wrapper .leaflet-bottom.leaflet-right .main-map-location-control{
-            margin-top:0 !important;
+            order:1 !important;
+        }
+        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-zoom{
+            order:2 !important;
+        }
+        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
+            order:3 !important;
         }
         .main-map-location-button{
             width:34px;
