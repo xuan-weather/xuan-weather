@@ -1687,7 +1687,7 @@
         const CWA_STATIC_BASE = new URL('data/', document.baseURI).href;
         // 即時 CWA 資料優先走既有的公開反向代理；失敗時自動退回 GitHub Actions 靜態 JSON。
         // 代理網址本身不含 CWA API Key，避免把 CWA 金鑰放進 GitHub Pages 前端。
-        const CWA_LIVE_API_BASE = 'https://mingxuan.904037.xyz/api/v1/rest/datastore/';
+        const CWA_LIVE_API_BASE = 'https://xuan-weather-yvlx.vercel.app/api/cwa?dataset=';
         const CWA_LIVE_DATASETS = new Set([
             'O-A0001-001', 'O-A0002-001', 'O-A0003-001'
         ]);
@@ -1700,15 +1700,16 @@
             throw new Error(`CWA 資料格式無法辨識：${dataset}`);
         }
 
-        // 取得一份 CWA 資料中「真正最新的一批 ObsTime」。
-        // 不能只相信即時代理，因為代理或 GitHub Actions 可能短暫不同步。
         function getCwaPayloadLatestObsTime(payload) {
             const list = payload?.records?.Station;
             if (!Array.isArray(list) || !list.length) return 0;
+
             let latest = 0;
             list.forEach(station => {
                 let raw = station?.ObsTime?.DateTime ?? station?.ObsTime ?? station?.DateTime;
-                if (raw && typeof raw === 'object') raw = raw.DateTime ?? raw.dateTime ?? null;
+                if (raw && typeof raw === 'object') {
+                    raw = raw.DateTime ?? raw.dateTime ?? null;
+                }
                 const ms = Date.parse(raw || '');
                 if (Number.isFinite(ms) && ms > latest) latest = ms;
             });
@@ -1720,9 +1721,9 @@
             let liveData = null;
             let staticData = null;
 
-            // ① 即時代理：嘗試取得最新資料。
+            // ① 即時資料：改走已驗證成功的 Vercel 官方 CWA API。
             if (CWA_LIVE_DATASETS.has(dataset)) {
-                const liveUrl = `${CWA_LIVE_API_BASE}${dataset}?_=${nonce}`;
+                const liveUrl = `${CWA_LIVE_API_BASE}${encodeURIComponent(dataset)}&_=${nonce}`;
                 try {
                     const liveResponse = await fetch(liveUrl, {
                         cache: 'no-store',
@@ -1736,13 +1737,11 @@
                         }
                     }
                 } catch (liveError) {
-                    console.warn(`CWA 即時代理讀取失敗 ${dataset}，將比較 GitHub 靜態資料。`, liveError);
+                    console.warn(`Vercel CWA 即時 API 讀取失敗 ${dataset}，改用 GitHub 靜態資料。`, liveError);
                 }
             }
 
-            // ② GitHub Actions 靜態資料也一起檢查。
-            // 原本「代理成功就直接採用」會造成代理停在 13:40、GitHub 已經 13:50 時，
-            // 網站反而選到較舊的 13:40。
+            // ② GitHub Actions 靜態 JSON 作為備援，同時用 ObsTime 比較新舊。
             const staticUrl = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${nonce}`;
             try {
                 const response = await fetch(staticUrl, {
@@ -1757,19 +1756,19 @@
                 console.warn(`CWA GitHub 靜態資料讀取失敗 ${dataset}`, staticError);
             }
 
-            // ③ 兩份資料都拿到時，以 CWA ObsTime 較新的那一份為準。
-            const liveTime = getCwaPayloadLatestObsTime(liveData);
-            const staticTime = getCwaPayloadLatestObsTime(staticData);
-
             if (liveData && staticData) {
+                const liveTime = getCwaPayloadLatestObsTime(liveData);
+                const staticTime = getCwaPayloadLatestObsTime(staticData);
+
                 if (liveTime >= staticTime && liveTime > 0) return liveData;
                 if (staticTime > 0) return staticData;
                 return liveData;
             }
+
             if (liveData) return liveData;
             if (staticData) return staticData;
 
-            throw new Error(`CWA ${dataset} 即時代理與 GitHub 靜態資料皆無法取得`);
+            throw new Error(`CWA 無法取得有效資料：${dataset}`);
         }
 
         // AQI 由 GitHub Actions 定時更新至 data/aqx-p-432.json，GitHub Pages 直接讀取。
@@ -3106,17 +3105,18 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
                         renderCurrentStationData();
                     }
                     renderQuickRankingCards();
+
+                    // CWA 新一批 10 分鐘資料到達後，重新更新在地天氣，
+                    // 避免定位卡片停留在舊的 ObsTime。
+                    const locationArea = document.getElementById('myLocationContentArea');
+                    if (locationArea && locationArea.dataset.locationReady === '1') {
+                        initUserLocationWeather();
+                    }
                     renderNationwideAttention();
                     renderRankings();
                     renderCountyForecastGrid();
                     renderFavoritesSection();
                     if (mapInitialized) renderMapMarkers();
-                    // CWA 新批次套用後，同步更新「您目前所在位置天氣」的最近測站資料。
-                    // 已取得定位權限時不會重新詢問使用者，只會重新以最新測站資料比對。
-                    const myLocationArea = document.getElementById('myLocationContentArea');
-                    if (myLocationArea && navigator.geolocation && myLocationArea.dataset.locationReady === '1') {
-                        initUserLocationWeather();
-                    }
                 }
             } catch (err) {
                 console.error("資料載入錯誤:", err);
@@ -3320,7 +3320,7 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
         function updateRankingObservationTime() {
             const quick = document.getElementById('quickRankingObsTime');
             if (quick) {
-                quick.textContent = `資料時間：${getRankingObservationTimeLabel(['O-A0003-001', 'O-A0002-001'])}`;
+                quick.textContent = `資料時間：${getRankingObservationTimeLabel('O-A0003-001')}`;
             }
             const ranking = document.getElementById('rankingObsTime');
             if (ranking) {
@@ -4118,8 +4118,6 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 position => {
                     const userLat = position.coords.latitude;
                     const userLon = position.coords.longitude;
-                    const locationArea = document.getElementById('myLocationContentArea');
-                    if (locationArea) locationArea.dataset.locationReady = '1';
                     let closestStation = null;
                     let minDistance = Infinity;
                     weatherStationData.forEach(station => {
@@ -4134,6 +4132,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                         }
                     });
                     if (closestStation) {
+                        container.dataset.locationReady = '1';
                         const data = parseStationElement(closestStation);
                         const county = (closestStation.GeoInfo?.CountyName || '').replace('台', '臺');
                         const town = closestStation.GeoInfo?.TownName || '';
@@ -4177,6 +4176,7 @@ const popVal = getPopForStation(county, town);
                 },
                 error => {
                     container.innerHTML = `<div class="my-location-status" style="color: #f87171;"><i class="fas fa-map-marker-slash"></i> 定位失敗或權限遭拒</div>`;
+                    container.dataset.locationReady = '0';
                 },
                 { timeout: 10000, maximumAge: 60000 }
             );
