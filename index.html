@@ -4262,6 +4262,9 @@ const popVal = getPopForStation(county, town);
                 }
             }
 
+            // 先把目前 CWA 測站快照寫入本機歷史，再立即建立 24 小時圖。
+            // 避免第一次開啟測站時因快照尚未寫入，圖表暫時空白；之後點擊才出現資料點。
+            recordStationHistorySnapshot(true);
             renderPast24hChart(targetStation, data.obsTime);
         }
         
@@ -4289,13 +4292,33 @@ const popVal = getPopForStation(county, town);
             const now = Date.now();
             const cutoff = now - STATION_HISTORY_MAX_MS;
 
-            // 24 小時趨勢統一以 GitHub Actions 保存的 CWA 歷史檔為準。
-            // 不再把 localStorage 的裝置本機歷史併入圖表，避免網站與 PWA
-            // 因為各自累積的時間不同而顯示不同的 24 小時曲線。
+            // CWA GitHub 歷史檔會逐步累積；剛啟用時可能只有 1～2 筆。
+            // 不能因為遠端目前只有兩筆，就把本機已累積的 24 小時資料丟掉。
+            // 合併「GitHub CWA 10分鐘歷史」＋「本機歷史快取」，
+            // 同一時間戳以 GitHub 的 CWA 資料優先。
+            if (subtitleEl) subtitleEl.innerText = '正在載入 CWA 10分鐘歷史資料…';
             const remoteHistory = await loadCwaTemperatureHistory(historyId);
+
+            const localHistory = Array.isArray(stationHistoryCache?.[historyId])
+                ? stationHistoryCache[historyId]
+                : [];
 
             const historyByTs = new Map();
 
+            for (const point of localHistory) {
+                const ts = Number(point?.ts);
+                const temp = Number(point?.temp);
+                if (
+                    Number.isFinite(ts) &&
+                    Number.isFinite(temp) &&
+                    temp !== 0 &&
+                    ts >= cutoff
+                ) {
+                    historyByTs.set(ts, { ts, temp });
+                }
+            }
+
+            // GitHub Actions 的 CWA 資料覆蓋同時間的本機資料。
             for (const point of remoteHistory) {
                 const ts = Number(point?.ts);
                 const temp = Number(point?.temp);
