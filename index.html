@@ -2442,18 +2442,21 @@ const longWave = longWaveResult.status === 'fulfilled'
                     html += `<div class="national-alert-item"><div class="national-alert-item-detail">目前沒有符合篩選條件的生效中示警。你可以按上方「篩選」調整顯示類別。</div></div>`;
                 } else {
                     if (showLongWave) html += renderCwaLongWaveItem(longWave);
-                    html += inPanel.map(alert=>{
-                        const status=String(alert.status||'').toLowerCase();
-                        const isTest=status==='test';
-                        const badge=isTest?'🟠 國家防災日｜演習':'⚠️ 即時政府示警';
-                        const icon=nationalAlertCategoryIcon(nationalAlertNormalizedCategory(alert));
-                        const title=nationalAlertEscape(alert.title||nationalAlertNormalizedCategory(alert)||'政府示警');
-                        const summary=nationalAlertEscape(alert.summary||'目前有生效中的政府示警。');
-                        return `<div class="national-alert-item" style="${isTest?'border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.10);':''}">
-                            <div class="national-alert-item-title">${badge}｜${icon} ${nationalAlertEscape(nationalAlertNormalizedCategory(alert)||'示警')}｜${title}</div>
-                            <div class="national-alert-item-detail">${isTest?'<b style="color:#f59e0b;">本訊息為演習，非實際災害</b><br>':''}<b>生效：${formatNationalAlertTime(alert.effective)}</b><br><b>到期：${formatNationalAlertTime(alert.expires)}</b><br>${summary}</div>
-                        </div>`;
-                    }).join('');
+                   html += inPanel.map(alert=>{
+    const status=String(alert.status||'').toLowerCase();
+    const isTest=status==='test';
+    const badge=isTest?'🟠 國家防災日｜演習':'⚠️ 即時政府示警';
+    const icon=nationalAlertCategoryIcon(nationalAlertNormalizedCategory(alert));
+    const title=nationalAlertEscape(alert.title||nationalAlertNormalizedCategory(alert)||'政府示警');
+    const summary=nationalAlertEscape(alert.summary||'目前有生效中的政府示警。');
+    const source=nationalAlertEscape(alert.author||'政府機關');
+    const sourceLink=nationalAlertEscape(alert.link||'https://alerts.ncdr.nat.gov.tw/');
+    return `<div class="national-alert-item" style="${isTest?'border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.10);':''}">
+        <div class="national-alert-item-title">${badge}｜${icon} ${nationalAlertEscape(nationalAlertNormalizedCategory(alert)||'示警')}｜${title}</div>
+        <div class="national-alert-item-detail">${isTest?'<b style="color:#f59e0b;">本訊息為演習，非實際災害</b><br>':''}<b>生效：${formatNationalAlertTime(alert.effective)}</b><br><b>到期：${formatNationalAlertTime(alert.expires)}</b><br>${summary}</div>
+        <div class="national-alert-source">資料來源：${source}｜<a href="${sourceLink}" target="_blank" rel="noopener noreferrer">NCDR 民生示警公開資料平台</a></div>
+    </div>`;
+}).join('');
                 }
                 section.innerHTML=html;
             } catch(error) {
