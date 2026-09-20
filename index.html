@@ -4695,19 +4695,21 @@ const popVal = getPopForStation(county, town);
 
                 mainMapUserLocationCircle=L.circle(latlng,{
                     radius:accuracy,
-                    color:'#38bdf8',
+                    color:'#4285f4',
                     weight:2,
-                    fillColor:'#38bdf8',
-                    fillOpacity:0.12,
+                    fillColor:'#4285f4',
+                    fillOpacity:0.14,
                     interactive:false
                 }).addTo(map);
 
+                /* 全台地圖定位點改成與雷達回波圖完全相同的 DPIP 風格：
+                   藍色小圓點＋白色外框＋淡藍色定位範圍 */
                 mainMapUserLocationMarker=L.marker(latlng,{
                     icon:L.divIcon({
-                        className:'main-map-location-marker-wrap',
-                        html:'<div class=\"main-map-location-dot\"></div>',
-                        iconSize:[18,18],
-                        iconAnchor:[9,9]
+                        className:'dpip-location-marker-wrap',
+                        html:'<div class="dpip-location-marker"><span class="dpip-location-pulse"></span><span class="dpip-location-dot"></span></div>',
+                        iconSize:[28,28],
+                        iconAnchor:[14,14]
                     }),
                     zIndexOffset:10000
                 }).addTo(map);
