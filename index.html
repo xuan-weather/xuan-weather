@@ -562,6 +562,46 @@
         }
         .map-header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
         .map-title-row { display: flex; justify-content: space-between; align-items: center; }
+        /* 天氣即時觀測：手機版橫向滑動圖層列 */
+        .map-mode-btn-group{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            width:100%;
+            overflow-x:auto;
+            overflow-y:hidden;
+            white-space:nowrap;
+            -webkit-overflow-scrolling:touch;
+            scrollbar-width:none;
+            padding:2px 2px 4px;
+            touch-action:pan-x;
+        }
+        .map-mode-btn-group::-webkit-scrollbar{display:none;}
+        .map-mode-btn-group button{
+            flex:0 0 auto;
+            border:1px solid rgba(148,163,184,.28);
+            border-radius:12px;
+            background:rgba(15,23,42,.72);
+            color:#cbd5e1;
+            padding:8px 13px;
+            min-height:36px;
+            font-size:13px;
+            font-weight:700;
+            white-space:nowrap;
+            cursor:pointer;
+            transition:all .18s ease;
+        }
+        .map-mode-btn-group button.active{
+            background:#0ea5e9;
+            border-color:#38bdf8;
+            color:#fff;
+            box-shadow:0 3px 10px rgba(14,165,233,.28);
+        }
+        .map-mode-btn-group button:active{transform:scale(.97);}
+        @media(max-width:600px){
+            .map-mode-btn-group{gap:7px;padding:1px 1px 5px;}
+            .map-mode-btn-group button{padding:8px 12px;font-size:13px;}
+        }
         /* 全台地圖：仿 DPIP 的地圖內嵌圖層切換器
            只有全螢幕時顯示；切換器直接放在 #map 內，確保 iPhone Safari Pseudo Fullscreen 也可見。 */
         .map-layer-switcher{
@@ -1464,7 +1504,15 @@
                     <h3><i class="fas fa-globe-asia"></i> 天氣即時觀測</h3>
                     <span id="mapObsTimeTag" style="font-size: 12px; color: #38bdf8; font-weight: 600;">CWA 觀測時間： --</span>
                 </div>
-                <!-- 圖層切換器改為固定在全台地圖內，不需離開地圖即可切換 -->
+                <div class="map-mode-btn-group" id="mapModeBtnGroup" aria-label="天氣即時觀測資料圖層">
+                    <button id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️ 氣溫</button>
+                    <button id="btnMapPop" onclick="switchMapMode('pop')">📈 降雨機率</button>
+                    <button id="btnMapHumidity" onclick="switchMapMode('humidity')">💧 濕度</button>
+                    <button id="btnMapRain" onclick="switchMapMode('rain')">🌧️ 日雨量</button>
+                    <button id="btnMapWind" onclick="switchMapMode('wind')">💨 風速</button>
+                    <button id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️ 陣風</button>
+                    <button id="btnMapAqi" onclick="switchMapMode('aqi')">😷 空品</button>
+                </div>
             </div>
 
             <div class="map-container-wrapper">
@@ -1666,6 +1714,7 @@
         // GitHub Pages 直接讀取 GitHub Actions 定時更新的 CWA 靜態 JSON。
         // 使用 document.baseURI 是為了正確支援 GitHub Pages 的 /xuan-weather/ 子路徑。
         const CWA_STATIC_BASE = new URL('data/', document.baseURI).href;
+        // 2026-09-20 同步修正版：地圖保留完整測站，但即時數值統一使用 O-A0003-001。
         // GitHub Pages 高溫資訊檔案：data/cwa-W-C0033-005.json
 
         async function fetchCwaDataset(dataset) {
@@ -1697,43 +1746,6 @@
             }
 
             throw new Error(`CWA 靜態資料格式無法辨識：${dataset}`);
-        }
-
-        // ===== CWA 即時同步閘門（只控制即時測站資料） =====
-        // 即時測站資料改由 Vercel /api/cwa 直接取得官方 CWA API 回傳。
-        // GitHub Pages 原本的靜態 data/ 流程保留給其他功能，不改動。
-        // 只有官方 CWA 的 ObsTime 前進，才允許更新即時測站畫面。
-        const CWA_OFFICIAL_API_BASE = 'https://xuan-weather-yvlx.vercel.app';
-
-        async function fetchOfficialCwaStationDataset(dataset) {
-            const url = `${CWA_OFFICIAL_API_BASE}/api/cwa?dataset=${encodeURIComponent(dataset)}&_=${Date.now()}`;
-            try {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    cache: 'no-store',
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                if (!response.ok) {
-                    console.warn(`官方 CWA API HTTP ${response.status}: ${dataset}`);
-                    return null;
-                }
-
-                const payload = await response.json();
-                const records = payload?.result?.records || payload?.records || null;
-                const stations = records?.Station;
-
-                // 嚴格驗證：沒有真正的 Station 陣列就不採用這次資料。
-                if (!Array.isArray(stations) || stations.length === 0) {
-                    console.warn(`官方 CWA API 沒有有效 Station 資料：${dataset}`);
-                    return null;
-                }
-
-                return { records };
-            } catch (error) {
-                console.warn(`官方 CWA API 讀取失敗：${dataset}`, error);
-                return null;
-            }
         }
 
         // AQI 由 GitHub Actions 定時更新至 data/aqx-p-432.json，GitHub Pages 直接讀取。
@@ -2175,11 +2187,9 @@ let cityStationMapping = {};
         }
 
         function startCwaObsTimeSync() {
-            // 每 30 秒檢查一次官方 CWA API。
-            // 30 秒只是檢查頻率；真正的更新條件仍是 CWA ObsTime 前進。
-            // CWA 尚未更新 → 網站維持原批次。
-            // CWA 一更新 → 最多下一次檢查（約 30 秒內）同步。
-            setInterval(() => fetchAllStationData(false), 30 * 1000);
+            // 初始載入已經完成後，以60秒檢查一次 CWA 是否發布新批次。
+            // 60秒只是檢查頻率，不代表資料更新頻率；畫面仍完全以 CWA ObsTime 為準。
+            setInterval(() => fetchAllStationData(false), 60 * 1000);
         }
 
         async function fetchWeatherWarnings() {
@@ -2940,19 +2950,15 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const nonce = Date.now();
             try {
-                const [officialHourly, officialRealtime, officialRain, resPop] = await Promise.all([
-                    fetchOfficialCwaStationDataset('O-A0001-001'),
-                    fetchOfficialCwaStationDataset('O-A0003-001'),
-                    fetchOfficialCwaStationDataset('O-A0002-001'),
+                const [res1, res2, resRain, resPop] = await Promise.all([
+                    fetchCwaDataset('O-A0001-001').catch(() => ({ records: { Station: [] } })),
+                    fetchCwaDataset('O-A0003-001').catch(() => ({ records: { Station: [] } })),
+                    fetchCwaDataset('O-A0002-001').catch(() => ({ records: { Station: [] } })),
                     fetchCwaDataset('F-C0032-001').catch(() => ({ records: { dataset: { location: [] } } }))
                 ]);
-
-                // 官方 API 尚未回應時，絕對不拿 GitHub Actions 靜態檔補成「新資料」。
-                // 這樣可以確保「氣象署沒更新 → 網站不提前更新」。
-                // 已經套用的舊資料則維持不變，避免畫面突然清空。
-                const list1 = officialHourly?.records?.Station || [];
-                const list2 = officialRealtime?.records?.Station || [];
-                const listRain = officialRain?.records?.Station || [];
+                const list1 = res1.records?.Station || [];
+                const list2 = res2.records?.Station || [];
+                const listRain = resRain.records?.Station || [];
                 // 先取得三個 CWA 資料源本次回傳的最新 ObsTime。
                 // 只有 ObsTime 真的前進，才套用該來源的新資料。
                 const hourlyChanged = cwaObsTimeChanged('O-A0001-001', list1);
@@ -2977,22 +2983,39 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
                     cwaHourlyRainfallRankingData = latestRainfallStationData;
                 }
 
-                // 地圖與測站詳細資訊以 O-A0003-001 的最新10分鐘資料為主；
-                // O-A0001-001 僅在 O-A0003 缺少該測站時作為後備。
+                // 統一測站資料模型：保留 O-A0001 的完整測站座標/名稱清單，
+                // 但只要 O-A0003 有同一測站，就把「即時觀測 WeatherElement + ObsTime」
+                // 疊回完整測站物件。如此地圖仍保留完整測站圓點，
+                // 但氣溫／濕度／風速／陣風等即時數值與即時極值、即時排行榜完全同源於 O-A0003。
                 const realtimeById = new Map();
                 latestRealtimeStationData.forEach(station => {
-                    if (station?.StationId) realtimeById.set(station.StationId, station);
+                    const id = String(station?.StationId ?? '').trim();
+                    if (id) realtimeById.set(id, station);
                 });
-                const fallbackById = new Map();
+
+                const hourlyById = new Map();
                 latestHourlyStationData.forEach(station => {
-                    if (station?.StationId) fallbackById.set(station.StationId, station);
+                    const id = String(station?.StationId ?? '').trim();
+                    if (id) hourlyById.set(id, station);
                 });
 
                 weatherStationData = [];
-                const stationIds = new Set([...realtimeById.keys(), ...fallbackById.keys()]);
+                const stationIds = new Set([...hourlyById.keys(), ...realtimeById.keys()]);
                 stationIds.forEach(id => {
-                    const station = realtimeById.get(id) || fallbackById.get(id);
-                    if (station?.StationId) weatherStationData.push(station);
+                    const hourlyStation = hourlyById.get(id);
+                    const realtimeStation = realtimeById.get(id);
+                    if (!hourlyStation && !realtimeStation) return;
+
+                    // O-A0001 提供完整測站資訊；O-A0003 覆蓋即時觀測欄位。
+                    // 不直接用 {...hourlyStation, ...realtimeStation}，避免遺失巢狀 GeoInfo。
+                    const merged = hourlyStation ? { ...hourlyStation } : { ...realtimeStation };
+                    if (realtimeStation) {
+                        if (realtimeStation.WeatherElement) merged.WeatherElement = realtimeStation.WeatherElement;
+                        if (realtimeStation.ObsTime) merged.ObsTime = realtimeStation.ObsTime;
+                        if (realtimeStation.StationName) merged.StationName = realtimeStation.StationName;
+                        if (realtimeStation.StationId) merged.StationId = realtimeStation.StationId;
+                    }
+                    if (merged?.StationId) weatherStationData.push(merged);
                 });
 
                 forecastPopData = {};
@@ -3262,7 +3285,7 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
         function updateRankingObservationTime() {
             const quick = document.getElementById('quickRankingObsTime');
             if (quick) {
-                quick.textContent = `資料時間：${getRankingObservationTimeLabel(['O-A0003-001', 'O-A0002-001'])}`;
+                quick.textContent = `資料時間：${getRankingObservationTimeLabel('O-A0003-001')}`;
             }
             const ranking = document.getElementById('rankingObsTime');
             if (ranking) {
