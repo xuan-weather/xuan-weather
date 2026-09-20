@@ -5345,17 +5345,18 @@ const popVal = getPopForStation(county, town);
                     // 重要：地圖的即時氣象數值必須與「現在」排行榜使用同一批 O-A0003-001。
                     // weatherStationData 仍保留 O-A0001-001 的完整測站目錄，確保原本測站圓點不消失；
                     // 但氣溫／濕度／風速／陣風不再直接讀取 O-A0001 的舊整點值。
+                    const stationKey = value => String(value ?? '').trim();
                     const realtimeStation = latestRealtimeStationData.find(s =>
-                        String(s?.StationId ?? '') === String(station?.StationId ?? '')
+                        stationKey(s?.StationId) === stationKey(station?.StationId)
                     );
-                    const data = realtimeStation ? parseStationElement(realtimeStation) : {
-                        temp: NaN, rain: NaN, windSpeed: NaN, windGust: NaN, windDir: -1,
-                        humidity: '--', uvIndex: NaN, elevation: 0, obsTime: '--'
-                    };
+                    // 優先使用 O-A0003-001 最新 10 分鐘資料；
+                    // 若該測站沒有 O-A0003 即時值，才使用地圖原本保留的 O-A0001 測站資料，
+                    // 避免整張地圖變成灰色 --。這只作為「測站顯示備援」，O-A0003 有值時絕不覆蓋。
+                    const data = realtimeStation ? parseStationElement(realtimeStation) : parseStationElement(station);
                     // 地圖「日雨量」改用 CWA O-A0002-001 的正式雨量測站資料，
                     // 以 StationId 精準對應，不再拿 O-A0003-001 的雨量欄位代替。
                     const rainStation = latestRainfallStationData.find(s =>
-                        String(s?.StationId ?? '') === String(station?.StationId ?? '')
+                        stationKey(s?.StationId) === stationKey(station?.StationId)
                     );
                     const rainfallNow = rainStation ? parseCwaRainfallStation(rainStation) : NaN;
                     const mapRain = Number.isFinite(rainfallNow) ? rainfallNow : data.rain;
