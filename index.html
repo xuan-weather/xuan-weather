@@ -1004,55 +1004,27 @@
             #ffff22 46%, #ffd33d 54%, #f47f2c 62%, #f02e23 70%, #c51f18 78%, #8f120d 84%, #ed2df1 92%, #8618f2 100%);}
         .radar-legend-labels{display:flex;flex-direction:column;justify-content:space-between;font-size:11px;line-height:1;color:var(--legend-text);padding:0;}
         .radar-load-status{position:absolute;z-index:1001;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 16px;border-radius:999px;background:rgba(9,13,22,.82);color:#cbd5e1;font-size:14px;display:none;pointer-events:none;}
-        /* 全台地圖右下控制項：固定放在地圖右下角，順序永遠為
-           上：📍定位
-           中：＋／－放大縮小
-           下：⛶全螢幕
-           不再使用 Leaflet 的控制角落排序，避免控制項跑到左上或順序顛倒。 */
-        .main-map-controls-fixed{
-            position:absolute !important;
-            right:10px !important;
-            bottom:10px !important;
-            z-index:1005 !important;
-            display:flex !important;
-            flex-direction:column !important;
-            align-items:flex-end !important;
-            gap:10px !important;
-            width:36px !important;
-            margin:0 !important;
-            padding:0 !important;
-            pointer-events:none !important;
+        /* 全台地圖右下控制項：與雷達回波圖使用相同的 Leaflet 控制方式。
+           固定在右下角，順序由上到下：
+           1. 📍定位
+           2. ＋／－放大縮小
+           3. ⛶全螢幕 */
+        .map-container-wrapper .leaflet-bottom.leaflet-right{
+            display:block;
         }
-        .main-map-controls-fixed > .leaflet-control{
-            position:relative !important;
-            top:auto !important;
-            right:auto !important;
-            bottom:auto !important;
-            left:auto !important;
-            float:none !important;
-            clear:none !important;
-            margin:0 !important;
-            padding:0 !important;
-            pointer-events:auto !important;
+        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control{
+            float:none;
+            clear:both;
+            margin-right:0;
         }
-        .main-map-controls-fixed .main-map-location-button,
-        .main-map-controls-fixed .leaflet-control-fullscreen a{
-            border-radius:6px !important;
+        .map-container-wrapper .leaflet-bottom.leaflet-right .main-map-location-control{
+            margin-top:0 !important;
         }
-        .main-map-controls-fixed .leaflet-control-zoom{
-            border-radius:6px !important;
-            overflow:hidden !important;
+        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-zoom{
+            margin-top:10px !important;
         }
-        .main-map-controls-fixed .leaflet-control-zoom a{
-            border-radius:0 !important;
-        }
-        .main-map-controls-fixed .leaflet-control-zoom a:first-child{
-            border-top-left-radius:6px !important;
-            border-top-right-radius:6px !important;
-        }
-        .main-map-controls-fixed .leaflet-control-zoom a:last-child{
-            border-bottom-left-radius:6px !important;
-            border-bottom-right-radius:6px !important;
+        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
+            margin-top:10px !important;
         }
         .main-map-location-button{
             width:34px;
@@ -4786,60 +4758,23 @@ const popVal = getPopForStation(county, town);
             };
             mainMapLocationControl.addTo(map);
 
-            // 全台地圖控制項直接移入「右下固定容器」，
-            // 完全不依賴 Leaflet 控制角落的建立順序，避免跑到左上或順序顛倒。
+            // 全台地圖右下控制項與雷達回波圖相同：
+            // 直接使用 Leaflet 的 bottomright 控制角落，不建立額外固定容器。
+            // 明確指定 DOM 順序：最上面定位 → 中間＋／－ → 最下面全螢幕。
+            const mainMapBottomRight = map._controlCorners && map._controlCorners.bottomright;
             const mainMapLocationEl = mainMapLocationControl.getContainer ? mainMapLocationControl.getContainer() : null;
             const mainMapZoomEl = mainMapZoomControl.getContainer ? mainMapZoomControl.getContainer() : null;
             const mainMapFullscreenEl = map._controlContainer ? map._controlContainer.querySelector('.leaflet-control-fullscreen') : null;
 
-            let mainMapFixedControls = map.getContainer().querySelector('.main-map-controls-fixed');
-            if(!mainMapFixedControls){
-                mainMapFixedControls = document.createElement('div');
-                mainMapFixedControls.className = 'main-map-controls-fixed';
-                map.getContainer().appendChild(mainMapFixedControls);
+            if(mainMapBottomRight && mainMapLocationEl && mainMapZoomEl && mainMapFullscreenEl){
+                mainMapBottomRight.appendChild(mainMapLocationEl);
+                mainMapBottomRight.appendChild(mainMapZoomEl);
+                mainMapBottomRight.appendChild(mainMapFullscreenEl);
+                mainMapLocationEl.style.marginTop='0';
+                mainMapZoomEl.style.marginTop='10px';
+                mainMapFullscreenEl.style.marginTop='10px';
             }
 
-            // 固定順序：最上面定位 → 中間＋／－ → 最下面全螢幕。
-            [mainMapLocationEl, mainMapZoomEl, mainMapFullscreenEl].forEach(function(controlEl){
-                if(controlEl){
-                    mainMapFixedControls.appendChild(controlEl);
-                    controlEl.style.position='relative';
-                    controlEl.style.top='auto';
-                    controlEl.style.right='auto';
-                    controlEl.style.bottom='auto';
-                    controlEl.style.left='auto';
-                    controlEl.style.margin='0';
-                }
-            });
-
-                                      
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-eGP, and the GIS User Community',
-                maxZoom: 18,
-                updateWhenZooming: false,
-                updateWhenIdle: true,
-                keepBuffer: 4
-            }).addTo(map);
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-                maxZoom: 18,
-                updateWhenZooming: false,
-                updateWhenIdle: true,
-                keepBuffer: 4
-            }).addTo(map);
-            map.addLayer(currentMarkersLayer);
-
-            // 只在「標籤顯示狀態」跨過 zoom 10 時重繪一次；
-            // 避免每一次縮放都清空／重建全部測站圓點，讓地圖拖曳與縮放更流暢。
-            let markerLabelState = map.getZoom() >= 10;
-            map.on('zoomend', () => {
-                if (!mapInitialized || !currentMarkersLayer) return;
-                const nextLabelState = map.getZoom() >= 10;
-                if (nextLabelState !== markerLabelState) {
-                    markerLabelState = nextLabelState;
-                    renderMapMarkers();
-                }
-            });
-            
             const LegendControl = L.Control.extend({
                 options: { position: 'topleft' },
                 onAdd: function() {
