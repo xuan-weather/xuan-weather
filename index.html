@@ -1004,58 +1004,53 @@
             #ffff22 46%, #ffd33d 54%, #f47f2c 62%, #f02e23 70%, #c51f18 78%, #8f120d 84%, #ed2df1 92%, #8618f2 100%);}
         .radar-legend-labels{display:flex;flex-direction:column;justify-content:space-between;font-size:11px;line-height:1;color:var(--legend-text);padding:0;}
         .radar-load-status{position:absolute;z-index:1001;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 16px;border-radius:999px;background:rgba(9,13,22,.82);color:#cbd5e1;font-size:14px;display:none;pointer-events:none;}
-        /* 全台地圖控制順序：📍所在地 → ＋／－ → 全螢幕，與 DPIP 風格一致 */
-        /* 全台地圖右下控制項【固定位置】，避免 Leaflet / 瀏覽器再次顛倒：
+        /* 全台地圖右下控制項：固定放在地圖右下角，順序永遠為
            上：📍定位
            中：＋／－放大縮小
-           下：⛶ 全螢幕
-           使用絕對定位，不依賴 Leaflet 控制項建立順序。 */
-        .map-container-wrapper .leaflet-bottom.leaflet-right{
-            position:relative !important;
-            display:block !important;
+           下：⛶全螢幕
+           不再使用 Leaflet 的控制角落排序，避免控制項跑到左上或順序顛倒。 */
+        .main-map-controls-fixed{
+            position:absolute !important;
+            right:10px !important;
+            bottom:10px !important;
+            z-index:1005 !important;
+            display:flex !important;
+            flex-direction:column !important;
+            align-items:flex-end !important;
+            gap:10px !important;
             width:36px !important;
-            height:156px !important;
             margin:0 !important;
             padding:0 !important;
+            pointer-events:none !important;
         }
-        .map-container-wrapper .leaflet-bottom.leaflet-right > .leaflet-control{
-            position:absolute !important;
-            right:0 !important;
+        .main-map-controls-fixed > .leaflet-control{
+            position:relative !important;
+            top:auto !important;
+            right:auto !important;
+            bottom:auto !important;
+            left:auto !important;
             float:none !important;
             clear:none !important;
             margin:0 !important;
             padding:0 !important;
+            pointer-events:auto !important;
         }
-        /* ① 最上方：定位 */
-        .map-container-wrapper .leaflet-bottom.leaflet-right > .main-map-location-control{
-            top:0 !important;
-            bottom:auto !important;
-            z-index:3 !important;
-        }
-        /* ② 中間：＋／－縮放（兩顆按鈕合併成一組） */
-        .map-container-wrapper .leaflet-bottom.leaflet-right > .leaflet-control-zoom{
-            top:44px !important;
-            bottom:auto !important;
-            z-index:3 !important;
-        }
-        /* ③ 最下方：全螢幕，固定在右下角 */
-        .map-container-wrapper .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen{
-            top:122px !important;
-            bottom:auto !important;
-            z-index:3 !important;
-        }
-        .map-container-wrapper .leaflet-bottom.leaflet-right .main-map-location-button,
-        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-fullscreen a{
+        .main-map-controls-fixed .main-map-location-button,
+        .main-map-controls-fixed .leaflet-control-fullscreen a{
             border-radius:6px !important;
         }
-        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-zoom a{
+        .main-map-controls-fixed .leaflet-control-zoom{
+            border-radius:6px !important;
+            overflow:hidden !important;
+        }
+        .main-map-controls-fixed .leaflet-control-zoom a{
             border-radius:0 !important;
         }
-        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-zoom a:first-child{
+        .main-map-controls-fixed .leaflet-control-zoom a:first-child{
             border-top-left-radius:6px !important;
             border-top-right-radius:6px !important;
         }
-        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-zoom a:last-child{
+        .main-map-controls-fixed .leaflet-control-zoom a:last-child{
             border-bottom-left-radius:6px !important;
             border-bottom-right-radius:6px !important;
         }
@@ -4791,20 +4786,31 @@ const popVal = getPopForStation(county, town);
             };
             mainMapLocationControl.addTo(map);
 
-            // Leaflet 原生控制依建立順序可能互換，這裡強制整理成 DPIP 順序。
-            const mainMapBottomRight = map._controlCorners && map._controlCorners.bottomright;
+            // 全台地圖控制項直接移入「右下固定容器」，
+            // 完全不依賴 Leaflet 控制角落的建立順序，避免跑到左上或順序顛倒。
             const mainMapLocationEl = mainMapLocationControl.getContainer ? mainMapLocationControl.getContainer() : null;
             const mainMapZoomEl = mainMapZoomControl.getContainer ? mainMapZoomControl.getContainer() : null;
             const mainMapFullscreenEl = map._controlContainer ? map._controlContainer.querySelector('.leaflet-control-fullscreen') : null;
-            if(mainMapBottomRight && mainMapLocationEl && mainMapZoomEl){
-                mainMapBottomRight.appendChild(mainMapLocationEl);
-                mainMapBottomRight.appendChild(mainMapZoomEl);
-                if(mainMapFullscreenEl) mainMapBottomRight.appendChild(mainMapFullscreenEl);
-                // 位置由 CSS 絕對定位固定，這裡只負責把三個控制項放進同一個右下容器。
-                mainMapLocationEl.style.marginTop='0px';
-                mainMapZoomEl.style.marginTop='0px';
-                if(mainMapFullscreenEl) mainMapFullscreenEl.style.marginTop='0px';
+
+            let mainMapFixedControls = map.getContainer().querySelector('.main-map-controls-fixed');
+            if(!mainMapFixedControls){
+                mainMapFixedControls = document.createElement('div');
+                mainMapFixedControls.className = 'main-map-controls-fixed';
+                map.getContainer().appendChild(mainMapFixedControls);
             }
+
+            // 固定順序：最上面定位 → 中間＋／－ → 最下面全螢幕。
+            [mainMapLocationEl, mainMapZoomEl, mainMapFullscreenEl].forEach(function(controlEl){
+                if(controlEl){
+                    mainMapFixedControls.appendChild(controlEl);
+                    controlEl.style.position='relative';
+                    controlEl.style.top='auto';
+                    controlEl.style.right='auto';
+                    controlEl.style.bottom='auto';
+                    controlEl.style.left='auto';
+                    controlEl.style.margin='0';
+                }
+            });
 
                                       
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
