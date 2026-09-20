@@ -47,6 +47,8 @@ jobs:
               --retry-delay 2 \
               -H "Accept: application/json" \
               -H "Authorization: ${CWA_API_KEY}" \
+              -H "Cache-Control: no-cache, no-store, max-age=0" \
+              -H "Pragma: no-cache" \
               "https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}" \
               -o "data/cwa-${dataset}.json"
 
@@ -56,6 +58,7 @@ jobs:
             python - "${dataset}" <<'PY'
           import json
           import sys
+          from datetime import datetime
 
           dataset = sys.argv[1]
           path = f"data/cwa-{dataset}.json"
@@ -66,12 +69,49 @@ jobs:
           print(f"{dataset}：JSON 格式正常")
 
           if not isinstance(data, dict):
-              raise SystemExit(f"{dataset}：錯誤，回傳資料不是 JSON 物件")
+              raise SystemExit(
+                  f"{dataset}：錯誤，回傳資料不是 JSON 物件"
+              )
 
           if "records" not in data:
-              raise SystemExit(f"{dataset}：錯誤，找不到 records")
+              raise SystemExit(
+                  f"{dataset}：錯誤，找不到 records"
+              )
 
           print(f"{dataset}：records 存在")
+
+          # 顯示這次實際抓到的最新觀測時間
+          latest_time = None
+
+          records = data.get("records", {})
+          stations = records.get("Station", [])
+
+          if isinstance(stations, list):
+              for station in stations:
+                  obs = station.get("ObsTime", {})
+                  dt = obs.get("DateTime") if isinstance(obs, dict) else None
+
+                  if dt:
+                      try:
+                          parsed = datetime.fromisoformat(
+                              dt.replace("Z", "+00:00")
+                          )
+
+                          if latest_time is None or parsed > latest_time:
+                              latest_time = parsed
+
+                      except Exception:
+                          pass
+
+          if latest_time:
+              print(
+                  f"{dataset}：本次抓到的最新 ObsTime = "
+                  f"{latest_time.isoformat()}"
+              )
+          else:
+              print(
+                  f"{dataset}：找不到可解析的 ObsTime"
+              )
           PY
 
           done
