@@ -3007,40 +3007,26 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
                     cwaHourlyRainfallRankingData = latestRainfallStationData;
                 }
 
-                // 全台地圖保留原本完整的測站圓點範圍，但「即時數值」優先使用
-                // O-A0003-001 最新 10 分鐘資料。
-                // 若某測站暫時沒有出現在 O-A0003，仍保留 O-A0001 的測站座標／名稱，
-                // 但刻意清空舊的氣象數值，避免把整點舊值冒充成最新即時值。
-                // 這樣可以同時做到：
-                // 1. 測站圓點不因資料集差異大量消失。
-                // 2. 有 O-A0003 資料的測站使用最新 10 分鐘值。
-                // 3. 暫缺 O-A0003 的測站顯示圓點，但數值顯示「--」，不混入過時資料。
+                // 全台地圖恢復原本的測站呈現方式：
+                // O-A0003-001 有最新 10 分鐘資料時優先使用；
+                // O-A0003 沒有的測站，直接使用 O-A0001-001 的完整測站資料補回。
+                // 這樣可以恢復原本「大量測站圓點都有顏色與數值」的地圖樣式，
+                // 不會再出現一大片灰色空值圓點。
                 const realtimeByStationId = new Map(
                     latestRealtimeStationData
                         .filter(station => station && station.StationId)
                         .map(station => [String(station.StationId), station])
                 );
-                const hourlyStationMeta = new Map(
+                const hourlyByStationId = new Map(
                     latestHourlyStationData
                         .filter(station => station && station.StationId)
                         .map(station => [String(station.StationId), station])
                 );
-                const mergedStationMap = new Map();
+                const mergedStationMap = new Map(hourlyByStationId);
 
-                // 先放 O-A0003 最新資料。
+                // O-A0003 最新 10 分鐘資料覆蓋同一測站的整點資料。
                 realtimeByStationId.forEach((station, id) => {
                     mergedStationMap.set(id, station);
-                });
-
-                // 再補回 O-A0001 中存在、但 O-A0003 暫時沒有的測站。
-                hourlyStationMeta.forEach((station, id) => {
-                    if (mergedStationMap.has(id)) return;
-                    const stationMetaOnly = {
-                        ...station,
-                        ObsTime: null,
-                        WeatherElement: {}
-                    };
-                    mergedStationMap.set(id, stationMetaOnly);
                 });
 
                 weatherStationData = Array.from(mergedStationMap.values());
