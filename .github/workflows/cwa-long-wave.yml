@@ -42,13 +42,32 @@ jobs:
           }
 
           function parsePublishedAt(text) {
+            const normalized = normalizeText(text);
+            const currentYear = new Date().toLocaleString('en-US', {
+              timeZone: 'Asia/Taipei',
+              year: 'numeric'
+            });
+
+            // CWA W37 頁面常見格式：
+            // 「發布時間：09/20 19:53」
+            // 「發布時間：09/21 00:05」
+            const md = normalized.match(
+              /發布時間\s*[：:]\s*(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})/
+            );
+            if (md) {
+              const [, mo, d, h, mi] = md;
+              const pad = n => String(n).padStart(2, '0');
+              return `${currentYear}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(mi)}:00+08:00`;
+            }
+
+            // 其他可能的完整日期格式。
             const patterns = [
               /(20\d{2})[年\/-](\d{1,2})[月\/-](\d{1,2})日?\s*(\d{1,2})[時:]\s*(\d{1,2})分?\s*發布/,
               /(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})日?\s*(\d{1,2}):(\d{2})\s*發布/,
               /(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})/
             ];
             for (const re of patterns) {
-              const m = text.match(re);
+              const m = normalized.match(re);
               if (!m) continue;
               const [_, y, mo, d, h, mi] = m;
               const pad = n => String(n).padStart(2, '0');
