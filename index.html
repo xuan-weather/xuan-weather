@@ -1320,16 +1320,16 @@
             </div>
 
 
-            <!-- 國家級警報：政府正式公告的國家防災日演練資訊 -->
-            <div class="national-alert-widget" id="nationalAlertWidget">
+            <!-- 國家級警報：只顯示 NCDR 目前生效中的政府／氣象署實際示警 -->
+            <div class="national-alert-widget" id="nationalAlertWidget" style="display:none;">
                 <div class="national-alert-head">
                     <div class="national-alert-title"><i class="fas fa-tower-broadcast"></i> 國家級警報</div>
-                    <div class="national-alert-status">政府公告演練</div>
+                    <div class="national-alert-status">即時政府示警</div>
                 </div>
                 <div id="nationalAlertContent"></div>
                 <div class="national-alert-source">
-                    資訊依政府公開公告顯示；「演練」不是實際災害警報。
-                    <a href="https://www.moi.gov.tw/News_Content.aspx?n=4&s=340709" target="_blank" rel="noopener">內政部公告</a> ｜
+                    資訊依 NCDR 生效中的政府／氣象署公開示警資料顯示；僅有實際生效示警時顯示。
+                    <a href="https://alerts.ncdr.nat.gov.tw/web/alerts/immediate" target="_blank" rel="noopener">NCDR 生效中示警</a> ｜
                     <a href="https://scweb.cwa.gov.tw/zh-tw/pws" target="_blank" rel="noopener">氣象署 PWS</a>
                 </div>
             </div>
@@ -1868,22 +1868,131 @@ let cityStationMapping = {};
         });
 
 
-        // ==================== 國家級警報／政府演練 ====================
-        // 只顯示政府已公開公告的演練／警報資訊，不自行預測或製造警報。
-        const NATIONAL_ALERT_SCHEDULE = [
-            { id:'20260921-earthquake-drill', start:'2026-09-20T00:00:00+08:00', end:'2026-09-21T09:29:59+08:00', time:'2026/09/21 09:21', title:'115年國家防災日｜地震速報演練', detail:'中央氣象署將發送「國家防災日地震警報」演練訊息，請收到訊息後進行「趴下、掩護、穩住」。' },
-            { id:'20260921-tsunami-drill', start:'2026-09-21T09:30:00+08:00', end:'2026-09-21T10:00:59+08:00', time:'2026/09/21 09:30', title:'115年國家防災日｜海嘯警報測試', detail:'災防告警細胞廣播系統及防空警報系統將對沿海鄉鎮市區進行海嘯警報測試。' },
-            { id:'20260921-tsunami-cancel-drill', start:'2026-09-21T10:01:00+08:00', end:'2026-09-21T10:30:00+08:00', time:'2026/09/21 10:00', title:'115年國家防災日｜海嘯警報解除測試', detail:'模擬完整警報發布與解除流程；測試訊息會明確標示為演習。' }
-        ];
-        function renderNationalAlert() {
-            const widget=document.getElementById('nationalAlertWidget'); const container=document.getElementById('nationalAlertContent'); if(!widget||!container)return;
-            const now=Date.now();
-            const active=NATIONAL_ALERT_SCHEDULE.map(x=>({...x,startMs:Date.parse(x.start),endMs:Date.parse(x.end)})).filter(x=>Number.isFinite(x.startMs)&&Number.isFinite(x.endMs)&&now>=x.startMs&&now<=x.endMs);
-            const upcoming=NATIONAL_ALERT_SCHEDULE.map(x=>({...x,startMs:Date.parse(x.start)})).filter(x=>Number.isFinite(x.startMs)&&x.startMs>now).sort((a,b)=>a.startMs-b.startMs)[0];
-            const rows=active.length?active:(upcoming?[upcoming]:[]);
-            if(!rows.length){widget.style.display='none';return;}
-            widget.style.display=''; const status=widget.querySelector('.national-alert-status'); if(status)status.textContent=active.length?'目前演練時段':'即將開始';
-            container.innerHTML=rows.map(x=>`<div class="national-alert-item"><div class="national-alert-item-title">🚨 ${escapeQuickRankingText(x.title)}</div><div class="national-alert-item-detail"><b>時間：${escapeQuickRankingText(x.time)}</b><br>${escapeQuickRankingText(x.detail)}</div></div>`).join('');
+        // ==================== 國家級警報／NCDR 即時生效示警 ====================
+        // 只顯示 NCDR 目前「生效中」且由後端資料流程提供的政府／氣象署示警。
+        // 不再使用固定 921 防災演練排程；演練 Test 資料也不由前端自行製造。
+        const NATIONAL_ALERT_DATA_URL = 'data/national-alerts.json';
+
+        function nationalAlertEscape(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({
+                '&':'&amp;',
+                '<':'&lt;',
+                '>':'&gt;',
+                '"':'&quot;',
+                "'":'&#39;'
+            }[ch]));
+        }
+
+        function nationalAlertCategoryIcon(category) {
+            const icons = {
+                '地震':'🌏',
+                '海嘯':'🌊',
+                '颱風':'🌀',
+                '雷雨':'⛈️',
+                '降雨':'🌧️',
+                '強風':'💨',
+                '濃霧':'🌫️',
+                '高溫':'🌡️',
+                '低溫':'🥶',
+                '火山':'🌋',
+                '巨浪':'🌊'
+            };
+            return icons[category] || '⚠️';
+        }
+
+        function formatNationalAlertTime(value) {
+            if (!value) return '--';
+            const dt = new Date(value);
+            if (Number.isNaN(dt.getTime())) return nationalAlertEscape(value);
+            return dt.toLocaleString('zh-TW', {
+                timeZone: 'Asia/Taipei',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+
+        async function renderNationalAlert() {
+            const widget = document.getElementById('nationalAlertWidget');
+            const container = document.getElementById('nationalAlertContent');
+            if (!widget || !container) return;
+
+            try {
+                const response = await fetch(
+                    `${NATIONAL_ALERT_DATA_URL}?t=${Date.now()}`,
+                    {
+                        cache: 'no-store',
+                        headers: { 'Accept': 'application/json' }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const alerts = Array.isArray(data?.alerts) ? data.alerts : [];
+                const now = Date.now();
+
+                const activeAlerts = alerts.filter(alert => {
+                    if (!alert || String(alert.status || '').toLowerCase() !== 'actual') {
+                        return false;
+                    }
+
+                    const effectiveMs = alert.effective ? Date.parse(alert.effective) : NaN;
+                    const expiresMs = alert.expires ? Date.parse(alert.expires) : NaN;
+
+                    if (Number.isFinite(effectiveMs) && effectiveMs > now) return false;
+                    if (Number.isFinite(expiresMs) && expiresMs < now) return false;
+
+                    return true;
+                });
+
+                if (!activeAlerts.length) {
+                    widget.style.display = 'none';
+                    container.innerHTML = '';
+                    return;
+                }
+
+                widget.style.display = '';
+
+                const status = widget.querySelector('.national-alert-status');
+                if (status) status.textContent = `目前 ${activeAlerts.length} 項生效中`;
+
+                container.innerHTML = activeAlerts.map(alert => {
+                    const category = nationalAlertEscape(alert.category || '警報');
+                    const icon = nationalAlertCategoryIcon(alert.category);
+                    const title = nationalAlertEscape(alert.title || alert.category || '政府示警');
+                    const summary = nationalAlertEscape(alert.summary || '目前有生效中的政府示警。');
+                    const effective = formatNationalAlertTime(alert.effective);
+                    const expires = formatNationalAlertTime(alert.expires);
+                    const link = typeof alert.link === 'string' ? alert.link.trim() : '';
+
+                    const sourceLink = link
+                        ? `<a href="${nationalAlertEscape(link)}" target="_blank" rel="noopener">查看原始示警</a>`
+                        : '';
+
+                    return `
+                        <div class="national-alert-item">
+                            <div class="national-alert-item-title">${icon} ${category}｜${title}</div>
+                            <div class="national-alert-item-detail">
+                                <b>生效：${effective}</b><br>
+                                <b>到期：${expires}</b><br>
+                                ${summary}
+                                ${sourceLink ? `<div style="margin-top:5px;">${sourceLink}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                // 資料暫時讀取失敗時隱藏，避免顯示過期或固定演練內容。
+                widget.style.display = 'none';
+                container.innerHTML = '';
+                console.warn('國家級警報資料讀取失敗：', error);
+            }
         }
 
         // ==================== 空氣品質 AQI ====================
