@@ -2398,10 +2398,14 @@ function nationalAlertCategoryIcon(category) {
             const section=document.getElementById('ncdrAlertSection');
             if(!section) return;
             try {
-                const [ncdrResult, longWave] = await Promise.allSettled([
-                    fetch(`${NATIONAL_ALERT_DATA_URL}?t=${Date.now()}`,{cache:'no-store',headers:{'Accept':'application/json'}}),
-                    loadCwaLongWaveMessage()
-                ]);
+                const [ncdrResult, longWaveResult] = await Promise.allSettled([
+    fetch(`${NATIONAL_ALERT_DATA_URL}?t=${Date.now()}`,{cache:'no-store',headers:{'Accept':'application/json'}}),
+    loadCwaLongWaveMessage()
+]);
+
+const longWave = longWaveResult.status === 'fulfilled'
+    ? longWaveResult.value
+    : null;
 
                 let alerts=[];
                 if (ncdrResult.status === 'fulfilled' && ncdrResult.value.ok) {
