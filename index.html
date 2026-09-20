@@ -1687,6 +1687,9 @@
         const CWA_STATIC_BASE = new URL('data/', document.baseURI).href;
         // 即時 CWA 資料優先走既有的公開反向代理；失敗時自動退回 GitHub Actions 靜態 JSON。
         // 代理網址本身不含 CWA API Key，避免把 CWA 金鑰放進 GitHub Pages 前端。
+        // 即時 CWA 資料優先走既有的公開反向代理；若代理暫時落後或失敗，
+        // 再與 GitHub Actions 靜態資料比較，永遠採用 ObsTime 較新的那一份。
+        // 代理網址本身不含 CWA API Key，避免把 CWA 金鑰放進 GitHub Pages 前端。
         const CWA_LIVE_API_BASE = 'https://mingxuan.904037.xyz/api/v1/rest/datastore/';
         const CWA_LIVE_DATASETS = new Set([
             'O-A0001-001', 'O-A0002-001', 'O-A0003-001'
@@ -1700,32 +1703,65 @@
             throw new Error(`CWA 資料格式無法辨識：${dataset}`);
         }
 
+        function getCwaPayloadLatestObsTime(payload) {
+            const list = payload?.records?.Station;
+            if (!Array.isArray(list) || !list.length) return null;
+            return getCwaLatestObsTime(list);
+        }
+
         async function fetchCwaDataset(dataset) {
             const nonce = Date.now();
 
-            // ① 即時資料：O-A0003/O-A0002/O-A0001 優先從反向代理取得。
-            // 每次都帶 cache-busting + no-store，避免瀏覽器／PWA 沿用舊批次。
+            // O-A0001/O-A0002/O-A0003：同時檢查「即時代理」與「GitHub 靜態備援」，
+            // 再比較兩邊的最新 ObsTime。這樣即使代理暫時停在 13:30、GitHub 已到 13:40，
+            // 或反過來，也會自動採用較新的 CWA 批次。
             if (CWA_LIVE_DATASETS.has(dataset)) {
                 const liveUrl = `${CWA_LIVE_API_BASE}${dataset}?_=${nonce}`;
-                try {
-                    const liveResponse = await fetch(liveUrl, {
+                const staticUrl = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${nonce}`;
+
+                const [liveResult, staticResult] = await Promise.all([
+                    fetch(liveUrl, {
                         cache: 'no-store',
                         headers: { 'Accept': 'application/json' }
+                    }).then(async response => {
+                        if (!response.ok) throw new Error(`代理 HTTP ${response.status}`);
+                        return normalizeCwaPayload(await response.json(), dataset);
+                    }).catch(error => {
+                        console.warn(`CWA 即時代理讀取失敗 ${dataset}：`, error);
+                        return null;
+                    }),
+                    fetch(staticUrl, {
+                        cache: 'no-store',
+                        headers: { 'Accept': 'application/json' }
+                    }).then(async response => {
+                        if (!response.ok) throw new Error(`靜態資料 HTTP ${response.status}`);
+                        return normalizeCwaPayload(await response.json(), dataset);
+                    }).catch(error => {
+                        console.warn(`CWA GitHub 靜態資料讀取失敗 ${dataset}：`, error);
+                        return null;
+                    })
+                ]);
+
+                const candidates = [liveResult, staticResult]
+                    .filter(payload => Array.isArray(payload?.records?.Station) && payload.records.Station.length);
+
+                if (candidates.length) {
+                    candidates.sort((a, b) => {
+                        const aTs = Date.parse(getCwaPayloadLatestObsTime(a) || '') || 0;
+                        const bTs = Date.parse(getCwaPayloadLatestObsTime(b) || '') || 0;
+                        return bTs - aTs;
                     });
-                    if (liveResponse.ok) {
-                        const livePayload = await liveResponse.json();
-                        const normalized = normalizeCwaPayload(livePayload, dataset);
-                        if (Array.isArray(normalized.records?.Station) && normalized.records.Station.length) {
-                            return normalized;
-                        }
-                    }
-                    console.warn(`CWA 即時代理未取得有效 ${dataset}，改用 GitHub 靜態資料。`);
-                } catch (liveError) {
-                    console.warn(`CWA 即時代理讀取失敗 ${dataset}，改用 GitHub 靜態資料。`, liveError);
+
+                    const selected = candidates[0];
+                    const selectedObsTime = getCwaPayloadLatestObsTime(selected);
+                    console.log(`CWA ${dataset} 採用最新批次：${selectedObsTime || '--'}`);
+                    return selected;
                 }
+
+                throw new Error(`CWA ${dataset} 即時代理與靜態資料皆無有效 Station 資料`);
             }
 
-            // ② 備援：GitHub Actions 產生的靜態 JSON。
+            // 其他資料集維持原本的 GitHub Pages 靜態資料流程，不改動。
             const staticUrl = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${nonce}`;
             const response = await fetch(staticUrl, {
                 cache: 'no-store',
@@ -2945,7 +2981,19 @@ const cwaTemperatureHistoryRemoteCache = new Map();
         function cwaObsTimeChanged(sourceId, list) {
             const latest = getCwaLatestObsTime(list);
             if (!latest) return false;
-            if (cwaAppliedObsTime[sourceId] === latest) return false;
+
+            // 只接受「時間向前」的新批次，絕不讓備援資料把畫面從較新的
+            // CWA ObsTime 往回退。例如即時代理已經拿到 13:40 後，
+            // 代理暫時失敗而 GitHub 靜態檔仍是 13:30，也不能回退成 13:30。
+            const previous = cwaAppliedObsTime[sourceId];
+            if (previous) {
+                const latestTs = Date.parse(latest);
+                const previousTs = Date.parse(previous);
+                if (Number.isFinite(latestTs) && Number.isFinite(previousTs) && latestTs <= previousTs) {
+                    return false;
+                }
+            }
+
             cwaAppliedObsTime[sourceId] = latest;
             return true;
         }
