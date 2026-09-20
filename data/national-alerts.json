@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T02:12:27.321233+08:00",
+  "updatedAt": "2026-09-21T02:26:21.074719+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20260921021840_0000",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "水利署",
+      "updated": "2026-09-21T02:18:40+08:00",
+      "effective": "2026/9/21 上午 02:18:40",
+      "expires": "2026/9/21 上午 05:19:00",
+      "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260921021840_0000.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260921011840_0000",
       "category": "水庫放流",
