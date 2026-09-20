@@ -342,6 +342,17 @@
             border: 1px solid rgba(148, 163, 184, 0.14);
             cursor: pointer;
         }
+        /* 天亮模式：全台即時異常內層不再使用深灰色，改為淡黃色警示卡。
+           只調整顯示樣式，不修改 CWA／MOENV 資料來源與判斷邏輯。 */
+        [data-theme="light"] .nationwide-attention-item {
+            background: #fff5cf;
+            border-color: #f2d58b;
+            color: #182238;
+        }
+        [data-theme="light"] .nationwide-attention-item:hover {
+            background: #ffefb0;
+            border-color: #edc86a;
+        }
         .nationwide-attention-badge {
             flex: 0 0 auto;
             font-size: 13px;
