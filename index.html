@@ -1687,9 +1687,6 @@
         const CWA_STATIC_BASE = new URL('data/', document.baseURI).href;
         // 即時 CWA 資料優先走既有的公開反向代理；失敗時自動退回 GitHub Actions 靜態 JSON。
         // 代理網址本身不含 CWA API Key，避免把 CWA 金鑰放進 GitHub Pages 前端。
-        // 即時 CWA 資料優先走既有的公開反向代理；若代理暫時落後或失敗，
-        // 再與 GitHub Actions 靜態資料比較，永遠採用 ObsTime 較新的那一份。
-        // 代理網址本身不含 CWA API Key，避免把 CWA 金鑰放進 GitHub Pages 前端。
         const CWA_LIVE_API_BASE = 'https://mingxuan.904037.xyz/api/v1/rest/datastore/';
         const CWA_LIVE_DATASETS = new Set([
             'O-A0001-001', 'O-A0002-001', 'O-A0003-001'
@@ -1703,75 +1700,76 @@
             throw new Error(`CWA 資料格式無法辨識：${dataset}`);
         }
 
+        // 取得一份 CWA 資料中「真正最新的一批 ObsTime」。
+        // 不能只相信即時代理，因為代理或 GitHub Actions 可能短暫不同步。
         function getCwaPayloadLatestObsTime(payload) {
             const list = payload?.records?.Station;
-            if (!Array.isArray(list) || !list.length) return null;
-            return getCwaLatestObsTime(list);
+            if (!Array.isArray(list) || !list.length) return 0;
+            let latest = 0;
+            list.forEach(station => {
+                let raw = station?.ObsTime?.DateTime ?? station?.ObsTime ?? station?.DateTime;
+                if (raw && typeof raw === 'object') raw = raw.DateTime ?? raw.dateTime ?? null;
+                const ms = Date.parse(raw || '');
+                if (Number.isFinite(ms) && ms > latest) latest = ms;
+            });
+            return latest;
         }
 
         async function fetchCwaDataset(dataset) {
             const nonce = Date.now();
+            let liveData = null;
+            let staticData = null;
 
-            // O-A0001/O-A0002/O-A0003：同時檢查「即時代理」與「GitHub 靜態備援」，
-            // 再比較兩邊的最新 ObsTime。這樣即使代理暫時停在 13:30、GitHub 已到 13:40，
-            // 或反過來，也會自動採用較新的 CWA 批次。
+            // ① 即時代理：嘗試取得最新資料。
             if (CWA_LIVE_DATASETS.has(dataset)) {
                 const liveUrl = `${CWA_LIVE_API_BASE}${dataset}?_=${nonce}`;
-                const staticUrl = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${nonce}`;
-
-                const [liveResult, staticResult] = await Promise.all([
-                    fetch(liveUrl, {
+                try {
+                    const liveResponse = await fetch(liveUrl, {
                         cache: 'no-store',
                         headers: { 'Accept': 'application/json' }
-                    }).then(async response => {
-                        if (!response.ok) throw new Error(`代理 HTTP ${response.status}`);
-                        return normalizeCwaPayload(await response.json(), dataset);
-                    }).catch(error => {
-                        console.warn(`CWA 即時代理讀取失敗 ${dataset}：`, error);
-                        return null;
-                    }),
-                    fetch(staticUrl, {
-                        cache: 'no-store',
-                        headers: { 'Accept': 'application/json' }
-                    }).then(async response => {
-                        if (!response.ok) throw new Error(`靜態資料 HTTP ${response.status}`);
-                        return normalizeCwaPayload(await response.json(), dataset);
-                    }).catch(error => {
-                        console.warn(`CWA GitHub 靜態資料讀取失敗 ${dataset}：`, error);
-                        return null;
-                    })
-                ]);
-
-                const candidates = [liveResult, staticResult]
-                    .filter(payload => Array.isArray(payload?.records?.Station) && payload.records.Station.length);
-
-                if (candidates.length) {
-                    candidates.sort((a, b) => {
-                        const aTs = Date.parse(getCwaPayloadLatestObsTime(a) || '') || 0;
-                        const bTs = Date.parse(getCwaPayloadLatestObsTime(b) || '') || 0;
-                        return bTs - aTs;
                     });
-
-                    const selected = candidates[0];
-                    const selectedObsTime = getCwaPayloadLatestObsTime(selected);
-                    console.log(`CWA ${dataset} 採用最新批次：${selectedObsTime || '--'}`);
-                    return selected;
+                    if (liveResponse.ok) {
+                        const livePayload = await liveResponse.json();
+                        const normalized = normalizeCwaPayload(livePayload, dataset);
+                        if (Array.isArray(normalized.records?.Station) && normalized.records.Station.length) {
+                            liveData = normalized;
+                        }
+                    }
+                } catch (liveError) {
+                    console.warn(`CWA 即時代理讀取失敗 ${dataset}，將比較 GitHub 靜態資料。`, liveError);
                 }
-
-                throw new Error(`CWA ${dataset} 即時代理與靜態資料皆無有效 Station 資料`);
             }
 
-            // 其他資料集維持原本的 GitHub Pages 靜態資料流程，不改動。
+            // ② GitHub Actions 靜態資料也一起檢查。
+            // 原本「代理成功就直接採用」會造成代理停在 13:40、GitHub 已經 13:50 時，
+            // 網站反而選到較舊的 13:40。
             const staticUrl = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${nonce}`;
-            const response = await fetch(staticUrl, {
-                cache: 'no-store',
-                headers: { 'Accept': 'application/json' }
-            });
-            if (!response.ok) {
-                throw new Error(`CWA 靜態資料 HTTP ${response.status}: ${dataset}`);
+            try {
+                const response = await fetch(staticUrl, {
+                    cache: 'no-store',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                    const payload = await response.json();
+                    staticData = normalizeCwaPayload(payload, dataset);
+                }
+            } catch (staticError) {
+                console.warn(`CWA GitHub 靜態資料讀取失敗 ${dataset}`, staticError);
             }
-            const payload = await response.json();
-            return normalizeCwaPayload(payload, dataset);
+
+            // ③ 兩份資料都拿到時，以 CWA ObsTime 較新的那一份為準。
+            const liveTime = getCwaPayloadLatestObsTime(liveData);
+            const staticTime = getCwaPayloadLatestObsTime(staticData);
+
+            if (liveData && staticData) {
+                if (liveTime >= staticTime && liveTime > 0) return liveData;
+                if (staticTime > 0) return staticData;
+                return liveData;
+            }
+            if (liveData) return liveData;
+            if (staticData) return staticData;
+
+            throw new Error(`CWA ${dataset} 即時代理與 GitHub 靜態資料皆無法取得`);
         }
 
         // AQI 由 GitHub Actions 定時更新至 data/aqx-p-432.json，GitHub Pages 直接讀取。
@@ -2981,19 +2979,7 @@ const cwaTemperatureHistoryRemoteCache = new Map();
         function cwaObsTimeChanged(sourceId, list) {
             const latest = getCwaLatestObsTime(list);
             if (!latest) return false;
-
-            // 只接受「時間向前」的新批次，絕不讓備援資料把畫面從較新的
-            // CWA ObsTime 往回退。例如即時代理已經拿到 13:40 後，
-            // 代理暫時失敗而 GitHub 靜態檔仍是 13:30，也不能回退成 13:30。
-            const previous = cwaAppliedObsTime[sourceId];
-            if (previous) {
-                const latestTs = Date.parse(latest);
-                const previousTs = Date.parse(previous);
-                if (Number.isFinite(latestTs) && Number.isFinite(previousTs) && latestTs <= previousTs) {
-                    return false;
-                }
-            }
-
+            if (cwaAppliedObsTime[sourceId] === latest) return false;
             cwaAppliedObsTime[sourceId] = latest;
             return true;
         }
@@ -3125,6 +3111,12 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
                     renderCountyForecastGrid();
                     renderFavoritesSection();
                     if (mapInitialized) renderMapMarkers();
+                    // CWA 新批次套用後，同步更新「您目前所在位置天氣」的最近測站資料。
+                    // 已取得定位權限時不會重新詢問使用者，只會重新以最新測站資料比對。
+                    const myLocationArea = document.getElementById('myLocationContentArea');
+                    if (myLocationArea && navigator.geolocation && myLocationArea.dataset.locationReady === '1') {
+                        initUserLocationWeather();
+                    }
                 }
             } catch (err) {
                 console.error("資料載入錯誤:", err);
@@ -4126,6 +4118,8 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                 position => {
                     const userLat = position.coords.latitude;
                     const userLon = position.coords.longitude;
+                    const locationArea = document.getElementById('myLocationContentArea');
+                    if (locationArea) locationArea.dataset.locationReady = '1';
                     let closestStation = null;
                     let minDistance = Infinity;
                     weatherStationData.forEach(station => {
