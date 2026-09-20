@@ -571,7 +571,8 @@
             right:14px;
             z-index:100000;
         }
-        .map-container-wrapper:has(#map.leaflet-fullscreen-on) .map-layer-switcher{
+        .map-container-wrapper:has(#map.leaflet-fullscreen-on) .map-layer-switcher,
+        .map-container-wrapper:has(#map.leaflet-pseudo-fullscreen) .map-layer-switcher{
             display:block;
             position:fixed;
             top:max(14px, env(safe-area-inset-top, 0px));
@@ -670,7 +671,8 @@
             color:#38bdf8;
         }
         @media(max-width:600px){
-            .map-container-wrapper:has(#map.leaflet-fullscreen-on) .map-layer-switcher{
+            .map-container-wrapper:has(#map.leaflet-fullscreen-on) .map-layer-switcher,
+        .map-container-wrapper:has(#map.leaflet-pseudo-fullscreen) .map-layer-switcher{
                 top:max(10px, env(safe-area-inset-top, 0px));
                 right:max(10px, env(safe-area-inset-right, 0px));
             }
@@ -4969,6 +4971,28 @@ const popVal = getPopForStation(county, town);
             legendControl = new LegendControl().addTo(map);
             mapInitialized = true;
             bindFullscreenLayoutFix(map);
+
+            // 全台地圖進入 Leaflet 原生／Pseudo 全螢幕時，顯示 DPIP 類圖層切換器。
+            // 不依賴單一 class，兼容 iPhone Safari 的 pseudo fullscreen。
+            function syncMainMapLayerSwitcherVisibility(){
+                const switcher = document.getElementById('mapLayerSwitcher');
+                if(!switcher || !map) return;
+                const isFullscreen = map.getContainer().classList.contains('leaflet-fullscreen-on') ||
+                    map.getContainer().classList.contains('leaflet-pseudo-fullscreen') ||
+                    document.fullscreenElement === map.getContainer();
+                switcher.style.display = isFullscreen ? 'block' : 'none';
+                if(!isFullscreen) closeMapLayerMenu();
+            }
+            map.on('fullscreenchange', syncMainMapLayerSwitcherVisibility);
+            ['webkitfullscreenchange','MSFullscreenChange','mozfullscreenchange'].forEach(function(evt){
+                map.getContainer().addEventListener(evt, syncMainMapLayerSwitcherVisibility, {passive:true});
+            });
+            document.addEventListener('fullscreenchange', syncMainMapLayerSwitcherVisibility, {passive:true});
+            document.addEventListener('webkitfullscreenchange', syncMainMapLayerSwitcherVisibility, {passive:true});
+            // iPhone Safari pseudo fullscreen 需要等 Leaflet 完成 class 切換後再同步。
+            setTimeout(syncMainMapLayerSwitcherVisibility, 50);
+            setTimeout(syncMainMapLayerSwitcherVisibility, 300);
+
             renderMapMarkers();
         }
         
