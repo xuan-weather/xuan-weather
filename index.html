@@ -1100,7 +1100,17 @@
             .data-source-bar a{font-size:10px;}
         }
 
-</style>
+
+        .national-emergency-modal { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 18px; }
+        .national-emergency-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.68); backdrop-filter: blur(3px); }
+        .national-emergency-dialog { position: relative; width: min(92vw, 430px); background: var(--popup-bg, #fff); color: var(--popup-text, #0f172a); border: 2px solid #ef4444; border-radius: 20px; padding: 24px 20px 18px; box-shadow: 0 20px 60px rgba(0,0,0,.4); text-align: center; }
+        .national-emergency-close { position: absolute; top: 8px; right: 12px; width: 34px; height: 34px; border: 0; background: transparent; color: var(--popup-text, #0f172a); font-size: 28px; cursor: pointer; }
+        .national-emergency-icon { font-size: 42px; line-height: 1; margin-bottom: 8px; }
+        .national-emergency-label { display: inline-block; color: #fff; background: #dc2626; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 800; margin-bottom: 10px; }
+        .national-emergency-dialog h2 { font-size: 21px; margin-bottom: 10px; }
+        .national-emergency-detail { font-size: 13px; line-height: 1.65; text-align: left; color: var(--popup-sub, #334155); }
+        .national-emergency-confirm { margin-top: 16px; width: 100%; border: 0; border-radius: 12px; padding: 11px 14px; background: #dc2626; color: #fff; font-weight: 800; cursor: pointer; }
+    </style>
 <style>
 @media(max-width:600px){.convection-storm-item{grid-template-columns:28px 1fr auto;padding:9px}}
 
@@ -1320,29 +1330,16 @@
             </div>
 
 
-            <!-- 國家級警報：只顯示 NCDR 目前生效中的政府／氣象署實際示警 -->
-            <div class="national-alert-widget" id="nationalAlertWidget" style="display:none;">
-                <div class="national-alert-head">
-                    <div class="national-alert-title"><i class="fas fa-tower-broadcast"></i> 國家級警報</div>
-                    <div class="national-alert-status">即時政府示警</div>
-                </div>
-                <div id="nationalAlertContent"></div>
-                <div class="national-alert-source">
-                    資訊依 NCDR 生效中的政府／氣象署公開示警資料顯示；僅有實際生效示警時顯示。
-                    <a href="https://alerts.ncdr.nat.gov.tw/web/alerts/immediate" target="_blank" rel="noopener">NCDR 生效中示警</a> ｜
-                    <a href="https://scweb.cwa.gov.tw/zh-tw/pws" target="_blank" rel="noopener">氣象署 PWS</a>
-                </div>
-            </div>
-
             <div class="my-location-widget" id="weatherWarningsWidget" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(15, 23, 42, 0.1)); border-color: rgba(239, 68, 68, 0.25);">
                 <div class="my-location-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
                     <div class="my-location-title" style="color: #ef4444;">
-                        <i class="fas fa-exclamation-triangle"></i> 即時警特報與防災快訊
+                        <i class="fas fa-exclamation-triangle"></i> 即時警特報與防災資訊
                     </div>
                     <div style="font-size: 12px; color: var(--text-muted);" id="warningCountTag">同步更新中</div>
                 </div>
                 <div id="weatherWarningsContent">
                     <div class="my-location-status"><i class="fas fa-spinner fa-spin"></i> 正在檢查豪大雨特報、強風與地震報告...</div>
+                    <div id="ncdrAlertSection" style="display:none; margin-top:8px;"></div>
                 </div>
             </div>
             
@@ -1751,6 +1748,18 @@
         </div>
     </div>
 
+    <div id="nationalEmergencyModal" class="national-emergency-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="nationalEmergencyTitle">
+        <div class="national-emergency-backdrop" onclick="closeNationalEmergencyPopup()"></div>
+        <div class="national-emergency-dialog">
+            <button class="national-emergency-close" type="button" onclick="closeNationalEmergencyPopup()" aria-label="關閉">&times;</button>
+            <div class="national-emergency-icon">🚨</div>
+            <div class="national-emergency-label">重大災防告警</div>
+            <h2 id="nationalEmergencyTitle">即時災防告警</h2>
+            <div id="nationalEmergencyContent"></div>
+            <button class="national-emergency-confirm" type="button" onclick="closeNationalEmergencyPopup()">我知道了</button>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.js"></script>
     <script>
@@ -1868,35 +1877,19 @@ let cityStationMapping = {};
         });
 
 
-        // ==================== 國家級警報／NCDR 即時生效示警 ====================
-        // 只顯示 NCDR 目前「生效中」且由後端資料流程提供的政府／氣象署示警。
-        // 不再使用固定 921 防災演練排程；演練 Test 資料也不由前端自行製造。
+        // ==================== NCDR 即時生效示警整合 ====================
+        // 一般政府／氣象署示警與 921 演習：放在「即時警特報與防災資訊」。
+        // 只有符合重大災防告警特徵的 Actual 資料，才另外跳出醒目視窗。
         const NATIONAL_ALERT_DATA_URL = 'data/national-alerts.json';
 
         function nationalAlertEscape(value) {
             return String(value ?? '').replace(/[&<>"']/g, ch => ({
-                '&':'&amp;',
-                '<':'&lt;',
-                '>':'&gt;',
-                '"':'&quot;',
-                "'":'&#39;'
+                '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
             }[ch]));
         }
 
         function nationalAlertCategoryIcon(category) {
-            const icons = {
-                '地震':'🌏',
-                '海嘯':'🌊',
-                '颱風':'🌀',
-                '雷雨':'⛈️',
-                '降雨':'🌧️',
-                '強風':'💨',
-                '濃霧':'🌫️',
-                '高溫':'🌡️',
-                '低溫':'🥶',
-                '火山':'🌋',
-                '巨浪':'🌊'
-            };
+            const icons = { '地震':'🌏','海嘯':'🌊','颱風':'🌀','雷雨':'⛈️','降雨':'🌧️','強風':'💨','濃霧':'🌫️','高溫':'🌡️','低溫':'🥶','火山':'🌋','巨浪':'🌊' };
             return icons[category] || '⚠️';
         }
 
@@ -1904,95 +1897,73 @@ let cityStationMapping = {};
             if (!value) return '--';
             const dt = new Date(value);
             if (Number.isNaN(dt.getTime())) return nationalAlertEscape(value);
-            return dt.toLocaleString('zh-TW', {
-                timeZone: 'Asia/Taipei',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            });
+            return dt.toLocaleString('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+        }
+
+        function isNationalEmergencyAlert(alert) {
+            const status = String(alert?.status || '').toLowerCase();
+            if (status !== 'actual') return false;
+            const text = [alert?.category, alert?.title, alert?.summary].filter(Boolean).join(' ');
+            return /災防告警|災防警報|細胞廣播|地震速報|海嘯警報/.test(text);
+        }
+
+        function showNationalEmergencyPopup(alert) {
+            const id = String(alert?.id || alert?.link || alert?.title || '');
+            if (!id) return;
+            const seenKey = `national-emergency-seen:${id}`;
+            try { if (sessionStorage.getItem(seenKey)) return; sessionStorage.setItem(seenKey,'1'); } catch(e) {}
+            const modal=document.getElementById('nationalEmergencyModal');
+            const title=document.getElementById('nationalEmergencyTitle');
+            const content=document.getElementById('nationalEmergencyContent');
+            if(!modal||!title||!content)return;
+            title.textContent = alert.title || alert.category || '即時災防告警';
+            content.innerHTML = `<div class="national-emergency-detail"><b>${nationalAlertEscape(alert.category || '重大災防告警')}</b><br>${nationalAlertEscape(alert.summary || '請依官方告警內容採取適當防護措施。')}<br><br>生效：${formatNationalAlertTime(alert.effective)}<br>到期：${formatNationalAlertTime(alert.expires)}</div>`;
+            modal.style.display='flex';
+        }
+
+        function closeNationalEmergencyPopup() {
+            const modal=document.getElementById('nationalEmergencyModal');
+            if(modal) modal.style.display='none';
         }
 
         async function renderNationalAlert() {
-            const widget = document.getElementById('nationalAlertWidget');
-            const container = document.getElementById('nationalAlertContent');
-            if (!widget || !container) return;
-
+            const section=document.getElementById('ncdrAlertSection');
+            if(!section) return;
             try {
-                const response = await fetch(
-                    `${NATIONAL_ALERT_DATA_URL}?t=${Date.now()}`,
-                    {
-                        cache: 'no-store',
-                        headers: { 'Accept': 'application/json' }
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
-                const data = await response.json();
-                const alerts = Array.isArray(data?.alerts) ? data.alerts : [];
-                const now = Date.now();
-
-                const activeAlerts = alerts.filter(alert => {
-                    const alertStatus = String(alert.status || '').toLowerCase();
-
-if (alertStatus !== 'actual' && alertStatus !== 'test') {
-    return false;
-}
-                    const effectiveMs = alert.effective ? Date.parse(alert.effective) : NaN;
-                    const expiresMs = alert.expires ? Date.parse(alert.expires) : NaN;
-
-                    if (Number.isFinite(effectiveMs) && effectiveMs > now) return false;
-                    if (Number.isFinite(expiresMs) && expiresMs < now) return false;
-
-                    return true;
+                const response=await fetch(`${NATIONAL_ALERT_DATA_URL}?t=${Date.now()}`,{cache:'no-store',headers:{'Accept':'application/json'}});
+                if(!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data=await response.json();
+                const alerts=Array.isArray(data?.alerts)?data.alerts:[];
+                const now=Date.now();
+                const active=alerts.filter(alert=>{
+                    const status=String(alert?.status||'').toLowerCase();
+                    if(status!=='actual' && status!=='test') return false;
+                    const eff=alert.effective?Date.parse(alert.effective):NaN;
+                    const exp=alert.expires?Date.parse(alert.expires):NaN;
+                    return !(Number.isFinite(eff)&&eff>now) && !(Number.isFinite(exp)&&exp<now);
                 });
 
-                if (!activeAlerts.length) {
-                    widget.style.display = 'none';
-                    container.innerHTML = '';
-                    return;
-                }
+                const emergency=active.filter(isNationalEmergencyAlert);
+                emergency.forEach(showNationalEmergencyPopup);
 
-                widget.style.display = '';
-
-                const status = widget.querySelector('.national-alert-status');
-                if (status) status.textContent = `目前 ${activeAlerts.length} 項生效中`;
-
-                container.innerHTML = activeAlerts.map(alert => {
-                    const category = nationalAlertEscape(alert.category || '警報');
-                    const icon = nationalAlertCategoryIcon(alert.category);
-                    const title = nationalAlertEscape(alert.title || alert.category || '政府示警');
-                    const summary = nationalAlertEscape(alert.summary || '目前有生效中的政府示警。');
-                    const effective = formatNationalAlertTime(alert.effective);
-                    const expires = formatNationalAlertTime(alert.expires);
-                    const link = typeof alert.link === 'string' ? alert.link.trim() : '';
-
-                    const sourceLink = link
-                        ? `<a href="${nationalAlertEscape(link)}" target="_blank" rel="noopener">查看原始示警</a>`
-                        : '';
-
-                    return `
-                        <div class="national-alert-item">
-                            <div class="national-alert-item-title">${icon} ${category}｜${title}</div>
-                            <div class="national-alert-item-detail">
-                                <b>生效：${effective}</b><br>
-                                <b>到期：${expires}</b><br>
-                                ${summary}
-                                ${sourceLink ? `<div style="margin-top:5px;">${sourceLink}</div>` : ''}
-                            </div>
-                        </div>
-                    `;
+                const inPanel=active.filter(alert=>!isNationalEmergencyAlert(alert));
+                if(!inPanel.length){ section.style.display='none'; section.innerHTML=''; return; }
+                section.style.display='block';
+                section.innerHTML = `<div style="font-size:12px;font-weight:800;color:var(--text-muted);margin:4px 2px 7px;">⚠️ 政府／氣象署即時示警</div>` + inPanel.map(alert=>{
+                    const status=String(alert.status||'').toLowerCase();
+                    const isTest=status==='test';
+                    const badge=isTest?'🟠 國家防災日｜演習':'⚠️ 即時政府示警';
+                    const icon=nationalAlertCategoryIcon(alert.category);
+                    const title=nationalAlertEscape(alert.title||alert.category||'政府示警');
+                    const summary=nationalAlertEscape(alert.summary||'目前有生效中的政府示警。');
+                    const link=typeof alert.link==='string'?alert.link.trim():'';
+                    return `<div class="national-alert-item" style="${isTest?'border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.10);':''}">
+                        <div class="national-alert-item-title">${badge}｜${icon} ${nationalAlertEscape(alert.category||'示警')}｜${title}</div>
+                        <div class="national-alert-item-detail">${isTest?'<b style="color:#f59e0b;">本訊息為演習，非實際災害</b><br>':''}<b>生效：${formatNationalAlertTime(alert.effective)}</b><br><b>到期：${formatNationalAlertTime(alert.expires)}</b><br>${summary}${link?`<div style="margin-top:5px;"><a href="${nationalAlertEscape(link)}" target="_blank" rel="noopener">查看原始示警</a></div>`:''}</div>
+                    </div>`;
                 }).join('');
-            } catch (error) {
-                // 資料暫時讀取失敗時隱藏，避免顯示過期或固定演練內容。
-                widget.style.display = 'none';
-                container.innerHTML = '';
-                console.warn('國家級警報資料讀取失敗：', error);
+            } catch(error) {
+                section.style.display='none'; section.innerHTML=''; console.warn('NCDR 即時示警讀取失敗：',error);
             }
         }
 
@@ -2413,8 +2384,9 @@ if (alertStatus !== 'actual' && alertStatus !== 'test') {
                 }
 
                 if (activeCount > 0) {
-                    if (countTag) countTag.innerText = `目前有 ${activeCount} 項警特報/防災快訊`;
+                    if (countTag) countTag.innerText = `目前有 ${activeCount} 項警特報/防災資訊`;
                     container.innerHTML = html;
+                    setTimeout(renderNationalAlert, 0);
                 } else {
                     if (countTag) countTag.innerText = `目前無發布警特報`;
                     container.innerHTML = `
@@ -2424,6 +2396,7 @@ if (alertStatus !== 'actual' && alertStatus !== 'test') {
                         </div>
                     `;
                 }
+                setTimeout(renderNationalAlert, 0);
             } catch (err) {
                 console.error("警特報載入錯誤:", err);
                 weatherWarnings = [];
@@ -2434,6 +2407,7 @@ if (alertStatus !== 'actual' && alertStatus !== 'test') {
                         <div>氣象署目前無發布特殊氣象警特報。</div>
                     </div>
                 `;
+                setTimeout(renderNationalAlert, 0);
             }
         }
 
