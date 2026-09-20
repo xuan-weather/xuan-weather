@@ -1,4 +1,4 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW" data-theme="dark">
 <head>
     <meta charset="UTF-8">
@@ -2428,32 +2428,6 @@ let cityStationMapping = {};
                 setTimeout(initMap, 100);
             } else if (pageId === 'map' && mapInitialized) {
                 setTimeout(() => { map.invalidateSize(); repairFullscreenMapLayout(map); }, 100);
-            }
-
-            // 從「全台即時異常」等儀表板項目跳到全台地圖時，
-            // 不把 mapPanel 頂到畫面最上方；保留最上方的觀測儀表板分頁列，
-            // 同時讓全台地圖區塊完整可見，避免上方導覽被捲出畫面。
-            if (pageId === 'map') {
-                setTimeout(() => {
-                    try {
-                        const tabs = document.querySelector('.page-tabs');
-                        const mapPanel = document.getElementById('mapPanel');
-                        if (!tabs || !mapPanel) return;
-
-                        // 先確保頁面回到最上方，讓「觀測儀表板／全台地圖」分頁列保持顯示。
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                        // 再讓地圖本身保持在分頁列下方，不額外呼叫 scrollIntoView。
-                        if (map && mapInitialized) {
-                            setTimeout(() => {
-                                map.invalidateSize();
-                                repairFullscreenMapLayout(map);
-                            }, 120);
-                        }
-                    } catch (e) {
-                        // 不影響原本地圖功能
-                    }
-                }, 180);
             }
             if (pageId === 'radar') {
                 setTimeout(() => { initRadarMap(); if(radarMap) { radarMap.invalidateSize(); repairFullscreenMapLayout(radarMap); } }, 100);
