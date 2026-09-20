@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>臺灣即時氣象與防災儀表板</title>
+
+    <!-- 首次開啟／重新進入網站時固定回到最上方觀測儀表板，避免 Safari 恢復上次捲動位置 -->
+    <script>
+        try {
+            if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        } catch (e) {}
+        function resetDashboardScrollPosition() {
+            try {
+                window.scrollTo(0, 0);
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+            } catch (e) {}
+        }
+        window.addEventListener('pageshow', function() {
+            resetDashboardScrollPosition();
+            setTimeout(resetDashboardScrollPosition, 50);
+            setTimeout(resetDashboardScrollPosition, 300);
+        });
+    </script>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" />
@@ -1745,6 +1764,8 @@ let cityStationMapping = {};
         ];
         
         window.addEventListener('DOMContentLoaded', () => {
+            resetDashboardScrollPosition();
+            setTimeout(resetDashboardScrollPosition, 100);
             const savedTheme = localStorage.getItem('cwa_theme') || 'dark';
             setTheme(savedTheme);
                           
