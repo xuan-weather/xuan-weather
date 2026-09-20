@@ -247,6 +247,42 @@
             margin-bottom: 2px;
         }
         .weather-status-text p { font-size: 12px; color: var(--text-muted); }
+        /* 觀測儀表板＋政府／氣象署即時示警：桌面並排、手機自動堆疊 */
+        .dashboard-top-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
+            gap: 12px;
+            align-items: stretch;
+            margin-bottom: 12px;
+        }
+        .dashboard-main-header {
+            margin-bottom: 0 !important;
+        }
+        .ncdr-dashboard-widget {
+            min-width: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background: var(--card-bg);
+            padding: 12px;
+            box-sizing: border-box;
+        }
+        .ncdr-dashboard-widget .my-location-header {
+            padding-bottom: 9px;
+            margin-bottom: 8px;
+        }
+        .ncdr-dashboard-widget #ncdrAlertSection {
+            max-height: 330px;
+            overflow-y: auto;
+        }
+        @media (max-width: 760px) {
+            .dashboard-top-row {
+                grid-template-columns: 1fr;
+            }
+            .ncdr-dashboard-widget #ncdrAlertSection {
+                max-height: 360px;
+            }
+        }
+
         .meta-info-bar {
             display: flex;
             justify-content: space-between;
@@ -1329,15 +1365,44 @@
         </div>
         
         <div id="dashboardPanel" class="content-panel active modern-dashboard">
-            <div class="header">
-                <div class="header-title">
-                    <i class="fas fa-cloud-sun-rain" style="color: #06b6d4;"></i>
-                    <h2>天氣即時資訊</h2>
+            <div class="dashboard-top-row">
+                <div class="header dashboard-main-header">
+                    <div class="header-title">
+                        <i class="fas fa-cloud-sun-rain" style="color: #06b6d4;"></i>
+                        <h2>天氣即時資訊</h2>
+                    </div>
+                    <div class="header-actions">
+                        <button class="action-btn" id="refreshBtn" onclick="fetchAllStationData(true)">
+                            <i class="fas fa-sync-alt"></i> 重新整理
+                        </button>
+                    </div>
                 </div>
-                <div class="header-actions">
-                    <button class="action-btn" id="refreshBtn" onclick="fetchAllStationData(true)">
-                        <i class="fas fa-sync-alt"></i> 重新整理
-                    </button>
+
+                <div class="ncdr-dashboard-widget">
+                    <div class="national-alert-header-row my-location-header">
+                        <div class="my-location-title">
+                            <i class="fas fa-triangle-exclamation"></i> ⚠️ 政府／氣象署即時示警
+                        </div>
+                        <div class="national-alert-header-actions">
+                            <button type="button" class="national-alert-filter-btn" onclick="toggleNationalAlertFilter()" aria-expanded="false" aria-controls="nationalAlertFilterPanel">
+                                <i class="fas fa-filter"></i> 篩選
+                            </button>
+                        </div>
+                    </div>
+                    <div id="nationalAlertFilterPanel" class="national-alert-filter-panel" style="display:none;">
+                        <div class="national-alert-filter-head">
+                            <div>
+                                <div class="national-alert-filter-title"><i class="fas fa-sliders"></i> 示警顯示篩選</div>
+                                <div class="national-alert-filter-note">勾選的類別會顯示在「政府／氣象署即時示警」；未勾選的資料仍保留在 NCDR 資料中，不會被刪除。</div>
+                            </div>
+                            <div class="national-alert-filter-tools">
+                                <button type="button" onclick="selectAllNationalAlertFilters()">全選</button>
+                                <button type="button" onclick="clearNationalAlertFilters()">清除</button>
+                            </div>
+                        </div>
+                        <div id="nationalAlertFilterList" class="national-alert-filter-list"></div>
+                    </div>
+                    <div id="ncdrAlertSection" style="display:none; margin-top:8px;"></div>
                 </div>
             </div>
                          
@@ -1348,35 +1413,15 @@
 
 
             <div class="my-location-widget" id="weatherWarningsWidget" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(15, 23, 42, 0.1)); border-color: rgba(239, 68, 68, 0.25);">
-                <div class="national-alert-header-row my-location-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
+                <div class="my-location-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
                     <div class="my-location-title" style="color: #ef4444;">
                         <i class="fas fa-exclamation-triangle"></i> 即時警特報與防災資訊
                     </div>
-                    <div class="national-alert-header-actions">
-                        <div style="font-size: 12px; color: var(--text-muted);" id="warningCountTag">同步更新中</div>
-                        <button type="button" class="national-alert-filter-btn" onclick="toggleNationalAlertFilter()" aria-expanded="false" aria-controls="nationalAlertFilterPanel">
-                            <i class="fas fa-filter"></i> 篩選
-                        </button>
-                    </div>
-                </div>
-                <div id="nationalAlertFilterPanel" class="national-alert-filter-panel" style="display:none;">
-                    <div class="national-alert-filter-head">
-                        <div>
-                            <div class="national-alert-filter-title"><i class="fas fa-sliders"></i> 示警顯示篩選</div>
-                            <div class="national-alert-filter-note">勾選的類別會顯示在「即時警特報與防災資訊」；未勾選的資料仍保留在 NCDR 資料中，不會被刪除。</div>
-                        </div>
-                        <div class="national-alert-filter-tools">
-                            <button type="button" onclick="selectAllNationalAlertFilters()">全選</button>
-                            <button type="button" onclick="clearNationalAlertFilters()">清除</button>
-                        </div>
-                    </div>
-                    <div id="nationalAlertFilterList" class="national-alert-filter-list"></div>
+                    <div style="font-size: 12px; color: var(--text-muted);" id="warningCountTag">同步更新中</div>
                 </div>
                 <div id="weatherWarningsContent">
                     <div class="my-location-status"><i class="fas fa-spinner fa-spin"></i> 正在檢查豪大雨特報、強風與地震報告...</div>
                 </div>
-                <!-- NCDR／氣象署即時示警獨立於 CWA 警特報容器，避免 fetchWeatherWarnings() 重建 innerHTML 時被清除 -->
-                <div id="ncdrAlertSection" style="display:none; margin-top:8px;"></div>
             </div>
             
 
