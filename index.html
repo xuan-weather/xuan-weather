@@ -1938,10 +1938,11 @@ let cityStationMapping = {};
                 const now = Date.now();
 
                 const activeAlerts = alerts.filter(alert => {
-                    if (!alert || String(alert.status || '').toLowerCase() !== 'actual') {
-                        return false;
-                    }
+                    const alertStatus = String(alert.status || '').toLowerCase();
 
+if (alertStatus !== 'actual' && alertStatus !== 'test') {
+    return false;
+}
                     const effectiveMs = alert.effective ? Date.parse(alert.effective) : NaN;
                     const expiresMs = alert.expires ? Date.parse(alert.expires) : NaN;
 
