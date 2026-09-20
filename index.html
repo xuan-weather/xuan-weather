@@ -399,6 +399,23 @@
         .national-alert-title { font-size: 18px; font-weight: 900; color: #ef4444; }
         .national-alert-title i { margin-right: 5px; }
         .national-alert-status { font-size: 11px; font-weight: 800; color: #b45309; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.28); border-radius: 999px; padding: 4px 8px; white-space: nowrap; }
+        .national-alert-header-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+        .national-alert-header-actions { display:flex; align-items:center; gap:7px; flex-wrap:wrap; justify-content:flex-end; }
+        .national-alert-filter-btn { border:1px solid var(--action-border, rgba(148,163,184,.35)); background:var(--panel-bg, rgba(255,255,255,.7)); color:var(--text-color); border-radius:9px; padding:5px 9px; font-size:11px; font-weight:800; cursor:pointer; }
+        .national-alert-filter-panel { margin:8px 0 10px; padding:11px; border:1px solid var(--action-border, rgba(148,163,184,.3)); border-radius:13px; background:var(--panel-bg, rgba(255,255,255,.72)); }
+        .national-alert-filter-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+        .national-alert-filter-title { font-size:13px; font-weight:900; color:var(--text-color); }
+        .national-alert-filter-note { margin-top:3px; font-size:10px; line-height:1.45; color:var(--text-muted); }
+        .national-alert-filter-tools { display:flex; gap:5px; flex-shrink:0; }
+        .national-alert-filter-tools button { border:0; border-radius:8px; padding:5px 7px; background:rgba(148,163,184,.14); color:var(--text-color); font-size:10px; font-weight:800; cursor:pointer; }
+        .national-alert-filter-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin-top:9px; max-height:260px; overflow:auto; padding-right:2px; }
+        .national-alert-filter-option { display:flex; align-items:center; gap:6px; min-width:0; padding:7px 8px; border-radius:9px; background:rgba(148,163,184,.08); font-size:11px; color:var(--text-color); cursor:pointer; }
+        .national-alert-filter-option input { width:15px; height:15px; accent-color:#ef4444; flex:0 0 auto; }
+        .national-alert-filter-option span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        [data-theme="dark"] .national-alert-filter-panel { background:rgba(15,23,42,.68); }
+        [data-theme="dark"] .national-alert-filter-btn { background:rgba(15,23,42,.65); }
+        @media(max-width:520px){ .national-alert-filter-list{grid-template-columns:1fr;} .national-alert-filter-head{flex-direction:column;} .national-alert-filter-tools{align-self:flex-end;} }
+
         .national-alert-item { padding: 13px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(239, 68, 68, 0.20); }
         .national-alert-item + .national-alert-item { margin-top: 8px; }
         .national-alert-item-title { font-size: 14px; font-weight: 900; color: var(--text-color); line-height: 1.45; }
@@ -1331,11 +1348,29 @@
 
 
             <div class="my-location-widget" id="weatherWarningsWidget" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(15, 23, 42, 0.1)); border-color: rgba(239, 68, 68, 0.25);">
-                <div class="my-location-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
+                <div class="national-alert-header-row my-location-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
                     <div class="my-location-title" style="color: #ef4444;">
                         <i class="fas fa-exclamation-triangle"></i> 即時警特報與防災資訊
                     </div>
-                    <div style="font-size: 12px; color: var(--text-muted);" id="warningCountTag">同步更新中</div>
+                    <div class="national-alert-header-actions">
+                        <div style="font-size: 12px; color: var(--text-muted);" id="warningCountTag">同步更新中</div>
+                        <button type="button" class="national-alert-filter-btn" onclick="toggleNationalAlertFilter()" aria-expanded="false" aria-controls="nationalAlertFilterPanel">
+                            <i class="fas fa-filter"></i> 篩選
+                        </button>
+                    </div>
+                </div>
+                <div id="nationalAlertFilterPanel" class="national-alert-filter-panel" style="display:none;">
+                    <div class="national-alert-filter-head">
+                        <div>
+                            <div class="national-alert-filter-title"><i class="fas fa-sliders"></i> 示警顯示篩選</div>
+                            <div class="national-alert-filter-note">勾選的類別會顯示在「即時警特報與防災資訊」；未勾選的資料仍保留在 NCDR 資料中，不會被刪除。</div>
+                        </div>
+                        <div class="national-alert-filter-tools">
+                            <button type="button" onclick="selectAllNationalAlertFilters()">全選</button>
+                            <button type="button" onclick="clearNationalAlertFilters()">清除</button>
+                        </div>
+                    </div>
+                    <div id="nationalAlertFilterList" class="national-alert-filter-list"></div>
                 </div>
                 <div id="weatherWarningsContent">
                     <div class="my-location-status"><i class="fas fa-spinner fa-spin"></i> 正在檢查豪大雨特報、強風與地震報告...</div>
@@ -1894,6 +1929,71 @@ let cityStationMapping = {};
             return icons[category] || '⚠️';
         }
 
+        // NCDR 示警顯示篩選：只控制畫面顯示，不刪除 data/national-alerts.json 中的資料。
+        const NATIONAL_ALERT_FILTER_STORAGE_KEY = 'xuan_weather_national_alert_filters_v1';
+        const NATIONAL_ALERT_DEFAULT_FILTERS = [
+            '颱風','地震','海嘯','降雨','雷雨','強風','濃霧','高溫','低溫','火山','巨浪',
+            '淹水','土石流及大規模崩塌','河川高水位','水位警戒','水位警示','水庫放流',
+            '道路封閉','疏散避難','防空','林火危險度預警','堰塞湖警戒','分洪警報','枯旱預警'
+        ];
+        const NATIONAL_ALERT_FILTER_ALL_CATEGORIES = [
+            ...NATIONAL_ALERT_DEFAULT_FILTERS,
+            '淹水感測','空氣品質',
+            '國家公園入園示警',
+            '強風管制路段','交流道下地方連絡道淹水','地下道積淹水','各直轄市縣市政府災情通報',
+            '公用天然氣事業災情通報','停班停課','急門診通報',
+            '高速公路路況事件','開放路邊停車','開放臨時停車',
+            '水門資訊','其他'
+        ];
+        function getNationalAlertFilters() {
+            try { const saved=JSON.parse(localStorage.getItem(NATIONAL_ALERT_FILTER_STORAGE_KEY)||'null'); if(Array.isArray(saved)) return saved; } catch(e) {}
+            return [...NATIONAL_ALERT_DEFAULT_FILTERS];
+        }
+        function saveNationalAlertFilters(filters) { localStorage.setItem(NATIONAL_ALERT_FILTER_STORAGE_KEY,JSON.stringify([...new Set(filters)])); }
+        const NATIONAL_ALERT_HIDDEN_CATEGORIES = new Set([
+            '火災','海洋污染','停水','消防安全檢查重大不合格場所',
+            '傳染病','市話通訊中斷','行動電話中斷','電力中斷',
+            '國家森林遊樂區','鐵路事故','捷運營運','道路施工','海灘水質'
+        ]);
+
+        function getNationalAlertFilterCategories(alerts=[]) {
+            const dynamic=alerts
+                .map(a=>String(a?.category||'').trim())
+                .filter(Boolean)
+                .filter(category=>!NATIONAL_ALERT_HIDDEN_CATEGORIES.has(category));
+
+            return [...new Set([
+                ...NATIONAL_ALERT_FILTER_ALL_CATEGORIES.filter(
+                    category=>!NATIONAL_ALERT_HIDDEN_CATEGORIES.has(category)
+                ),
+                ...dynamic
+            ])].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+        }
+        function renderNationalAlertFilterList(alerts=[]) {
+            const list=document.getElementById('nationalAlertFilterList'); if(!list) return;
+            const selected=new Set(getNationalAlertFilters());
+            list.innerHTML=getNationalAlertFilterCategories(alerts).map(category=>{
+                const checked=selected.has(category)?' checked':'';
+                return `<label class="national-alert-filter-option"><input type="checkbox" value="${nationalAlertEscape(category)}"${checked} onchange="updateNationalAlertFilter(this)"><span>${nationalAlertEscape(category)}</span></label>`;
+            }).join('');
+        }
+        function updateNationalAlertFilter(input) {
+            const filters=getNationalAlertFilters(), category=input.value, i=filters.indexOf(category);
+            if(input.checked && i<0) filters.push(category);
+            if(!input.checked && i>=0) filters.splice(i,1);
+            saveNationalAlertFilters(filters); renderNationalAlert();
+        }
+        function selectAllNationalAlertFilters() {
+            const list=document.getElementById('nationalAlertFilterList'); if(!list) return;
+            saveNationalAlertFilters([...list.querySelectorAll('input[type="checkbox"]')].map(i=>i.value)); renderNationalAlert();
+        }
+        function clearNationalAlertFilters() { saveNationalAlertFilters([]); renderNationalAlert(); }
+        function toggleNationalAlertFilter() {
+            const panel=document.getElementById('nationalAlertFilterPanel'); const button=document.querySelector('.national-alert-filter-btn'); if(!panel) return;
+            const open=panel.style.display==='none'||!panel.style.display; panel.style.display=open?'block':'none';
+            if(button) button.setAttribute('aria-expanded',open?'true':'false');
+        }
+
         function formatNationalAlertTime(value) {
             if (!value) return '--';
             const dt = new Date(value);
@@ -1944,13 +2044,23 @@ let cityStationMapping = {};
                     return !(Number.isFinite(eff)&&eff>now) && !(Number.isFinite(exp)&&exp<now);
                 });
 
+                renderNationalAlertFilterList(active);
+
                 const emergency=active.filter(isNationalEmergencyAlert);
                 emergency.forEach(showNationalEmergencyPopup);
 
-                const inPanel=active.filter(alert=>!isNationalEmergencyAlert(alert));
-                if(!inPanel.length){ section.style.display='none'; section.innerHTML=''; return; }
+                const selectedFilters=new Set(getNationalAlertFilters());
+                const inPanel=active.filter(alert=>{
+                    if(isNationalEmergencyAlert(alert)) return false;
+                    return selectedFilters.has(String(alert?.category||'').trim());
+                });
+                if(!inPanel.length){
+                    section.style.display='block';
+                    section.innerHTML = `<div style="font-size:12px;font-weight:800;color:var(--text-muted);margin:4px 2px 7px;">⚠️ 政府／氣象署即時示警</div><div class="national-alert-item"><div class="national-alert-item-detail">目前沒有符合篩選條件的生效中示警。你可以按上方「篩選」調整顯示類別。</div></div>`;
+                    return;
+                }
                 section.style.display='block';
-                section.innerHTML = `<div style="font-size:12px;font-weight:800;color:var(--text-muted);margin:4px 2px 7px;">⚠️ 政府／氣象署即時示警</div>` + inPanel.map(alert=>{
+                section.innerHTML = `<div style="font-size:12px;font-weight:800;color:var(--text-muted);margin:4px 2px 7px;">⚠️ 政府／氣象署即時示警｜顯示 ${inPanel.length} 項</div>` + inPanel.map(alert=>{
                     const status=String(alert.status||'').toLowerCase();
                     const isTest=status==='test';
                     const badge=isTest?'🟠 國家防災日｜演習':'⚠️ 即時政府示警';
