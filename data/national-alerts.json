@@ -1,20 +1,20 @@
 {
-  "updatedAt": "2026-09-21T01:19:30.344083+08:00",
+  "updatedAt": "2026-09-21T01:29:18.832954+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
     {
-      "id": "WRA_ReservoirWarn_20260920231840_0000",
+      "id": "WRA_ReservoirWarn_20260921011840_0000",
       "category": "水庫放流",
       "title": "水庫放流",
       "status": "Actual",
       "msgType": "Update",
       "author": "水利署",
-      "updated": "2026-09-20T23:18:40+08:00",
-      "effective": "2026/9/20 下午 11:18:40",
-      "expires": "2026/9/21 上午 02:19:00",
+      "updated": "2026-09-21T01:18:40+08:00",
+      "effective": "2026/9/21 上午 01:18:40",
+      "expires": "2026/9/21 上午 04:19:00",
       "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260920231840_0000.cap",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260921011840_0000.cap",
       "isDrill": false
     },
     {
