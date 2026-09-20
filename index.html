@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
     <script data-goatcounter="https://taiwanweather.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 
     <style>
@@ -6156,10 +6155,9 @@ const popVal = getPopForStation(county, town);
 
         let radarMap = null;
         let radarOverlay = null;
-        let radarCountyBoundaryLayer = null;
         let radarInitialized = false;
-        const CWA_RADAR_IMAGE_URL = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-005.png';
-        const CWA_RADAR_BOUNDS = [[17.75,115.00],[29.25,126.50]];
+        const CWA_RADAR_IMAGE_URL = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-006.png';
+        const CWA_RADAR_BOUNDS = [[20.50,118.00],[26.50,124.00]];
 
         function initRadarMap(){
             if(radarInitialized) return;
@@ -6220,13 +6218,6 @@ const popVal = getPopForStation(county, town);
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{
                 maxZoom:18,updateWhenZooming:false,updateWhenIdle:true,keepBuffer:3,opacity:.95
             }).addTo(radarMap);
-
-            // ===== 雷達定位驗證：縣市界線 =====
-            // 僅作為定位檢查，不修改 CWA 雷達影像、dBZ、bounds 或更新流程。
-            // 圖資來源：taiwan-atlas 的 counties-10t.json，
-            // 該資料說明其縣市界線源自內政部「直轄市、縣市界線(TWD97經緯度)」。
-            loadRadarCountyBoundaryForCheck();
-
             radarInitialized=true;
             bindFullscreenLayoutFix(radarMap);
             repairFullscreenMapLayout(radarMap);
@@ -6235,45 +6226,6 @@ const popVal = getPopForStation(county, town);
         let radarUserLocationMarker = null;
         let radarUserLocationAccuracy = null;
         let radarImageForDbz = null;
-
-        // 雷達定位驗證用：疊加縣市界線，確認回波是否與
-        // 台南／高雄／屏東／台東等行政區位置吻合。
-        function loadRadarCountyBoundaryForCheck(){
-            if(!radarMap || radarCountyBoundaryLayer) return;
-
-            const topoUrl='https://cdn.jsdelivr.net/npm/taiwan-atlas/counties-10t.json';
-
-            fetch(topoUrl,{cache:'no-store'})
-                .then(r=>{
-                    if(!r.ok) throw new Error('縣市界線資料載入失敗：HTTP '+r.status);
-                    return r.json();
-                })
-                .then(topo=>{
-                    if(typeof topojson==='undefined' || !topo.objects || !topo.objects.counties){
-                        throw new Error('縣市界線 TopoJSON 格式無法辨識');
-                    }
-
-                    const geo=topojson.feature(topo,topo.objects.counties);
-
-                    radarCountyBoundaryLayer=L.geoJSON(geo,{
-                        interactive:false,
-                        style:{
-                            color:'#ffffff',
-                            weight:2.2,
-                            opacity:.92,
-                            fill:false,
-                            fillOpacity:0,
-                            pane:'overlayPane'
-                        }
-                    }).addTo(radarMap);
-
-                    // 確保縣市界線在雷達回波影像上方。
-                    radarCountyBoundaryLayer.bringToFront();
-                })
-                .catch(err=>{
-                    console.warn('雷達縣市界線載入失敗',err);
-                });
-        }
         let radarImageCanvas = null;
         let radarImageCtx = null;
 
@@ -6325,12 +6277,13 @@ const popVal = getPopForStation(county, town);
                 const imgH=radarImageForDbz.naturalHeight || radarImageForDbz.height;
                 if(!imgW || !imgH) return null;
 
-                // CWA O-A0058-005 官方範圍：
-                // Longitude 115.00–126.50 / Latitude 17.75–29.25 / 3600×3600。
-                const south=17.75;
-                const north=29.25;
-                const westLon=115.00;
-                const eastLon=126.50;
+                // CWA O-A0058-006 官方範圍：
+                // Longitude 118.00–124.00 / Latitude 20.50–26.50 / 3600×3600。
+                // dBZ 像素換算與影像 overlay 使用完全相同的範圍，避免定位後數值錯位。
+                const south=20.50;
+                const north=26.50;
+                const westLon=118.00;
+                const eastLon=124.00;
 
                 if(lat<north && lat>south && lng>westLon && lng<eastLon){
                     const x=Math.round((lng-westLon)/(eastLon-westLon)*(imgW-1));
@@ -6463,7 +6416,6 @@ const popVal = getPopForStation(county, town);
                 }
                 if(radarOverlay) radarMap.removeLayer(radarOverlay);
                 radarOverlay=L.imageOverlay(url,CWA_RADAR_BOUNDS,{opacity:0.86,interactive:false,zIndex:50}).addTo(radarMap);
-                if(radarCountyBoundaryLayer) radarCountyBoundaryLayer.bringToFront();
                 if(timeEl){
                     const now=new Date();
                     const m=Math.floor(now.getMinutes()/10)*10;
