@@ -4,25 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>臺灣即時氣象與防災儀表板</title>
-
-    <!-- 首次開啟／重新進入網站時固定回到最上方觀測儀表板，避免 Safari 恢復上次捲動位置 -->
-    <script>
-        try {
-            if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-        } catch (e) {}
-        function resetDashboardScrollPosition() {
-            try {
-                window.scrollTo(0, 0);
-                document.documentElement.scrollTop = 0;
-                document.body.scrollTop = 0;
-            } catch (e) {}
-        }
-        window.addEventListener('pageshow', function() {
-            resetDashboardScrollPosition();
-            setTimeout(resetDashboardScrollPosition, 50);
-            setTimeout(resetDashboardScrollPosition, 300);
-        });
-    </script>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" />
@@ -580,6 +561,38 @@
             padding: 18px;
         }
         .map-header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        /* 天氣即時觀測：圖層按鈕恢復成手機可左右滑動的一排 */
+        .map-mode-btn-group{
+            display:flex;
+            gap:8px;
+            overflow-x:auto;
+            overflow-y:hidden;
+            -webkit-overflow-scrolling:touch;
+            scrollbar-width:none;
+            padding:2px 1px 7px;
+            margin:0;
+            white-space:nowrap;
+        }
+        .map-mode-btn-group::-webkit-scrollbar{display:none;}
+        .map-mode-btn-group button{
+            flex:0 0 auto;
+            min-height:36px;
+            padding:7px 13px;
+            border:1px solid rgba(148,163,184,.28);
+            border-radius:10px;
+            background:rgba(15,23,42,.72);
+            color:#cbd5e1;
+            font-size:13px;
+            font-weight:700;
+            white-space:nowrap;
+            cursor:pointer;
+        }
+        .map-mode-btn-group button.active{
+            background:#0ea5e9;
+            color:#fff;
+            border-color:#38bdf8;
+        }
+
         .map-title-row { display: flex; justify-content: space-between; align-items: center; }
         /* 全台地圖：仿 DPIP 的地圖內嵌圖層切換器
            只有全螢幕時顯示；切換器直接放在 #map 內，確保 iPhone Safari Pseudo Fullscreen 也可見。 */
@@ -1483,28 +1496,20 @@
                     <h3><i class="fas fa-globe-asia"></i> 天氣即時觀測</h3>
                     <span id="mapObsTimeTag" style="font-size: 12px; color: #38bdf8; font-weight: 600;">CWA 觀測時間： --</span>
                 </div>
-                <!-- 圖層切換器改為固定在全台地圖內，不需離開地圖即可切換 -->
+                <!-- 天氣即時觀測圖層：手機可左右滑動 -->
+                <div class="map-mode-btn-group" id="mapModeBtnGroup" aria-label="地圖資料圖層">
+                    <button type="button" id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️氣溫</button>
+                    <button type="button" id="btnMapPop" onclick="switchMapMode('pop')">📈降雨機率</button>
+                    <button type="button" id="btnMapHumidity" onclick="switchMapMode('humidity')">💧濕度</button>
+                    <button type="button" id="btnMapRain" onclick="switchMapMode('rain')">🌧️日雨量</button>
+                    <button type="button" id="btnMapWind" onclick="switchMapMode('wind')">💨風速</button>
+                    <button type="button" id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️陣風</button>
+                    <button type="button" id="btnMapAqi" onclick="switchMapMode('aqi')">😷空品</button>
+                </div>
             </div>
 
             <div class="map-container-wrapper">
-                <div id="map">
-                <div class="map-layer-switcher" id="mapLayerSwitcher">
-                    <button type="button" class="map-layer-switcher-toggle" id="mapLayerSwitcherToggle" aria-haspopup="true" aria-expanded="false" onclick="toggleMapLayerMenu(event)">
-                        <i class="fas fa-layer-group map-layer-icon"></i>
-                        <span class="map-layer-current" id="mapModeLabel">溫度</span>
-                        <i class="fas fa-chevron-down map-layer-chevron"></i>
-                    </button>
-                    <div class="map-layer-switcher-menu" id="mapLayerSwitcherMenu">
-                        <button type="button" id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️ 溫度</button>
-                        <button type="button" id="btnMapPop" onclick="switchMapMode('pop')">📈 降雨機率</button>
-                        <button type="button" id="btnMapHumidity" onclick="switchMapMode('humidity')">💧 濕度</button>
-                        <button type="button" id="btnMapRain" onclick="switchMapMode('rain')">🌧️ 日雨量</button>
-                        <button type="button" id="btnMapWind" onclick="switchMapMode('wind')">💨 風速</button>
-                        <button type="button" id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️ 陣風</button>
-                        <button type="button" id="btnMapAqi" onclick="switchMapMode('aqi')">😷 空品</button>
-                    </div>
-                </div>
-                </div>
+                <div id="map"></div>
             </div>
         </div>
         
@@ -1685,31 +1690,29 @@
         // GitHub Pages 直接讀取 GitHub Actions 定時更新的 CWA 靜態 JSON。
         // 使用 document.baseURI 是為了正確支援 GitHub Pages 的 /xuan-weather/ 子路徑。
         const CWA_STATIC_BASE = new URL('data/', document.baseURI).href;
-        // 即時 CWA 資料優先走既有的公開反向代理；失敗時自動退回 GitHub Actions 靜態 JSON。
-        // 代理網址本身不含 CWA API Key，避免把 CWA 金鑰放進 GitHub Pages 前端。
+        // 已驗證成功的 Vercel CWA 官方即時 API。
+        // API Key 僅放在 Vercel 環境變數，不暴露在 GitHub Pages。
         const CWA_LIVE_API_BASE = 'https://xuan-weather-yvlx.vercel.app/api/cwa?dataset=';
         const CWA_LIVE_DATASETS = new Set([
             'O-A0001-001', 'O-A0002-001', 'O-A0003-001'
         ]);
+        // GitHub Pages 高溫資訊檔案：data/cwa-W-C0033-005.json
 
-        function normalizeCwaPayload(payload, dataset) {
+        function normalizeCwaPayload(payload) {
             if (payload?.result?.records) {
                 return { ...payload, records: payload.result.records };
             }
             if (payload?.records) return payload;
-            throw new Error(`CWA 資料格式無法辨識：${dataset}`);
+            return null;
         }
 
         function getCwaPayloadLatestObsTime(payload) {
             const list = payload?.records?.Station;
             if (!Array.isArray(list) || !list.length) return 0;
-
             let latest = 0;
             list.forEach(station => {
                 let raw = station?.ObsTime?.DateTime ?? station?.ObsTime ?? station?.DateTime;
-                if (raw && typeof raw === 'object') {
-                    raw = raw.DateTime ?? raw.dateTime ?? null;
-                }
+                if (raw && typeof raw === 'object') raw = raw.DateTime ?? raw.dateTime ?? null;
                 const ms = Date.parse(raw || '');
                 if (Number.isFinite(ms) && ms > latest) latest = ms;
             });
@@ -1721,50 +1724,48 @@
             let liveData = null;
             let staticData = null;
 
-            // ① 即時資料：改走已驗證成功的 Vercel 官方 CWA API。
+            // ① 先取得 Vercel → CWA 官方即時資料。
             if (CWA_LIVE_DATASETS.has(dataset)) {
-                const liveUrl = `${CWA_LIVE_API_BASE}${encodeURIComponent(dataset)}&_=${nonce}`;
                 try {
+                    const liveUrl = `${CWA_LIVE_API_BASE}${encodeURIComponent(dataset)}&_=${nonce}`;
                     const liveResponse = await fetch(liveUrl, {
                         cache: 'no-store',
                         headers: { 'Accept': 'application/json' }
                     });
                     if (liveResponse.ok) {
-                        const livePayload = await liveResponse.json();
-                        const normalized = normalizeCwaPayload(livePayload, dataset);
-                        if (Array.isArray(normalized.records?.Station) && normalized.records.Station.length) {
-                            liveData = normalized;
+                        liveData = normalizeCwaPayload(await liveResponse.json());
+                        if (!Array.isArray(liveData?.records?.Station) ||
+                            liveData.records.Station.length === 0) {
+                            liveData = null;
                         }
                     }
-                } catch (liveError) {
-                    console.warn(`Vercel CWA 即時 API 讀取失敗 ${dataset}，改用 GitHub 靜態資料。`, liveError);
+                } catch (e) {
+                    console.warn(`Vercel CWA 即時 API 讀取失敗：${dataset}`, e);
                 }
             }
 
-            // ② GitHub Actions 靜態 JSON 作為備援，同時用 ObsTime 比較新舊。
-            const staticUrl = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${nonce}`;
+            // ② GitHub Actions 靜態資料備援。
             try {
-                const response = await fetch(staticUrl, {
+                const url = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${nonce}`;
+                const response = await fetch(url, {
                     cache: 'no-store',
                     headers: { 'Accept': 'application/json' }
                 });
                 if (response.ok) {
-                    const payload = await response.json();
-                    staticData = normalizeCwaPayload(payload, dataset);
+                    staticData = normalizeCwaPayload(await response.json());
                 }
-            } catch (staticError) {
-                console.warn(`CWA GitHub 靜態資料讀取失敗 ${dataset}`, staticError);
+            } catch (e) {
+                console.warn(`CWA GitHub 靜態資料讀取失敗：${dataset}`, e);
             }
 
+            // ③ 不盲目相信其中一個來源；以 CWA ObsTime 比較新舊。
             if (liveData && staticData) {
                 const liveTime = getCwaPayloadLatestObsTime(liveData);
                 const staticTime = getCwaPayloadLatestObsTime(staticData);
-
                 if (liveTime >= staticTime && liveTime > 0) return liveData;
                 if (staticTime > 0) return staticData;
                 return liveData;
             }
-
             if (liveData) return liveData;
             if (staticData) return staticData;
 
@@ -1817,8 +1818,6 @@ let cityStationMapping = {};
         ];
         
         window.addEventListener('DOMContentLoaded', () => {
-            resetDashboardScrollPosition();
-            setTimeout(resetDashboardScrollPosition, 100);
             const savedTheme = localStorage.getItem('cwa_theme') || 'dark';
             setTheme(savedTheme);
                           
@@ -2211,30 +2210,10 @@ let cityStationMapping = {};
             loadAirQuality(true);
         }
 
-        let cwaFetchInFlight = false;
-        let cwaSyncTimer = null;
-
-        async function runCwaRealtimeSync(isManualRefresh = false) {
-            if (cwaFetchInFlight) return;
-            cwaFetchInFlight = true;
-            try {
-                await fetchAllStationData(isManualRefresh);
-            } finally {
-                cwaFetchInFlight = false;
-            }
-        }
-
         function startCwaObsTimeSync() {
-            // CWA O-A0003/O-A0002 官方產品每10分鐘更新；網站每30秒檢查一次，
-            // 目的是在新 ObsTime 出現後盡快套用，而不是自行製造新資料。
-            if (cwaSyncTimer) clearInterval(cwaSyncTimer);
-            cwaSyncTimer = setInterval(() => runCwaRealtimeSync(false), 30 * 1000);
-
-            // 從背景頁面回來時立即檢查，避免手機 PWA 在背景期間錯過新批次。
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden) runCwaRealtimeSync(false);
-            });
-            window.addEventListener('pageshow', () => runCwaRealtimeSync(false));
+            // 初始載入已經完成後，以60秒檢查一次 CWA 是否發布新批次。
+            // 60秒只是檢查頻率，不代表資料更新頻率；畫面仍完全以 CWA ObsTime 為準。
+            setInterval(() => fetchAllStationData(false), 60 * 1000);
         }
 
         async function fetchWeatherWarnings() {
@@ -3028,23 +3007,12 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
                     cwaHourlyRainfallRankingData = latestRainfallStationData;
                 }
 
-                // 地圖與測站詳細資訊以 O-A0003-001 的最新10分鐘資料為主；
-                // O-A0001-001 僅在 O-A0003 缺少該測站時作為後備。
-                const realtimeById = new Map();
-                latestRealtimeStationData.forEach(station => {
-                    if (station?.StationId) realtimeById.set(station.StationId, station);
-                });
-                const fallbackById = new Map();
-                latestHourlyStationData.forEach(station => {
-                    if (station?.StationId) fallbackById.set(station.StationId, station);
-                });
-
-                weatherStationData = [];
-                const stationIds = new Set([...realtimeById.keys(), ...fallbackById.keys()]);
-                stationIds.forEach(id => {
-                    const station = realtimeById.get(id) || fallbackById.get(id);
-                    if (station?.StationId) weatherStationData.push(station);
-                });
+                // 全台即時地圖與測站詳細資訊只使用 O-A0003-001 最新10分鐘批次。
+                // 不再把 O-A0001-001 整點舊資料混入，避免地圖出現
+                // 「標題已是 14:50，但個別測站仍顯示整點舊值」的情況。
+                weatherStationData = latestRealtimeStationData.filter(
+                    station => station && station.StationId
+                );
 
                 forecastPopData = {};
                 forecastWxData = {};
@@ -3106,12 +3074,10 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
                     }
                     renderQuickRankingCards();
 
-                    // CWA 新一批 10 分鐘資料到達後，重新更新在地天氣，
-                    // 避免定位卡片停留在舊的 ObsTime。
-                    const locationArea = document.getElementById('myLocationContentArea');
-                    if (locationArea && locationArea.dataset.locationReady === '1') {
-                        initUserLocationWeather();
-                    }
+                const locationArea = document.getElementById('myLocationContentArea');
+                if (locationArea && locationArea.dataset.locationReady === '1') {
+                    initUserLocationWeather();
+                }
                     renderNationwideAttention();
                     renderRankings();
                     renderCountyForecastGrid();
@@ -4105,6 +4071,7 @@ async function fetchEarthquakeData(isManualRefresh = false) {
         
         function initUserLocationWeather() {
             const container = document.getElementById('myLocationContentArea');
+            if (container) container.dataset.locationReady = '1';
             if (weatherStationData.length === 0) {
                 container.innerHTML = `<div class="my-location-status"><i class="fas fa-exclamation-circle" style="color: #f87171;"></i> 尚無測站資料可供比對</div>`;
                 return;
@@ -4132,7 +4099,6 @@ async function fetchEarthquakeData(isManualRefresh = false) {
                         }
                     });
                     if (closestStation) {
-                        container.dataset.locationReady = '1';
                         const data = parseStationElement(closestStation);
                         const county = (closestStation.GeoInfo?.CountyName || '').replace('台', '臺');
                         const town = closestStation.GeoInfo?.TownName || '';
@@ -4176,7 +4142,6 @@ const popVal = getPopForStation(county, town);
                 },
                 error => {
                     container.innerHTML = `<div class="my-location-status" style="color: #f87171;"><i class="fas fa-map-marker-slash"></i> 定位失敗或權限遭拒</div>`;
-                    container.dataset.locationReady = '0';
                 },
                 { timeout: 10000, maximumAge: 60000 }
             );
@@ -4344,9 +4309,6 @@ const popVal = getPopForStation(county, town);
                 }
             }
 
-            // 先把目前 CWA 測站快照寫入本機歷史，再立即建立 24 小時圖。
-            // 避免第一次開啟測站時因快照尚未寫入，圖表暫時空白；之後點擊才出現資料點。
-            recordStationHistorySnapshot(true);
             renderPast24hChart(targetStation, data.obsTime);
         }
         
@@ -4371,43 +4333,71 @@ const popVal = getPopForStation(county, town);
             }
 
             const historyId = getStationHistoryId(station);
-            // 圖表的時間軸以 CWA 最新 ObsTime 為錨點，不使用手機自己的現在時間。
-            const currentObsRaw = station.ObsTime?.DateTime || station.ObsTime || obsTimeString;
-            const currentObsTs = Date.parse(currentObsRaw || '');
-            const anchorTs = Number.isFinite(currentObsTs) ? currentObsTs : Date.now();
-            const cutoff = anchorTs - STATION_HISTORY_MAX_MS;
+            const now = Date.now();
+            const cutoff = now - STATION_HISTORY_MAX_MS;
 
-            // 24小時主圖只使用「GitHub CWA 歷史資料 + 最新即時 O-A0003 資料」。
-            // 不再把 localStorage 混進主圖，避免不同手機／PWA 各自顯示不同的歷史。
-            if (subtitleEl) subtitleEl.innerText = '正在載入 CWA 10分鐘歷史資料…';
+            // CWA GitHub 歷史檔會逐步累積；剛啟用時可能只有 1～2 筆。
+            // 不能因為遠端目前只有兩筆，就把本機已累積的 24 小時資料丟掉。
+            // 合併「GitHub CWA 10分鐘歷史」＋「本機歷史快取」，
+            // 同一時間戳以 GitHub 的 CWA 資料優先。
             const remoteHistory = await loadCwaTemperatureHistory(historyId);
+
+            const localHistory = Array.isArray(stationHistoryCache?.[historyId])
+                ? stationHistoryCache[historyId]
+                : [];
+
             const historyByTs = new Map();
 
-            for (const point of remoteHistory) {
+            for (const point of localHistory) {
                 const ts = Number(point?.ts);
                 const temp = Number(point?.temp);
-                if (Number.isFinite(ts) && Number.isFinite(temp) && temp !== 0 && ts >= cutoff && ts <= anchorTs) {
+                if (
+                    Number.isFinite(ts) &&
+                    Number.isFinite(temp) &&
+                    temp !== 0 &&
+                    ts >= cutoff
+                ) {
                     historyByTs.set(ts, { ts, temp });
                 }
             }
 
-            // 目前畫面若為 CWA O-A0003 的最新10分鐘資料，永遠優先補進圖表。
-            // 即使 GitHub Actions 歷史檔還沒同步到這一批，網站仍會立即顯示最新點。
-            const liveStation = Array.isArray(latestRealtimeStationData)
-                ? latestRealtimeStationData.find(s => String(s?.StationId || '') === String(historyId))
-                : null;
-            const liveData = liveStation ? parseStationElement(liveStation) : null;
-            const liveRaw = liveStation?.ObsTime?.DateTime || liveStation?.ObsTime;
-            const liveTs = Date.parse(liveRaw || '');
-            const liveTemp = Number(liveData?.temp);
-            if (Number.isFinite(liveTs) && Number.isFinite(liveTemp) && liveTemp !== 0 && liveTs >= cutoff) {
-                historyByTs.set(liveTs, { ts: liveTs, temp: Number(liveTemp.toFixed(1)) });
-            } else if (Number.isFinite(currentObsTs) && Number.isFinite(currentTemp) && currentTemp !== 0 && currentObsTs >= cutoff) {
-                historyByTs.set(currentObsTs, { ts: currentObsTs, temp: Number(currentTemp.toFixed(1)) });
+            // GitHub Actions 的 CWA 資料覆蓋同時間的本機資料。
+            for (const point of remoteHistory) {
+                const ts = Number(point?.ts);
+                const temp = Number(point?.temp);
+                if (
+                    Number.isFinite(ts) &&
+                    Number.isFinite(temp) &&
+                    temp !== 0 &&
+                    ts >= cutoff
+                ) {
+                    historyByTs.set(ts, { ts, temp });
+                }
             }
 
-            let history = Array.from(historyByTs.values()).sort((a, b) => a.ts - b.ts);
-            history = history.filter(point => point.ts >= cutoff && point.ts <= anchorTs && Number.isFinite(point.temp) && point.temp !== 0);
+            let history = Array.from(historyByTs.values())
+                .sort((a, b) => a.ts - b.ts);
+
+            // 保留最近 24 小時的 10 分鐘資料，不再壓成每小時一筆。
+            history = history.filter(point =>
+                point.ts >= cutoff &&
+                Number.isFinite(point.temp) &&
+                point.temp !== 0
+            );
+
+            // 補入目前這一筆 CWA 實際觀測，避免歷史檔剛好尚未同步到最新批次。
+            const currentObsRaw = station.ObsTime?.DateTime || station.ObsTime || obsTimeString;
+            const currentObsTs = Date.parse(currentObsRaw || '');
+            if (Number.isFinite(currentObsTs) && Number.isFinite(currentTemp) && currentTemp !== 0) {
+                const exists = history.some(point => Math.abs(point.ts - currentObsTs) < 30000);
+                if (!exists) {
+                    history.push({
+                        ts: currentObsTs,
+                        temp: Number(currentTemp.toFixed(1))
+                    });
+                    history.sort((a, b) => a.ts - b.ts);
+                }
+            }
 
             if (history.length < 2) {
                 if (subtitleEl) subtitleEl.innerText = 'CWA 10分鐘歷史資料正在累積';
