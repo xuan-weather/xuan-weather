@@ -562,12 +562,21 @@
         }
         .map-header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
         .map-title-row { display: flex; justify-content: space-between; align-items: center; }
-        /* 全台地圖：仿 DPIP 的地圖內嵌圖層切換器 */
+        /* 全台地圖：仿 DPIP 的地圖內嵌圖層切換器
+           平時隱藏，只有全台地圖進入全螢幕時才顯示。 */
         .map-layer-switcher{
+            display:none;
             position:absolute;
             top:14px;
             right:14px;
-            z-index:1000;
+            z-index:100000;
+        }
+        .map-container-wrapper:has(#map.leaflet-fullscreen-on) .map-layer-switcher{
+            display:block;
+            position:fixed;
+            top:max(14px, env(safe-area-inset-top, 0px));
+            right:max(14px, env(safe-area-inset-right, 0px));
+            z-index:100000;
         }
         .map-layer-switcher-toggle{
             min-width:148px;
@@ -661,9 +670,9 @@
             color:#38bdf8;
         }
         @media(max-width:600px){
-            .map-layer-switcher{
-                top:10px;
-                right:10px;
+            .map-container-wrapper:has(#map.leaflet-fullscreen-on) .map-layer-switcher{
+                top:max(10px, env(safe-area-inset-top, 0px));
+                right:max(10px, env(safe-area-inset-right, 0px));
             }
             .map-layer-switcher-toggle{
                 min-width:142px;
@@ -1527,13 +1536,13 @@
                         <i class="fas fa-chevron-down map-layer-chevron"></i>
                     </button>
                     <div class="map-layer-switcher-menu" id="mapLayerSwitcherMenu">
-                        <button id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️ 溫度</button>
-                        <button id="btnMapPop" onclick="switchMapMode('pop')">📈 降雨機率</button>
-                        <button id="btnMapHumidity" onclick="switchMapMode('humidity')">💧 濕度</button>
-                        <button id="btnMapRain" onclick="switchMapMode('rain')">🌧️ 日雨量</button>
-                        <button id="btnMapWind" onclick="switchMapMode('wind')">💨 風速</button>
-                        <button id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️ 陣風</button>
-                        <button id="btnMapAqi" onclick="switchMapMode('aqi')">😷 空品</button>
+                        <button type="button" id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️ 溫度</button>
+                        <button type="button" id="btnMapPop" onclick="switchMapMode('pop')">📈 降雨機率</button>
+                        <button type="button" id="btnMapHumidity" onclick="switchMapMode('humidity')">💧 濕度</button>
+                        <button type="button" id="btnMapRain" onclick="switchMapMode('rain')">🌧️ 日雨量</button>
+                        <button type="button" id="btnMapWind" onclick="switchMapMode('wind')">💨 風速</button>
+                        <button type="button" id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️ 陣風</button>
+                        <button type="button" id="btnMapAqi" onclick="switchMapMode('aqi')">😷 空品</button>
                     </div>
                 </div>
             </div>
@@ -4963,8 +4972,53 @@ const popVal = getPopForStation(county, town);
             renderMapMarkers();
         }
         
+        function toggleMapLayerMenu(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const switcher = document.getElementById('mapLayerSwitcher');
+            const toggle = document.getElementById('mapLayerSwitcherToggle');
+            if (!switcher || !toggle) return;
+
+            const isOpen = switcher.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
+        function closeMapLayerMenu() {
+            const switcher = document.getElementById('mapLayerSwitcher');
+            const toggle = document.getElementById('mapLayerSwitcherToggle');
+            if (!switcher || !toggle) return;
+            switcher.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+
+        // 點選圖層選項後，直接更新全台地圖，不跳頁；選完自動收起選單。
+        document.addEventListener('click', function(event) {
+            const switcher = document.getElementById('mapLayerSwitcher');
+            if (switcher && !switcher.contains(event.target)) {
+                closeMapLayerMenu();
+            }
+        });
+
         function switchMapMode(mode) {
+            const validModes = ['temp', 'pop', 'humidity', 'rain', 'wind', 'windGust', 'aqi'];
+            if (!validModes.includes(mode)) return;
+
             currentMapMode = mode;
+            const modeLabels = {
+                temp: '溫度',
+                pop: '降雨機率',
+                humidity: '濕度',
+                rain: '日雨量',
+                wind: '風速',
+                windGust: '陣風',
+                aqi: '空品'
+            };
+            const modeLabelEl = document.getElementById('mapModeLabel');
+            if (modeLabelEl) modeLabelEl.textContent = modeLabels[mode] || '溫度';
+            closeMapLayerMenu();
+
             ['temp', 'pop', 'humidity', 'rain', 'wind', 'windGust', 'aqi'].forEach(m => {
                 const btn = document.getElementById(`btnMap${m.charAt(0).toUpperCase() + m.slice(1)}`);
                 if (btn) btn.classList.toggle('active', m === mode);
