@@ -16,62 +16,64 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 抓取 NCDR 生效中的政府／氣象署示警
+      - name: 抓取 NCDR 公開生效中示警
         shell: python
         run: |
           import json
           import re
           import urllib.request
+          import xml.etree.ElementTree as ET
           from datetime import datetime, timezone, timedelta
           from pathlib import Path
 
           TZ = timezone(timedelta(hours=8))
-          FEED_URL = "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx"
 
-          # 只納入目前網站需要的重大災害示警類別。
-          TARGET_CATEGORIES = {
-              "地震",
-              "海嘯",
-              "颱風",
-              "雷雨",
-              "降雨",
-              "強風",
-              "濃霧",
-              "高溫",
-              "低溫",
-              "火山",
-              "巨浪",
+          # 使用 NCDR 公開 ATOM Feed。
+          # 不需要 API Key。
+          FEED_URL = "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx"
+
+          # 只排除明確不是災害示警的項目。
+          # 不再限制只有中央氣象署，讓公開的中央部會災害示警
+          # 有機會進入網站。
+          EXCLUDED_CATEGORIES = {
+              "道路施工",
+              "開放路邊停車",
+              "開放臨時停車",
+              "國家公園入園示警",
+              "海灘水質",
+              "捷運營運",
+              "鐵路事故",
           }
 
-          # NCDR 的總 JSON Feed 也包含其他政府機關資料。
-          # 這裡只保留中央氣象署（CWA）相關示警。
-          CWA_KEYWORDS = (
-              "中央氣象署",
-              "氣象署",
-              "交通部中央氣象署",
-              "CWA",
-          )
-
           def clean_text(value):
-              if isinstance(value, dict):
-                  value = value.get("#text", value.get("value", ""))
-              return re.sub(r"\s+", " ", str(value or "")).strip()
+              if value is None:
+                  return ""
+              return re.sub(r"\s+", " ", str(value)).strip()
 
-          def val(obj, *keys):
-              for key in keys:
-                  if isinstance(obj, dict) and key in obj:
-                      value = obj[key]
-                      if isinstance(value, dict):
-                          value = value.get("#text", value.get("value", ""))
-                      return str(value or "").strip()
+          def local_name(tag):
+              return tag.split("}", 1)[-1] if "}" in tag else tag
+
+          def child_text(element, names):
+              wanted = {str(x).lower() for x in names}
+              for child in list(element):
+                  if local_name(child.tag).lower() in wanted:
+                      return clean_text(child.text)
+              return ""
+
+          def find_descendant_text(element, names):
+              wanted = {str(x).lower() for x in names}
+              for child in element.iter():
+                  if local_name(child.tag).lower() in wanted:
+                      text = clean_text(child.text)
+                      if text:
+                          return text
               return ""
 
           def parse_time(value):
-              s = str(value or "").strip()
+              s = clean_text(value)
               if not s:
                   return None
 
-              # ISO 8601
               try:
                   d = datetime.fromisoformat(s.replace("Z", "+00:00"))
                   if d.tzinfo is None:
@@ -80,9 +82,6 @@ jobs:
               except Exception:
                   pass
 
-              # NCDR 常見中文日期：
-              # 2026/9/21 上午 09:21:00
-              # 2026/9/21 下午 03:21:00
               m = re.search(
                   r"(\d{4})[/-](\d{1,2})[/-](\d{1,2})"
                   r".*?(上午|下午)?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?",
@@ -107,137 +106,126 @@ jobs:
 
               return None
 
-          def get_category(entry):
-              category = entry.get("category", "")
+          def parse_status(entry):
+              return (
+                  find_descendant_text(entry, ["status"])
+                  or "Actual"
+              )
 
-              if isinstance(category, dict):
-                  return (
-                      category.get("@term")
-                      or category.get("term")
-                      or category.get("#text")
-                      or category.get("value")
-                      or ""
-                  )
+          def parse_msg_type(entry):
+              return (
+                  find_descendant_text(entry, ["msgType"])
+                  or "Alert"
+              )
 
-              if isinstance(category, list):
-                  for item in category:
-                      if isinstance(item, dict):
-                          value = (
-                              item.get("@term")
-                              or item.get("term")
-                              or item.get("#text")
-                              or item.get("value")
-                              or ""
-                          )
-                          if value:
-                              return str(value)
-                      elif item:
-                          return str(item)
+          def parse_category(entry):
+              for child in list(entry):
+                  if local_name(child.tag).lower() == "category":
+                      term = (
+                          child.attrib.get("term")
+                          or child.attrib.get("{http://www.w3.org/2005/Atom}term")
+                      )
+                      if term:
+                          return clean_text(term)
 
-              return str(category or "")
+                      text = clean_text(child.text)
+                      if text:
+                          return text
 
-          def get_author(entry):
-              author = entry.get("author", "")
+              return (
+                  find_descendant_text(entry, ["category"])
+                  or ""
+              )
 
-              if isinstance(author, dict):
-                  return clean_text(
-                      author.get("name")
-                      or author.get("#text")
-                      or author.get("value")
-                  )
+          def parse_link(entry):
+              # Atom 標準 link href
+              for child in list(entry):
+                  if local_name(child.tag).lower() == "link":
+                      href = child.attrib.get("href", "")
+                      if href:
+                          return href.strip()
 
-              return clean_text(author)
+                      text = clean_text(child.text)
+                      if text:
+                          return text
 
-          def get_link(entry):
-              raw_link = entry.get("link", "")
+              return find_descendant_text(entry, ["link"])
 
-              if isinstance(raw_link, dict):
-                  return (
-                      raw_link.get("@href")
-                      or raw_link.get("href")
-                      or ""
-                  )
+          def parse_author(entry):
+              author = find_descendant_text(entry, ["name"])
+              if author:
+                  return author
+              return find_descendant_text(entry, ["author"])
 
-              if isinstance(raw_link, list):
-                  for item in raw_link:
-                      if not isinstance(item, dict):
-                          continue
-                      rel = item.get("@rel") or item.get("rel")
-                      href = item.get("@href") or item.get("href") or ""
-                      if rel in (None, "alternate") and href:
-                          return href
+          def parse_entry(entry):
+              title = find_descendant_text(entry, ["title"])
+              summary = find_descendant_text(entry, ["summary", "description"])
+              author = parse_author(entry)
+              category = parse_category(entry)
+              status = parse_status(entry)
+              msg_type = parse_msg_type(entry)
 
-                  for item in raw_link:
-                      if isinstance(item, dict):
-                          href = item.get("@href") or item.get("href") or ""
-                          if href:
-                              return href
+              entry_id = find_descendant_text(entry, ["id"])
+              updated = find_descendant_text(entry, ["updated", "published"])
+              effective = find_descendant_text(entry, ["effective"])
+              expires = find_descendant_text(entry, ["expires"])
+              link = parse_link(entry)
 
-              return str(raw_link or "")
+              text_blob = " ".join([
+                  category, title, summary, author
+              ]).strip()
 
-          def normalize(entry):
-              if not isinstance(entry, dict):
-                  return None
+              status_lower = status.lower()
 
-              category = get_category(entry).strip()
-              title = clean_text(entry.get("title", ""))
-              author = get_author(entry)
-              summary = clean_text(entry.get("summary", ""))
-              status = val(entry, "cap:status", "status") or "Actual"
-              msg_type = val(entry, "cap:msgType", "msgType") or "Alert"
-
-              # Actual = 實際警報；Test = 政府正式演練。
-              # 兩者都保留，但前端會依 status 顯示「警報」或「演練」。
-              status_lower = str(status).strip().lower()
+              # 保留正式示警與演練／測試資料。
               if status_lower not in ("actual", "test"):
                   return None
 
-              if str(msg_type).lower() == "cancel":
+              # Cancel 不作為目前有效示警。
+              if msg_type.lower() == "cancel":
                   return None
 
-              if category not in TARGET_CATEGORIES:
+              # 明確不是災害警示的公開項目不放進本區。
+              if category in EXCLUDED_CATEGORIES:
                   return None
-
-              # 只保留中央氣象署相關資料；國家防災日／國家級警報演練
-              # 即使來源文字未明確寫 CWA，也允許保留。
-              cwa_text = " ".join([author, title, summary, category])
-              drill_keywords = (
-                  "國家防災日",
-                  "國家級警報",
-                  "地震速報演練",
-                  "海嘯警報",
-                  "演練",
-                  "測試",
-              )
-              is_drill = (
-                  status_lower == "test"
-                  or any(k.lower() in cwa_text.lower() for k in drill_keywords)
-              )
-
-              if not any(k.lower() in cwa_text.lower() for k in CWA_KEYWORDS) and not is_drill:
-                  return None
-
-              updated = val(entry, "updated")
-              effective = val(entry, "cap:effective", "effective")
-              expires = val(entry, "cap:expires", "expires")
 
               now = datetime.now(TZ)
               eff_dt = parse_time(effective) or parse_time(updated)
               exp_dt = parse_time(expires)
 
-              # 尚未生效
               if eff_dt and eff_dt > now:
                   return None
 
-              # 已過期
               if exp_dt and exp_dt < now:
                   return None
 
+              # 判斷演練／測試。
+              drill_keywords = (
+                  "國家防災日",
+                  "國家級警報",
+                  "地震速報演練",
+                  "海嘯警報演練",
+                  "演練",
+                  "測試",
+              )
+
+              is_drill = (
+                  status_lower == "test"
+                  or any(
+                      k.lower() in text_blob.lower()
+                      for k in drill_keywords
+                  )
+              )
+
+              if not entry_id:
+                  entry_id = (
+                      f"{category}|{updated}|{title}|{summary}"
+                  )
+
               return {
-                  "id": val(entry, "id")
-                        or f"{category}|{updated}|{title}|{summary}",
+                  "id": entry_id,
                   "category": category,
-                  "title": title or category,
+                  "title": title or category or "NCDR 示警",
                   "status": status,
                   "msgType": msg_type,
                   "author": author,
@@ -245,51 +233,67 @@ jobs:
                   "effective": effective,
                   "expires": expires,
                   "summary": summary,
-                  "link": get_link(entry),
+                  "link": link,
+                  "isDrill": is_drill,
               }
 
-          # 下載 NCDR 最新完整 JSON Feed
           request = urllib.request.Request(
               FEED_URL,
               headers={
-                  "User-Agent": "Xuan-Weather-National-Alert/2.0",
-                  "Accept": "application/json",
+                  "User-Agent": "Xuan-Weather-National-Alert/3.0",
+                  "Accept": (
+                      "application/atom+xml, "
+                      "application/xml, text/xml, */*"
+                  ),
               },
           )
 
-          with urllib.request.urlopen(request, timeout=20) as response:
+          with urllib.request.urlopen(request, timeout=30) as response:
               if response.status != 200:
                   raise RuntimeError(
                       f"NCDR HTTP 狀態碼：{response.status}"
                   )
+              raw = response.read()
 
-              raw = response.read().decode(
-                  "utf-8-sig", "replace"
-              )
+          # 自動處理 UTF-8 BOM。
+          raw = raw.lstrip(b"\xef\xbb\xbf")
 
-          payload = json.loads(raw)
+          try:
+              root = ET.fromstring(raw)
+          except ET.ParseError as exc:
+              # 若服務端回傳 JSON，保留診斷能力。
+              try:
+                  payload = json.loads(raw.decode("utf-8-sig", "replace"))
+                  raise RuntimeError(
+                      "NCDR 回傳 JSON 而非 ATOM XML；"
+                      f"JSON keys={list(payload)[:10]}"
+                  ) from exc
+              except json.JSONDecodeError:
+                  raise RuntimeError(
+                      f"NCDR ATOM XML 解析失敗：{exc}"
+                  ) from exc
 
-          entries = payload.get("entry", [])
-          if isinstance(entries, dict):
-              entries = [entries]
-          if not isinstance(entries, list):
-              entries = []
+          entries = [
+              element
+              for element in root.iter()
+              if local_name(element.tag).lower() == "entry"
+          ]
 
           normalized = []
 
           for entry in entries:
-              item = normalize(entry)
+              item = parse_entry(entry)
               if item:
                   normalized.append(item)
 
-          # 相同 ID 只保留最新一筆
+          # 同 ID 只保留 updated 較新的版本。
           latest = {}
 
           for item in normalized:
               key = item["id"]
               old = latest.get(key)
 
-              if not old:
+              if old is None:
                   latest[key] = item
                   continue
 
@@ -317,7 +321,7 @@ jobs:
 
           output = {
               "updatedAt": datetime.now(TZ).isoformat(),
-              "source": "NCDR 民生示警公開資料平台／中央氣象署",
+              "source": "NCDR 民生示警公開資料平台",
               "feed": FEED_URL,
               "alerts": alerts,
           }
@@ -334,12 +338,14 @@ jobs:
               encoding="utf-8"
           )
 
-          print(f"NCDR 生效中的 CWA 重大示警：{len(alerts)}")
+          print(f"NCDR 公開生效中示警：{len(alerts)}")
 
           for item in alerts:
+              drill = "【演練／測試】" if item.get("isDrill") else ""
               print(
-                  f"- {item['category']} | "
+                  f"- {drill}{item['category']} | "
                   f"{item['title']} | "
+                  f"{item['author']} | "
                   f"{item['effective']} ~ {item['expires']}"
               )
 
@@ -352,7 +358,7 @@ jobs:
           git add data/national-alerts.json
 
           if git diff --cached --quiet; then
-            echo "沒有新的國家級警報資料變化，不需要提交。"
+            echo "沒有新的 NCDR 示警資料變化，不需要提交。"
             exit 0
           fi
 
