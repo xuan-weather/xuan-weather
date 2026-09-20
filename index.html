@@ -250,22 +250,14 @@
         /* 最上方資訊欄：政府／氣象署即時示警獨立功能 */
         .dashboard-top-row { margin-bottom: 12px; }
         .dashboard-main-header { margin-bottom: 0 !important; }
-        .top-national-alert-panel {
-            display: none;
-            margin-top: 10px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 12px;
-            box-sizing: border-box;
-            box-shadow: 0 8px 24px rgba(15,23,42,.08);
-        }
-        .top-national-alert-panel.is-open { display: block; }
-        .top-national-alert-panel #ncdrAlertSection {
-            max-height: 420px;
-            overflow-y: auto;
-        }
         #tabNationalAlert { position: relative; }
+        #nationalAlertPanel .ncdr-dashboard-widget {
+            margin-top: 0;
+        }
+        #nationalAlertPanel #ncdrAlertSection {
+            max-height: none;
+            overflow: visible;
+        }
         #tabNationalAlert .national-alert-tab-badge {
             display: inline-flex;
             align-items: center;
@@ -280,10 +272,6 @@
             font-size: 11px;
             font-weight: 800;
             vertical-align: middle;
-        }
-        @media (max-width: 760px) {
-            .top-national-alert-panel { margin-top: 8px; padding: 8px; }
-            .top-national-alert-panel #ncdrAlertSection { max-height: 340px; }
         }
 
         .meta-info-bar {
@@ -1341,7 +1329,7 @@
             <button id="tabDashboard" class="tab-btn active" onclick="switchMainPage('dashboard')">
                 <i class="fas fa-chart-line"></i> 觀測儀表板
             </button>
-            <button id="tabNationalAlert" class="tab-btn" type="button" onclick="toggleTopNationalAlert()" aria-expanded="false" aria-controls="topNationalAlertPanel">
+            <button id="tabNationalAlert" class="tab-btn" type="button" onclick="switchMainPage('nationalAlert')">
                 <i class="fas fa-triangle-exclamation"></i> ⚠️ 政府／氣象署即時示警 <span class="national-alert-tab-badge" id="nationalAlertTabBadge" style="display:none;">0</span>
             </button>
             <button id="tabMap" class="tab-btn" onclick="switchMainPage('map')">
@@ -1371,9 +1359,15 @@
         </div>
 
         <!-- 政府／氣象署即時示警：位於最上方資訊欄，獨立於觀測儀表板內容 -->
-        <div id="topNationalAlertPanel" class="top-national-alert-panel" aria-hidden="true">
-<!-- 獨立欄位：政府／氣象署即時示警，不放進天氣即時資訊卡片 -->
-<div class="ncdr-dashboard-widget">
+        <div id="nationalAlertPanel" class="content-panel modern-dashboard">
+    <div class="header">
+        <div class="header-title">
+            <i class="fas fa-triangle-exclamation" style="color:#f59e0b;"></i>
+            <h2>⚠️ 政府／氣象署即時示警</h2>
+        </div>
+    </div>
+    <div class="ncdr-dashboard-widget">
+
     <div class="national-alert-header-row my-location-header">
         <div class="my-location-title">
             <i class="fas fa-triangle-exclamation"></i> ⚠️ 政府／氣象署即時示警
@@ -1401,7 +1395,11 @@
 </div>
         </div>
         
-        <div id="dashboardPanel" class="content-panel active modern-dashboard">
+        
+</div>
+</div>
+
+<div id="dashboardPanel" class="content-panel active modern-dashboard">
             <div class="dashboard-top-row">
                 <div class="header dashboard-main-header">
                     <div class="header-title">
@@ -2511,19 +2509,7 @@ let cityStationMapping = {};
             badge.textContent = n > 99 ? '99+' : String(n);
             badge.style.display = n > 0 ? 'inline-flex' : 'none';
         }
-
-        function toggleTopNationalAlert() {
-            const panel = document.getElementById('topNationalAlertPanel');
-            const btn = document.getElementById('tabNationalAlert');
-            if (!panel || !btn) return;
-            const willOpen = !panel.classList.contains('is-open');
-            panel.classList.toggle('is-open', willOpen);
-            panel.setAttribute('aria-hidden', willOpen ? 'false' : 'true');
-            btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-            btn.classList.toggle('active', willOpen);
-        }
-
-        async function fetchWeatherWarnings() {
+async function fetchWeatherWarnings() {
             const container = document.getElementById('weatherWarningsContent');
             const countTag = document.getElementById('warningCountTag');
             if (!container) return;
@@ -2767,6 +2753,7 @@ let cityStationMapping = {};
 
         function switchMainPage(pageId) {
             document.getElementById('tabDashboard').classList.toggle('active', pageId === 'dashboard');
+            document.getElementById('tabNationalAlert').classList.toggle('active', pageId === 'nationalAlert');
             document.getElementById('tabRadar').classList.toggle('active', pageId === 'radar');
             document.getElementById('tabMap').classList.toggle('active', pageId === 'map');
             document.getElementById('tabCountyForecast').classList.toggle('active', pageId === 'countyForecast');
@@ -2776,6 +2763,7 @@ let cityStationMapping = {};
             document.getElementById('tabLocalWeatherReport').classList.toggle('active', pageId === 'localWeatherReport');
                                       
             document.getElementById('dashboardPanel').classList.toggle('active', pageId === 'dashboard');
+            document.getElementById('nationalAlertPanel').classList.toggle('active', pageId === 'nationalAlert');
             document.getElementById('radarPanel').classList.toggle('active', pageId === 'radar');
             document.getElementById('mapPanel').classList.toggle('active', pageId === 'map');
             document.getElementById('countyForecastPanel').classList.toggle('active', pageId === 'countyForecast');
