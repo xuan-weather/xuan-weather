@@ -1960,7 +1960,7 @@ let cityStationMapping = {};
                     const link=typeof alert.link==='string'?alert.link.trim():'';
                     return `<div class="national-alert-item" style="${isTest?'border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.10);':''}">
                         <div class="national-alert-item-title">${badge}｜${icon} ${nationalAlertEscape(alert.category||'示警')}｜${title}</div>
-                        <div class="national-alert-item-detail">${isTest?'<b style="color:#f59e0b;">本訊息為演習，非實際災害</b><br>':''}<b>生效：${formatNationalAlertTime(alert.effective)}</b><br><b>到期：${formatNationalAlertTime(alert.expires)}</b><br>${summary}${link?`<div style="margin-top:5px;"><a href="${nationalAlertEscape(link)}" target="_blank" rel="noopener">查看原始示警</a></div>`:''}</div>
+                        <div class="national-alert-item-detail">${isTest?'<b style="color:#f59e0b;">本訊息為演習，非實際災害</b><br>':''}<b>生效：${formatNationalAlertTime(alert.effective)}</b><br><b>到期：${formatNationalAlertTime(alert.expires)}</b><br>${summary}${link?`<div style="margin-top:5px;"></div>`:''}</div>
                     </div>`;
                 }).join('');
             } catch(error) {
