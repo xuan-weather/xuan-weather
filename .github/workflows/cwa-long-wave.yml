@@ -52,7 +52,7 @@ jobs:
             // 「發布時間：09/20 19:53」
             // 「發布時間：09/21 00:05」
             const md = normalized.match(
-              /發布時間\s*[：:]\s*(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})/
+              /發[布佈]時間\s*[：:]\s*(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})/
             );
             if (md) {
               const [, mo, d, h, mi] = md;
@@ -112,13 +112,19 @@ jobs:
               const publishedAt = parsePublishedAt(text);
               const active = Boolean(summary);
 
+              // 同時寫入多個發布時間欄位，兼容不同版本前端讀取方式。
+              // publishedAt 為主要欄位，其餘欄位使用完全相同的 ISO 8601 台灣時間。
               const output = {
                 updatedAt: new Date().toISOString(),
                 source: '中央氣象署',
                 product: '長浪即時訊息',
                 active,
                 publishedAt,
+                publishTime: publishedAt,
+                publishDate: publishedAt,
+                published: publishedAt,
                 summary: active ? summary : '',
+                rawText: text,
                 link: 'https://www.cwa.gov.tw/V8/C/P/Warning/W37.html'
               };
 
