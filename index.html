@@ -2429,6 +2429,18 @@ let cityStationMapping = {};
             } else if (pageId === 'map' && mapInitialized) {
                 setTimeout(() => { map.invalidateSize(); repairFullscreenMapLayout(map); }, 100);
             }
+
+            // 從「全台即時異常」等儀表板項目跳到全台地圖時，
+            // 將地圖區塊完整捲到可視區頂端，避免「天氣即時觀測」標題被上方內容吃掉。
+            if (pageId === 'map') {
+                setTimeout(() => {
+                    const mapPanel = document.getElementById('mapPanel');
+                    if (mapPanel) {
+                        const top = mapPanel.getBoundingClientRect().top + window.pageYOffset - 8;
+                        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+                    }
+                }, 180);
+            }
             if (pageId === 'radar') {
                 setTimeout(() => { initRadarMap(); if(radarMap) { radarMap.invalidateSize(); repairFullscreenMapLayout(radarMap); } }, 100);
             }
