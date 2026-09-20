@@ -3013,15 +3013,16 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
                 // O-A0003 沒有的測站，直接使用 O-A0001-001 的完整測站資料補回。
                 // 這樣可以恢復原本「大量測站圓點都有顏色與數值」的地圖樣式，
                 // 不會再出現一大片灰色空值圓點。
+                const normalizeStationId = value => String(value ?? '').trim().toUpperCase();
                 const realtimeByStationId = new Map(
                     latestRealtimeStationData
                         .filter(station => station && station.StationId)
-                        .map(station => [String(station.StationId), station])
+                        .map(station => [normalizeStationId(station.StationId), station])
                 );
                 const hourlyByStationId = new Map(
                     latestHourlyStationData
                         .filter(station => station && station.StationId)
-                        .map(station => [String(station.StationId), station])
+                        .map(station => [normalizeStationId(station.StationId), station])
                 );
                 const mergedStationMap = new Map(hourlyByStationId);
 
@@ -5342,17 +5343,13 @@ const popVal = getPopForStation(county, town);
                 const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
                 const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
                 if (!isNaN(lat) && !isNaN(lon)) {
-                    // 重要：地圖的即時氣象數值必須與「現在」排行榜使用同一批 O-A0003-001。
-                    // weatherStationData 仍保留 O-A0001-001 的完整測站目錄，確保原本測站圓點不消失；
-                    // 但氣溫／濕度／風速／陣風不再直接讀取 O-A0001 的舊整點值。
-                    const stationKey = value => String(value ?? '').trim();
-                    const realtimeStation = latestRealtimeStationData.find(s =>
-                        stationKey(s?.StationId) === stationKey(station?.StationId)
-                    );
-                    // 優先使用 O-A0003-001 最新 10 分鐘資料；
-                    // 若該測站沒有 O-A0003 即時值，才使用地圖原本保留的 O-A0001 測站資料，
-                    // 避免整張地圖變成灰色 --。這只作為「測站顯示備援」，O-A0003 有值時絕不覆蓋。
-                    const data = realtimeStation ? parseStationElement(realtimeStation) : parseStationElement(station);
+                    // 重要：地圖數值直接解析 weatherStationData 本身。
+                    // fetchAllStationData 已經先用 O-A0003-001 最新10分鐘資料覆蓋同 StationId 的 O-A0001-001，
+                    // 因此這裡不能再次用另一張陣列搜尋測站，否則 StationId 格式稍有差異就會把即時值丟掉，
+                    // 造成整張地圖變成灰色。
+                    // 結果：同一個 weatherStationData 測站若有 O-A0003 資料，就一定是 O-A0003；
+                    // O-A0003 沒有的測站才保留 O-A0001 的原始值，維持原本完整彩色測站地圖。
+                    const data = parseStationElement(station);
                     // 地圖「日雨量」改用 CWA O-A0002-001 的正式雨量測站資料，
                     // 以 StationId 精準對應，不再拿 O-A0003-001 的雨量欄位代替。
                     const rainStation = latestRainfallStationData.find(s =>
