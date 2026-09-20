@@ -1005,27 +1005,59 @@
         .radar-legend-labels{display:flex;flex-direction:column;justify-content:space-between;font-size:11px;line-height:1;color:var(--legend-text);padding:0;}
         .radar-load-status{position:absolute;z-index:1001;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 16px;border-radius:999px;background:rgba(9,13,22,.82);color:#cbd5e1;font-size:14px;display:none;pointer-events:none;}
         /* 全台地圖控制順序：📍所在地 → ＋／－ → 全螢幕，與 DPIP 風格一致 */
-        /* 全台地圖右下控制項固定由上到下：
-           1. 📍定位　2. ＋／－縮放　3. 全螢幕 */
+        /* 全台地圖右下控制項【固定位置】，避免 Leaflet / 瀏覽器再次顛倒：
+           上：📍定位
+           中：＋／－放大縮小
+           下：⛶ 全螢幕
+           使用絕對定位，不依賴 Leaflet 控制項建立順序。 */
         .map-container-wrapper .leaflet-bottom.leaflet-right{
-            display:flex !important;
-            flex-direction:column !important;
-            align-items:flex-end !important;
-            gap:10px !important;
+            position:relative !important;
+            display:block !important;
+            width:36px !important;
+            height:156px !important;
+            margin:0 !important;
+            padding:0 !important;
         }
-        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control{
+        .map-container-wrapper .leaflet-bottom.leaflet-right > .leaflet-control{
+            position:absolute !important;
+            right:0 !important;
             float:none !important;
             clear:none !important;
             margin:0 !important;
+            padding:0 !important;
         }
-        .map-container-wrapper .leaflet-bottom.leaflet-right .main-map-location-control{
-            order:1 !important;
+        /* ① 最上方：定位 */
+        .map-container-wrapper .leaflet-bottom.leaflet-right > .main-map-location-control{
+            top:0 !important;
+            bottom:auto !important;
+            z-index:3 !important;
         }
-        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-zoom{
-            order:2 !important;
+        /* ② 中間：＋／－縮放（兩顆按鈕合併成一組） */
+        .map-container-wrapper .leaflet-bottom.leaflet-right > .leaflet-control-zoom{
+            top:44px !important;
+            bottom:auto !important;
+            z-index:3 !important;
         }
-        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-fullscreen{
-            order:3 !important;
+        /* ③ 最下方：全螢幕，固定在右下角 */
+        .map-container-wrapper .leaflet-bottom.leaflet-right > .leaflet-control-fullscreen{
+            top:122px !important;
+            bottom:auto !important;
+            z-index:3 !important;
+        }
+        .map-container-wrapper .leaflet-bottom.leaflet-right .main-map-location-button,
+        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-fullscreen a{
+            border-radius:6px !important;
+        }
+        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-zoom a{
+            border-radius:0 !important;
+        }
+        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-zoom a:first-child{
+            border-top-left-radius:6px !important;
+            border-top-right-radius:6px !important;
+        }
+        .map-container-wrapper .leaflet-bottom.leaflet-right .leaflet-control-zoom a:last-child{
+            border-bottom-left-radius:6px !important;
+            border-bottom-right-radius:6px !important;
         }
         .main-map-location-button{
             width:34px;
@@ -4768,9 +4800,10 @@ const popVal = getPopForStation(county, town);
                 mainMapBottomRight.appendChild(mainMapLocationEl);
                 mainMapBottomRight.appendChild(mainMapZoomEl);
                 if(mainMapFullscreenEl) mainMapBottomRight.appendChild(mainMapFullscreenEl);
+                // 位置由 CSS 絕對定位固定，這裡只負責把三個控制項放進同一個右下容器。
                 mainMapLocationEl.style.marginTop='0px';
-                mainMapZoomEl.style.marginTop='10px';
-                if(mainMapFullscreenEl) mainMapFullscreenEl.style.marginTop='10px';
+                mainMapZoomEl.style.marginTop='0px';
+                if(mainMapFullscreenEl) mainMapFullscreenEl.style.marginTop='0px';
             }
 
                                       
