@@ -1663,32 +1663,27 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.js"></script>
     <script>
-        // CWA 即時同步：GitHub Pages 前端透過 Vercel Serverless API
-        // 取得中央氣象署 Open Data。CWA_API_KEY 只保存在 Vercel Server，
-        // 不會放進前端程式碼。
-        //
-        // 重要：網站是否更新，不看網站自己的時間，也不看 GitHub Actions
-        // 何時產生檔案，而是看 CWA 回傳資料真正的 ObsTime。
-        // 網站可以每 60 秒檢查一次，但只要 ObsTime 沒前進，畫面就維持
-        // 上一個已套用的 CWA 批次。
-        const CWA_API_BASE = 'https://xuan-weather-yvlx.vercel.app';
+        // GitHub Pages 直接讀取 GitHub Actions 定時更新的 CWA 靜態 JSON。
+        // 使用 document.baseURI 是為了正確支援 GitHub Pages 的 /xuan-weather/ 子路徑。
+        const CWA_STATIC_BASE = new URL('data/', document.baseURI).href;
+        // GitHub Pages 高溫資訊檔案：data/cwa-W-C0033-005.json
 
         async function fetchCwaDataset(dataset) {
-            const url = `${CWA_API_BASE}/api/cwa?dataset=${encodeURIComponent(dataset)}&_=${Date.now()}`;
+            const url = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${Date.now()}`;
             const response = await fetch(url, {
-                method: 'GET',
                 cache: 'no-store',
                 headers: { 'Accept': 'application/json' }
             });
-
             if (!response.ok) {
-                throw new Error(`CWA API HTTP ${response.status}: ${dataset}`);
+                throw new Error(`CWA 靜態資料 HTTP ${response.status}: ${dataset}`);
             }
 
             const payload = await response.json();
 
-            // Vercel /api/cwa 回傳中央氣象署資料。
-            // 統一把 result.records 正規化成既有程式使用的 records。
+            // 氣象署 API 的完整回傳格式：
+            // { success: true, result: { resource_id: "...", records: {...} } }
+            // GitHub Actions 將完整 JSON 原樣存到 data/，因此在這裡
+            // 統一把 result.records 正規化成前端原本使用的 records。
             if (payload?.result?.records) {
                 return {
                     ...payload,
@@ -1696,12 +1691,49 @@
                 };
             }
 
-            // 相容已經是 { records: ... } 的格式。
+            // 相容原本已經是 { records: ... } 的資料格式。
             if (payload?.records) {
                 return payload;
             }
 
-            throw new Error(`CWA 資料格式無法辨識：${dataset}`);
+            throw new Error(`CWA 靜態資料格式無法辨識：${dataset}`);
+        }
+
+        // ===== CWA 即時同步閘門（只控制即時測站資料） =====
+        // 即時測站資料改由 Vercel /api/cwa 直接取得官方 CWA API 回傳。
+        // GitHub Pages 原本的靜態 data/ 流程保留給其他功能，不改動。
+        // 只有官方 CWA 的 ObsTime 前進，才允許更新即時測站畫面。
+        const CWA_OFFICIAL_API_BASE = 'https://xuan-weather-yvlx.vercel.app';
+
+        async function fetchOfficialCwaStationDataset(dataset) {
+            const url = `${CWA_OFFICIAL_API_BASE}/api/cwa?dataset=${encodeURIComponent(dataset)}&_=${Date.now()}`;
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    cache: 'no-store',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    console.warn(`官方 CWA API HTTP ${response.status}: ${dataset}`);
+                    return null;
+                }
+
+                const payload = await response.json();
+                const records = payload?.result?.records || payload?.records || null;
+                const stations = records?.Station;
+
+                // 嚴格驗證：沒有真正的 Station 陣列就不採用這次資料。
+                if (!Array.isArray(stations) || stations.length === 0) {
+                    console.warn(`官方 CWA API 沒有有效 Station 資料：${dataset}`);
+                    return null;
+                }
+
+                return { records };
+            } catch (error) {
+                console.warn(`官方 CWA API 讀取失敗：${dataset}`, error);
+                return null;
+            }
         }
 
         // AQI 由 GitHub Actions 定時更新至 data/aqx-p-432.json，GitHub Pages 直接讀取。
@@ -2143,12 +2175,11 @@ let cityStationMapping = {};
         }
 
         function startCwaObsTimeSync() {
-            // 每 60 秒向 Vercel /api/cwa 檢查一次官方 CWA 資料。
-            // 60 秒只是「檢查頻率」，不是「資料更新時間」。
-            // 真正更新畫面的唯一條件仍是 CWA 回傳的 ObsTime 前進。
-            // CWA 仍是 15:50 → 網站持續 15:50；
-            // CWA 出現 16:00 → 下一次檢查就套用 16:00。
-            setInterval(() => fetchAllStationData(false), 60 * 1000);
+            // 每 30 秒檢查一次官方 CWA API。
+            // 30 秒只是檢查頻率；真正的更新條件仍是 CWA ObsTime 前進。
+            // CWA 尚未更新 → 網站維持原批次。
+            // CWA 一更新 → 最多下一次檢查（約 30 秒內）同步。
+            setInterval(() => fetchAllStationData(false), 30 * 1000);
         }
 
         async function fetchWeatherWarnings() {
@@ -2909,15 +2940,19 @@ async function fetchAllStationData(isManualRefresh = false, callback = null) {
             if (btn && isManualRefresh) btn.classList.add('spinning');
             const nonce = Date.now();
             try {
-                const [res1, res2, resRain, resPop] = await Promise.all([
-                    fetchCwaDataset('O-A0001-001').catch(() => ({ records: { Station: [] } })),
-                    fetchCwaDataset('O-A0003-001').catch(() => ({ records: { Station: [] } })),
-                    fetchCwaDataset('O-A0002-001').catch(() => ({ records: { Station: [] } })),
+                const [officialHourly, officialRealtime, officialRain, resPop] = await Promise.all([
+                    fetchOfficialCwaStationDataset('O-A0001-001'),
+                    fetchOfficialCwaStationDataset('O-A0003-001'),
+                    fetchOfficialCwaStationDataset('O-A0002-001'),
                     fetchCwaDataset('F-C0032-001').catch(() => ({ records: { dataset: { location: [] } } }))
                 ]);
-                const list1 = res1.records?.Station || [];
-                const list2 = res2.records?.Station || [];
-                const listRain = resRain.records?.Station || [];
+
+                // 官方 API 尚未回應時，絕對不拿 GitHub Actions 靜態檔補成「新資料」。
+                // 這樣可以確保「氣象署沒更新 → 網站不提前更新」。
+                // 已經套用的舊資料則維持不變，避免畫面突然清空。
+                const list1 = officialHourly?.records?.Station || [];
+                const list2 = officialRealtime?.records?.Station || [];
+                const listRain = officialRain?.records?.Station || [];
                 // 先取得三個 CWA 資料源本次回傳的最新 ObsTime。
                 // 只有 ObsTime 真的前進，才套用該來源的新資料。
                 const hourlyChanged = cwaObsTimeChanged('O-A0001-001', list1);
