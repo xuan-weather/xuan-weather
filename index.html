@@ -1682,14 +1682,46 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.js"></script>
     <script>
-        // GitHub Pages 直接讀取 GitHub Actions 定時更新的 CWA 靜態 JSON。
-        // 使用 document.baseURI 是為了正確支援 GitHub Pages 的 /xuan-weather/ 子路徑。
+        // CWA 一般資料仍由 GitHub Actions → GitHub Pages 提供。
+        // O-A0003-001 / O-A0002-001 的即時資料另外優先走 Vercel 後端，
+        // 讓「即時排行榜／台灣即時極值／地圖即時測站」直接取得最新批次；
+        // 若後端暫時不可用，再自動回退 GitHub Pages 靜態 JSON，不影響既有功能。
         const CWA_STATIC_BASE = new URL('data/', document.baseURI).href;
-        // GitHub Pages 高溫資訊檔案：data/cwa-W-C0033-005.json
+        const CWA_LIVE_API_BASE = 'https://xuan-weather-yvlx.vercel.app/api/cwa';
+        const CWA_SYNC_BUILD = '2026-09-20-realtime-sync-v1';
+
+        function normalizeCwaPayload(payload, dataset) {
+            if (payload?.result?.records) {
+                return { ...payload, records: payload.result.records };
+            }
+            if (payload?.records) return payload;
+            throw new Error(`CWA 資料格式無法辨識：${dataset}`);
+        }
 
         async function fetchCwaDataset(dataset) {
-            const url = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${Date.now()}`;
-            const response = await fetch(url, {
+            const isRealtimeDataset = dataset === 'O-A0003-001' || dataset === 'O-A0002-001';
+
+            // 即時資料優先：Vercel 後端每次請求都向上游 CWA 取得新資料。
+            // 不把 GitHub Actions 的執行時間當成 CWA 的觀測時間。
+            if (isRealtimeDataset) {
+                try {
+                    const liveUrl = `${CWA_LIVE_API_BASE}?dataset=${encodeURIComponent(dataset)}&_=${Date.now()}`;
+                    const liveResponse = await fetch(liveUrl, {
+                        cache: 'no-store',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (liveResponse.ok) {
+                        const livePayload = await liveResponse.json();
+                        return normalizeCwaPayload(livePayload, dataset);
+                    }
+                    console.warn(`CWA 即時後端 HTTP ${liveResponse.status}，改用 GitHub 靜態資料：${dataset}`);
+                } catch (liveError) {
+                    console.warn(`CWA 即時後端暫時不可用，改用 GitHub 靜態資料：${dataset}`, liveError);
+                }
+            }
+
+            const staticUrl = `${CWA_STATIC_BASE}cwa-${dataset}.json?_=${Date.now()}`;
+            const response = await fetch(staticUrl, {
                 cache: 'no-store',
                 headers: { 'Accept': 'application/json' }
             });
@@ -1698,24 +1730,7 @@
             }
 
             const payload = await response.json();
-
-            // 氣象署 API 的完整回傳格式：
-            // { success: true, result: { resource_id: "...", records: {...} } }
-            // GitHub Actions 將完整 JSON 原樣存到 data/，因此在這裡
-            // 統一把 result.records 正規化成前端原本使用的 records。
-            if (payload?.result?.records) {
-                return {
-                    ...payload,
-                    records: payload.result.records
-                };
-            }
-
-            // 相容原本已經是 { records: ... } 的資料格式。
-            if (payload?.records) {
-                return payload;
-            }
-
-            throw new Error(`CWA 靜態資料格式無法辨識：${dataset}`);
+            return normalizeCwaPayload(payload, dataset);
         }
 
         // AQI 由 GitHub Actions 定時更新至 data/aqx-p-432.json，GitHub Pages 直接讀取。
@@ -1792,6 +1807,17 @@ let cityStationMapping = {};
             setInterval(() => {
                 loadAirQuality(false);
             }, 10 * 60 * 1000);
+
+            // iOS PWA 從背景／主畫面返回時，背景計時器可能曾被系統暫停。
+            // 回到前景立即重新檢查 CWA，避免 PWA 比網頁版停留在舊批次。
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    fetchAllStationData(false);
+                }
+            });
+            window.addEventListener('pageshow', () => {
+                fetchAllStationData(false);
+            });
         });
 
         // ==================== 空氣品質 AQI ====================
@@ -2615,11 +2641,12 @@ const cwaTemperatureHistoryRemoteCache = new Map();
                 // Storage full/private mode: charts still work for this page session.
             }
         }
-        async function loadCwaTemperatureHistory(stationId) {
+        async function loadCwaTemperatureHistory(stationId, forceRefresh = false) {
             const id = String(stationId || '').trim();
             if (!id) return [];
 
-            if (cwaTemperatureHistoryRemoteCache.has(id)) {
+            // 圖表開啟時強制重新抓取，避免同一個頁面長時間停留而一直使用舊快取。
+            if (!forceRefresh && cwaTemperatureHistoryRemoteCache.has(id)) {
                 return cwaTemperatureHistoryRemoteCache.get(id);
             }
 
@@ -2650,7 +2677,7 @@ const cwaTemperatureHistoryRemoteCache = new Map();
                 cwaTemperatureHistoryRemoteCache.set(id, points);
                 return points;
             } catch (error) {
-                console.warn('CWA 10分鐘歷史資料讀取失敗，暫時使用本機歷史快取：', error);
+                console.warn('CWA 10分鐘歷史資料讀取失敗，24小時圖暫不混入本機資料：', error);
                 return [];
             }
         }
@@ -4289,72 +4316,26 @@ const popVal = getPopForStation(county, town);
             }
 
             const historyId = getStationHistoryId(station);
-            const now = Date.now();
-            const cutoff = now - STATION_HISTORY_MAX_MS;
+            const cutoff = Date.now() - STATION_HISTORY_MAX_MS;
 
-            // CWA GitHub 歷史檔會逐步累積；剛啟用時可能只有 1～2 筆。
-            // 不能因為遠端目前只有兩筆，就把本機已累積的 24 小時資料丟掉。
-            // 合併「GitHub CWA 10分鐘歷史」＋「本機歷史快取」，
-            // 同一時間戳以 GitHub 的 CWA 資料優先。
+            // 重要：24小時圖只使用 GitHub Actions 保存的 CWA O-A0003-001 歷史檔。
+            // 不再混入 localStorage，也不再補入「目前這台裝置剛抓到的觀測值」。
+            // 這樣網站版、iOS PWA、不同手機／電腦看到的曲線會使用同一份資料。
             if (subtitleEl) subtitleEl.innerText = '正在載入 CWA 10分鐘歷史資料…';
-            const remoteHistory = await loadCwaTemperatureHistory(historyId);
+            const remoteHistory = await loadCwaTemperatureHistory(historyId, true);
 
-            const localHistory = Array.isArray(stationHistoryCache?.[historyId])
-                ? stationHistoryCache[historyId]
-                : [];
-
-            const historyByTs = new Map();
-
-            for (const point of localHistory) {
-                const ts = Number(point?.ts);
-                const temp = Number(point?.temp);
-                if (
-                    Number.isFinite(ts) &&
-                    Number.isFinite(temp) &&
-                    temp !== 0 &&
-                    ts >= cutoff
-                ) {
-                    historyByTs.set(ts, { ts, temp });
-                }
-            }
-
-            // GitHub Actions 的 CWA 資料覆蓋同時間的本機資料。
-            for (const point of remoteHistory) {
-                const ts = Number(point?.ts);
-                const temp = Number(point?.temp);
-                if (
-                    Number.isFinite(ts) &&
-                    Number.isFinite(temp) &&
-                    temp !== 0 &&
-                    ts >= cutoff
-                ) {
-                    historyByTs.set(ts, { ts, temp });
-                }
-            }
-
-            let history = Array.from(historyByTs.values())
+            const history = (Array.isArray(remoteHistory) ? remoteHistory : [])
+                .map(point => ({
+                    ts: Number(point?.ts),
+                    temp: Number(point?.temp)
+                }))
+                .filter(point =>
+                    Number.isFinite(point.ts) &&
+                    point.ts >= cutoff &&
+                    Number.isFinite(point.temp) &&
+                    point.temp !== 0
+                )
                 .sort((a, b) => a.ts - b.ts);
-
-            // 保留最近 24 小時的 10 分鐘資料，不再壓成每小時一筆。
-            history = history.filter(point =>
-                point.ts >= cutoff &&
-                Number.isFinite(point.temp) &&
-                point.temp !== 0
-            );
-
-            // 補入目前這一筆 CWA 實際觀測，避免歷史檔剛好尚未同步到最新批次。
-            const currentObsRaw = station.ObsTime?.DateTime || station.ObsTime || obsTimeString;
-            const currentObsTs = Date.parse(currentObsRaw || '');
-            if (Number.isFinite(currentObsTs) && Number.isFinite(currentTemp) && currentTemp !== 0) {
-                const exists = history.some(point => Math.abs(point.ts - currentObsTs) < 30000);
-                if (!exists) {
-                    history.push({
-                        ts: currentObsTs,
-                        temp: Number(currentTemp.toFixed(1))
-                    });
-                    history.sort((a, b) => a.ts - b.ts);
-                }
-            }
 
             if (history.length < 2) {
                 if (subtitleEl) subtitleEl.innerText = 'CWA 10分鐘歷史資料正在累積';
@@ -4381,7 +4362,7 @@ const popVal = getPopForStation(county, town);
             initPastChart([], temps, fullDateLabels, timeValues);
         }
 
-        function initPastChart(labels, dataValues, fullDates, timeValues = []) {
+                function initPastChart(labels, dataValues, fullDates, timeValues = []) {
             const canvas = document.getElementById('tempChart');
             if (!canvas) return;
 
