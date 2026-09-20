@@ -392,6 +392,23 @@
             line-height: 1.45;
         }
 
+
+        /* 國家級警報／政府防災演練 */
+        .national-alert-widget { margin-top: 16px; margin-bottom: 16px; padding: 16px; border-radius: 18px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.13), rgba(245, 158, 11, 0.10)); border: 2px solid rgba(239, 68, 68, 0.38); box-shadow: 0 6px 18px rgba(239, 68, 68, 0.06); }
+        .national-alert-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+        .national-alert-title { font-size: 18px; font-weight: 900; color: #ef4444; }
+        .national-alert-title i { margin-right: 5px; }
+        .national-alert-status { font-size: 11px; font-weight: 800; color: #b45309; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.28); border-radius: 999px; padding: 4px 8px; white-space: nowrap; }
+        .national-alert-item { padding: 13px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(239, 68, 68, 0.20); }
+        .national-alert-item + .national-alert-item { margin-top: 8px; }
+        .national-alert-item-title { font-size: 14px; font-weight: 900; color: var(--text-color); line-height: 1.45; }
+        .national-alert-item-detail { margin-top: 4px; font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+        .national-alert-source { margin-top: 10px; font-size: 10px; color: var(--text-muted); line-height: 1.45; }
+        .national-alert-source a { color: #38bdf8; text-decoration: none; }
+        [data-theme="dark"] .national-alert-item { background: rgba(15, 23, 42, 0.52); }
+        [data-theme="light"] .national-alert-widget { background: linear-gradient(135deg, rgba(254, 226, 226, 0.92), rgba(255, 247, 237, 0.96)); }
+        @media (max-width: 520px) { .national-alert-head { align-items: flex-start; } .national-alert-title { font-size: 17px; } }
+
         .quick-ranking-section {
             margin-top: 20px;
             margin-bottom: 20px;
@@ -1302,6 +1319,21 @@
                 <div><i class="fas fa-clock"></i> 臺灣標準時間 <span id="liveTimeText">--:--:--</span></div>
             </div>
 
+
+            <!-- 國家級警報：政府正式公告的國家防災日演練資訊 -->
+            <div class="national-alert-widget" id="nationalAlertWidget">
+                <div class="national-alert-head">
+                    <div class="national-alert-title"><i class="fas fa-tower-broadcast"></i> 國家級警報</div>
+                    <div class="national-alert-status">政府公告演練</div>
+                </div>
+                <div id="nationalAlertContent"></div>
+                <div class="national-alert-source">
+                    資訊依政府公開公告顯示；「演練」不是實際災害警報。
+                    <a href="https://www.moi.gov.tw/News_Content.aspx?n=4&s=340709" target="_blank" rel="noopener">內政部公告</a> ｜
+                    <a href="https://scweb.cwa.gov.tw/zh-tw/pws" target="_blank" rel="noopener">氣象署 PWS</a>
+                </div>
+            </div>
+
             <div class="my-location-widget" id="weatherWarningsWidget" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(15, 23, 42, 0.1)); border-color: rgba(239, 68, 68, 0.25);">
                 <div class="my-location-header" style="border-bottom-color: rgba(239, 68, 68, 0.2);">
                     <div class="my-location-title" style="color: #ef4444;">
@@ -1818,6 +1850,8 @@ let cityStationMapping = {};
             fetchTyphoonData(false);
             loadAirQuality(false);
             fetchWeatherWarnings();
+            renderNationalAlert();
+            setInterval(renderNationalAlert, 30000);
             loadLocalWeatherReports();
             setInterval(() => {
                 fetchEarthquakeData(false);
@@ -1832,6 +1866,25 @@ let cityStationMapping = {};
                 loadAirQuality(false);
             }, 10 * 60 * 1000);
         });
+
+
+        // ==================== 國家級警報／政府演練 ====================
+        // 只顯示政府已公開公告的演練／警報資訊，不自行預測或製造警報。
+        const NATIONAL_ALERT_SCHEDULE = [
+            { id:'20260921-earthquake-drill', start:'2026-09-20T00:00:00+08:00', end:'2026-09-21T09:29:59+08:00', time:'2026/09/21 09:21', title:'115年國家防災日｜地震速報演練', detail:'中央氣象署將發送「國家防災日地震警報」演練訊息，請收到訊息後進行「趴下、掩護、穩住」。' },
+            { id:'20260921-tsunami-drill', start:'2026-09-21T09:30:00+08:00', end:'2026-09-21T10:00:59+08:00', time:'2026/09/21 09:30', title:'115年國家防災日｜海嘯警報測試', detail:'災防告警細胞廣播系統及防空警報系統將對沿海鄉鎮市區進行海嘯警報測試。' },
+            { id:'20260921-tsunami-cancel-drill', start:'2026-09-21T10:01:00+08:00', end:'2026-09-21T10:30:00+08:00', time:'2026/09/21 10:00', title:'115年國家防災日｜海嘯警報解除測試', detail:'模擬完整警報發布與解除流程；測試訊息會明確標示為演習。' }
+        ];
+        function renderNationalAlert() {
+            const widget=document.getElementById('nationalAlertWidget'); const container=document.getElementById('nationalAlertContent'); if(!widget||!container)return;
+            const now=Date.now();
+            const active=NATIONAL_ALERT_SCHEDULE.map(x=>({...x,startMs:Date.parse(x.start),endMs:Date.parse(x.end)})).filter(x=>Number.isFinite(x.startMs)&&Number.isFinite(x.endMs)&&now>=x.startMs&&now<=x.endMs);
+            const upcoming=NATIONAL_ALERT_SCHEDULE.map(x=>({...x,startMs:Date.parse(x.start)})).filter(x=>Number.isFinite(x.startMs)&&x.startMs>now).sort((a,b)=>a.startMs-b.startMs)[0];
+            const rows=active.length?active:(upcoming?[upcoming]:[]);
+            if(!rows.length){widget.style.display='none';return;}
+            widget.style.display=''; const status=widget.querySelector('.national-alert-status'); if(status)status.textContent=active.length?'目前演練時段':'即將開始';
+            container.innerHTML=rows.map(x=>`<div class="national-alert-item"><div class="national-alert-item-title">🚨 ${escapeQuickRankingText(x.title)}</div><div class="national-alert-item-detail"><b>時間：${escapeQuickRankingText(x.time)}</b><br>${escapeQuickRankingText(x.detail)}</div></div>`).join('');
+        }
 
         // ==================== 空氣品質 AQI ====================
         let airQualityData = [];
