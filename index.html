@@ -563,21 +563,19 @@
         .map-header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
         .map-title-row { display: flex; justify-content: space-between; align-items: center; }
         /* 全台地圖：仿 DPIP 的地圖內嵌圖層切換器
-           平時隱藏，只有全台地圖進入全螢幕時才顯示。 */
+           只有全螢幕時顯示；切換器直接放在 #map 內，確保 iPhone Safari Pseudo Fullscreen 也可見。 */
         .map-layer-switcher{
             display:none;
             position:absolute;
             top:14px;
             right:14px;
-            z-index:100000;
+            z-index:1000000;
+            pointer-events:auto;
         }
-        .map-container-wrapper:has(#map.leaflet-fullscreen-on) .map-layer-switcher,
-        .map-container-wrapper:has(#map.leaflet-pseudo-fullscreen) .map-layer-switcher{
-            display:block;
-            position:fixed;
-            top:max(14px, env(safe-area-inset-top, 0px));
-            right:max(14px, env(safe-area-inset-right, 0px));
-            z-index:100000;
+        #map.leaflet-fullscreen-on .map-layer-switcher,
+        #map.leaflet-pseudo-fullscreen .map-layer-switcher,
+        #map.map-layer-fullscreen-active .map-layer-switcher{
+            display:block !important;
         }
         .map-layer-switcher-toggle{
             min-width:148px;
@@ -597,96 +595,35 @@
             font-size:15px;
             font-weight:800;
             cursor:pointer;
+            pointer-events:auto;
         }
-        .map-layer-switcher-toggle .map-layer-icon{
-            font-size:20px;
-            color:#475569;
-            flex:0 0 auto;
-        }
-        .map-layer-switcher-toggle .map-layer-current{
-            flex:1;
-            text-align:left;
-            white-space:nowrap;
-        }
-        .map-layer-switcher-toggle .map-layer-chevron{
-            font-size:14px;
-            color:#475569;
-            transition:transform .18s ease;
-        }
-        .map-layer-switcher.open .map-layer-switcher-toggle .map-layer-chevron{
-            transform:rotate(180deg);
-        }
+        .map-layer-switcher-toggle .map-layer-icon{font-size:20px;color:#475569;flex:0 0 auto;}
+        .map-layer-switcher-toggle .map-layer-current{flex:1;text-align:left;white-space:nowrap;}
+        .map-layer-switcher-toggle .map-layer-chevron{font-size:14px;color:#475569;transition:transform .18s ease;}
+        .map-layer-switcher.open .map-layer-switcher-toggle .map-layer-chevron{transform:rotate(180deg);}
         .map-layer-switcher-menu{
-            position:absolute;
-            top:54px;
-            right:0;
-            min-width:190px;
-            padding:6px;
-            border:1px solid rgba(255,255,255,.45);
-            border-radius:14px;
-            background:rgba(255,255,255,.96);
-            box-shadow:0 10px 28px rgba(0,0,0,.22);
-            backdrop-filter:blur(12px);
-            -webkit-backdrop-filter:blur(12px);
-            display:none;
+            position:absolute;top:54px;right:0;min-width:190px;padding:6px;
+            border:1px solid rgba(255,255,255,.45);border-radius:14px;
+            background:rgba(255,255,255,.96);box-shadow:0 10px 28px rgba(0,0,0,.22);
+            backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;
+            pointer-events:auto;
         }
-        .map-layer-switcher.open .map-layer-switcher-menu{
-            display:block;
-        }
+        .map-layer-switcher.open .map-layer-switcher-menu{display:block;}
         .map-layer-switcher-menu button{
-            width:100%;
-            display:flex;
-            align-items:center;
-            gap:9px;
-            padding:10px 12px;
-            border:0;
-            border-radius:10px;
-            background:transparent;
-            color:#334155;
-            font-size:13px;
-            font-weight:700;
-            text-align:left;
-            cursor:pointer;
+            width:100%;display:flex;align-items:center;gap:9px;padding:10px 12px;
+            border:0;border-radius:10px;background:transparent;color:#334155;font-size:13px;
+            font-weight:700;text-align:left;cursor:pointer;pointer-events:auto;
         }
-        .map-layer-switcher-menu button:hover{
-            background:rgba(6,182,212,.10);
-        }
-        .map-layer-switcher-menu button.active{
-            background:rgba(6,182,212,.14);
-            color:#0284c7;
-        }
-        [data-theme="dark"] .map-layer-switcher-toggle{
-            background:rgba(248,250,252,.94);
-            color:#334155;
-        }
-        [data-theme="dark"] .map-layer-switcher-menu{
-            background:rgba(15,23,42,.96);
-            border-color:rgba(255,255,255,.12);
-        }
-        [data-theme="dark"] .map-layer-switcher-menu button{
-            color:#e2e8f0;
-        }
-        [data-theme="dark"] .map-layer-switcher-menu button.active{
-            background:rgba(56,189,248,.16);
-            color:#38bdf8;
-        }
+        .map-layer-switcher-menu button:hover{background:rgba(6,182,212,.10);}
+        .map-layer-switcher-menu button.active{background:rgba(6,182,212,.14);color:#0284c7;}
+        [data-theme="dark"] .map-layer-switcher-toggle{background:rgba(248,250,252,.94);color:#334155;}
+        [data-theme="dark"] .map-layer-switcher-menu{background:rgba(15,23,42,.96);border-color:rgba(255,255,255,.12);}
+        [data-theme="dark"] .map-layer-switcher-menu button{color:#e2e8f0;}
+        [data-theme="dark"] .map-layer-switcher-menu button.active{background:rgba(56,189,248,.16);color:#38bdf8;}
         @media(max-width:600px){
-            .map-container-wrapper:has(#map.leaflet-fullscreen-on) .map-layer-switcher,
-        .map-container-wrapper:has(#map.leaflet-pseudo-fullscreen) .map-layer-switcher{
-                top:max(10px, env(safe-area-inset-top, 0px));
-                right:max(10px, env(safe-area-inset-right, 0px));
-            }
-            .map-layer-switcher-toggle{
-                min-width:142px;
-                height:44px;
-                padding:0 12px;
-                border-radius:13px;
-                font-size:14px;
-            }
-            .map-layer-switcher-menu{
-                top:50px;
-                min-width:178px;
-            }
+            .map-layer-switcher{top:max(10px,env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));}
+            .map-layer-switcher-toggle{min-width:142px;height:44px;padding:0 12px;border-radius:13px;font-size:14px;}
+            .map-layer-switcher-menu{top:50px;min-width:178px;}
         }
         .map-container-wrapper {
             position: relative;
@@ -1530,7 +1467,7 @@
             </div>
 
             <div class="map-container-wrapper">
-                <div id="map"></div>
+                <div id="map">
                 <div class="map-layer-switcher" id="mapLayerSwitcher">
                     <button type="button" class="map-layer-switcher-toggle" id="mapLayerSwitcherToggle" aria-haspopup="true" aria-expanded="false" onclick="toggleMapLayerMenu(event)">
                         <i class="fas fa-layer-group map-layer-icon"></i>
@@ -1546,6 +1483,7 @@
                         <button type="button" id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️ 陣風</button>
                         <button type="button" id="btnMapAqi" onclick="switchMapMode('aqi')">😷 空品</button>
                     </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -4973,14 +4911,18 @@ const popVal = getPopForStation(county, town);
             bindFullscreenLayoutFix(map);
 
             // 全台地圖進入 Leaflet 原生／Pseudo 全螢幕時，顯示 DPIP 類圖層切換器。
-            // 不依賴單一 class，兼容 iPhone Safari 的 pseudo fullscreen。
+            // 切換器位於 #map 內，並監看 class 變化，兼容 iPhone Safari。
             function syncMainMapLayerSwitcherVisibility(){
+                const container = map.getContainer();
                 const switcher = document.getElementById('mapLayerSwitcher');
-                if(!switcher || !map) return;
-                const isFullscreen = map.getContainer().classList.contains('leaflet-fullscreen-on') ||
-                    map.getContainer().classList.contains('leaflet-pseudo-fullscreen') ||
-                    document.fullscreenElement === map.getContainer();
+                if(!container || !switcher) return;
+                const isFullscreen = container.classList.contains('leaflet-fullscreen-on') ||
+                    container.classList.contains('leaflet-pseudo-fullscreen') ||
+                    document.fullscreenElement === container ||
+                    container.classList.contains('map-layer-fullscreen-active');
+                container.classList.toggle('map-layer-fullscreen-active', isFullscreen);
                 switcher.style.display = isFullscreen ? 'block' : 'none';
+                switcher.style.zIndex = '1000000';
                 if(!isFullscreen) closeMapLayerMenu();
             }
             map.on('fullscreenchange', syncMainMapLayerSwitcherVisibility);
@@ -4989,9 +4931,21 @@ const popVal = getPopForStation(county, town);
             });
             document.addEventListener('fullscreenchange', syncMainMapLayerSwitcherVisibility, {passive:true});
             document.addEventListener('webkitfullscreenchange', syncMainMapLayerSwitcherVisibility, {passive:true});
-            // iPhone Safari pseudo fullscreen 需要等 Leaflet 完成 class 切換後再同步。
+            // 直接監看 iPhone Safari／Leaflet 是否加入或移除 fullscreen class。
+            const mainMapFullscreenObserver = new MutationObserver(syncMainMapLayerSwitcherVisibility);
+            mainMapFullscreenObserver.observe(map.getContainer(), {attributes:true, attributeFilter:['class','style']});
+            // 點全螢幕控制後再同步幾次，避免 Safari 延遲套用 class。
+            const mainMapFullscreenButton = document.querySelector('.map-container-wrapper .leaflet-control-fullscreen a');
+            if(mainMapFullscreenButton){
+                mainMapFullscreenButton.addEventListener('click', function(){
+                    setTimeout(syncMainMapLayerSwitcherVisibility, 50);
+                    setTimeout(syncMainMapLayerSwitcherVisibility, 150);
+                    setTimeout(syncMainMapLayerSwitcherVisibility, 400);
+                }, {passive:true});
+            }
             setTimeout(syncMainMapLayerSwitcherVisibility, 50);
             setTimeout(syncMainMapLayerSwitcherVisibility, 300);
+            setTimeout(syncMainMapLayerSwitcherVisibility, 800);
 
             renderMapMarkers();
         }
