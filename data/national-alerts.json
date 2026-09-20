@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-20T22:47:18.443737+08:00",
+  "updatedAt": "2026-09-20T22:54:23.077761+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_strong-wind_202609202246001",
+      "category": "強風",
+      "title": "強風",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-20T22:46:04+08:00",
+      "effective": "2026/9/20 下午 10:45:00",
+      "expires": "2026/9/21 下午 10:00:00",
+      "summary": "風力偏強，20日晚上至21日晚上苗栗縣、臺中市、宜蘭縣、臺東縣(含蘭嶼)局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609202246.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260920211840_0002",
       "category": "水庫放流",
@@ -43,20 +57,6 @@
       "expires": "2026/9/21 下午 08:57:00",
       "summary": "火災",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_0220260920139521.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_strong-wind_202609201640001",
-      "category": "強風",
-      "title": "強風",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-20T16:40:37+08:00",
-      "effective": "2026/9/20 下午 04:39:00",
-      "expires": "2026/9/21 下午 10:00:00",
-      "summary": "風力偏強，20日下午至21日晚上苗栗縣、臺中市、彰化縣、臺南市、臺東縣(含蘭嶼)局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609201640.cap",
       "isDrill": false
     },
     {
