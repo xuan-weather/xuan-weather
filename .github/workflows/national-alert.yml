@@ -186,8 +186,10 @@ jobs:
               status = val(entry, "cap:status", "status") or "Actual"
               msg_type = val(entry, "cap:msgType", "msgType") or "Alert"
 
-              # 只接受實際警報，不把演練 Test 當成真正警報。
-              if str(status).lower() != "actual":
+              # Actual = 實際警報；Test = 政府正式演練。
+              # 兩者都保留，但前端會依 status 顯示「警報」或「演練」。
+              status_lower = str(status).strip().lower()
+              if status_lower not in ("actual", "test"):
                   return None
 
               if str(msg_type).lower() == "cancel":
@@ -196,9 +198,23 @@ jobs:
               if category not in TARGET_CATEGORIES:
                   return None
 
-              # 只保留中央氣象署相關資料。
+              # 只保留中央氣象署相關資料；國家防災日／國家級警報演練
+              # 即使來源文字未明確寫 CWA，也允許保留。
               cwa_text = " ".join([author, title, summary, category])
-              if not any(k.lower() in cwa_text.lower() for k in CWA_KEYWORDS):
+              drill_keywords = (
+                  "國家防災日",
+                  "國家級警報",
+                  "地震速報演練",
+                  "海嘯警報",
+                  "演練",
+                  "測試",
+              )
+              is_drill = (
+                  status_lower == "test"
+                  or any(k.lower() in cwa_text.lower() for k in drill_keywords)
+              )
+
+              if not any(k.lower() in cwa_text.lower() for k in CWA_KEYWORDS) and not is_drill:
                   return None
 
               updated = val(entry, "updated")
