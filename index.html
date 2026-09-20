@@ -562,16 +562,121 @@
         }
         .map-header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
         .map-title-row { display: flex; justify-content: space-between; align-items: center; }
-        .map-mode-btn-group {
-            display: flex; gap: 6px; background: var(--select-bg); padding: 5px; border-radius: 14px;
-            overflow-x: auto;
+        /* 全台地圖：仿 DPIP 的地圖內嵌圖層切換器 */
+        .map-layer-switcher{
+            position:absolute;
+            top:14px;
+            right:14px;
+            z-index:1000;
         }
-        .map-mode-btn-group button {
-            flex: 1; padding: 8px 12px; font-size: 12px; font-weight: 600; border: none;
-            border-radius: 10px; cursor: pointer; background: none; color: var(--text-muted); transition: all 0.2s;
-            white-space: nowrap;
+        .map-layer-switcher-toggle{
+            min-width:148px;
+            height:48px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            padding:0 14px;
+            border:1px solid rgba(255,255,255,.55);
+            border-radius:14px;
+            background:rgba(255,255,255,.92);
+            color:#334155;
+            box-shadow:0 4px 16px rgba(0,0,0,.16);
+            backdrop-filter:blur(10px);
+            -webkit-backdrop-filter:blur(10px);
+            font-size:15px;
+            font-weight:800;
+            cursor:pointer;
         }
-        .map-mode-btn-group button.active { background: #06b6d4; color: #fff; box-shadow: 0 2px 8px rgba(6, 182, 212, 0.4); }
+        .map-layer-switcher-toggle .map-layer-icon{
+            font-size:20px;
+            color:#475569;
+            flex:0 0 auto;
+        }
+        .map-layer-switcher-toggle .map-layer-current{
+            flex:1;
+            text-align:left;
+            white-space:nowrap;
+        }
+        .map-layer-switcher-toggle .map-layer-chevron{
+            font-size:14px;
+            color:#475569;
+            transition:transform .18s ease;
+        }
+        .map-layer-switcher.open .map-layer-switcher-toggle .map-layer-chevron{
+            transform:rotate(180deg);
+        }
+        .map-layer-switcher-menu{
+            position:absolute;
+            top:54px;
+            right:0;
+            min-width:190px;
+            padding:6px;
+            border:1px solid rgba(255,255,255,.45);
+            border-radius:14px;
+            background:rgba(255,255,255,.96);
+            box-shadow:0 10px 28px rgba(0,0,0,.22);
+            backdrop-filter:blur(12px);
+            -webkit-backdrop-filter:blur(12px);
+            display:none;
+        }
+        .map-layer-switcher.open .map-layer-switcher-menu{
+            display:block;
+        }
+        .map-layer-switcher-menu button{
+            width:100%;
+            display:flex;
+            align-items:center;
+            gap:9px;
+            padding:10px 12px;
+            border:0;
+            border-radius:10px;
+            background:transparent;
+            color:#334155;
+            font-size:13px;
+            font-weight:700;
+            text-align:left;
+            cursor:pointer;
+        }
+        .map-layer-switcher-menu button:hover{
+            background:rgba(6,182,212,.10);
+        }
+        .map-layer-switcher-menu button.active{
+            background:rgba(6,182,212,.14);
+            color:#0284c7;
+        }
+        [data-theme="dark"] .map-layer-switcher-toggle{
+            background:rgba(248,250,252,.94);
+            color:#334155;
+        }
+        [data-theme="dark"] .map-layer-switcher-menu{
+            background:rgba(15,23,42,.96);
+            border-color:rgba(255,255,255,.12);
+        }
+        [data-theme="dark"] .map-layer-switcher-menu button{
+            color:#e2e8f0;
+        }
+        [data-theme="dark"] .map-layer-switcher-menu button.active{
+            background:rgba(56,189,248,.16);
+            color:#38bdf8;
+        }
+        @media(max-width:600px){
+            .map-layer-switcher{
+                top:10px;
+                right:10px;
+            }
+            .map-layer-switcher-toggle{
+                min-width:142px;
+                height:44px;
+                padding:0 12px;
+                border-radius:13px;
+                font-size:14px;
+            }
+            .map-layer-switcher-menu{
+                top:50px;
+                min-width:178px;
+            }
+        }
         .map-container-wrapper {
             position: relative;
             width: 100%;
@@ -1410,19 +1515,27 @@
                     <h3><i class="fas fa-globe-asia"></i> 天氣即時觀測</h3>
                     <span id="mapObsTimeTag" style="font-size: 12px; color: #38bdf8; font-weight: 600;">CWA 觀測時間： --</span>
                 </div>
-                <div class="map-mode-btn-group">
-                    <button id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️氣溫</button>
-                    <button id="btnMapPop" onclick="switchMapMode('pop')">📈降雨機率</button>
-                    <button id="btnMapHumidity" onclick="switchMapMode('humidity')">💧濕度</button>
-                    <button id="btnMapRain" onclick="switchMapMode('rain')">🌧️日雨量</button>
-                    <button id="btnMapWind" onclick="switchMapMode('wind')">💨風速</button>
-                    <button id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️陣風</button>
-                    <button id="btnMapAqi" onclick="switchMapMode('aqi')">😷空品</button>
-                </div>
+                <!-- 圖層切換器改為固定在全台地圖內，不需離開地圖即可切換 -->
             </div>
-                                      
+
             <div class="map-container-wrapper">
-<div id="map"></div>
+                <div id="map"></div>
+                <div class="map-layer-switcher" id="mapLayerSwitcher">
+                    <button type="button" class="map-layer-switcher-toggle" id="mapLayerSwitcherToggle" aria-haspopup="true" aria-expanded="false" onclick="toggleMapLayerMenu(event)">
+                        <i class="fas fa-layer-group map-layer-icon"></i>
+                        <span class="map-layer-current" id="mapModeLabel">溫度</span>
+                        <i class="fas fa-chevron-down map-layer-chevron"></i>
+                    </button>
+                    <div class="map-layer-switcher-menu" id="mapLayerSwitcherMenu">
+                        <button id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️ 溫度</button>
+                        <button id="btnMapPop" onclick="switchMapMode('pop')">📈 降雨機率</button>
+                        <button id="btnMapHumidity" onclick="switchMapMode('humidity')">💧 濕度</button>
+                        <button id="btnMapRain" onclick="switchMapMode('rain')">🌧️ 日雨量</button>
+                        <button id="btnMapWind" onclick="switchMapMode('wind')">💨 風速</button>
+                        <button id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️ 陣風</button>
+                        <button id="btnMapAqi" onclick="switchMapMode('aqi')">😷 空品</button>
+                    </div>
+                </div>
             </div>
         </div>
         
