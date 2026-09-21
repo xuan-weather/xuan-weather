@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T15:25:15.580596+08:00",
+  "updatedAt": "2026-09-21T15:37:58.332372+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_extremely-rain_202609211528001",
+      "category": "降雨",
+      "title": "降雨",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-21T15:28:30+08:00",
+      "effective": "2026/9/21 下午 03:25:00",
+      "expires": "2026/9/21 下午 11:00:00",
+      "summary": "對流雲系發展旺盛，易有短延時強降雨，今(21)日南部地區有局部大雨發生的機率，請注意雷擊及強陣風，山區請慎防坍方及落石，低窪地區請慎防積水。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_RAIN/fifows_extremely-rain_202609211528.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609211520",
       "category": "停水",
@@ -172,20 +186,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609211100",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T11:00:01+08:00",
-      "effective": "2026/9/21 上午 10:55:57",
-      "expires": "2026/9/21 下午 03:30:00",
-      "summary": "嘉義縣竹崎鄉灣橋村73號附近破管搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211100.cap",
-      "isDrill": false
-    },
-    {
       "id": "CWA-Weather_strong-wind_202609211026001",
       "category": "強風",
       "title": "強風",
@@ -323,20 +323,6 @@
       "expires": "2026/9/21 下午 06:00:00",
       "summary": "斗六市虎溪、正心等汰換管線工程 115/9/21上午08時至下午18時暫停供水。(管線末端用戶可能因水流時間延至下午19時恢復供水，遇雨天則順延)。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609210740.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_extremely-rain_202609210622001",
-      "category": "降雨",
-      "title": "降雨",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "中央氣象署",
-      "updated": "2026-09-21T06:22:17+08:00",
-      "effective": "2026/9/21 上午 06:15:00",
-      "expires": "2026/9/21 下午 05:00:00",
-      "summary": "對流雲系發展旺盛，易有短延時強降雨，今(21)日高雄及屏東地區有局部大雨發生的機率，請注意雷擊及強陣風，山區請慎防坍方及落石，低窪地區請慎防積水。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_RAIN/fifows_extremely-rain_202609210622.cap",
       "isDrill": false
     },
     {
