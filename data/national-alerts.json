@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T16:48:36.317888+08:00",
+  "updatedAt": "2026-09-21T16:57:40.848807+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609211650",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T16:50:01+08:00",
+      "effective": "2026/9/21 下午 04:48:04",
+      "expires": "2026/9/21 下午 06:00:00",
+      "summary": "新裝工程斷管連絡工程",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211650.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609211640",
       "category": "停水",
