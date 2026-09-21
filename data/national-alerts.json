@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T05:20:15.945504+08:00",
+  "updatedAt": "2026-09-22T05:31:26.507118+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-EQ115064-2026-0922-051613",
+      "category": "地震",
+      "title": "地震",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-09-22T05:19:16+08:00",
+      "effective": "2026/9/22 上午 05:19:16",
+      "expires": "2026/9/22 上午 06:19:00",
+      "summary": "09/22 05:16臺南市楠西區發生規模4.2有感地震，最大震度臺南市曾文4級。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Earthquake/CWA-EQ115064-2026-0922-051613.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260922051840_0000",
       "category": "水庫放流",
