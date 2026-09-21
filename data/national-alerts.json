@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T21:44:43.725039+08:00",
+  "updatedAt": "2026-09-21T21:54:49.728054+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609212150",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T21:50:01+08:00",
+      "effective": "2026/9/21 下午 09:42:49",
+      "expires": "2026/9/21 下午 11:30:00",
+      "summary": "泰林第二減壓閥異常處理",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609212150.cap",
+      "isDrill": false
+    },
     {
       "id": "cwa.gov.tw_thunderstorm_20260921213214_000",
       "category": "雷雨",
