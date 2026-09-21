@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T15:58:01.814163+08:00",
+  "updatedAt": "2026-09-21T16:10:29.451182+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609211600",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T16:00:01+08:00",
+      "effective": "2026/9/21 下午 03:59:18",
+      "expires": "2026/9/22 下午 05:30:00",
+      "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理西屯區大有街等汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211600.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609211550",
       "category": "停水",
@@ -11,11 +25,11 @@
       "msgType": "Update",
       "author": "台灣自來水公司",
       "updated": "2026-09-21T15:50:01+08:00",
-      "effective": "2026/9/21 下午 02:35:57",
-      "expires": "2026/9/21 下午 04:00:00",
-      "summary": "小區封閉供水調配制水閥啟閉測試",
+      "effective": "2026/9/21 下午 03:41:11",
+      "expires": "2026/9/21 下午 06:30:00",
+      "summary": "豐原區南田街43號 破管搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211550.cap",
-      "isDrill": true
+      "isDrill": false
     },
     {
       "id": "CWA-Weather_extremely-rain_202609211528001",
@@ -151,11 +165,11 @@
       "msgType": "Update",
       "author": "台灣自來水公司",
       "updated": "2026-09-21T14:00:01+08:00",
-      "effective": "2026/9/21 上午 08:43:34",
-      "expires": "2026/9/21 下午 04:00:00",
-      "summary": "辦理分區管網建置前 制水閥機能測試 (區域內不同路段分別停水，非整片停水)",
+      "effective": "2026/9/21 下午 01:50:04",
+      "expires": "2026/9/21 下午 07:00:00",
+      "summary": "魚池鄉中山路592-6號前道路漏水搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211400.cap",
-      "isDrill": true
+      "isDrill": false
     },
     {
       "id": "TWC_water_202609211230",
@@ -263,9 +277,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-21T09:10:01+08:00",
-      "effective": "2026/9/18 下午 03:17:24",
-      "expires": "2026/9/21 下午 04:00:00",
-      "summary": "鶯歌區尖山路及高職西街等汰換管線工程",
+      "effective": "2026/9/18 下午 03:18:31",
+      "expires": "2026/9/21 下午 05:00:00",
+      "summary": "三峽區中正路二段及白雞路等汰換管線工程",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609210910.cap",
       "isDrill": false
     },
