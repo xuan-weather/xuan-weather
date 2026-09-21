@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T09:44:35.911402+08:00",
+  "updatedAt": "2026-09-21T09:53:55.976044+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609210950",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T09:50:01+08:00",
+      "effective": "2026/9/21 上午 09:46:36",
+      "expires": "2026/9/21 下午 01:00:00",
+      "summary": "09/21 09:30-13:00，因『台南市南區大成路二段175號』路面漏水緊急搶修，造成該區域部分無水與降壓",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609210950.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609210940",
       "category": "停水",
