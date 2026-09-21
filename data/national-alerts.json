@@ -1,20 +1,34 @@
 {
-  "updatedAt": "2026-09-21T12:09:27.163018+08:00",
+  "updatedAt": "2026-09-21T12:23:58.625712+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
     {
-      "id": "TWC_water_202609211200",
+      "id": "TWC_water_202609211220",
       "category": "停水",
       "title": "停水",
       "status": "Actual",
-      "msgType": "Alert",
+      "msgType": "Update",
       "author": "台灣自來水公司",
-      "updated": "2026-09-21T12:00:01+08:00",
-      "effective": "2026/9/21 上午 11:56:43",
-      "expires": "2026/9/21 下午 03:00:00",
-      "summary": "因八德區建國路與建成街口 250mm 漏水 緊急搶修 停水",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211200.cap",
+      "updated": "2026-09-21T12:20:01+08:00",
+      "effective": "2026/9/16 下午 04:42:53",
+      "expires": "2026/9/22 下午 05:00:00",
+      "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理台東系統-博愛小區等巷道汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211220.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609211210",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T12:10:01+08:00",
+      "effective": "2026/9/21 下午 12:03:19",
+      "expires": "2026/9/21 下午 08:00:00",
+      "summary": "辦理馬公市光復里三民路６號前管線緊急搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211210.cap",
       "isDrill": false
     },
     {
@@ -337,20 +351,6 @@
       "expires": "2026/9/21 下午 05:30:00",
       "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理豐原區三豐路一.二段汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609201630.cap",
-      "isDrill": false
-    },
-    {
-      "id": "NFA_Fire_20260920114549010",
-      "category": "火災",
-      "title": "火災",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-20T12:14:47+08:00",
-      "effective": "2026/9/20 下午 12:14:47",
-      "expires": "2026/9/21 下午 12:15:00",
-      "summary": "火災-工廠及倉庫(含石化工業設備設施)",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260920114549010.cap",
       "isDrill": false
     },
     {
