@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-21T22:19:01.233433+08:00",
+  "updatedAt": "2026-09-21T22:32:01.339153+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -29,20 +29,6 @@
       "expires": "2026/9/21 下午 11:30:00",
       "summary": "泰林第二減壓閥異常處理",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609212150.cap",
-      "isDrill": false
-    },
-    {
-      "id": "cwa.gov.tw_thunderstorm_20260921213214_000",
-      "category": "雷雨",
-      "title": "雷雨",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "中央氣象署",
-      "updated": "2026-09-21T21:32:36+08:00",
-      "effective": "2026/9/21 下午 09:32:00",
-      "expires": "2026/9/21 下午 10:32:00",
-      "summary": "115年09月21日21時32分氣象署發布大雷雨即時訊息，持續時間至22時32分；有短延時強降雨發生，並伴隨較強陣風、閃電落雷，請慎防低窪地區積水、低能見度、雷擊",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/thunderstorm/cwa.gov.tw_thunderstorm_20260921213214_000.cap",
       "isDrill": false
     },
     {
