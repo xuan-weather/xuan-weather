@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T04:31:57.655263+08:00",
+  "updatedAt": "2026-09-22T04:42:17.814060+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_strong-wind_202609220436001",
+      "category": "強風",
+      "title": "強風",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-22T04:36:03+08:00",
+      "effective": "2026/9/22 上午 04:35:00",
+      "expires": "2026/9/23 下午 11:00:00",
+      "summary": "東北風偏強，22日晨至23日晚上桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、雲林縣、屏東縣、臺東縣(含蘭嶼)、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609220436.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260922031840_0000",
       "category": "水庫放流",
@@ -29,20 +43,6 @@
       "expires": "2026/12/21 上午 10:43:00",
       "summary": "地方單位\\澎湖縣政府\\環境保護局：外垵漁港不明油污案",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/OCA/2026/marinePollution/OCA-marinePollution_3162.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_strong-wind_202609212231001",
-      "category": "強風",
-      "title": "強風",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-21T22:31:36+08:00",
-      "effective": "2026/9/21 下午 10:30:00",
-      "expires": "2026/9/22 下午 11:00:00",
-      "summary": "風力偏強，21日晚上至22日晚上桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、屏東縣、臺東縣(含蘭嶼)、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609212231.cap",
       "isDrill": false
     },
     {
