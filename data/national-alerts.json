@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T11:37:30.887927+08:00",
+  "updatedAt": "2026-09-21T11:48:53.981364+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609211140",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T11:40:02+08:00",
+      "effective": "2026/9/21 上午 11:35:53",
+      "expires": "2026/9/21 下午 03:00:00",
+      "summary": "因「清水區光華路與清水街口破管搶修作業」。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211140.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609211130",
       "category": "停水",
