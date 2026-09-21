@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-22T06:05:21.657285+08:00",
+  "updatedAt": "2026-09-22T06:19:34.174084+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -15,20 +15,6 @@
       "expires": "2026/9/22 上午 08:49:00",
       "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260922054840_0000.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-EQ115064-2026-0922-051613",
-      "category": "地震",
-      "title": "地震",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "中央氣象署",
-      "updated": "2026-09-22T05:19:16+08:00",
-      "effective": "2026/9/22 上午 05:19:16",
-      "expires": "2026/9/22 上午 06:19:00",
-      "summary": "09/22 05:16臺南市楠西區發生規模4.2有感地震，最大震度臺南市曾文4級。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Earthquake/CWA-EQ115064-2026-0922-051613.cap",
       "isDrill": false
     },
     {
