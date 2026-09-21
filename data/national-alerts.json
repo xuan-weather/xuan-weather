@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T10:40:52.087284+08:00",
+  "updatedAt": "2026-09-21T10:50:54.265834+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609211040",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T10:40:02+08:00",
+      "effective": "2026/9/21 上午 09:59:20",
+      "expires": "2026/9/21 下午 12:00:00",
+      "summary": "因六甲區菁埔346號旁漏水搶修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211040.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609211030",
       "category": "停水",
@@ -57,20 +71,6 @@
       "expires": "2026/9/21 下午 02:00:00",
       "summary": "∮200mm搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211010.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609211000",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T10:00:01+08:00",
-      "effective": "2026/9/21 上午 09:59:20",
-      "expires": "2026/9/21 下午 12:00:00",
-      "summary": "因六甲區菁埔346號旁漏水搶修。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211000.cap",
       "isDrill": false
     },
     {
