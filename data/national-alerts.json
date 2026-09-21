@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T18:56:41.353027+08:00",
+  "updatedAt": "2026-09-21T19:06:32.942855+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609211900",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T19:00:11+08:00",
+      "effective": "2026/9/18 上午 10:36:35",
+      "expires": "2026/9/21 下午 07:30:00",
+      "summary": "台九線拓寬配合工程安和橋南側自來水送水專線斷管及新舊管連接作業",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211900.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609211810",
       "category": "停水",
@@ -116,20 +130,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609211610",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T16:10:01+08:00",
-      "effective": "2026/9/18 上午 10:36:35",
-      "expires": "2026/9/21 下午 07:00:00",
-      "summary": "台九線拓寬配合工程安和橋南側自來水送水專線斷管及新舊管連接作業",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211610.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609211600",
       "category": "停水",
       "title": "停水",
@@ -172,20 +172,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609211440",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T14:40:01+08:00",
-      "effective": "2026/9/21 下午 02:30:31",
-      "expires": "2026/9/21 下午 07:00:00",
-      "summary": "沙鹿區自由路35號破管搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211440.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609211410",
       "category": "停水",
       "title": "停水",
@@ -197,20 +183,6 @@
       "expires": "2026/9/24 下午 05:00:00",
       "summary": "配合水利局永康區污水下水道改遷工程， 永大五路169號至99號(共1處)，辦理管線停水施工作業。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211410.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609211400",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T14:00:01+08:00",
-      "effective": "2026/9/21 下午 01:50:04",
-      "expires": "2026/9/21 下午 07:00:00",
-      "summary": "魚池鄉中山路592-6號前道路漏水搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211400.cap",
       "isDrill": false
     },
     {
