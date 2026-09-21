@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T16:25:50.347750+08:00",
+  "updatedAt": "2026-09-21T16:38:02.892022+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609211630",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T16:30:02+08:00",
+      "effective": "2026/9/18 下午 04:46:10",
+      "expires": "2026/9/21 下午 11:30:00",
+      "summary": "管線汰換工程已完工復水，惟需層層加壓，水壓較慢恢復正常值。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211630.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609211610",
       "category": "停水",
@@ -144,20 +158,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609211420",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T14:20:01+08:00",
-      "effective": "2026/9/21 上午 11:53:21",
-      "expires": "2026/9/22 下午 05:00:00",
-      "summary": "斗南鎮新生三路3600巷新裝工程施工停水",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211420.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609211410",
       "category": "停水",
       "title": "停水",
@@ -249,9 +249,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-21T09:40:01+08:00",
-      "effective": "2026/9/21 上午 09:29:01",
-      "expires": "2026/9/21 下午 04:30:00",
-      "summary": "自2026/09/21(一)至2026/09/21(一)每日10:00時至16:30時停水。 為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理「台東系統-四維路一段及巷弄汰換管線工程」，以強化整體供水系統效能，提供更安心可靠之用水服務。",
+      "effective": "2026/9/21 上午 09:31:09",
+      "expires": "2026/9/21 下午 05:00:00",
+      "summary": "九和路1巷12－3號新設水表施工",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609210940.cap",
       "isDrill": false
     },
