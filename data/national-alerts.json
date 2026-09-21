@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T02:10:58.241124+08:00",
+  "updatedAt": "2026-09-22T02:26:28.145603+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "NFA_Fire_20260922014208026",
+      "category": "火災",
+      "title": "火災",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "內政部消防署",
+      "updated": "2026-09-22T02:23:02+08:00",
+      "effective": "2026/9/22 上午 02:23:02",
+      "expires": "2026/9/23 上午 02:23:00",
+      "summary": "火災-一般(集合)住宅",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260922014208026.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260922011840_0000",
       "category": "水庫放流",
