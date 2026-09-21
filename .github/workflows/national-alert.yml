@@ -32,6 +32,15 @@ jobs:
           # 不需要 API Key。
           FEED_URL = "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx"
 
+          # 921 國家防災日 09:21 地震速報演練：
+          # PWS（災防告警細胞廣播）與 NCDR 民生示警 ATOM Feed 是不同資料來源，
+          # 因此不能只靠上面的 NCDR Feed 取得手機收到的國家級警報。
+          # 這筆是中央氣象署公布的 2026-09-21 國家防災日演練訊息，
+          # 只在指定日期加入，並明確標示為 test / isDrill，不冒充實際災害。
+          CWA_921_DRILL_DATE = "2026-09-21"
+          CWA_921_DRILL_ID = "CWA_PWS_202609210921_DRILL"
+          CWA_921_DRILL_LINK = "https://scweb.cwa.gov.tw/zh-tw/pws"
+
           # 只排除明確不是災害示警的項目。
           # 不再限制只有中央氣象署，讓公開的中央部會災害示警
           # 有機會進入網站。
@@ -237,6 +246,32 @@ jobs:
                   "isDrill": is_drill,
               }
 
+          def add_cwa_921_drill(alerts):
+              """加入 2026/9/21 09:21 CWA PWS 國家防災日地震速報演練。"""
+              now = datetime.now(TZ)
+              if now.strftime("%Y-%m-%d") != CWA_921_DRILL_DATE:
+                  return alerts
+
+              drill = {
+                  "id": CWA_921_DRILL_ID,
+                  "category": "地震",
+                  "title": "地震速報演練｜115年國家防災日演習",
+                  "status": "test",
+                  "msgType": "Alert",
+                  "author": "中央氣象署｜災防告警服務 PWS",
+                  "updated": "2026-09-21T09:21:00+08:00",
+                  "effective": "2026-09-21T09:21:00+08:00",
+                  "expires": "2026-09-21T10:30:00+08:00",
+                  "summary": "〖115年國家防災日演習〗地震速報演練，臨震應變「趴下、掩護、穩住」｜Earthquake Disaster Drill。演練情境為臺東地區規模 7.3 地震，非實際災害。",
+                  "link": CWA_921_DRILL_LINK,
+                  "isDrill": True,
+              }
+
+              # 避免 workflow 每 5 分鐘重複加入相同演練資料。
+              alerts = [a for a in alerts if a.get("id") != CWA_921_DRILL_ID]
+              alerts.append(drill)
+              return alerts
+
           request = urllib.request.Request(
               FEED_URL,
               headers={
@@ -310,6 +345,9 @@ jobs:
                   latest[key] = item
 
           alerts = list(latest.values())
+
+          # 補入 921 09:21 CWA PWS 國家防災日地震速報演練。
+          alerts = add_cwa_921_drill(alerts)
 
           alerts.sort(
               key=lambda x: (
