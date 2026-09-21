@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T07:48:58.007904+08:00",
+  "updatedAt": "2026-09-22T07:55:42.322031+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609220750",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T07:50:01+08:00",
+      "effective": "2026/9/22 上午 07:48:09",
+      "expires": "2026/9/23 上午 05:00:00",
+      "summary": "棒球小區夜間漏水測試",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609220750.cap",
+      "isDrill": true
+    },
     {
       "id": "TWC_water_202609220730",
       "category": "停水",
