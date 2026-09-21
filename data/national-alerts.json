@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-21T09:22:13.337360+08:00",
+  "updatedAt": "2026-09-21T09:33:29.039754+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609210930",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T09:30:02+08:00",
+      "effective": "2026/9/21 上午 09:21:26",
+      "expires": "2026/9/21 下午 01:00:00",
+      "summary": "為全面提升溪州鄉地區居民用水品質及強化區域供水之穩定度，辦理二水-115年溪洲鄉增設消防栓工程 停水施工改接作業。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609210930.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609210920",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T09:20:02+08:00",
+      "effective": "2026/9/21 上午 09:16:23",
+      "expires": "2026/9/22 上午 11:30:00",
+      "summary": "管線設備維修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609210920.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260921091840_0001",
       "category": "水庫放流",
@@ -43,20 +71,6 @@
       "expires": "2026/9/21 下午 12:09:00",
       "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260921090840_0001.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609210900",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T09:00:01+08:00",
-      "effective": "2026/9/21 上午 08:18:35",
-      "expires": "2026/9/21 下午 05:00:00",
-      "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理公園路一段路段汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609210900.cap",
       "isDrill": false
     },
     {
