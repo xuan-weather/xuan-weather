@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-21T19:54:34.506371+08:00",
+  "updatedAt": "2026-09-21T20:03:02.111516+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -15,20 +15,6 @@
       "expires": "2026/9/22 下午 11:00:00",
       "summary": "風力偏強，今(21)日至明(22)日晚上桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、雲林縣、嘉義縣、屏東縣、臺東縣(含蘭嶼)、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609211944.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609211930",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T19:30:02+08:00",
-      "effective": "2026/9/18 上午 10:36:35",
-      "expires": "2026/9/21 下午 08:00:00",
-      "summary": "台九線拓寬配合工程安和橋南側自來水送水專線斷管及新舊管連接作業",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211930.cap",
       "isDrill": false
     },
     {
@@ -158,20 +144,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609211550",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T15:50:01+08:00",
-      "effective": "2026/9/21 下午 03:04:32",
-      "expires": "2026/9/21 下午 08:00:00",
-      "summary": "鶯歌區建國路84號漏水搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211550.cap",
-      "isDrill": false
-    },
-    {
       "id": "CWA-Weather_extremely-rain_202609211528001",
       "category": "降雨",
       "title": "降雨",
@@ -295,20 +267,6 @@
       "expires": "2026/9/22 下午 05:00:00",
       "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，西港區金砂及南海里等汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609210820.cap",
-      "isDrill": false
-    },
-    {
-      "id": "A2026092107380754145349060",
-      "category": "疏散避難",
-      "title": "疏散避難",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-21T08:00:17+08:00",
-      "effective": "2026/9/21 上午 08:00:00",
-      "expires": "2026/9/21 下午 08:00:00",
-      "summary": "[疏散避難]萬里溪堰塞湖目前穩定溢流仍存在有不確定性風險，請勿進入萬里溪堤防周邊及河床等縣府公告警戒區，違者將依災害防救法舉發裁罰。 [Evacuation and Shelter]The Wanli Stream landslide-dammed lake is currently experiencing stable overflow; however, residual uncertainties and potential risks remain. Members of the public are advised not to enter the county government-designated alert zones, including areas surrounding the Wanli Stream embankment and riverbed. Violators will be reported and subject to penalties in accordance with the Disaster Prevention and Protection Act. https://www.hl.gov.tw/kra/.花蓮縣災害應變中心(Hualien County EOC)03-8462119",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/evacuation/A2026092107380754145349060.cap",
       "isDrill": false
     },
     {
