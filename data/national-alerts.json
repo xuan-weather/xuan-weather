@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-21T20:03:02.111516+08:00",
+  "updatedAt": "2026-09-21T20:35:43.634576+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20260921200840_0001",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-09-21T20:08:40+08:00",
+      "effective": "2026/9/21 下午 08:08:40",
+      "expires": "2026/9/21 下午 11:09:00",
+      "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260921200840_0001.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609212000",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T20:00:01+08:00",
+      "effective": "2026/9/18 上午 10:36:35",
+      "expires": "2026/9/21 下午 11:00:00",
+      "summary": "台九線拓寬配合工程安和橋南側自來水送水專線斷管及新舊管連接作業",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609212000.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_strong-wind_202609211944001",
       "category": "強風",
@@ -99,20 +127,6 @@
       "expires": "2026/9/21 下午 09:30:00",
       "summary": "左營區左營大路701號前自來水管破管搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211720.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260921171840_0002",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-09-21T17:18:40+08:00",
-      "effective": "2026/9/21 下午 05:18:40",
-      "expires": "2026/9/21 下午 08:19:00",
-      "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260921171840_0002.cap",
       "isDrill": false
     },
     {
