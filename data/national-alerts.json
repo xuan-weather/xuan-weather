@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T12:23:58.625712+08:00",
+  "updatedAt": "2026-09-21T12:48:31.658389+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609211230",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T12:30:02+08:00",
+      "effective": "2026/9/21 下午 12:23:28",
+      "expires": "2026/9/22 下午 12:00:00",
+      "summary": "過港路加壓站抽水機檢修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211230.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609211220",
       "category": "停水",
@@ -113,20 +127,6 @@
       "expires": "2026/9/21 下午 03:30:00",
       "summary": "嘉義縣竹崎鄉灣橋村73號附近破管搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211100.cap",
-      "isDrill": false
-    },
-    {
-      "id": "NFA_Fire_20260921100017014",
-      "category": "火災",
-      "title": "火災",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-21T10:50:08+08:00",
-      "effective": "2026/9/21 上午 10:50:08",
-      "expires": "2026/9/22 上午 10:50:00",
-      "summary": "火災-一般(集合)住宅",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260921100017014.cap",
       "isDrill": false
     },
     {
