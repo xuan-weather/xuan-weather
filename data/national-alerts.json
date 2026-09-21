@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T07:31:13.087038+08:00",
+  "updatedAt": "2026-09-22T07:41:26.588340+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609220730",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T07:30:01+08:00",
+      "effective": "2026/9/18 下午 03:19:27",
+      "expires": "2026/9/22 下午 05:00:00",
+      "summary": "三峽區中正路二段及白雞路等汰換管線工程",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609220730.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260922071840_0000",
       "category": "水庫放流",
