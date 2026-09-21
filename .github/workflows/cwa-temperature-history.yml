@@ -170,10 +170,32 @@ jobs:
                   # CWA O-A0002-001：Past10Min.Precipitation 才是過去10分鐘累積雨量。
                   if rain10 < 0:
                       return
-                  history["stations"].setdefault(station_id, []).append({
+
+                  # 同一筆 O-A0002-001 同時保存 Past24hr，
+                  # 讓前端「24小時雨量趨勢」與上方「24小時雨量排行」使用完全相同的指標。
+                  past24 = (
+                      rainfall.get("Past24hr")
+                      or rainfall.get("Past24HR")
+                      or rainfall.get("Past24Hour")
+                      or {}
+                  )
+                  raw_rain24 = past24.get("Precipitation") if isinstance(past24, dict) else None
+                  rain24 = None
+                  if raw_rain24 not in (None, "", "X", "x", "T", "t", "-99"):
+                      try:
+                          candidate24 = float(raw_rain24)
+                          if candidate24 >= 0:
+                              rain24 = round(candidate24, 1)
+                      except (TypeError, ValueError):
+                          pass
+
+                  row = {
                       "ts": ts_ms,
                       "rain10": round(rain10, 1)
-                  })
+                  }
+                  if rain24 is not None:
+                      row["rain24h"] = rain24
+                  history["stations"].setdefault(station_id, []).append(row)
                   return
 
               weather = station.get("WeatherElement") or {}
@@ -234,6 +256,13 @@ jobs:
                               row["rain10"] = round(rain10, 1)
                       except (TypeError, ValueError):
                           pass
+                  if "rain24h" in point:
+                      try:
+                          rain24h = float(point["rain24h"])
+                          if rain24h >= 0:
+                              row["rain24h"] = round(rain24h, 1)
+                      except (TypeError, ValueError):
+                          pass
 
               cleaned = [unique[k] for k in sorted(unique) if len(unique[k]) > 1]
               if cleaned:
@@ -249,6 +278,8 @@ jobs:
           print("C0B010 七堵歷史筆數：", len(history["stations"].get("C0B010", [])))
           rain_points = sum(1 for arr in history["stations"].values() for p in arr if "rain10" in p)
           print("10分鐘雨量歷史資料筆數：", rain_points)
+          rain24_points = sum(1 for arr in history["stations"].values() for p in arr if "rain24h" in p)
+          print("24小時雨量歷史資料筆數：", rain24_points)
           PY
 
       - name: Commit history
