@@ -1,8 +1,50 @@
 {
-  "updatedAt": "2026-09-21T13:10:55.358825+08:00",
+  "updatedAt": "2026-09-21T13:23:42.115279+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609211320",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T13:20:01+08:00",
+      "effective": "2026/9/21 下午 01:19:15",
+      "expires": "2026/9/21 下午 03:00:00",
+      "summary": "09/21 13:00-15:00，因『台南市南區大成路二段175號』路面漏水緊急搶修，造成該區域部分無水與降壓",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211320.cap",
+      "isDrill": false
+    },
+    {
+      "id": "WRA_ReservoirWarn_20260921131840_0001",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-09-21T13:18:40+08:00",
+      "effective": "2026/9/21 下午 01:18:40",
+      "expires": "2026/9/21 下午 04:19:00",
+      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260921131840_0001.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609211310",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T13:10:01+08:00",
+      "effective": "2026/9/21 上午 11:39:30",
+      "expires": "2026/9/21 下午 04:30:00",
+      "summary": "因烏日區溪南路一段18巷689弄漏水搶修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211310.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260921130840_0001",
       "category": "水庫放流",
@@ -60,20 +102,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609211140",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T11:40:02+08:00",
-      "effective": "2026/9/21 上午 11:35:53",
-      "expires": "2026/9/21 下午 03:00:00",
-      "summary": "因「清水區光華路與清水街口破管搶修作業」。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211140.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609211130",
       "category": "停水",
       "title": "停水",
@@ -85,20 +113,6 @@
       "expires": "2026/9/21 下午 01:30:00",
       "summary": "自來水管破管搶修。修漏地點:宜蘭市女中路二段231巷25號",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211130.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260921111840_0000",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-09-21T11:18:40+08:00",
-      "effective": "2026/9/21 上午 11:18:40",
-      "expires": "2026/9/21 下午 02:19:00",
-      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260921111840_0000.cap",
       "isDrill": false
     },
     {
