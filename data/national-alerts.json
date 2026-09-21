@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T09:41:36.491794+08:00",
+  "updatedAt": "2026-09-21T09:44:35.911402+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609210940",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T09:40:01+08:00",
+      "effective": "2026/9/21 上午 09:29:01",
+      "expires": "2026/9/21 下午 04:30:00",
+      "summary": "自2026/09/21(一)至2026/09/21(一)每日10:00時至16:30時停水。 為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理「台東系統-四維路一段及巷弄汰換管線工程」，以強化整體供水系統效能，提供更安心可靠之用水服務。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609210940.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609210930",
       "category": "停水",
