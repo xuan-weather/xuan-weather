@@ -95,6 +95,27 @@ jobs:
                       old = json.load(f)
                   if isinstance(old, dict) and isinstance(old.get("stations"), dict):
                       history = old
+                      # 舊版 rain10 是用 RainfallElement.Now.Precipitation 寫入，
+                      # 不是 Past10Min.Precipitation；清除舊 rain10，避免錯誤值
+                      #（例如 125.5 mm）繼續留在歷史曲線。
+                      for station_id, arr in list(history["stations"].items()):
+                          cleaned_old = []
+                          for p in arr:
+                              if not isinstance(p, dict) or "ts" not in p:
+                                  continue
+                              try:
+                                  ts = int(p["ts"])
+                              except (TypeError, ValueError):
+                                  continue
+                              if "temp" in p:
+                                  cleaned_old.append({
+                                      "ts": ts,
+                                      "temp": p["temp"]
+                                  })
+                          if cleaned_old:
+                              history["stations"][station_id] = cleaned_old
+                          else:
+                              del history["stations"][station_id]
               except Exception:
                   pass
 
@@ -123,12 +144,20 @@ jobs:
 
               if rain_only:
                   rainfall = station.get("RainfallElement") or {}
-                  now_node = rainfall.get("Now") or rainfall.get("NOW") or {}
-                  raw_rain = now_node.get("Precipitation")
+                  past10 = (
+                      rainfall.get("Past10Min")
+                      or rainfall.get("Past10MIN")
+                      or rainfall.get("Past10minute")
+                      or {}
+                  )
+                  raw_rain = past10.get("Precipitation")
+                  if raw_rain in (None, "", "X", "T"):
+                      return
                   try:
                       rain10 = float(raw_rain)
                   except (TypeError, ValueError):
                       return
+                  # CWA O-A0002-001：Past10Min.Precipitation 才是10分鐘累積雨量。
                   if rain10 < 0:
                       return
                   history["stations"].setdefault(station_id, []).append({
@@ -214,19 +243,12 @@ jobs:
 
       - name: Commit history
         run: |
-          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/history/cwa-o-a0003-001-history.json
-
           if git diff --cached --quiet; then
             echo "歷史資料沒有變化，不需要提交"
-            exit 0
+          else
+            git commit -m "Update CWA 10-minute temperature and rainfall history"
+            git push
           fi
-
-          git commit -m "Update CWA 10-minute temperature and rainfall history"
-
-          # 避免其他 GitHub Actions / 手動提交先更新 main，
-          # 導致本次歷史資料 push 被拒絕。
-          git pull --rebase origin main
-          git push origin main
