@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-21T14:03:25.922658+08:00",
+  "updatedAt": "2026-09-21T14:26:12.754286+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609211420",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T14:20:01+08:00",
+      "effective": "2026/9/21 上午 11:53:21",
+      "expires": "2026/9/22 下午 05:00:00",
+      "summary": "斗南鎮新生三路3600巷新裝工程施工停水",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211420.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609211410",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T14:10:01+08:00",
+      "effective": "2026/9/21 下午 02:06:20",
+      "expires": "2026/9/24 下午 05:00:00",
+      "summary": "配合水利局永康區污水下水道改遷工程， 永大五路169號至99號(共1處)，辦理管線停水施工作業。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211410.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609211400",
       "category": "停水",
@@ -29,20 +57,6 @@
       "expires": "2026/9/21 下午 03:00:00",
       "summary": "彰南路二段277巷破管搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211350.cap",
-      "isDrill": false
-    },
-    {
-      "id": "NFA_Fire_20260921111626002",
-      "category": "火災",
-      "title": "火災",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-21T13:42:37+08:00",
-      "effective": "2026/9/21 下午 01:42:37",
-      "expires": "2026/9/22 下午 01:43:00",
-      "summary": "火災-臨時屋(含工寮、樣品屋、雞舍等無門牌之建築物)",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260921111626002.cap",
       "isDrill": false
     },
     {
@@ -141,20 +155,6 @@
       "expires": "2026/9/22 下午 05:00:00",
       "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理台東系統-博愛小區等巷道汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211220.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609211210",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T12:10:01+08:00",
-      "effective": "2026/9/21 下午 12:03:19",
-      "expires": "2026/9/21 下午 08:00:00",
-      "summary": "辦理馬公市光復里三民路６號前管線緊急搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211210.cap",
       "isDrill": false
     },
     {
