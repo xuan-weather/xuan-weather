@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-21T10:15:26.648165+08:00",
+  "updatedAt": "2026-09-21T10:16:50.013219+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -58,6 +58,20 @@
       "summary": "自2026/09/21(一)至2026/09/21(一)每日10:00時至16:30時停水。 為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理「台東系統-四維路一段及巷弄汰換管線工程」，以強化整體供水系統效能，提供更安心可靠之用水服務。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609210940.cap",
       "isDrill": false
+    },
+    {
+      "id": "CWA_PWS_202609210921_DRILL",
+      "category": "地震",
+      "title": "地震速報演練｜115年國家防災日演習",
+      "status": "test",
+      "msgType": "Alert",
+      "author": "中央氣象署｜災防告警服務 PWS",
+      "updated": "2026-09-21T09:21:00+08:00",
+      "effective": "2026-09-21T09:21:00+08:00",
+      "expires": "2026-09-21T10:30:00+08:00",
+      "summary": "〖115年國家防災日演習〗地震速報演練，臨震應變「趴下、掩護、穩住」｜Earthquake Disaster Drill。演練情境為臺東地區規模 7.3 地震，非實際災害。",
+      "link": "https://scweb.cwa.gov.tw/zh-tw/pws",
+      "isDrill": true
     },
     {
       "id": "TWC_water_202609210920",
