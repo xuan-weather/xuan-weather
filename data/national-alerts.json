@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-21T20:35:43.634576+08:00",
+  "updatedAt": "2026-09-21T20:47:47.793862+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609212040",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T20:40:02+08:00",
+      "effective": "2026/9/21 下午 08:39:06",
+      "expires": "2026/9/22 上午 02:00:00",
+      "summary": "安和橋南側管線脫接,緊急搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609212040.cap",
+      "isDrill": false
+    },
+    {
+      "id": "cwa.gov.tw_thunderstorm_20260921203442_000",
+      "category": "雷雨",
+      "title": "雷雨",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-09-21T20:35:04+08:00",
+      "effective": "2026/9/21 下午 08:34:00",
+      "expires": "2026/9/21 下午 09:34:00",
+      "summary": "115年09月21日20時34分氣象署發布大雷雨即時訊息，持續時間至21時34分；有短延時強降雨發生，並伴隨較強陣風、閃電落雷，請慎防低窪地區積水、低能見度、雷擊",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/thunderstorm/cwa.gov.tw_thunderstorm_20260921203442_000.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260921200840_0001",
       "category": "水庫放流",
