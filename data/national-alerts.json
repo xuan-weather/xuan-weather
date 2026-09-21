@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-21T11:24:35.100041+08:00",
+  "updatedAt": "2026-09-21T11:37:30.887927+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609211130",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-21T11:30:02+08:00",
+      "effective": "2026/9/21 上午 11:20:07",
+      "expires": "2026/9/21 下午 01:30:00",
+      "summary": "自來水管破管搶修。修漏地點:宜蘭市女中路二段231巷25號",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211130.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260921111840_0000",
       "category": "水庫放流",
