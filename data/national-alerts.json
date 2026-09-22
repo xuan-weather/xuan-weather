@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T22:58:18.565550+08:00",
+  "updatedAt": "2026-09-22T23:09:40.123215+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20260922230840_0000",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-09-22T23:08:40+08:00",
+      "effective": "2026/9/22 下午 11:08:40",
+      "expires": "2026/9/23 上午 02:09:00",
+      "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260922230840_0000.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_strong-wind_202609222223001",
       "category": "強風",
@@ -71,20 +85,6 @@
       "expires": "2026/9/23 上午 06:00:00",
       "summary": "不明原因漏水查修中",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609222130.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260922211840_0002",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-09-22T21:18:40+08:00",
-      "effective": "2026/9/22 下午 09:18:40",
-      "expires": "2026/9/23 上午 12:19:00",
-      "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260922211840_0002.cap",
       "isDrill": false
     },
     {
@@ -351,20 +351,6 @@
       "expires": "2026/9/24 下午 05:00:00",
       "summary": "配合水利局永康區污水下水道改遷工程， 永大五路169號至99號(共1處)，辦理管線停水施工作業。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211410.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_strong-wind_202609211026001",
-      "category": "強風",
-      "title": "強風",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-21T10:26:56+08:00",
-      "effective": "2026/9/21 上午 10:26:00",
-      "expires": "2026/9/22 下午 11:00:00",
-      "summary": "風力偏強，今(21)日至明(22)日晚上桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、嘉義縣、屏東縣、臺東縣、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609211026.cap",
       "isDrill": false
     },
     {
