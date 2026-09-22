@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T09:50:32.564758+08:00",
+  "updatedAt": "2026-09-22T09:57:38.029048+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609220950",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T09:50:02+08:00",
+      "effective": "2026/9/22 上午 09:42:34",
+      "expires": "2026/9/22 下午 03:00:00",
+      "summary": "興和巷外線搶修 (高地區或管線末端無水現象發生)",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609220950.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609220940",
       "category": "停水",
