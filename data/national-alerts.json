@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T21:38:35.789347+08:00",
+  "updatedAt": "2026-09-22T21:49:18.128144+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609222140",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T21:40:01+08:00",
+      "effective": "2026/9/22 下午 09:37:30",
+      "expires": "2026/9/23 下午 06:00:00",
+      "summary": "桃園區建國路送水管線遭污水下水道工程施工挖損辦理緊急搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609222140.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609222130",
       "category": "停水",
