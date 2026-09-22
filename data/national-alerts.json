@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T12:22:21.571026+08:00",
+  "updatedAt": "2026-09-22T12:33:43.070748+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609221230",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T12:30:02+08:00",
+      "effective": "2026/9/22 上午 11:04:09",
+      "expires": "2026/9/22 下午 03:00:00",
+      "summary": "花蓮縣吉安鄉北昌村中央路三段588號漏水搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221230.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609221210",
       "category": "停水",
@@ -71,20 +85,6 @@
       "expires": "2026/9/22 下午 02:19:00",
       "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260922111840_0001.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609221110",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-22T11:10:01+08:00",
-      "effective": "2026/9/22 上午 11:04:43",
-      "expires": "2026/9/22 下午 05:00:00",
-      "summary": "南田街外線搶修 (高地區或管線末端無水現象發生)",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221110.cap",
       "isDrill": false
     },
     {
