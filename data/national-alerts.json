@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-22T16:24:18.544090+08:00",
+  "updatedAt": "2026-09-22T16:36:20.051861+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_strong-wind_202609221633001",
+      "category": "強風",
+      "title": "強風",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-22T16:33:50+08:00",
+      "effective": "2026/9/22 下午 04:32:00",
+      "expires": "2026/9/23 上午 01:00:00",
+      "summary": "東北風偏強，22日下午至23日晨桃園市、新竹縣、苗栗縣、臺中市、彰化縣、屏東縣、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609221633.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609221630",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T16:30:01+08:00",
+      "effective": "2026/9/22 下午 03:49:53",
+      "expires": "2026/9/24 下午 08:00:00",
+      "summary": "配合辦理龜山區楓樹七街15號前汙水改管事宜",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221630.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609221610",
       "category": "停水",
@@ -228,34 +256,6 @@
       "isDrill": false
     },
     {
-      "id": "CWA-Weather_strong-wind_202609221031001",
-      "category": "強風",
-      "title": "強風",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-22T10:31:45+08:00",
-      "effective": "2026/9/22 上午 10:31:00",
-      "expires": "2026/9/23 下午 11:00:00",
-      "summary": "東北風偏強，22日上午至23日晚上苗栗縣、臺中市、彰化縣、屏東縣、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609221031.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609221030",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-22T10:30:02+08:00",
-      "effective": "2026/9/22 上午 10:25:39",
-      "expires": "2026/9/22 下午 04:30:00",
-      "summary": "大溪區和二路79巷1號一般漏水維修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221030.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609221010",
       "category": "停水",
       "title": "停水",
@@ -366,20 +366,6 @@
       "summary": "汰換管線工程施工",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609220850.cap",
       "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609220840",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-22T08:40:02+08:00",
-      "effective": "2026/9/22 上午 08:31:00",
-      "expires": "2026/9/22 下午 04:30:00",
-      "summary": "漏水管段測試",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609220840.cap",
-      "isDrill": true
     },
     {
       "id": "TWC_water_202609220820",
@@ -494,20 +480,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609211650",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T16:50:01+08:00",
-      "effective": "2026/9/21 下午 04:49:09",
-      "expires": "2026/9/22 下午 04:30:00",
-      "summary": "新裝工程斷管連絡",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609211650.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609211600",
       "category": "停水",
       "title": "停水",
@@ -561,20 +533,6 @@
       "expires": "2026/9/22 下午 11:00:00",
       "summary": "風力偏強，今(21)日至明(22)日晚上桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、嘉義縣、屏東縣、臺東縣、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609211026.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609210830",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-21T08:30:02+08:00",
-      "effective": "2026/9/21 上午 08:26:56",
-      "expires": "2026/9/22 下午 04:30:00",
-      "summary": "斗六所115年分區計量委外管網建置及漏水調查作業",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609210830.cap",
       "isDrill": false
     },
     {
