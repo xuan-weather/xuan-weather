@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T14:20:53.414932+08:00",
+  "updatedAt": "2026-09-22T14:38:04.624569+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609221420",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T14:20:02+08:00",
+      "effective": "2026/9/22 下午 02:11:04",
+      "expires": "2026/9/24 下午 05:30:00",
+      "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理西屯區福安九街等汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221420.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609221410",
       "category": "停水",
@@ -169,20 +183,6 @@
       "expires": "2026/9/22 下午 06:00:00",
       "summary": "國姓鄉大長路671號前道路漏水搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221100.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609221050",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-22T10:50:01+08:00",
-      "effective": "2026/9/22 上午 10:48:45",
-      "expires": "2026/9/22 下午 02:30:00",
-      "summary": "嘉義市北港路1475號前管線漏水搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221050.cap",
       "isDrill": false
     },
     {
