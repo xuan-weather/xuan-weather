@@ -5,11 +5,6 @@ on:
   schedule:
     - cron: '*/5 * * * *'
 
-# 避免每 5 分鐘的 CWA 更新工作彼此同時 push main
-concurrency:
-  group: cwa-weather-data
-  cancel-in-progress: false
-
 permissions:
   contents: write
 
@@ -20,8 +15,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Fetch all CWA datasets
         env:
@@ -38,6 +31,7 @@ jobs:
             F-C0032-001
             W-C0033-001
             W-C0034-001
+            W-C0034-005
             E-A0015-001
             E-A0016-001
           )
@@ -142,27 +136,5 @@ jobs:
             echo "資料沒有變化，不需要提交"
           else
             git commit -m "Update CWA weather data"
-
-            # 先同步遠端 main，避免其他 workflow 或手動 Commit
-            # 在本次抓資料期間更新 main 而造成 non-fast-forward。
-            git fetch origin main
-            git rebase origin/main
-
-            # 若剛好有其他 workflow 在這一瞬間更新 main，重試 push。
-            for attempt in 1 2 3; do
-              if git push origin HEAD:main; then
-                echo "CWA 資料已成功推送至 main"
-                break
-              fi
-
-              if [ "$attempt" -eq 3 ]; then
-                echo "CWA 資料 push 連續 3 次失敗"
-                exit 1
-              fi
-
-              echo "push 被拒絕，重新同步 origin/main 後再試第 $((attempt + 1)) 次"
-              git fetch origin main
-              git rebase origin/main
-              sleep 2
-            done
+            git push
           fi
