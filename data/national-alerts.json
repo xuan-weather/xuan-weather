@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T08:06:31.107534+08:00",
+  "updatedAt": "2026-09-22T08:27:01.268122+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609220820",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T08:20:02+08:00",
+      "effective": "2026/9/18 下午 01:09:28",
+      "expires": "2026/9/23 下午 04:00:00",
+      "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理MTA-F-05-01-光復鄉強化供水韌性管線更新工程新舊管線連絡，以強化整體供水系統效能，提供更安心可靠之用水服務。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609220820.cap",
+      "isDrill": false
+    },
     {
       "id": "A2026092207473274345370960",
       "category": "疏散避難",
