@@ -3,7 +3,7 @@ name: CWA 10-Minute Temperature History
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/5 * * * *'
 
 permissions:
   contents: write
@@ -129,7 +129,7 @@ jobs:
                       del history["stations"][station_id]
               history["rain10HistoryVersion"] = 2
 
-          cutoff_ms = int((datetime.now(timezone.utc) - timedelta(hours=30)).timestamp() * 1000)
+          cutoff_ms = int((datetime.now(timezone.utc) - timedelta(days=7)).timestamp() * 1000)
 
           def append_station(station, only_c0=False, rain_only=False):
               if not isinstance(station, dict):
