@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T21:49:18.128144+08:00",
+  "updatedAt": "2026-09-22T21:57:41.019087+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609222150",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T21:50:02+08:00",
+      "effective": "2026/9/22 下午 09:40:27",
+      "expires": "2026/9/23 上午 04:00:00",
+      "summary": "竹南科學園區出水管遭挖損，緊急停水槍修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609222150.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609222140",
       "category": "停水",
