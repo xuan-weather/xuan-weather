@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T16:36:20.051861+08:00",
+  "updatedAt": "2026-09-22T16:47:44.139718+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609221640",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T16:40:02+08:00",
+      "effective": "2026/9/22 下午 04:33:13",
+      "expires": "2026/9/22 下午 10:00:00",
+      "summary": "彰化縣福興鄉萬豐巷及彰水路口200dip破管搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221640.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_strong-wind_202609221633001",
       "category": "強風",
