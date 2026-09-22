@@ -1,8 +1,50 @@
 {
-  "updatedAt": "2026-09-22T10:22:29.467617+08:00",
+  "updatedAt": "2026-09-22T10:33:30.429097+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_strong-wind_202609221031001",
+      "category": "強風",
+      "title": "強風",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-22T10:31:45+08:00",
+      "effective": "2026/9/22 上午 10:31:00",
+      "expires": "2026/9/23 下午 11:00:00",
+      "summary": "東北風偏強，22日上午至23日晚上苗栗縣、臺中市、彰化縣、屏東縣、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609221031.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609221030",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T10:30:02+08:00",
+      "effective": "2026/9/22 上午 10:27:15",
+      "expires": "2026/9/22 下午 02:00:00",
+      "summary": "本公司消防栓遭撞損，需緊急停水搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221030.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609221020",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T10:20:01+08:00",
+      "effective": "2026/9/22 上午 10:10:03",
+      "expires": "2026/9/30 下午 05:30:00",
+      "summary": "辦理「114年度岡山所分區計量管網委外建置及漏水調查工程」於梓官區大舍北路300號對面施工埋設窨井、擬停水施工，造成不便深感抱歉",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221020.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609221010",
       "category": "停水",
@@ -253,20 +295,6 @@
       "expires": "2026/9/22 下午 05:00:00",
       "summary": "三峽區中正路二段及白雞路等汰換管線工程",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609220730.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_strong-wind_202609220436001",
-      "category": "強風",
-      "title": "強風",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-22T04:36:03+08:00",
-      "effective": "2026/9/22 上午 04:35:00",
-      "expires": "2026/9/23 下午 11:00:00",
-      "summary": "東北風偏強，22日晨至23日晚上桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、雲林縣、屏東縣、臺東縣(含蘭嶼)、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609220436.cap",
       "isDrill": false
     },
     {
