@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T16:09:18.859901+08:00",
+  "updatedAt": "2026-09-22T16:24:18.544090+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609221610",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T16:10:01+08:00",
+      "effective": "2026/9/22 下午 01:41:02",
+      "expires": "2026/9/22 下午 08:00:00",
+      "summary": "因羅東鎮民權路199巷1號80mmPVCP漏水搶修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221610.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609221540",
       "category": "停水",
