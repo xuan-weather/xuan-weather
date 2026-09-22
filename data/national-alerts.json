@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-22T20:13:37.611823+08:00",
+  "updatedAt": "2026-09-22T20:31:44.802190+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -43,20 +43,6 @@
       "expires": "2026/9/22 下午 10:19:00",
       "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260922191840_0001.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609221820",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-22T18:20:02+08:00",
-      "effective": "2026/9/21 下午 05:20:49",
-      "expires": "2026/9/22 下午 08:30:00",
-      "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理豐原區三豐路一.二段汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221820.cap",
       "isDrill": false
     },
     {
