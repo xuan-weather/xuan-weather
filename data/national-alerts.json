@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-22T09:57:38.029048+08:00",
+  "updatedAt": "2026-09-22T10:09:04.463051+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609221000",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-22T10:00:01+08:00",
+      "effective": "2026/9/22 上午 09:53:53",
+      "expires": "2026/9/22 下午 05:00:00",
+      "summary": "分區計量管網閥栓功能確認及管段封閉測試，短時間小區域停水",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221000.cap",
+      "isDrill": true
+    },
     {
       "id": "TWC_water_202609220950",
       "category": "停水",
