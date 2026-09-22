@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-23T00:57:35.921479+08:00",
+  "updatedAt": "2026-09-23T01:08:01.554511+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -29,20 +29,6 @@
       "expires": "2026/9/23 上午 02:09:00",
       "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260922230840_0000.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_strong-wind_202609222223001",
-      "category": "強風",
-      "title": "強風",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-22T22:23:14+08:00",
-      "effective": "2026/9/22 下午 10:23:00",
-      "expires": "2026/9/23 上午 01:00:00",
-      "summary": "風力偏強，22日晚上至23日晨屏東縣、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609222223.cap",
       "isDrill": false
     },
     {
