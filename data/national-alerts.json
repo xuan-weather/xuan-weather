@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-23T14:01:05.605770+08:00",
+  "updatedAt": "2026-09-23T14:21:02.760858+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609231400",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-23T14:00:01+08:00",
+      "effective": "2026/9/23 下午 01:52:54",
+      "expires": "2026/9/23 下午 05:00:00",
+      "summary": "潭子區興華一路364號破管搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231400.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609231350",
       "category": "停水",
@@ -169,20 +183,6 @@
       "expires": "2026/9/23 下午 05:30:00",
       "summary": "因 桃園區建國路192號 流量計堵塞緊急搶修 停水",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231120.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_FloodWarn_20260923111730_0000",
-      "category": "淹水",
-      "title": "淹水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "水利署",
-      "updated": "2026-09-23T11:17:30+08:00",
-      "effective": "2026/9/23 上午 11:17:30",
-      "expires": "2026/9/23 下午 02:18:00",
-      "summary": "水利署訊屏東縣三地門鄉淹水一級警戒 (尾寮山站一小時雨量超過75mm) ,如持續降雨轄內易淹水村里及道路可能已經開始積淹水 (如：三地門鄉-德文村,馬兒村,大社村,青山村,青葉村)，建請即時注意淹水通報及應變，低窪地區及道路請特別注意防範積淹水。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/Flood/WRA_FloodWarn_20260923111730_0000.cap",
       "isDrill": false
     },
     {
