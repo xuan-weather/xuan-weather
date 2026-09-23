@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-23T20:14:07.130751+08:00",
+  "updatedAt": "2026-09-23T20:32:34.136809+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -113,20 +113,6 @@
       "expires": "2026/9/23 下午 11:30:00",
       "summary": "豐原區西安街與圓環南路口 破管搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231800.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609231750",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T17:50:01+08:00",
-      "effective": "2026/9/23 下午 03:43:20",
-      "expires": "2026/9/23 下午 08:30:00",
-      "summary": "中興路二街破管搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231750.cap",
       "isDrill": false
     },
     {
