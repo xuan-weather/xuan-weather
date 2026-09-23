@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-23T11:45:14.935548+08:00",
+  "updatedAt": "2026-09-23T11:54:21.124473+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609231150",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-23T11:50:01+08:00",
+      "effective": "2026/9/23 上午 11:45:20",
+      "expires": "2026/9/24 上午 05:00:00",
+      "summary": "棒球小區夜間漏水測試",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231150.cap",
+      "isDrill": true
+    },
     {
       "id": "TWC_water_202609231140",
       "category": "停水",
@@ -113,20 +127,6 @@
       "expires": "2026/9/23 下午 11:00:00",
       "summary": "風力增強，23日下午至晚上桃園市、新竹縣、屏東縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609231036.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609231030",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T10:30:02+08:00",
-      "effective": "2026/9/23 上午 09:21:40",
-      "expires": "2026/9/23 下午 12:00:00",
-      "summary": "因虎尾鎮惠來里81號旁100mmPVCP管線搶修。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231030.cap",
       "isDrill": false
     },
     {
