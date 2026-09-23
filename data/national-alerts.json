@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-23T10:26:29.386033+08:00",
+  "updatedAt": "2026-09-23T10:37:59.508133+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_strong-wind_202609231036001",
+      "category": "強風",
+      "title": "強風",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-09-23T10:36:19+08:00",
+      "effective": "2026/9/23 上午 10:35:00",
+      "expires": "2026/9/23 下午 11:00:00",
+      "summary": "風力增強，23日下午至晚上桃園市、新竹縣、屏東縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609231036.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609231030",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-23T10:30:02+08:00",
+      "effective": "2026/9/23 上午 09:21:40",
+      "expires": "2026/9/23 下午 12:00:00",
+      "summary": "因虎尾鎮惠來里81號旁100mmPVCP管線搶修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231030.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609231010",
       "category": "停水",
@@ -29,20 +57,6 @@
       "expires": "2026/9/23 下午 04:00:00",
       "summary": "管線漏水緊急搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609230950.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609230930",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T09:30:01+08:00",
-      "effective": "2026/9/23 上午 09:22:15",
-      "expires": "2026/9/23 下午 03:00:00",
-      "summary": "崇信街41巷1-2號旁緊急漏水搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609230930.cap",
       "isDrill": false
     },
     {
