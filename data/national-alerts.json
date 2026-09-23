@@ -1,22 +1,8 @@
 {
-  "updatedAt": "2026-09-23T13:53:55.444592+08:00",
+  "updatedAt": "2026-09-23T14:01:05.605770+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
-    {
-      "id": "A2026092307241161045394560",
-      "category": "疏散避難",
-      "title": "疏散避難",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-23T13:50:02+08:00",
-      "effective": "2026/9/23 下午 01:50:00",
-      "expires": "2026/9/23 下午 02:00:00",
-      "summary": "[演習] [疏散避難] 115年9月23日約上午10點整於臺中市烏日區第九公墓發生火警，可能造成下風處空品不佳，請民眾減少戶外活動，回到室內緊閉門窗。臺中市政府 關心您 04-22289111。 [drills] [Evacuation] September 23, 2026, 10:00 a.m. — A fire broke out at the Ninth Cemetery in Wuri District, Taichung City, which may impact local air quality. Residents are advised to reduce outdoor activities, stay indoors, and keep doors and windows closed . TAICHUNG GOV 04-22289111.臺中市政府環境保護局(TCEPB)04-22289111#66259",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/evacuation/A2026092307241161045394560.cap",
-      "isDrill": false
-    },
     {
       "id": "TWC_water_202609231350",
       "category": "停水",
