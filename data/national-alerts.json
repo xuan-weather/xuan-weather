@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-23T23:39:32.347866+08:00",
+  "updatedAt": "2026-09-23T23:49:57.442075+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609232340",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-23T23:40:01+08:00",
+      "effective": "2026/9/23 下午 06:37:37",
+      "expires": "2026/9/24 上午 02:00:00",
+      "summary": "義二路212號漏水搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609232340.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260923231840_0000",
       "category": "水庫放流",
@@ -113,20 +127,6 @@
       "expires": "2026/9/24 下午 04:00:00",
       "summary": "為提高自來水普及率，辦理中山東路三段481巷申請人中堅里區域停水施工改接作業。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231910.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609231840",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T18:40:02+08:00",
-      "effective": "2026/9/23 下午 06:37:37",
-      "expires": "2026/9/24 上午 12:00:00",
-      "summary": "義二路212號漏水搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231840.cap",
       "isDrill": false
     },
     {
