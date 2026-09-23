@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-23T16:12:26.034087+08:00",
+  "updatedAt": "2026-09-23T16:40:10.550289+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_strong-wind_202609231630001",
+      "category": "強風",
+      "title": "強風",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-23T16:30:53+08:00",
+      "effective": "2026/9/23 下午 04:29:00",
+      "expires": "2026/9/23 下午 07:00:00",
+      "summary": "風力增強，23日下午至晚上新竹縣、臺中市、臺東縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609231630.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609231620",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-23T16:20:01+08:00",
+      "effective": "2026/9/23 下午 04:01:46",
+      "expires": "2026/9/23 下午 07:00:00",
+      "summary": "富里鄉吳江橋南側破管，緊急搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231620.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609231600",
       "category": "停水",
@@ -172,34 +200,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609231330",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T13:30:02+08:00",
-      "effective": "2026/9/23 下午 01:27:58",
-      "expires": "2026/9/23 下午 04:30:00",
-      "summary": "左鎮區澄山里124號旁管線緊急維修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231330.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609231320",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T13:20:01+08:00",
-      "effective": "2026/9/22 上午 10:49:29",
-      "expires": "2026/9/24 下午 05:00:00",
-      "summary": "辦理「樹林區保安街二段及俊安街汰換管線工程」施工停水。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231320.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609231210",
       "category": "停水",
       "title": "停水",
@@ -211,20 +211,6 @@
       "expires": "2026/9/23 下午 05:00:00",
       "summary": "紅葉淨水場附近路面漏水，緊急搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231210.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609231200",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T12:00:01+08:00",
-      "effective": "2026/9/23 上午 11:54:17",
-      "expires": "2026/9/23 下午 04:30:00",
-      "summary": "內坑路158號附近一帶斷管連絡",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231200.cap",
       "isDrill": false
     },
     {
@@ -267,20 +253,6 @@
       "expires": "2026/9/29 下午 02:00:00",
       "summary": "福興小區水量計故障維修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231040.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_strong-wind_202609231036001",
-      "category": "強風",
-      "title": "強風",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "中央氣象署",
-      "updated": "2026-09-23T10:36:19+08:00",
-      "effective": "2026/9/23 上午 10:35:00",
-      "expires": "2026/9/23 下午 11:00:00",
-      "summary": "風力增強，23日下午至晚上桃園市、新竹縣、屏東縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202609231036.cap",
       "isDrill": false
     },
     {
