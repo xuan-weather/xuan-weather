@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-23T15:59:03.818242+08:00",
+  "updatedAt": "2026-09-23T16:12:26.034087+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609231600",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-23T16:00:02+08:00",
+      "effective": "2026/9/23 下午 01:59:40",
+      "expires": "2026/9/23 下午 06:00:00",
+      "summary": "為配合「清水區福德路186巷63號、星河路57號新裝工程」施工停水。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231600.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609231550",
       "category": "停水",
@@ -186,34 +200,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609231310",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T13:10:01+08:00",
-      "effective": "2026/9/23 下午 01:08:37",
-      "expires": "2026/9/23 下午 04:00:00",
-      "summary": "觀音區保障五路電台旁 漏水搶修導致水壓降低 部分地區域有無水情形",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231310.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609231220",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T12:20:01+08:00",
-      "effective": "2026/9/23 下午 12:11:49",
-      "expires": "2026/9/23 下午 04:00:00",
-      "summary": "中壢區吉林路1號漏水修理",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231220.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609231210",
       "category": "停水",
       "title": "停水",
@@ -221,9 +207,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-23T12:10:01+08:00",
-      "effective": "2026/9/23 下午 12:04:05",
-      "expires": "2026/9/23 下午 04:00:00",
-      "summary": "田寮區南安路崗安橋旁漏水搶修，燕巢加壓站配合降壓。",
+      "effective": "2026/9/23 下午 12:09:17",
+      "expires": "2026/9/23 下午 05:00:00",
+      "summary": "紅葉淨水場附近路面漏水，緊急搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231210.cap",
       "isDrill": false
     },
@@ -235,9 +221,9 @@
       "msgType": "Update",
       "author": "台灣自來水公司",
       "updated": "2026-09-23T12:00:01+08:00",
-      "effective": "2026/9/23 上午 09:12:18",
-      "expires": "2026/9/23 下午 04:00:00",
-      "summary": "鶯歌區尖山路及高職西街等汰換管線工程",
+      "effective": "2026/9/23 上午 11:54:17",
+      "expires": "2026/9/23 下午 04:30:00",
+      "summary": "內坑路158號附近一帶斷管連絡",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231200.cap",
       "isDrill": false
     },
@@ -309,34 +295,6 @@
       "expires": "2026/9/23 下午 05:00:00",
       "summary": "阿蓮區忠孝路俥停停車場旁破管搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609230910.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609230900",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T09:00:01+08:00",
-      "effective": "2026/9/23 上午 08:51:46",
-      "expires": "2026/9/23 下午 04:00:00",
-      "summary": "泰林路三段168巷漏水修理",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609230900.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609230830",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T08:30:01+08:00",
-      "effective": "2026/9/22 上午 10:48:40",
-      "expires": "2026/9/23 下午 05:00:00",
-      "summary": "辦理「樹林區保安街二段及俊安街汰換管線工程」施工停水。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609230830.cap",
       "isDrill": false
     },
     {
@@ -547,20 +505,6 @@
       "expires": "2026/9/29 下午 05:30:00",
       "summary": "辦理「114年度岡山所分區計量管網委外建置及漏水調查工程」於梓官區大舍北路300號施工埋設窨井、擬停水施工，造成不便深感抱歉",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221010.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609220820",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-22T08:20:02+08:00",
-      "effective": "2026/9/18 下午 01:09:28",
-      "expires": "2026/9/23 下午 04:00:00",
-      "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理MTA-F-05-01-光復鄉強化供水韌性管線更新工程新舊管線連絡，以強化整體供水系統效能，提供更安心可靠之用水服務。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609220820.cap",
       "isDrill": false
     },
     {
