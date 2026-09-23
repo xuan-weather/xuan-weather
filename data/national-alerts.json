@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-23T15:42:08.606359+08:00",
+  "updatedAt": "2026-09-23T15:52:18.462810+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609231540",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-23T15:40:02+08:00",
+      "effective": "2026/9/23 下午 03:33:29",
+      "expires": "2026/9/23 下午 06:00:00",
+      "summary": "因 八德區永豐路226巷37號 100mmPVCP漏水緊急搶修 停水",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231540.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260923151840_0000",
       "category": "水庫放流",
