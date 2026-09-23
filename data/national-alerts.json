@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-24T01:57:17.333594+08:00",
+  "updatedAt": "2026-09-24T02:10:25.079428+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -18,20 +18,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609232340",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T23:40:01+08:00",
-      "effective": "2026/9/23 下午 06:37:37",
-      "expires": "2026/9/24 上午 02:00:00",
-      "summary": "義二路212號漏水搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609232340.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609232310",
       "category": "停水",
       "title": "停水",
@@ -43,20 +29,6 @@
       "expires": "2026/9/24 下午 06:30:00",
       "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理豐原區三豐路一.二段汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609232310.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260923230840_0000",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-09-23T23:08:40+08:00",
-      "effective": "2026/9/23 下午 11:08:40",
-      "expires": "2026/9/24 上午 02:09:00",
-      "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260923230840_0000.cap",
       "isDrill": false
     },
     {
