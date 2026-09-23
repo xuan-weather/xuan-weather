@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-24T00:24:03.525039+08:00",
+  "updatedAt": "2026-09-24T00:36:55.593001+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -86,20 +86,6 @@
       "summary": "辦理分區管網建置前，制水閥機能測試(區域內不同路段分別停水，非整片停水)",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609232140.cap",
       "isDrill": true
-    },
-    {
-      "id": "NFA_Fire_20260923202308008",
-      "category": "火災",
-      "title": "火災",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-23T20:55:21+08:00",
-      "effective": "2026/9/23 下午 08:55:21",
-      "expires": "2026/9/24 下午 08:55:00",
-      "summary": "火災-一般(集合)住宅",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260923202308008.cap",
-      "isDrill": false
     },
     {
       "id": "TWC_water_202609232030",
