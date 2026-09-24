@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-24T19:42:37.076789+08:00",
+  "updatedAt": "2026-09-24T19:52:07.919401+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609241940",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T19:40:02+08:00",
+      "effective": "2026/9/24 下午 06:39:30",
+      "expires": "2026/9/25 上午 03:00:00",
+      "summary": "縣府美寮路拓寬工程挖損350管線，緊急搶修，預計23:00復水。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241940.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260924191840_0002",
       "category": "水庫放流",
@@ -29,20 +43,6 @@
       "expires": "2026/9/24 下午 10:19:00",
       "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260924191840_0001.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609241840",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-24T18:40:02+08:00",
-      "effective": "2026/9/24 下午 06:39:30",
-      "expires": "2026/9/24 下午 11:00:00",
-      "summary": "縣府美寮路拓寬工程挖損350管線，緊急搶修，預計23:00復水。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241840.cap",
       "isDrill": false
     },
     {
