@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-24T15:55:36.736655+08:00",
+  "updatedAt": "2026-09-24T16:04:35.287042+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -312,34 +312,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609241030",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-24T10:30:02+08:00",
-      "effective": "2026/9/24 上午 10:26:13",
-      "expires": "2026/9/24 下午 04:00:00",
-      "summary": "配合水利局汙水改管，三峽區文化路35號搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241030.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609241010",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-24T10:10:01+08:00",
-      "effective": "2026/9/24 上午 10:03:16",
-      "expires": "2026/9/24 下午 04:00:00",
-      "summary": "泰林路三段168巷漏水修理",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241010.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609240950",
       "category": "停水",
       "title": "停水",
@@ -438,20 +410,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609232140",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T21:40:01+08:00",
-      "effective": "2026/9/23 下午 09:32:55",
-      "expires": "2026/9/24 下午 04:00:00",
-      "summary": "辦理分區管網建置前，制水閥機能測試(區域內不同路段分別停水，非整片停水)",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609232140.cap",
-      "isDrill": true
-    },
-    {
       "id": "TWC_water_202609232030",
       "category": "停水",
       "title": "停水",
@@ -491,20 +449,6 @@
       "expires": "2026/9/24 下午 05:00:00",
       "summary": "自2026/09/24(四)至2026/09/24(四)每日08:30時至17:00時停水。 為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理太原路段供水管線改善工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231640.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609231450",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T14:50:01+08:00",
-      "effective": "2026/9/23 下午 02:44:11",
-      "expires": "2026/9/24 下午 04:00:00",
-      "summary": "仁昌街5號前破管搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231450.cap",
       "isDrill": false
     },
     {
