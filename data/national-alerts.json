@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-25T07:22:03.471461+08:00",
+  "updatedAt": "2026-09-25T07:32:03.792438+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_heat_202609250725001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-09-25T07:25:22+08:00",
+      "effective": "2026/9/25 上午 07:24:00",
+      "expires": "2026/9/25 下午 05:00:00",
+      "summary": "天氣高溫炎熱，今(25)日中午前後臺南市、屏東縣為黃色燈號，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609250725.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260925071840_0000",
       "category": "水庫放流",
