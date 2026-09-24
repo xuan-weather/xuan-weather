@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-24T09:53:44.173720+08:00",
+  "updatedAt": "2026-09-24T10:14:35.387387+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609241010",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T10:10:01+08:00",
+      "effective": "2026/9/24 上午 10:00:06",
+      "expires": "2026/9/24 下午 01:30:00",
+      "summary": "09/24 10:00-13:30，因『台南市安南區長和路四段231巷60弄12號』路面漏水緊急搶修，造成該區域部分無水與降壓",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241010.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609241000",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T10:00:01+08:00",
+      "effective": "2026/9/24 上午 09:58:25",
+      "expires": "2026/9/24 下午 03:30:00",
+      "summary": "苗栗市南勢里坪頂西93號/管線搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241000.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609240950",
       "category": "停水",
