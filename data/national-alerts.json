@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-24T20:14:35.794058+08:00",
+  "updatedAt": "2026-09-24T20:33:49.938032+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -2423,20 +2423,6 @@
       "expires": "2026/9/27 下午 12:00:00",
       "summary": "地方單位\\澎湖縣政府\\環境保護局：遊艇「大立海洋」於東吉北方2海浬翻覆",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/OCA/2026/marinePollution/OCA-marinePollution_3036.cap",
-      "isDrill": false
-    },
-    {
-      "id": "OCA-marinePollution_3034",
-      "category": "海洋污染",
-      "title": "海洋污染",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "海洋保育署",
-      "updated": "2026-06-25T00:00:03+08:00",
-      "effective": "2026/6/24 下午 08:30:00",
-      "expires": "2026/9/24 下午 08:30:00",
-      "summary": "地方單位\\宜蘭縣政府\\環境保護局：南方澳蘇澳安檢所前方執檢碼頭油污案",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/OCA/2026/marinePollution/OCA-marinePollution_3034.cap",
       "isDrill": false
     },
     {
