@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-24T16:35:04.404934+08:00",
+  "updatedAt": "2026-09-24T16:47:39.418306+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609241640",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T16:40:01+08:00",
+      "effective": "2026/9/24 下午 04:35:19",
+      "expires": "2026/9/24 下午 09:00:00",
+      "summary": "中華路五段722號 搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241640.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609241630",
       "category": "停水",
