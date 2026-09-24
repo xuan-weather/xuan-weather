@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-24T20:50:18.190550+08:00",
+  "updatedAt": "2026-09-24T21:00:05.182014+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -113,20 +113,6 @@
       "expires": "2026/9/29 下午 05:00:00",
       "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理嘉縣布袋鎮布袋商港東岸管線改遷工程，以強化整體供水系統效能，提供更安心可靠之用水服務。停水時間9月29日上午09時至17時，17時開始恢復供水，(部分管末端地區，需延遲60分鐘水壓回穩至正常)",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241700.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609241640",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-24T16:40:01+08:00",
-      "effective": "2026/9/24 下午 04:35:19",
-      "expires": "2026/9/24 下午 09:00:00",
-      "summary": "中華路五段722號 搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241640.cap",
       "isDrill": false
     },
     {
