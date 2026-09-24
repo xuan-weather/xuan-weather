@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-24T16:04:35.287042+08:00",
+  "updatedAt": "2026-09-24T16:21:54.218356+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609241610",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T16:10:01+08:00",
+      "effective": "2026/9/24 下午 04:03:50",
+      "expires": "2026/9/24 下午 07:00:00",
+      "summary": "新丹巷8-8號旁遭名間公所埋設涵管工程挖損配合停水",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241610.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609241550",
       "category": "停水",
@@ -211,20 +225,6 @@
       "expires": "2026/9/24 下午 05:30:00",
       "summary": "因神岡區和睦路一段576號前100mmPVCP漏水搶修，造成不便請見諒。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241310.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609241300",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-24T13:00:01+08:00",
-      "effective": "2026/9/24 下午 12:59:53",
-      "expires": "2026/9/24 下午 06:30:00",
-      "summary": "因鳳山區新富路路前200mmPVCP漏水搶修。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241300.cap",
       "isDrill": false
     },
     {
