@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-24T15:46:21.952967+08:00",
+  "updatedAt": "2026-09-24T15:55:36.736655+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609241550",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T15:50:02+08:00",
+      "effective": "2026/9/24 下午 03:41:46",
+      "expires": "2026/9/29 下午 05:00:00",
+      "summary": "辦理新營區台一線290K+200等汰換管線工程斷水聯絡施工",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241550.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609241540",
       "category": "停水",
