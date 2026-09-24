@@ -1,6 +1,5 @@
 import json
 import os
-import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
@@ -10,19 +9,17 @@ OUTPUT = "data/typhoon.json"
 if not API_KEY:
     raise SystemExit("CWA_API_KEY GitHub Actions Secret is not set.")
 
-url = (
-    "https://opendata.cwa.gov.tw/fileapi/v1/opendataapi/"
-    "W-C0034-005"
-    "?Authorization="
-    + urllib.parse.quote(API_KEY, safe="")
-    + "&format=JSON"
+URL = (
+    "https://opendata.cwa.gov.tw/"
+    "api/v1/rest/datastore/W-C0034-005"
 )
 
 request = urllib.request.Request(
-    url,
+    URL,
     headers={
-        "User-Agent": "xuan-weather-typhoon/2.0",
-        "Accept": "application/json,*/*",
+        "Authorization": API_KEY,
+        "Accept": "application/json",
+        "User-Agent": "xuan-weather-typhoon/3.0",
     },
 )
 
@@ -30,6 +27,12 @@ with urllib.request.urlopen(request, timeout=30) as response:
     raw = response.read()
 
 data = json.loads(raw)
+
+if data.get("success") not in (True, "true"):
+    raise SystemExit(
+        "CWA API 回傳失敗："
+        + json.dumps(data, ensure_ascii=False)[:1000]
+    )
 
 records = data.get("records", {})
 
@@ -42,6 +45,9 @@ tropical_cyclones = (
 if isinstance(tropical_cyclones, dict):
     tropical_cyclones = [tropical_cyclones]
 
+print(f"偵測到熱帶氣旋數量：{len(tropical_cyclones)}")
+
+
 def number(value):
     if value is None or value == "":
         return None
@@ -50,6 +56,7 @@ def number(value):
         return float(value)
     except Exception:
         return None
+
 
 def parse_analysis(item):
     return {
@@ -62,6 +69,7 @@ def parse_analysis(item):
         "movingSpeedKmh": number(item.get("MovingSpeed")),
         "movingDirection": item.get("MovingDirection"),
     }
+
 
 def parse_forecast(item):
     return {
@@ -79,7 +87,9 @@ def parse_forecast(item):
         ),
     }
 
+
 typhoons = []
+
 
 for cyclone in tropical_cyclones:
 
@@ -104,6 +114,7 @@ for cyclone in tropical_cyclones:
     analysis = []
 
     for item in analysis_data:
+
         parsed = parse_analysis(item)
 
         if (
@@ -115,6 +126,7 @@ for cyclone in tropical_cyclones:
     forecast = []
 
     for item in forecast_data:
+
         parsed = parse_forecast(item)
 
         if (
@@ -123,11 +135,17 @@ for cyclone in tropical_cyclones:
         ):
             forecast.append(parsed)
 
-    current = analysis[-1] if analysis else None
+    current = (
+        analysis[-1]
+        if analysis
+        else None
+    )
 
     typhoon = {
         "year": cyclone.get("Year"),
-        "internationalName": cyclone.get("TyphoonName"),
+        "internationalName": cyclone.get(
+            "TyphoonName"
+        ),
         "name": (
             cyclone.get("CwaTyphoonName")
             or cyclone.get("TyphoonName")
@@ -142,18 +160,48 @@ for cyclone in tropical_cyclones:
 
     typhoons.append(typhoon)
 
+    print(
+        "颱風：",
+        typhoon["name"],
+        "(",
+        typhoon["internationalName"],
+        ")",
+        "CWA 編號：",
+        typhoon["cwaTyNo"],
+        "分析資料：",
+        len(analysis),
+        "筆",
+        "預報資料：",
+        len(forecast),
+        "筆",
+    )
+
+
 payload = {
     "ok": True,
     "source": "中央氣象署",
     "dataId": "W-C0034-005",
-    "updatedAt": datetime.now(timezone.utc).isoformat(),
+    "updatedAt": datetime.now(
+        timezone.utc
+    ).isoformat(),
     "typhoons": typhoons,
-    "typhoon": typhoons[0] if typhoons else None,
+    "typhoon": (
+        typhoons[0]
+        if typhoons
+        else None
+    ),
 }
+
 
 os.makedirs("data", exist_ok=True)
 
-with open(OUTPUT, "w", encoding="utf-8") as file:
+
+with open(
+    OUTPUT,
+    "w",
+    encoding="utf-8"
+) as file:
+
     json.dump(
         payload,
         file,
@@ -161,16 +209,11 @@ with open(OUTPUT, "w", encoding="utf-8") as file:
         indent=2,
     )
 
+
 print(
-    f"Saved {OUTPUT}; "
-    f"typhoons={len(typhoons)}"
+    f"成功寫入 {OUTPUT}"
 )
 
-for typhoon in typhoons:
-    print(
-        "Typhoon:",
-        typhoon["name"],
-        typhoon["internationalName"],
-        "CWA No:",
-        typhoon["cwaTyNo"]
-    )
+print(
+    f"最終熱帶氣旋數量：{len(typhoons)}"
+)
