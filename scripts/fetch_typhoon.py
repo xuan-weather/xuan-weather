@@ -2,7 +2,6 @@ import json
 import os
 import urllib.parse
 import urllib.request
-import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
 API_KEY = os.environ.get("CWA_API_KEY", "").strip()
@@ -16,142 +15,132 @@ url = (
     "W-C0034-005"
     "?Authorization="
     + urllib.parse.quote(API_KEY, safe="")
-    + "&format=XML"
+    + "&format=JSON"
 )
 
 request = urllib.request.Request(
     url,
     headers={
-        "User-Agent": "xuan-weather-typhoon/1.0",
-        "Accept": "application/xml,text/xml,*/*",
+        "User-Agent": "xuan-weather-typhoon/2.0",
+        "Accept": "application/json,*/*",
     },
 )
 
 with urllib.request.urlopen(request, timeout=30) as response:
-    xml_data = response.read()
+    raw = response.read()
 
-root = ET.fromstring(xml_data)
+data = json.loads(raw)
 
+records = data.get("records", {})
 
-def tag_name(element):
-    return element.tag.rsplit("}", 1)[-1]
+tropical_cyclones = (
+    records
+    .get("TropicalCyclones", {})
+    .get("TropicalCyclone", [])
+)
 
+if isinstance(tropical_cyclones, dict):
+    tropical_cyclones = [tropical_cyclones]
 
-def child(element, name):
-    for item in list(element):
-        if tag_name(item) == name:
-            return item
-    return None
-
-
-def value(element, name, default=None):
-    item = child(element, name)
-
-    if item is None or item.text is None:
-        return default
-
-    text = item.text.strip()
-
-    return text if text else default
-
-
-def number(value_text):
-    if value_text is None:
+def number(value):
+    if value is None or value == "":
         return None
 
     try:
-        return float(value_text)
+        return float(value)
     except Exception:
         return None
 
-
-def parse_coordinate(text_value):
-    if not text_value:
-        return None, None
-
-    text_value = text_value.strip()
-
-    # CWA 格式：經度,緯度
-    parts = [x.strip() for x in text_value.split(",")]
-
-    if len(parts) != 2:
-        return None, None
-
-    lon = number(parts[0])
-    lat = number(parts[1])
-
-    return lat, lon
-
-
-def parse_fix(fix, time_field):
-    coordinate_text = value(fix, "coordinate")
-    lat, lon = parse_coordinate(coordinate_text)
-
+def parse_analysis(item):
     return {
-        "time": value(fix, time_field),
-        "lat": lat,
-        "lon": lon,
-        "maxWindMs": number(value(fix, "max_wind_speed")),
-        "maxGustMs": number(value(fix, "max_gust_speed")),
-        "pressureHpa": number(value(fix, "pressure")),
-        "circle15km": number(value(fix, "circle_of_15ms")),
-        "circle25km": number(value(fix, "circle_of_25ms")),
-        "movingSpeedKmh": number(value(fix, "moving_speed")),
-        "movingDirection": value(fix, "moving_direction"),
-        "movingPrediction": value(fix, "moving_prediction"),
-        "stateTransfer": value(fix, "state_transfer_lang"),
+        "time": item.get("DateTime"),
+        "lat": number(item.get("CoordinateLatitude")),
+        "lon": number(item.get("CoordinateLongitude")),
+        "maxWindMs": number(item.get("MaxWindSpeed")),
+        "maxGustMs": number(item.get("MaxGustSpeed")),
+        "pressureHpa": number(item.get("Pressure")),
+        "movingSpeedKmh": number(item.get("MovingSpeed")),
+        "movingDirection": item.get("MovingDirection"),
     }
 
+def parse_forecast(item):
+    return {
+        "time": item.get("ForecastHour"),
+        "initTime": item.get("InitialTime"),
+        "lat": number(item.get("CoordinateLatitude")),
+        "lon": number(item.get("CoordinateLongitude")),
+        "maxWindMs": number(item.get("MaxWindSpeed")),
+        "maxGustMs": number(item.get("MaxGustSpeed")),
+        "pressureHpa": number(item.get("Pressure")),
+        "movingSpeedKmh": number(item.get("MovingSpeed")),
+        "movingDirection": item.get("MovingDirection"),
+        "probabilityRadiusKm": number(
+            item.get("Radius70PercentProbability")
+        ),
+    }
 
 typhoons = []
 
-for cyclone in root.iter():
+for cyclone in tropical_cyclones:
 
-    if tag_name(cyclone) != "tropicalCyclone":
-        continue
+    analysis_data = (
+        cyclone
+        .get("AnalysisData", {})
+        .get("Fix", [])
+    )
+
+    forecast_data = (
+        cyclone
+        .get("ForecastData", {})
+        .get("Fix", [])
+    )
+
+    if isinstance(analysis_data, dict):
+        analysis_data = [analysis_data]
+
+    if isinstance(forecast_data, dict):
+        forecast_data = [forecast_data]
 
     analysis = []
+
+    for item in analysis_data:
+        parsed = parse_analysis(item)
+
+        if (
+            parsed["lat"] is not None
+            and parsed["lon"] is not None
+        ):
+            analysis.append(parsed)
+
     forecast = []
 
-    for node in cyclone.iter():
+    for item in forecast_data:
+        parsed = parse_forecast(item)
 
-        if tag_name(node) == "analysis_data":
-
-            for fix in list(node):
-
-                if tag_name(fix) == "fix":
-                    item = parse_fix(fix, "fix_time")
-
-                    if item["lat"] is not None and item["lon"] is not None:
-                        analysis.append(item)
-
-        elif tag_name(node) == "forecast_data":
-
-            for fix in list(node):
-
-                if tag_name(fix) == "fix":
-                    item = parse_fix(fix, "tau")
-
-                    if item["lat"] is not None and item["lon"] is not None:
-                        forecast.append(item)
+        if (
+            parsed["lat"] is not None
+            and parsed["lon"] is not None
+        ):
+            forecast.append(parsed)
 
     current = analysis[-1] if analysis else None
 
-    typhoons.append({
-        "year": value(cyclone, "year"),
-        "internationalName": value(cyclone, "typhoon_name"),
+    typhoon = {
+        "year": cyclone.get("Year"),
+        "internationalName": cyclone.get("TyphoonName"),
         "name": (
-            value(cyclone, "cwa_typhoon_name")
-            or value(cyclone, "typhoon_name")
+            cyclone.get("CwaTyphoonName")
+            or cyclone.get("TyphoonName")
             or "未命名"
         ),
-        "cwaTdNo": value(cyclone, "cwa_td_no"),
-        "cwaTyNo": value(cyclone, "cwa_ty_no"),
+        "cwaTdNo": cyclone.get("CwaTdNo"),
+        "cwaTyNo": cyclone.get("CwaTyNo"),
         "current": current,
         "analysis": analysis,
         "forecast": forecast,
-    })
+    }
 
+    typhoons.append(typhoon)
 
 payload = {
     "ok": True,
@@ -176,3 +165,12 @@ print(
     f"Saved {OUTPUT}; "
     f"typhoons={len(typhoons)}"
 )
+
+for typhoon in typhoons:
+    print(
+        "Typhoon:",
+        typhoon["name"],
+        typhoon["internationalName"],
+        "CWA No:",
+        typhoon["cwaTyNo"]
+    )
