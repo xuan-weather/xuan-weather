@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-24T23:57:18.935418+08:00",
+  "updatedAt": "2026-09-25T00:08:51.812804+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "NFA_Fire_20260924231900002",
+      "category": "火災",
+      "title": "火災",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "內政部消防署",
+      "updated": "2026-09-24T23:56:21+08:00",
+      "effective": "2026/9/24 下午 11:56:21",
+      "expires": "2026/9/25 下午 11:56:00",
+      "summary": "火災-工廠及倉庫(含石化工業設備設施)",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260924231900002.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260924231840_0000",
       "category": "水庫放流",
