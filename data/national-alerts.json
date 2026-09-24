@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-24T14:09:56.267450+08:00",
+  "updatedAt": "2026-09-24T14:28:36.571634+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609241420",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T14:20:01+08:00",
+      "effective": "2026/9/24 下午 02:14:20",
+      "expires": "2026/9/28 下午 03:00:00",
+      "summary": "供水改善工程",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241420.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609241410",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T14:10:01+08:00",
+      "effective": "2026/9/24 下午 02:01:52",
+      "expires": "2026/9/24 下午 05:00:00",
+      "summary": "國姓鄉大旗村福旗巷10-1號外路口表位漏水修理(已復水中.部分高地區及管末復水較慢))",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241410.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609241400",
       "category": "停水",
