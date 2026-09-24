@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-24T11:46:12.784262+08:00",
+  "updatedAt": "2026-09-24T11:55:32.132953+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609241150",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T11:50:01+08:00",
+      "effective": "2026/9/24 上午 11:40:20",
+      "expires": "2026/9/24 下午 02:00:00",
+      "summary": "為配合「沙鹿區星海路57號新裝工程」施工停水。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241150.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609241140",
       "category": "停水",
