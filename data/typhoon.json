@@ -2,7 +2,505 @@
   "ok": true,
   "source": "中央氣象署",
   "dataId": "W-C0034-005",
-  "updatedAt": "2026-09-24T23:15:43.607959+00:00",
-  "typhoons": [],
-  "typhoon": null
+  "updatedAt": "2026-09-24T23:16:52.548266+00:00",
+  "typhoons": [
+    {
+      "year": "2026",
+      "internationalName": "SURIGAE",
+      "name": "舒力基",
+      "cwaTdNo": "29",
+      "cwaTyNo": "25",
+      "current": {
+        "time": "2026-09-25T02:00:00+08:00",
+        "lat": 19.5,
+        "lon": 131.4,
+        "maxWindMs": 23.0,
+        "maxGustMs": 30.0,
+        "pressureHpa": 990.0,
+        "movingSpeedKmh": 9.0,
+        "movingDirection": "WNW"
+      },
+      "analysis": [
+        {
+          "time": "2026-09-22T08:00:00+08:00",
+          "lat": 12.5,
+          "lon": 142.0,
+          "maxWindMs": 12.0,
+          "maxGustMs": 20.0,
+          "pressureHpa": 1006.0,
+          "movingSpeedKmh": 14.0,
+          "movingDirection": "NW"
+        },
+        {
+          "time": "2026-09-22T14:00:00+08:00",
+          "lat": 12.9,
+          "lon": 141.4,
+          "maxWindMs": 12.0,
+          "maxGustMs": 20.0,
+          "pressureHpa": 1006.0,
+          "movingSpeedKmh": 13.0,
+          "movingDirection": "WNW"
+        },
+        {
+          "time": "2026-09-22T20:00:00+08:00",
+          "lat": 14.0,
+          "lon": 140.9,
+          "maxWindMs": 12.0,
+          "maxGustMs": 20.0,
+          "pressureHpa": 1006.0,
+          "movingSpeedKmh": 22.0,
+          "movingDirection": "NNW"
+        },
+        {
+          "time": "2026-09-23T02:00:00+08:00",
+          "lat": 14.5,
+          "lon": 140.0,
+          "maxWindMs": 12.0,
+          "maxGustMs": 20.0,
+          "pressureHpa": 1006.0,
+          "movingSpeedKmh": 19.0,
+          "movingDirection": "WNW"
+        },
+        {
+          "time": "2026-09-23T08:00:00+08:00",
+          "lat": 15.7,
+          "lon": 138.7,
+          "maxWindMs": 15.0,
+          "maxGustMs": 23.0,
+          "pressureHpa": 1004.0,
+          "movingSpeedKmh": 32.0,
+          "movingDirection": "NW"
+        },
+        {
+          "time": "2026-09-23T14:00:00+08:00",
+          "lat": 16.4,
+          "lon": 137.9,
+          "maxWindMs": 15.0,
+          "maxGustMs": 23.0,
+          "pressureHpa": 1004.0,
+          "movingSpeedKmh": 19.0,
+          "movingDirection": "NW"
+        },
+        {
+          "time": "2026-09-23T20:00:00+08:00",
+          "lat": 16.8,
+          "lon": 137.4,
+          "maxWindMs": 18.0,
+          "maxGustMs": 25.0,
+          "pressureHpa": 1002.0,
+          "movingSpeedKmh": 12.0,
+          "movingDirection": "NW"
+        },
+        {
+          "time": "2026-09-24T02:00:00+08:00",
+          "lat": 17.4,
+          "lon": 135.6,
+          "maxWindMs": 20.0,
+          "maxGustMs": 28.0,
+          "pressureHpa": 998.0,
+          "movingSpeedKmh": 34.0,
+          "movingDirection": "WNW"
+        },
+        {
+          "time": "2026-09-24T08:00:00+08:00",
+          "lat": 18.1,
+          "lon": 134.6,
+          "maxWindMs": 20.0,
+          "maxGustMs": 28.0,
+          "pressureHpa": 998.0,
+          "movingSpeedKmh": 22.0,
+          "movingDirection": "NW"
+        },
+        {
+          "time": "2026-09-24T14:00:00+08:00",
+          "lat": 18.8,
+          "lon": 133.0,
+          "maxWindMs": 23.0,
+          "maxGustMs": 30.0,
+          "pressureHpa": 992.0,
+          "movingSpeedKmh": 31.0,
+          "movingDirection": "WNW"
+        },
+        {
+          "time": "2026-09-24T20:00:00+08:00",
+          "lat": 19.4,
+          "lon": 131.9,
+          "maxWindMs": 23.0,
+          "maxGustMs": 30.0,
+          "pressureHpa": 992.0,
+          "movingSpeedKmh": 22.0,
+          "movingDirection": "WNW"
+        },
+        {
+          "time": "2026-09-25T02:00:00+08:00",
+          "lat": 19.5,
+          "lon": 131.4,
+          "maxWindMs": 23.0,
+          "maxGustMs": 30.0,
+          "pressureHpa": 990.0,
+          "movingSpeedKmh": 9.0,
+          "movingDirection": "WNW"
+        }
+      ],
+      "forecast": [
+        {
+          "time": "6",
+          "initTime": "2026-09-25T02:00:00+08:00",
+          "lat": 19.9,
+          "lon": 130.0,
+          "maxWindMs": 25.0,
+          "maxGustMs": 33.0,
+          "pressureHpa": 985.0,
+          "movingSpeedKmh": 26.0,
+          "movingDirection": "WNW",
+          "probabilityRadiusKm": 40.0
+        },
+        {
+          "time": "12",
+          "initTime": "2026-09-25T02:00:00+08:00",
+          "lat": 20.4,
+          "lon": 129.1,
+          "maxWindMs": 25.0,
+          "maxGustMs": 33.0,
+          "pressureHpa": 988.0,
+          "movingSpeedKmh": 18.0,
+          "movingDirection": "WNW",
+          "probabilityRadiusKm": 50.0
+        },
+        {
+          "time": "18",
+          "initTime": "2026-09-25T02:00:00+08:00",
+          "lat": 20.9,
+          "lon": 128.3,
+          "maxWindMs": 28.0,
+          "maxGustMs": 35.0,
+          "pressureHpa": 982.0,
+          "movingSpeedKmh": 17.0,
+          "movingDirection": "WNW",
+          "probabilityRadiusKm": 80.0
+        },
+        {
+          "time": "24",
+          "initTime": "2026-09-25T02:00:00+08:00",
+          "lat": 21.4,
+          "lon": 127.6,
+          "maxWindMs": 30.0,
+          "maxGustMs": 38.0,
+          "pressureHpa": 975.0,
+          "movingSpeedKmh": 15.0,
+          "movingDirection": "NW",
+          "probabilityRadiusKm": 90.0
+        },
+        {
+          "time": "36",
+          "initTime": "2026-09-25T02:00:00+08:00",
+          "lat": 22.4,
+          "lon": 126.8,
+          "maxWindMs": 33.0,
+          "maxGustMs": 43.0,
+          "pressureHpa": 970.0,
+          "movingSpeedKmh": 12.0,
+          "movingDirection": "NW",
+          "probabilityRadiusKm": 100.0
+        },
+        {
+          "time": "48",
+          "initTime": "2026-09-25T02:00:00+08:00",
+          "lat": 23.5,
+          "lon": 127.0,
+          "maxWindMs": 35.0,
+          "maxGustMs": 45.0,
+          "pressureHpa": 965.0,
+          "movingSpeedKmh": 10.0,
+          "movingDirection": "N",
+          "probabilityRadiusKm": 130.0
+        },
+        {
+          "time": "72",
+          "initTime": "2026-09-25T02:00:00+08:00",
+          "lat": 25.5,
+          "lon": 128.8,
+          "maxWindMs": 38.0,
+          "maxGustMs": 48.0,
+          "pressureHpa": 960.0,
+          "movingSpeedKmh": 12.0,
+          "movingDirection": "NE",
+          "probabilityRadiusKm": 210.0
+        },
+        {
+          "time": "96",
+          "initTime": "2026-09-25T02:00:00+08:00",
+          "lat": 26.9,
+          "lon": 131.0,
+          "maxWindMs": 35.0,
+          "maxGustMs": 45.0,
+          "pressureHpa": 965.0,
+          "movingSpeedKmh": 11.0,
+          "movingDirection": "NE",
+          "probabilityRadiusKm": 360.0
+        },
+        {
+          "time": "120",
+          "initTime": "2026-09-25T02:00:00+08:00",
+          "lat": 28.3,
+          "lon": 133.2,
+          "maxWindMs": 28.0,
+          "maxGustMs": 35.0,
+          "pressureHpa": 980.0,
+          "movingSpeedKmh": 11.0,
+          "movingDirection": "NE",
+          "probabilityRadiusKm": 510.0
+        }
+      ]
+    }
+  ],
+  "typhoon": {
+    "year": "2026",
+    "internationalName": "SURIGAE",
+    "name": "舒力基",
+    "cwaTdNo": "29",
+    "cwaTyNo": "25",
+    "current": {
+      "time": "2026-09-25T02:00:00+08:00",
+      "lat": 19.5,
+      "lon": 131.4,
+      "maxWindMs": 23.0,
+      "maxGustMs": 30.0,
+      "pressureHpa": 990.0,
+      "movingSpeedKmh": 9.0,
+      "movingDirection": "WNW"
+    },
+    "analysis": [
+      {
+        "time": "2026-09-22T08:00:00+08:00",
+        "lat": 12.5,
+        "lon": 142.0,
+        "maxWindMs": 12.0,
+        "maxGustMs": 20.0,
+        "pressureHpa": 1006.0,
+        "movingSpeedKmh": 14.0,
+        "movingDirection": "NW"
+      },
+      {
+        "time": "2026-09-22T14:00:00+08:00",
+        "lat": 12.9,
+        "lon": 141.4,
+        "maxWindMs": 12.0,
+        "maxGustMs": 20.0,
+        "pressureHpa": 1006.0,
+        "movingSpeedKmh": 13.0,
+        "movingDirection": "WNW"
+      },
+      {
+        "time": "2026-09-22T20:00:00+08:00",
+        "lat": 14.0,
+        "lon": 140.9,
+        "maxWindMs": 12.0,
+        "maxGustMs": 20.0,
+        "pressureHpa": 1006.0,
+        "movingSpeedKmh": 22.0,
+        "movingDirection": "NNW"
+      },
+      {
+        "time": "2026-09-23T02:00:00+08:00",
+        "lat": 14.5,
+        "lon": 140.0,
+        "maxWindMs": 12.0,
+        "maxGustMs": 20.0,
+        "pressureHpa": 1006.0,
+        "movingSpeedKmh": 19.0,
+        "movingDirection": "WNW"
+      },
+      {
+        "time": "2026-09-23T08:00:00+08:00",
+        "lat": 15.7,
+        "lon": 138.7,
+        "maxWindMs": 15.0,
+        "maxGustMs": 23.0,
+        "pressureHpa": 1004.0,
+        "movingSpeedKmh": 32.0,
+        "movingDirection": "NW"
+      },
+      {
+        "time": "2026-09-23T14:00:00+08:00",
+        "lat": 16.4,
+        "lon": 137.9,
+        "maxWindMs": 15.0,
+        "maxGustMs": 23.0,
+        "pressureHpa": 1004.0,
+        "movingSpeedKmh": 19.0,
+        "movingDirection": "NW"
+      },
+      {
+        "time": "2026-09-23T20:00:00+08:00",
+        "lat": 16.8,
+        "lon": 137.4,
+        "maxWindMs": 18.0,
+        "maxGustMs": 25.0,
+        "pressureHpa": 1002.0,
+        "movingSpeedKmh": 12.0,
+        "movingDirection": "NW"
+      },
+      {
+        "time": "2026-09-24T02:00:00+08:00",
+        "lat": 17.4,
+        "lon": 135.6,
+        "maxWindMs": 20.0,
+        "maxGustMs": 28.0,
+        "pressureHpa": 998.0,
+        "movingSpeedKmh": 34.0,
+        "movingDirection": "WNW"
+      },
+      {
+        "time": "2026-09-24T08:00:00+08:00",
+        "lat": 18.1,
+        "lon": 134.6,
+        "maxWindMs": 20.0,
+        "maxGustMs": 28.0,
+        "pressureHpa": 998.0,
+        "movingSpeedKmh": 22.0,
+        "movingDirection": "NW"
+      },
+      {
+        "time": "2026-09-24T14:00:00+08:00",
+        "lat": 18.8,
+        "lon": 133.0,
+        "maxWindMs": 23.0,
+        "maxGustMs": 30.0,
+        "pressureHpa": 992.0,
+        "movingSpeedKmh": 31.0,
+        "movingDirection": "WNW"
+      },
+      {
+        "time": "2026-09-24T20:00:00+08:00",
+        "lat": 19.4,
+        "lon": 131.9,
+        "maxWindMs": 23.0,
+        "maxGustMs": 30.0,
+        "pressureHpa": 992.0,
+        "movingSpeedKmh": 22.0,
+        "movingDirection": "WNW"
+      },
+      {
+        "time": "2026-09-25T02:00:00+08:00",
+        "lat": 19.5,
+        "lon": 131.4,
+        "maxWindMs": 23.0,
+        "maxGustMs": 30.0,
+        "pressureHpa": 990.0,
+        "movingSpeedKmh": 9.0,
+        "movingDirection": "WNW"
+      }
+    ],
+    "forecast": [
+      {
+        "time": "6",
+        "initTime": "2026-09-25T02:00:00+08:00",
+        "lat": 19.9,
+        "lon": 130.0,
+        "maxWindMs": 25.0,
+        "maxGustMs": 33.0,
+        "pressureHpa": 985.0,
+        "movingSpeedKmh": 26.0,
+        "movingDirection": "WNW",
+        "probabilityRadiusKm": 40.0
+      },
+      {
+        "time": "12",
+        "initTime": "2026-09-25T02:00:00+08:00",
+        "lat": 20.4,
+        "lon": 129.1,
+        "maxWindMs": 25.0,
+        "maxGustMs": 33.0,
+        "pressureHpa": 988.0,
+        "movingSpeedKmh": 18.0,
+        "movingDirection": "WNW",
+        "probabilityRadiusKm": 50.0
+      },
+      {
+        "time": "18",
+        "initTime": "2026-09-25T02:00:00+08:00",
+        "lat": 20.9,
+        "lon": 128.3,
+        "maxWindMs": 28.0,
+        "maxGustMs": 35.0,
+        "pressureHpa": 982.0,
+        "movingSpeedKmh": 17.0,
+        "movingDirection": "WNW",
+        "probabilityRadiusKm": 80.0
+      },
+      {
+        "time": "24",
+        "initTime": "2026-09-25T02:00:00+08:00",
+        "lat": 21.4,
+        "lon": 127.6,
+        "maxWindMs": 30.0,
+        "maxGustMs": 38.0,
+        "pressureHpa": 975.0,
+        "movingSpeedKmh": 15.0,
+        "movingDirection": "NW",
+        "probabilityRadiusKm": 90.0
+      },
+      {
+        "time": "36",
+        "initTime": "2026-09-25T02:00:00+08:00",
+        "lat": 22.4,
+        "lon": 126.8,
+        "maxWindMs": 33.0,
+        "maxGustMs": 43.0,
+        "pressureHpa": 970.0,
+        "movingSpeedKmh": 12.0,
+        "movingDirection": "NW",
+        "probabilityRadiusKm": 100.0
+      },
+      {
+        "time": "48",
+        "initTime": "2026-09-25T02:00:00+08:00",
+        "lat": 23.5,
+        "lon": 127.0,
+        "maxWindMs": 35.0,
+        "maxGustMs": 45.0,
+        "pressureHpa": 965.0,
+        "movingSpeedKmh": 10.0,
+        "movingDirection": "N",
+        "probabilityRadiusKm": 130.0
+      },
+      {
+        "time": "72",
+        "initTime": "2026-09-25T02:00:00+08:00",
+        "lat": 25.5,
+        "lon": 128.8,
+        "maxWindMs": 38.0,
+        "maxGustMs": 48.0,
+        "pressureHpa": 960.0,
+        "movingSpeedKmh": 12.0,
+        "movingDirection": "NE",
+        "probabilityRadiusKm": 210.0
+      },
+      {
+        "time": "96",
+        "initTime": "2026-09-25T02:00:00+08:00",
+        "lat": 26.9,
+        "lon": 131.0,
+        "maxWindMs": 35.0,
+        "maxGustMs": 45.0,
+        "pressureHpa": 965.0,
+        "movingSpeedKmh": 11.0,
+        "movingDirection": "NE",
+        "probabilityRadiusKm": 360.0
+      },
+      {
+        "time": "120",
+        "initTime": "2026-09-25T02:00:00+08:00",
+        "lat": 28.3,
+        "lon": 133.2,
+        "maxWindMs": 28.0,
+        "maxGustMs": 35.0,
+        "pressureHpa": 980.0,
+        "movingSpeedKmh": 11.0,
+        "movingDirection": "NE",
+        "probabilityRadiusKm": 510.0
+      }
+    ]
+  }
 }
