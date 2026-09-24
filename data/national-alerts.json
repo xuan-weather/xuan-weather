@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-25T07:49:38.781861+08:00",
+  "updatedAt": "2026-09-25T07:56:36.316764+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609250750",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-25T07:50:01+08:00",
+      "effective": "2026/9/25 上午 07:44:12",
+      "expires": "2026/9/25 下午 05:00:00",
+      "summary": "100mm PVCP破管搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609250750.cap",
+      "isDrill": false
+    },
     {
       "id": "NFA_Fire_0220260925213981",
       "category": "火災",
