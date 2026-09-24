@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-24T10:50:05.249070+08:00",
+  "updatedAt": "2026-09-24T10:57:53.033693+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609241050",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T10:50:01+08:00",
+      "effective": "2026/9/24 上午 09:22:20",
+      "expires": "2026/9/24 下午 04:30:00",
+      "summary": "辦理馬公市中山路76號對面管線緊急搶修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241050.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609241040",
       "category": "停水",
@@ -85,20 +99,6 @@
       "expires": "2026/9/29 下午 05:00:00",
       "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理鳳仁路一帶汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609240950.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609240940",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-24T09:40:01+08:00",
-      "effective": "2026/9/24 上午 09:20:17",
-      "expires": "2026/9/30 下午 06:00:00",
-      "summary": "辦理新化大德路大新路汰換管線工程",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609240940.cap",
       "isDrill": false
     },
     {
