@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-24T09:32:33.520244+08:00",
+  "updatedAt": "2026-09-24T09:44:23.405699+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609240940",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T09:40:01+08:00",
+      "effective": "2026/9/24 上午 09:20:17",
+      "expires": "2026/9/30 下午 06:00:00",
+      "summary": "辦理新化大德路大新路汰換管線工程",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609240940.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609240920",
       "category": "停水",
