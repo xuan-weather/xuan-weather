@@ -1,20 +1,20 @@
 {
-  "updatedAt": "2026-09-24T13:27:41.284749+08:00",
+  "updatedAt": "2026-09-24T13:39:34.662708+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
     {
-      "id": "TWC_water_202609241320",
+      "id": "TWC_water_202609241330",
       "category": "停水",
       "title": "停水",
       "status": "Actual",
       "msgType": "Update",
       "author": "台灣自來水公司",
-      "updated": "2026-09-24T13:20:01+08:00",
-      "effective": "2026/9/23 下午 07:03:43",
-      "expires": "2026/9/24 下午 05:30:00",
-      "summary": "為提高自來水普及率，辦理中山東路三段481巷申請人中堅里區域停水施工改接作業。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241320.cap",
+      "updated": "2026-09-24T13:30:02+08:00",
+      "effective": "2026/9/24 下午 01:18:07",
+      "expires": "2026/9/25 下午 05:30:00",
+      "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理西屯區大有街等汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241330.cap",
       "isDrill": false
     },
     {
@@ -207,9 +207,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-24T10:10:01+08:00",
-      "effective": "2026/9/24 上午 10:00:06",
-      "expires": "2026/9/24 下午 01:30:00",
-      "summary": "09/24 10:00-13:30，因『台南市安南區長和路四段231巷60弄12號』路面漏水緊急搶修，造成該區域部分無水與降壓",
+      "effective": "2026/9/24 上午 10:03:16",
+      "expires": "2026/9/24 下午 04:00:00",
+      "summary": "泰林路三段168巷漏水修理",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241010.cap",
       "isDrill": false
     },
