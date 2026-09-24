@@ -1,0 +1,36 @@
+name: Update CWA Typhoon Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-typhoon:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch and normalize CWA typhoon data
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: python3 scripts/fetch_typhoon.py
+
+      - name: Commit updated typhoon data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/typhoon.json
+
+          if git diff --cached --quiet; then
+            echo "Typhoon data has not changed."
+          else
+            git commit -m "chore: update CWA typhoon data"
+            git push
+          fi
