@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-24T17:35:00.458028+08:00",
+  "updatedAt": "2026-09-24T17:55:34.965487+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609241750",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T17:50:01+08:00",
+      "effective": "2026/9/24 下午 05:47:33",
+      "expires": "2026/9/24 下午 08:00:00",
+      "summary": "設備故障檢修中",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241750.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_heat_202609241729001",
       "category": "高溫",
