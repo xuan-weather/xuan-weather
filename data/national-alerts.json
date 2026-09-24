@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-24T15:22:59.208625+08:00",
+  "updatedAt": "2026-09-24T15:34:14.957838+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609241530",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-24T15:30:02+08:00",
+      "effective": "2026/9/24 下午 03:25:13",
+      "expires": "2026/9/24 下午 08:00:00",
+      "summary": "苑裡鎮苑港里近苑港114號搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241530.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609241520",
       "category": "停水",
@@ -165,9 +179,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-24T13:10:01+08:00",
-      "effective": "2026/9/24 下午 01:09:20",
-      "expires": "2026/9/24 下午 03:30:00",
-      "summary": "新市區社內里133-2號旁管線緊急維修",
+      "effective": "2026/9/24 下午 01:04:24",
+      "expires": "2026/9/24 下午 05:30:00",
+      "summary": "因神岡區和睦路一段576號前100mmPVCP漏水搶修，造成不便請見諒。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241310.cap",
       "isDrill": false
     },
@@ -295,20 +309,6 @@
       "expires": "2026/9/24 下午 04:00:00",
       "summary": "泰林路三段168巷漏水修理",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241010.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609241000",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-24T10:00:01+08:00",
-      "effective": "2026/9/24 上午 09:58:25",
-      "expires": "2026/9/24 下午 03:30:00",
-      "summary": "苗栗市南勢里坪頂西93號/管線搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609241000.cap",
       "isDrill": false
     },
     {
@@ -645,20 +645,6 @@
       "expires": "2026/9/24 下午 05:00:00",
       "summary": "因辦理新營區東興十街等管線汰換工程斷管連絡。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609181020.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609171050",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-17T10:50:19+08:00",
-      "effective": "2026/9/17 上午 10:48:48",
-      "expires": "2026/9/24 下午 03:30:00",
-      "summary": "為辦理「114 年鳳山所分區計量管網委外建置及漏水調查」，因施作「鳳山工業區小區」供水區域計量總表裝設 ，致轄區內部分地區停水，請貴用戶配合節約用水並預作儲水準備。 造成不便之處，敬請見諒。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609171050.cap",
       "isDrill": false
     },
     {
