@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-25T14:21:25.072091+08:00",
+  "updatedAt": "2026-09-25T14:39:32.561393+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_heat_202609251425001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-25T14:25:51+08:00",
+      "effective": "2026/9/25 下午 02:25:00",
+      "expires": "2026/9/25 下午 05:00:00",
+      "summary": "天氣晴朗炎熱，今(25)日中午前後南投縣、臺南市、屏東縣為黃色燈號，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609251425.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609251320",
       "category": "停水",
@@ -71,20 +85,6 @@
       "expires": "2026/9/25 下午 05:00:00",
       "summary": "因台中市太平區興隆里光興路1266巷149號漏水搶修。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251150.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_heat_202609251131001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-25T11:31:11+08:00",
-      "effective": "2026/9/25 上午 11:30:00",
-      "expires": "2026/9/25 下午 05:00:00",
-      "summary": "天氣高溫炎熱，今(25)日中午前後臺南市、屏東縣為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609251131.cap",
       "isDrill": false
     },
     {
