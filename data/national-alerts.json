@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-25T11:10:43.727440+08:00",
+  "updatedAt": "2026-09-25T11:22:55.877004+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20260925111840_0001",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-09-25T11:18:40+08:00",
+      "effective": "2026/9/25 上午 11:18:40",
+      "expires": "2026/9/25 下午 02:19:00",
+      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260925111840_0001.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260925110840_0000",
       "category": "水庫放流",
@@ -57,20 +71,6 @@
       "expires": "2026/9/25 下午 05:00:00",
       "summary": "100mm PVCP破管搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251010.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260925091840_0001",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-09-25T09:18:40+08:00",
-      "effective": "2026/9/25 上午 09:18:40",
-      "expires": "2026/9/25 下午 12:19:00",
-      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260925091840_0001.cap",
       "isDrill": false
     },
     {
