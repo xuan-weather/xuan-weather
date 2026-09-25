@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-25T16:56:27.900079+08:00",
+  "updatedAt": "2026-09-25T17:06:34.048054+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609251700",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-25T17:00:01+08:00",
+      "effective": "2026/9/25 下午 12:23:34",
+      "expires": "2026/9/25 下午 06:30:00",
+      "summary": "辦理新厝路段汰換管線工程。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251700.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260925151840_0000",
       "category": "水庫放流",
@@ -18,20 +32,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609251510",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-25T15:10:02+08:00",
-      "effective": "2026/9/25 下午 03:02:16",
-      "expires": "2026/9/25 下午 05:00:00",
-      "summary": "樂利二街二號漏水搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251510.cap",
-      "isDrill": false
-    },
-    {
       "id": "WRA_ReservoirWarn_20260925150840_0000",
       "category": "水庫放流",
       "title": "水庫放流",
@@ -43,76 +43,6 @@
       "expires": "2026/9/25 下午 06:09:00",
       "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260925150840_0000.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_heat_202609251425001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-25T14:25:51+08:00",
-      "effective": "2026/9/25 下午 02:25:00",
-      "expires": "2026/9/25 下午 05:00:00",
-      "summary": "天氣晴朗炎熱，今(25)日中午前後南投縣、臺南市、屏東縣為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609251425.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609251320",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-25T13:20:01+08:00",
-      "effective": "2026/9/25 下午 12:10:04",
-      "expires": "2026/9/25 下午 05:00:00",
-      "summary": "南化區中坑里人仰橋橋頭管線設備搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251320.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609251230",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-25T12:30:02+08:00",
-      "effective": "2026/9/25 下午 12:23:34",
-      "expires": "2026/9/25 下午 05:00:00",
-      "summary": "辦理新厝路段汰換管線工程。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251230.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609251150",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-25T11:50:01+08:00",
-      "effective": "2026/9/25 上午 11:48:22",
-      "expires": "2026/9/25 下午 05:00:00",
-      "summary": "因台中市太平區興隆里光興路1266巷149號漏水搶修。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251150.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609251010",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-25T10:10:01+08:00",
-      "effective": "2026/9/25 上午 07:44:12",
-      "expires": "2026/9/25 下午 05:00:00",
-      "summary": "100mm PVCP破管搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251010.cap",
       "isDrill": false
     },
     {
@@ -155,20 +85,6 @@
       "expires": "2026/9/26 上午 12:00:00",
       "summary": "2026-09-25 仁愛醫院 下午、夜間停診，早上、急診正常",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/MOHW/2026/HospitalReport/HospitalReport_000194_20260925_20260924180045.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_heat_202609241729001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-24T17:29:09+08:00",
-      "effective": "2026/9/24 下午 05:26:00",
-      "expires": "2026/9/25 下午 05:00:00",
-      "summary": "天氣高溫炎熱，明(25)日中午前後臺南市、屏東縣為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609241729.cap",
       "isDrill": false
     },
     {
