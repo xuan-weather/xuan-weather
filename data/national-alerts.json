@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-25T10:04:15.401428+08:00",
+  "updatedAt": "2026-09-25T10:18:07.880159+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609251010",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-25T10:10:01+08:00",
+      "effective": "2026/9/25 上午 07:44:12",
+      "expires": "2026/9/25 下午 05:00:00",
+      "summary": "100mm PVCP破管搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251010.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260925091840_0001",
       "category": "水庫放流",
@@ -85,20 +99,6 @@
       "expires": "2026/9/25 上午 11:19:00",
       "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260925081840_0001.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609250800",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-25T08:00:02+08:00",
-      "effective": "2026/9/25 上午 07:44:12",
-      "expires": "2026/9/25 下午 05:00:00",
-      "summary": "100mm PVCP破管搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609250800.cap",
       "isDrill": false
     },
     {
