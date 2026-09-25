@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-25T18:21:12.181345+08:00",
+  "updatedAt": "2026-09-25T18:33:45.333886+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "NFA_Fire_20260925171643001",
+      "category": "火災",
+      "title": "火災",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "內政部消防署",
+      "updated": "2026-09-25T18:30:49+08:00",
+      "effective": "2026/9/25 下午 06:30:49",
+      "expires": "2026/9/26 下午 06:31:00",
+      "summary": "火災-一般(集合)住宅",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260925171643001.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609251800",
       "category": "停水",
@@ -71,20 +85,6 @@
       "expires": "2026/9/25 下午 08:19:00",
       "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260925171840_0001.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609251700",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-25T17:00:01+08:00",
-      "effective": "2026/9/25 下午 12:23:34",
-      "expires": "2026/9/25 下午 06:30:00",
-      "summary": "辦理新厝路段汰換管線工程。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251700.cap",
       "isDrill": false
     },
     {
