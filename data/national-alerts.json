@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-26T07:40:11.260838+08:00",
+  "updatedAt": "2026-09-26T07:47:53.121224+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "NFA_Fire_20260926065352008",
+      "category": "火災",
+      "title": "火災",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "內政部消防署",
+      "updated": "2026-09-26T07:39:52+08:00",
+      "effective": "2026/9/26 上午 07:39:52",
+      "expires": "2026/9/27 上午 07:40:00",
+      "summary": "火災-商店(量販店)",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260926065352008.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_heat_202609260720001",
       "category": "高溫",
