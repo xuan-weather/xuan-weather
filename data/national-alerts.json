@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-25T23:55:15.939458+08:00",
+  "updatedAt": "2026-09-26T00:05:04.378045+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -86,20 +86,6 @@
       "summary": "辦理分區管網建置前，制水閥機能測試(區域內不同路段分別停水，非整片停水)",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609242140.cap",
       "isDrill": true
-    },
-    {
-      "id": "HospitalReport_000194_20260925_20260924180045",
-      "category": "急門診通報",
-      "title": "急門診通報",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "衛生福利部",
-      "updated": "2026-09-24T18:00:45+08:00",
-      "effective": "2026/9/24 下午 06:00:45",
-      "expires": "2026/9/26 上午 12:00:00",
-      "summary": "2026-09-25 仁愛醫院 下午、夜間停診，早上、急診正常",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/MOHW/2026/HospitalReport/HospitalReport_000194_20260925_20260924180045.cap",
-      "isDrill": false
     },
     {
       "id": "TWC_water_202609241720",
