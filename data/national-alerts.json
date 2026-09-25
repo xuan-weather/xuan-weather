@@ -1,8 +1,50 @@
 {
-  "updatedAt": "2026-09-25T17:56:00.023228+08:00",
+  "updatedAt": "2026-09-25T18:05:25.987222+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609251800",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-25T18:00:01+08:00",
+      "effective": "2026/9/25 下午 05:59:26",
+      "expires": "2026/9/25 下午 07:00:00",
+      "summary": "竹南鎮光華北路177號前消防栓撞斷維修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251800.cap",
+      "isDrill": false
+    },
+    {
+      "id": "HospitalReport_000194_20260926_20260925180000",
+      "category": "急門診通報",
+      "title": "急門診通報",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "衛生福利部",
+      "updated": "2026-09-25T18:00:00+08:00",
+      "effective": "2026/9/25 下午 06:00:00",
+      "expires": "2026/9/27 上午 12:00:00",
+      "summary": "2026-09-26 仁愛醫院 下午、夜間停診，早上、急診正常",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/MOHW/2026/HospitalReport/HospitalReport_000194_20260926_20260925180000.cap",
+      "isDrill": false
+    },
+    {
+      "id": "CWA-Weather_heat_202609251754001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-25T17:54:17+08:00",
+      "effective": "2026/9/25 下午 05:52:00",
+      "expires": "2026/9/26 下午 05:00:00",
+      "summary": "天氣晴朗炎熱，明(26)日中午前後臺南市為橙色燈號，有連續出現36度高溫的機率，請加強注意。南投縣、屏東縣為黃色燈號，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609251754.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260925171840_0000",
       "category": "水庫放流",
