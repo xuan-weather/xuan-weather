@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-25T18:55:19.679719+08:00",
+  "updatedAt": "2026-09-25T19:03:55.933593+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -15,20 +15,6 @@
       "expires": "2026/9/26 下午 06:31:00",
       "summary": "火災-一般(集合)住宅",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260925171643001.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609251800",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-25T18:00:01+08:00",
-      "effective": "2026/9/25 下午 05:59:26",
-      "expires": "2026/9/25 下午 07:00:00",
-      "summary": "竹南鎮光華北路177號前消防栓撞斷維修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609251800.cap",
       "isDrill": false
     },
     {
