@@ -8,6 +8,11 @@ on:
 permissions:
   contents: write
 
+# 避免每 5 分鐘排程重疊，造成舊資料覆蓋或 push 衝突
+concurrency:
+  group: cwa-weather-data
+  cancel-in-progress: false
+
 jobs:
   fetch-cwa-data:
     runs-on: ubuntu-latest
@@ -15,6 +20,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Fetch all CWA datasets
         env:
@@ -30,8 +37,6 @@ jobs:
             O-A0003-001
             F-C0032-001
             W-C0033-001
-            W-C0033-002
-            W-C0033-005
             W-C0034-001
             W-C0034-005
             E-A0015-001
@@ -76,17 +81,12 @@ jobs:
                   f"{dataset}：錯誤，回傳資料不是 JSON 物件"
               )
 
-          # W-C0033-005 為 CAP 高溫資訊，可能不是一般 datastore 的 records 結構。
-          # 其餘一般觀測/預報資料仍維持原本的 records 驗證。
-          if dataset == "W-C0033-005":
-              print(f"{dataset}：CAP 高溫資訊 JSON 保留原始結構")
-          else:
-              if "records" not in data:
-                  raise SystemExit(
-                      f"{dataset}：錯誤，找不到 records"
-                  )
+          if "records" not in data:
+              raise SystemExit(
+                  f"{dataset}：錯誤，找不到 records"
+              )
 
-              print(f"{dataset}：records 存在")
+          print(f"{dataset}：records 存在")
 
           # 顯示這次實際抓到的最新觀測時間
           latest_time = None
@@ -144,8 +144,9 @@ jobs:
           else
             git commit -m "Update CWA weather data"
 
-            # 同步最新 main，避免其他 GitHub Actions 同時更新造成 push 衝突
-            git pull --rebase origin main
+            # 同步最新 main，避免其他更新造成 non-fast-forward push 衝突
+            git fetch origin main
+            git rebase origin/main
 
             git push origin HEAD:main
           fi
