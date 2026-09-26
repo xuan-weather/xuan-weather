@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-26T22:06:09.554256+08:00",
+  "updatedAt": "2026-09-26T22:19:41.822749+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20260926221840_0000",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-09-26T22:18:40+08:00",
+      "effective": "2026/9/26 下午 10:18:40",
+      "expires": "2026/9/27 上午 01:19:00",
+      "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926221840_0000.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260926211840_0001",
       "category": "水庫放流",
@@ -43,20 +57,6 @@
       "expires": "2026/9/28 上午 12:00:00",
       "summary": "2026-09-27 仁愛醫院 早上、下午、夜間停診，急診正常",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/MOHW/2026/HospitalReport/HospitalReport_000194_20260927_20260926205954.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260926201840_0000",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "水利署",
-      "updated": "2026-09-26T20:18:40+08:00",
-      "effective": "2026/9/26 下午 08:18:40",
-      "expires": "2026/9/26 下午 11:19:00",
-      "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926201840_0000.cap",
       "isDrill": false
     },
     {
