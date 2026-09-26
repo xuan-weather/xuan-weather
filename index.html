@@ -9961,10 +9961,11 @@ const popVal = getPopForStation(county, town);
                                     const end = Number(axis.max);
                                     const ticks = [];
                                     if (Number.isFinite(start) && Number.isFinite(end) && end >= start) {
-                                        // 第一個刻度直接對齊第一筆實際資料，之後固定每 2 小時。
-                                        // 不額外補左右刻度，避免造成視覺上的空白區。
                                         for (let value = start; value <= end; value += step) {
                                             ticks.push({ value });
+                                        }
+                                        if (!ticks.length || ticks[ticks.length - 1].value < end) {
+                                            ticks.push({ value: end });
                                         }
                                     }
                                     axis.ticks = ticks;
@@ -10044,12 +10045,36 @@ const popVal = getPopForStation(county, town);
             // 例如第一筆是 23:00：23:00、01:00、03:00…；
             // 第一筆是 22:20：22:00、00:00、02:00…。
             // 這樣選取點與下方時間使用同一個時間基準，不再硬套偶數整點。
-            // X 軸左右邊界直接使用實際第一筆／最後一筆資料時間。
-            // 不再向前或向後補整點，避免不同測站出現左側或右側空白。
-            // 第一筆 22:40 就從 22:40 開始；最後一筆 21:50 就在 21:50 結束。
+            const alignStartHourDown = (ts) => {
+                const d = new Date(Number(ts));
+                if (Number.isNaN(d.getTime())) return Number(ts);
+                d.setMinutes(0, 0, 0);
+                return d.getTime();
+            };
             const twoHoursMs = 2 * 60 * 60 * 1000;
-            const chartAxisStart = hasTimeValues ? firstTs : 0;
-            const chartAxisEnd = hasTimeValues ? lastTs : validPoints.length - 1;
+            // X 軸範圍只把左右邊界對齊到「小時整點」，
+            // 不再把右端強制延伸到下一個 2 小時刻度。
+            // 這樣每個測站的第一筆／最後一筆資料都貼近圖表邊界，
+            // 不會因為不同測站的起始分鐘不同而在左邊或右邊產生大片空白。
+            const alignEndHourUp = (ts) => {
+                const d = new Date(Number(ts));
+                if (Number.isNaN(d.getTime())) return Number(ts);
+                if (
+                    d.getMinutes() !== 0 ||
+                    d.getSeconds() !== 0 ||
+                    d.getMilliseconds() !== 0
+                ) {
+                    d.setHours(d.getHours() + 1);
+                }
+                d.setMinutes(0, 0, 0);
+                return d.getTime();
+            };
+            const chartAxisStart = hasTimeValues
+                ? alignStartHourDown(firstTs)
+                : 0;
+            const chartAxisEnd = hasTimeValues
+                ? alignEndHourUp(lastTs)
+                : validPoints.length - 1;
 
             const values = validPoints.map(p => Number(p.y));
             const dataMin = Math.min(...values);
@@ -10110,7 +10135,7 @@ const popVal = getPopForStation(county, town);
             const formatHour = (ts) => {
                 const d = new Date(Number(ts));
                 if (Number.isNaN(d.getTime())) return '';
-                return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                return `${String(d.getHours()).padStart(2, '0')}:00`;
             };
 
             const formatTooltipTime = (ts) => {
