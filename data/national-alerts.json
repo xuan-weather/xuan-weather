@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-27T01:18:06.525376+08:00",
+  "updatedAt": "2026-09-27T01:29:46.406546+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20260927011840_0000",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-09-27T01:18:40+08:00",
+      "effective": "2026/9/27 上午 01:18:40",
+      "expires": "2026/9/27 上午 04:19:00",
+      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260927011840_0000.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260927001840_0000",
       "category": "水庫放流",
@@ -29,20 +43,6 @@
       "expires": "2026/12/26 下午 03:52:00",
       "summary": "地方單位\\屏東縣政府\\環境保護局：恆春籍「小海豚1號及3號」半潛艇娛樂漁船擱淺案",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/OCA/2026/marinePollution/OCA-marinePollution_3164.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260926231840_0000",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-09-26T23:18:40+08:00",
-      "effective": "2026/9/26 下午 11:18:40",
-      "expires": "2026/9/27 上午 02:19:00",
-      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926231840_0000.cap",
       "isDrill": false
     },
     {
