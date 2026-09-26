@@ -43,7 +43,6 @@ jobs:
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON" \
             -o /tmp/cwa-o-a0001-001.json
 
-
       - name: Fetch CWA O-A0002-001 rainfall
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
@@ -104,7 +103,9 @@ jobs:
               except Exception:
                   pass
 
-          cutoff_ms = int((datetime.now(timezone.utc) - timedelta(days=7)).timestamp() * 1000)
+          cutoff_ms = int(
+              (datetime.now(timezone.utc) - timedelta(days=7)).timestamp() * 1000
+          )
 
           def parse_ts(station):
               obs = station.get("ObsTime")
@@ -113,7 +114,9 @@ jobs:
               if not obs:
                   return None
               try:
-                  dt = datetime.fromisoformat(str(obs).replace("Z", "+00:00"))
+                  dt = datetime.fromisoformat(
+                      str(obs).replace("Z", "+00:00")
+                  )
                   if dt.tzinfo is None:
                       dt = dt.replace(tzinfo=timezone.utc)
                   return int(dt.timestamp() * 1000)
@@ -123,22 +126,38 @@ jobs:
           def append_station(station, only_c0=False):
               if not isinstance(station, dict):
                   return
-              station_id = str(station.get("StationId") or "").strip()
-              if not station_id or (only_c0 and not station_id.startswith("C0")):
+
+              station_id = str(
+                  station.get("StationId") or ""
+              ).strip()
+
+              if not station_id or (
+                  only_c0 and not station_id.startswith("C0")
+              ):
                   return
+
               ts_ms = parse_ts(station)
               if ts_ms is None:
                   return
 
               weather = station.get("WeatherElement") or {}
+
               try:
-                  temp = float(weather.get("AirTemperature", weather.get("TEMP")))
+                  temp = float(
+                      weather.get(
+                          "AirTemperature",
+                          weather.get("TEMP")
+                      )
+                  )
               except (TypeError, ValueError):
                   return
+
               if temp == 0 or temp < -50 or temp > 60:
                   return
 
-              history["stations"].setdefault(station_id, []).append({
+              history["stations"].setdefault(
+                  station_id, []
+              ).append({
                   "ts": ts_ms,
                   "temp": round(temp, 1)
               })
@@ -146,26 +165,47 @@ jobs:
           def append_rainfall_station(station):
               if not isinstance(station, dict):
                   return
-              station_id = str(station.get("StationId") or "").strip()
+
+              station_id = str(
+                  station.get("StationId") or ""
+              ).strip()
+
               if not station_id:
                   return
+
               ts_ms = parse_ts(station)
               if ts_ms is None:
                   return
 
               rainfall = station.get("RainfallElement") or {}
-              past24 = rainfall.get("Past24hr") or rainfall.get("Past24HR") or rainfall.get("Past24Hour") or {}
-              raw = past24.get("Precipitation") if isinstance(past24, dict) else None
+
+              past24 = (
+                  rainfall.get("Past24hr")
+                  or rainfall.get("Past24HR")
+                  or rainfall.get("Past24Hour")
+                  or {}
+              )
+
+              raw = (
+                  past24.get("Precipitation")
+                  if isinstance(past24, dict)
+                  else None
+              )
+
               if raw in (None, "", "X", "T"):
                   return
+
               try:
                   rain24h = float(raw)
               except (TypeError, ValueError):
                   return
+
               if rain24h < 0:
                   return
 
-              history["stations"].setdefault(station_id, []).append({
+              history["stations"].setdefault(
+                  station_id, []
+              ).append({
                   "ts": ts_ms,
                   "rain24h": round(rain24h, 1)
               })
@@ -173,7 +213,10 @@ jobs:
           # 先放入 C0 自動站的逐時資料，確保像 C0B010 七堵即使未出現在
           # 全測站 O-A0003 回傳中，也有跨裝置一致的歷史基礎。
           for station in hourly_stations:
-              append_station(station, only_c0=True)
+              append_station(
+                  station,
+                  only_c0=True
+              )
 
           # 再加入 O-A0003 全站 10 分鐘資料；同時間戳會在清理階段以最後加入的
           # O-A0003 數值覆蓋逐時 fallback。
@@ -182,7 +225,10 @@ jobs:
 
           # 最後加入明確指定 C0B010 的 O-A0003 回傳，優先補上七堵的 10 分鐘資料。
           for station in explicit_stations:
-              if str(station.get("StationId") or "").strip() == "C0B010":
+              if (
+                  str(station.get("StationId") or "").strip()
+                  == "C0B010"
+              ):
                   append_station(station)
 
           # O-A0002-001：獨立保存雨量站自己的 24 小時累積雨量。
@@ -190,31 +236,59 @@ jobs:
           for station in rainfall_stations:
               append_rainfall_station(station)
 
-          for station_id, arr in list(history["stations"].items()):
+          for station_id, arr in list(
+              history["stations"].items()
+          ):
               unique = {}
+
               for point in arr:
                   try:
                       ts = int(point["ts"])
-                  except (KeyError, TypeError, ValueError):
+                  except (
+                      KeyError,
+                      TypeError,
+                      ValueError
+                  ):
                       continue
+
                   if ts < cutoff_ms:
                       continue
 
                   item = {"ts": ts}
                   has_value = False
+
                   try:
                       temp = float(point.get("temp"))
-                      if temp != 0 and -50 <= temp <= 60:
+
+                      if (
+                          temp != 0
+                          and -50 <= temp <= 60
+                      ):
                           item["temp"] = round(temp, 1)
                           has_value = True
-                  except (TypeError, ValueError):
+
+                  except (
+                      TypeError,
+                      ValueError
+                  ):
                       pass
+
                   try:
-                      rain24h = float(point.get("rain24h"))
+                      rain24h = float(
+                          point.get("rain24h")
+                      )
+
                       if rain24h >= 0:
-                          item["rain24h"] = round(rain24h, 1)
+                          item["rain24h"] = round(
+                              rain24h,
+                              1
+                          )
                           has_value = True
-                  except (TypeError, ValueError):
+
+                  except (
+                      TypeError,
+                      ValueError
+                  ):
                       pass
 
                   if has_value:
@@ -224,20 +298,60 @@ jobs:
                       else:
                           unique[ts] = item
 
-              cleaned = [unique[k] for k in sorted(unique)]
+              cleaned = [
+                  unique[k]
+                  for k in sorted(unique)
+              ]
+
               if cleaned:
                   history["stations"][station_id] = cleaned
               else:
                   del history["stations"][station_id]
 
-          history["generatedAt"] = datetime.now(timezone.utc).isoformat()
-          with open(output, "w", encoding="utf-8") as f:
-              json.dump(history, f, ensure_ascii=False, separators=(",", ":"))
+          history["generatedAt"] = (
+              datetime.now(timezone.utc).isoformat()
+          )
 
-          print("CWA 歷史測站數：", len(history["stations"]))
-          print("C0B010 七堵歷史筆數：", len(history["stations"].get("C0B010", [])))
-          rain_count = sum(1 for arr in history["stations"].values() if any("rain24h" in p for p in arr))
-          print("含 24 小時雨量歷史的測站數：", rain_count)
+          with open(
+              output,
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  history,
+                  f,
+                  ensure_ascii=False,
+                  separators=(",", ":")
+              )
+
+          print(
+              "CWA 歷史測站數：",
+              len(history["stations"])
+          )
+
+          print(
+              "C0B010 七堵歷史筆數：",
+              len(
+                  history["stations"].get(
+                      "C0B010",
+                      []
+                  )
+              )
+          )
+
+          rain_count = sum(
+              1
+              for arr in history["stations"].values()
+              if any(
+                  "rain24h" in p
+                  for p in arr
+              )
+          )
+
+          print(
+              "含 24 小時雨量歷史的測站數：",
+              rain_count
+          )
           PY
 
       - name: Commit history
@@ -245,10 +359,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/history/cwa-o-a0003-001-history.json
+
           if git diff --cached --quiet; then
             echo "歷史資料沒有變化，不需要提交"
           else
             git commit -m "Update CWA temperature and 24-hour rainfall history"
             git pull --rebase origin main
-            git push origin main
+            git push origin HEAD:main
           fi
