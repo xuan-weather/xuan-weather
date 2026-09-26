@@ -1,8 +1,50 @@
 {
-  "updatedAt": "2026-09-26T20:59:00.857596+08:00",
+  "updatedAt": "2026-09-26T21:31:39.335310+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20260926211840_0001",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-09-26T21:18:40+08:00",
+      "effective": "2026/9/26 下午 09:18:40",
+      "expires": "2026/9/27 上午 12:19:00",
+      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926211840_0001.cap",
+      "isDrill": false
+    },
+    {
+      "id": "WRA_ReservoirWarn_20260926211840_0002",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-09-26T21:18:40+08:00",
+      "effective": "2026/9/26 下午 09:18:40",
+      "expires": "2026/9/27 上午 12:19:00",
+      "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926211840_0002.cap",
+      "isDrill": false
+    },
+    {
+      "id": "HospitalReport_000194_20260927_20260926205954",
+      "category": "急門診通報",
+      "title": "急門診通報",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "衛生福利部",
+      "updated": "2026-09-26T20:59:54+08:00",
+      "effective": "2026/9/26 下午 08:59:54",
+      "expires": "2026/9/28 上午 12:00:00",
+      "summary": "2026-09-27 仁愛醫院 早上、下午、夜間停診，急診正常",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/MOHW/2026/HospitalReport/HospitalReport_000194_20260927_20260926205954.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260926201840_0000",
       "category": "水庫放流",
@@ -15,34 +57,6 @@
       "expires": "2026/9/26 下午 11:19:00",
       "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926201840_0000.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260926191840_0000",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-09-26T19:18:40+08:00",
-      "effective": "2026/9/26 下午 07:18:40",
-      "expires": "2026/9/26 下午 10:19:00",
-      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926191840_0000.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260926191840_0001",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-09-26T19:18:40+08:00",
-      "effective": "2026/9/26 下午 07:18:40",
-      "expires": "2026/9/26 下午 10:19:00",
-      "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926191840_0001.cap",
       "isDrill": false
     },
     {
