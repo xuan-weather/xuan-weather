@@ -1,8 +1,50 @@
 {
-  "updatedAt": "2026-09-26T08:02:28.771973+08:00",
+  "updatedAt": "2026-09-26T08:23:36.502650+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609260820",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-26T08:20:01+08:00",
+      "effective": "2026/9/26 上午 08:15:03",
+      "expires": "2026/9/26 下午 03:00:00",
+      "summary": "草屯鎮股坑巷18號邊漏水搶修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609260820.cap",
+      "isDrill": false
+    },
+    {
+      "id": "WRA_ReservoirWarn_20260926081840_0001",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-09-26T08:18:40+08:00",
+      "effective": "2026/9/26 上午 08:18:40",
+      "expires": "2026/9/26 上午 11:19:00",
+      "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926081840_0001.cap",
+      "isDrill": false
+    },
+    {
+      "id": "A2026092608083652745446410",
+      "category": "疏散避難",
+      "title": "疏散避難",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "內政部消防署",
+      "updated": "2026-09-26T08:08:36+08:00",
+      "effective": "2026/9/26 上午 08:07:32",
+      "expires": "2026/9/27 上午 08:01:00",
+      "summary": "[疏散避難]萬里溪堰塞湖目前穩定溢流仍存在有不確定性風險，請勿進入萬里溪堤防周邊及河床等縣府公告警戒區，違者將依災害防救法舉發裁罰。 [Evacuation and Shelter]The Wanli Stream landslide-dammed lake is currently experiencing stable overflow; however, residual uncertainties and potential risks remain. Members of the public are advised not to enter the county government-designated alert zones, including areas surrounding the Wanli Stream embankment and riverbed. Violators will be reported and subject to penalties in accordance with the Disaster Prevention and Protection Act. https://www.hl.gov.tw/kra/.Hualien County EOC03-8462119",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/evacuation/A2026092608083652745446410.cap",
+      "isDrill": false
+    },
     {
       "id": "NFA_Fire_20260926065352008",
       "category": "火災",
@@ -57,20 +99,6 @@
       "expires": "2026/9/26 上午 10:09:00",
       "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926070840_0000.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260926061840_0000",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-09-26T06:18:40+08:00",
-      "effective": "2026/9/26 上午 06:18:40",
-      "expires": "2026/9/26 上午 09:19:00",
-      "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926061840_0000.cap",
       "isDrill": false
     },
     {
