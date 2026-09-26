@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-26T23:53:13.939589+08:00",
+  "updatedAt": "2026-09-27T00:00:27.343439+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -99,20 +99,6 @@
       "expires": "2026/9/27 上午 08:01:00",
       "summary": "[疏散避難]萬里溪堰塞湖目前穩定溢流仍存在有不確定性風險，請勿進入萬里溪堤防周邊及河床等縣府公告警戒區，違者將依災害防救法舉發裁罰。 [Evacuation and Shelter]The Wanli Stream landslide-dammed lake is currently experiencing stable overflow; however, residual uncertainties and potential risks remain. Members of the public are advised not to enter the county government-designated alert zones, including areas surrounding the Wanli Stream embankment and riverbed. Violators will be reported and subject to penalties in accordance with the Disaster Prevention and Protection Act. https://www.hl.gov.tw/kra/.Hualien County EOC03-8462119",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/evacuation/A2026092608083652745446410.cap",
-      "isDrill": false
-    },
-    {
-      "id": "HospitalReport_000194_20260926_20260925180000",
-      "category": "急門診通報",
-      "title": "急門診通報",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "衛生福利部",
-      "updated": "2026-09-25T18:00:00+08:00",
-      "effective": "2026/9/25 下午 06:00:00",
-      "expires": "2026/9/27 上午 12:00:00",
-      "summary": "2026-09-26 仁愛醫院 下午、夜間停診，早上、急診正常",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/MOHW/2026/HospitalReport/HospitalReport_000194_20260926_20260925180000.cap",
       "isDrill": false
     },
     {
