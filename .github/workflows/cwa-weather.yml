@@ -143,5 +143,9 @@ jobs:
             echo "資料沒有變化，不需要提交"
           else
             git commit -m "Update CWA weather data"
-            git push
+
+            # 同步最新 main，避免其他 GitHub Actions 同時更新造成 push 衝突
+            git pull --rebase origin main
+
+            git push origin HEAD:main
           fi
