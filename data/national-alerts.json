@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-26T14:57:02.883446+08:00",
+  "updatedAt": "2026-09-26T15:07:02.400201+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -165,9 +165,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-26T08:20:01+08:00",
-      "effective": "2026/9/26 上午 08:15:03",
-      "expires": "2026/9/26 下午 03:00:00",
-      "summary": "草屯鎮股坑巷18號邊漏水搶修。",
+      "effective": "2026/9/26 上午 08:10:51",
+      "expires": "2026/9/26 下午 05:00:00",
+      "summary": "因機電設備故障導致供水異常，緊急搶修中。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609260820.cap",
       "isDrill": false
     },
