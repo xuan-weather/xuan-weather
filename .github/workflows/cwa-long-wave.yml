@@ -8,12 +8,21 @@ on:
 permissions:
   contents: write
 
+# 避免每 5 分鐘的排程重疊，造成多個 Actions 同時 push。
+concurrency:
+  group: cwa-long-wave-data
+  cancel-in-progress: false
+
 jobs:
   fetch-long-wave:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -48,9 +57,6 @@ jobs:
               year: 'numeric'
             });
 
-            // CWA W37 頁面常見格式：
-            // 「發布時間：09/20 19:53」
-            // 「發布時間：09/21 00:05」
             const md = normalized.match(
               /發[布佈]時間\s*[：:]\s*(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})/
             );
@@ -60,7 +66,6 @@ jobs:
               return `${currentYear}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(mi)}:00+08:00`;
             }
 
-            // 其他可能的完整日期格式。
             const patterns = [
               /(20\d{2})[年\/-](\d{1,2})[月\/-](\d{1,2})日?\s*(\d{1,2})[時:]\s*(\d{1,2})分?\s*發布/,
               /(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})日?\s*(\d{1,2}):(\d{2})\s*發布/,
@@ -79,12 +84,16 @@ jobs:
           function parseSummary(text) {
             const normalized = normalizeText(text);
             const markers = ['長浪即時訊息：', '長浪即時訊息:'];
+
             for (const marker of markers) {
               const idx = normalized.indexOf(marker);
               if (idx >= 0) {
                 let rest = normalized.slice(idx + marker.length).trim();
-                // 只取訊息本文，避免把後面的圖表說明一起帶進網站。
-                const stopTokens = ['浪高監測長條圖', '浪高監測燈號地圖', '長浪即時訊息\n'];
+                const stopTokens = [
+                  '浪高監測長條圖',
+                  '浪高監測燈號地圖',
+                  '長浪即時訊息\n'
+                ];
                 for (const token of stopTokens) {
                   const p = rest.indexOf(token);
                   if (p > 20) rest = rest.slice(0, p).trim();
@@ -93,27 +102,63 @@ jobs:
               }
             }
 
-            // 備援：從含「沿海」且以「請注意」結尾的句子擷取。
-            const lines = normalized.split(/\n+/).map(x => x.trim()).filter(Boolean);
+            const lines = normalized
+              .split(/\n+/)
+              .map(x => x.trim())
+              .filter(Boolean);
             const candidates = lines.filter(x => /沿海/.test(x) && /請注意[。.]?$/.test(x));
             if (candidates.length) return candidates[candidates.length - 1];
             return '';
+          }
+
+          function looksLikeRenderedW37Page(text) {
+            const normalized = normalizeText(text);
+            return /長浪即時訊息/.test(normalized) && (
+              /發布時間/.test(normalized) ||
+              /沿海/.test(normalized) ||
+              /請注意/.test(normalized) ||
+              /浪高/.test(normalized)
+            );
           }
 
           (async() => {
             const browser = await chromium.launch({headless:true});
             const page = await browser.newPage({locale:'zh-TW'});
             try {
-              await page.goto(url, {waitUntil:'networkidle', timeout:60000});
-              await page.waitForTimeout(3000);
+              await page.goto(url, {waitUntil:'domcontentloaded', timeout:60000});
+
+              // W37 為 JavaScript 頁面，給動態內容足夠時間載入。
+              await page.waitForTimeout(5000);
+
+              // 最多再等 20 秒，避免因 CWA 前端載入較慢而誤判成沒有長浪。
+              try {
+                await page.waitForFunction(() => {
+                  const t = document.body?.innerText || '';
+                  return /長浪即時訊息/.test(t) && (
+                    /發布時間/.test(t) || /沿海/.test(t) || /請注意/.test(t) || /浪高/.test(t)
+                  );
+                }, {timeout:20000});
+              } catch (_) {
+                // 下面會再檢查一次；若真的無法解析，直接讓 workflow 失敗，
+                // 不覆蓋上一筆有效資料，避免網站突然消失長浪訊息。
+              }
+
               const bodyText = await page.locator('body').innerText();
               const text = normalizeText(bodyText);
               const summary = parseSummary(text);
               const publishedAt = parsePublishedAt(text);
-              const active = Boolean(summary);
 
-              // 同時寫入多個發布時間欄位，兼容不同版本前端讀取方式。
-              // publishedAt 為主要欄位，其餘欄位使用完全相同的 ISO 8601 台灣時間。
+              if (!looksLikeRenderedW37Page(text)) {
+                throw new Error('CWA W37 頁面未完成載入，為避免覆蓋舊資料，本次不更新 data/cwa-long-wave.json。');
+              }
+
+              // 有實際訊息時必須取得本文；若頁面暫時載入異常，不寫入 active=false。
+              // 這可避免 CWA 網站短暫異常時把原本有效的長浪訊息清掉。
+              const active = Boolean(summary);
+              if (active && !publishedAt) {
+                console.warn('已解析到長浪本文，但未解析到發布時間；仍保留本文。');
+              }
+
               const output = {
                 updatedAt: new Date().toISOString(),
                 source: '中央氣象署',
@@ -131,11 +176,13 @@ jobs:
               fs.mkdirSync('data', {recursive:true});
               fs.writeFileSync('data/cwa-long-wave.json', JSON.stringify(output, null, 2) + '\n');
               console.log(JSON.stringify(output, null, 2));
-              if (!active) console.log('CWA W37 頁面目前未解析到生效中的長浪即時訊息，已寫入 active=false。');
             } finally {
               await browser.close();
             }
-          })().catch(err => { console.error(err); process.exit(1); });
+          })().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
           NODE
 
       - name: Commit data/cwa-long-wave.json
@@ -145,7 +192,9 @@ jobs:
           git add data/cwa-long-wave.json
           if git diff --cached --quiet; then
             echo "長浪資料沒有變化，不需要 commit。"
-          else
-            git commit -m "chore: update CWA long-wave message"
-            git push
+            exit 0
           fi
+          git commit -m "chore: update CWA long-wave message"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
