@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-26T14:31:21.361898+08:00",
+  "updatedAt": "2026-09-26T14:47:01.292686+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_heat_202609261431001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-26T14:31:43+08:00",
+      "effective": "2026/9/26 下午 02:29:00",
+      "expires": "2026/9/26 下午 05:00:00",
+      "summary": "天氣晴朗炎熱，今(26)日中午前後新北市、南投縣、雲林縣為黃色燈號，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609261431.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609261410",
       "category": "停水",
@@ -99,20 +113,6 @@
       "expires": "2026/9/26 下午 07:30:00",
       "summary": "因龜山區萬壽路二段731號前管線漏水維修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609261130.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_heat_202609261127001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-26T11:27:22+08:00",
-      "effective": "2026/9/26 上午 11:26:00",
-      "expires": "2026/9/26 下午 05:00:00",
-      "summary": "天氣晴朗炎熱，今(26)日中午前後臺南市為橙色燈號，有連續出現36度高溫的機率，請加強注意。南投縣、屏東縣為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609261127.cap",
       "isDrill": false
     },
     {
