@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-26T20:07:43.885556+08:00",
+  "updatedAt": "2026-09-26T20:25:06.003747+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20260926201840_0000",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "水利署",
+      "updated": "2026-09-26T20:18:40+08:00",
+      "effective": "2026/9/26 下午 08:18:40",
+      "expires": "2026/9/26 下午 11:19:00",
+      "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926201840_0000.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260926191840_0000",
       "category": "水庫放流",
