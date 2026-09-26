@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-27T00:14:31.211112+08:00",
+  "updatedAt": "2026-09-27T00:27:44.492338+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20260927001840_0000",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-09-27T00:18:40+08:00",
+      "effective": "2026/9/27 上午 12:18:40",
+      "expires": "2026/9/27 上午 03:19:00",
+      "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260927001840_0000.cap",
+      "isDrill": false
+    },
     {
       "id": "OCA-marinePollution_3164",
       "category": "海洋污染",
@@ -57,20 +71,6 @@
       "expires": "2026/9/27 下午 10:35:00",
       "summary": "火災-一般(集合)住宅",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260926210920003.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260926221840_0000",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-09-26T22:18:40+08:00",
-      "effective": "2026/9/26 下午 10:18:40",
-      "expires": "2026/9/27 上午 01:19:00",
-      "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260926221840_0000.cap",
       "isDrill": false
     },
     {
