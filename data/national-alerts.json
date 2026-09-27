@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-27T17:26:31.496597+08:00",
+  "updatedAt": "2026-09-27T17:37:47.754241+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_heat_202609271734001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-27T17:34:00+08:00",
+      "effective": "2026/9/27 下午 05:32:00",
+      "expires": "2026/9/28 下午 05:00:00",
+      "summary": "各地天氣高溫炎熱，明(28)日中午前後臺北市、新北市、彰化縣、南投縣、雲林縣、臺南市、屏東縣、花蓮縣為黃色燈號，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609271734.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260927171840_0001",
       "category": "水庫放流",
