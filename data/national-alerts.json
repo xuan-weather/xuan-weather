@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-27T17:47:08.376140+08:00",
+  "updatedAt": "2026-09-27T18:02:39.379083+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "HospitalReport_000194_20260928_20260927180041",
+      "category": "急門診通報",
+      "title": "急門診通報",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "衛生福利部",
+      "updated": "2026-09-27T18:00:41+08:00",
+      "effective": "2026/9/27 下午 06:00:41",
+      "expires": "2026/9/29 上午 12:00:00",
+      "summary": "2026-09-28 仁愛醫院 下午、夜間停診，早上、急診正常",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/MOHW/2026/HospitalReport/HospitalReport_000194_20260928_20260927180041.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_heat_202609271734001",
       "category": "高溫",
