@@ -111,14 +111,13 @@ jobs:
             return '';
           }
 
-          function looksLikeRenderedW37Page(text) {
+          function looksLikeLoadedW37Page(text) {
+            // 只確認 W37 頁面本身已成功載入；
+            // 不再要求一定要有「沿海／浪高／請注意」等活動訊息。
+            // 這樣當氣象署解除長浪後，頁面沒有活動本文時，
+            // workflow 才能正常寫入 active=false，清除網站上的舊訊息。
             const normalized = normalizeText(text);
-            return /長浪即時訊息/.test(normalized) && (
-              /發布時間/.test(normalized) ||
-              /沿海/.test(normalized) ||
-              /請注意/.test(normalized) ||
-              /浪高/.test(normalized)
-            );
+            return /長浪即時訊息/.test(normalized);
           }
 
           (async() => {
@@ -130,17 +129,16 @@ jobs:
               // W37 為 JavaScript 頁面，給動態內容足夠時間載入。
               await page.waitForTimeout(5000);
 
-              // 最多再等 20 秒，避免因 CWA 前端載入較慢而誤判成沒有長浪。
+              // 最多再等 20 秒，確認 W37 頁面本身已完成載入。
+              // 注意：不能要求一定要有長浪本文，因為「解除」時本文本來就應該消失。
               try {
                 await page.waitForFunction(() => {
                   const t = document.body?.innerText || '';
-                  return /長浪即時訊息/.test(t) && (
-                    /發布時間/.test(t) || /沿海/.test(t) || /請注意/.test(t) || /浪高/.test(t)
-                  );
+                  return /長浪即時訊息/.test(t);
                 }, {timeout:20000});
               } catch (_) {
-                // 下面會再檢查一次；若真的無法解析，直接讓 workflow 失敗，
-                // 不覆蓋上一筆有效資料，避免網站突然消失長浪訊息。
+                // 下面會再檢查一次；若連 W37 頁面標題都沒有，才視為抓取失敗，
+                // 避免 CWA 網站暫時異常時誤把有效資料清掉。
               }
 
               const bodyText = await page.locator('body').innerText();
@@ -148,12 +146,12 @@ jobs:
               const summary = parseSummary(text);
               const publishedAt = parsePublishedAt(text);
 
-              if (!looksLikeRenderedW37Page(text)) {
-                throw new Error('CWA W37 頁面未完成載入，為避免覆蓋舊資料，本次不更新 data/cwa-long-wave.json。');
+              if (!looksLikeLoadedW37Page(text)) {
+                throw new Error('CWA W37 頁面未完成載入，為避免抓取異常，本次不更新 data/cwa-long-wave.json。');
               }
 
-              // 有實際訊息時必須取得本文；若頁面暫時載入異常，不寫入 active=false。
-              // 這可避免 CWA 網站短暫異常時把原本有效的長浪訊息清掉。
+              // 以氣象署目前頁面是否仍有長浪本文作為 active 唯一判斷。
+              // 有本文＝active=true；解除後沒有本文＝active=false。
               const active = Boolean(summary);
               if (active && !publishedAt) {
                 console.warn('已解析到長浪本文，但未解析到發布時間；仍保留本文。');
