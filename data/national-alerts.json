@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-27T14:25:02.795110+08:00",
+  "updatedAt": "2026-09-27T14:40:37.738801+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_heat_202609271430001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-27T14:30:41+08:00",
+      "effective": "2026/9/27 下午 02:28:00",
+      "expires": "2026/9/27 下午 05:00:00",
+      "summary": "各地天氣高溫炎熱，今(27)日中午前後臺北市、新北市、桃園市、彰化縣、南投縣、雲林縣、臺南市、屏東縣、花蓮縣為黃色燈號，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609271430.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260927131840_0001",
       "category": "水庫放流",
@@ -29,20 +43,6 @@
       "expires": "2026/9/27 下午 04:09:00",
       "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260927130840_0001.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_heat_202609271133001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-27T11:33:29+08:00",
-      "effective": "2026/9/27 上午 11:31:00",
-      "expires": "2026/9/27 下午 05:00:00",
-      "summary": "各地天氣高溫炎熱，今(27)日中午前後臺北市、新北市、桃園市、彰化縣、南投縣、臺南市、屏東縣為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609271133.cap",
       "isDrill": false
     },
     {
