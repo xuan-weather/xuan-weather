@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-27T19:56:55.835240+08:00",
+  "updatedAt": "2026-09-27T20:09:08.970922+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -57,20 +57,6 @@
       "expires": "2026/9/28 下午 05:00:00",
       "summary": "各地天氣高溫炎熱，明(28)日中午前後臺北市、新北市、彰化縣、南投縣、雲林縣、臺南市、屏東縣、花蓮縣為黃色燈號，請注意。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609271734.cap",
-      "isDrill": false
-    },
-    {
-      "id": "A2026092707375363545456010",
-      "category": "疏散避難",
-      "title": "疏散避難",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-27T08:00:03+08:00",
-      "effective": "2026/9/27 上午 08:00:00",
-      "expires": "2026/9/27 下午 08:00:00",
-      "summary": "[疏散避難]萬里溪堰塞湖目前穩定溢流仍存在有不確定性風險，請勿進入萬里溪堤防周邊及河床等縣府公告警戒區，違者將依災害防救法舉發裁罰。 [Evacuation and Shelter]The Wanli Stream landslide-dammed lake is currently experiencing stable overflow; however, residual uncertainties and potential risks remain. Members of the public are advised not to enter the county government-designated alert zones, including areas surrounding the Wanli Stream embankment and riverbed. Violators will be reported and subject to penalties in accordance with the Disaster Prevention and Protection Act. https://www.hl.gov.tw/kra/.Hualien County EOC03-8462119",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/evacuation/A2026092707375363545456010.cap",
       "isDrill": false
     },
     {
