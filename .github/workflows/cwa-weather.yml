@@ -8,7 +8,7 @@ on:
 permissions:
   contents: write
 
-# 避免每 5 分鐘排程重疊，造成舊資料覆蓋或 push 衝突
+# 避免每 5 分鐘排程重疊造成舊資料覆蓋新資料或 git push 衝突
 concurrency:
   group: cwa-weather-data
   cancel-in-progress: false
@@ -27,7 +27,7 @@ jobs:
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
-          set -e
+          set -euo pipefail
 
           mkdir -p data
 
@@ -37,6 +37,8 @@ jobs:
             O-A0003-001
             F-C0032-001
             W-C0033-001
+            W-C0033-002
+            W-C0033-005
             W-C0034-001
             W-C0034-005
             E-A0015-001
@@ -48,17 +50,11 @@ jobs:
             echo "正在取得 CWA：${dataset}"
             echo "========================================"
 
-            curl --fail-with-body \
-              --silent \
-              --show-error \
-              --retry 3 \
-              --retry-delay 2 \
-              -H "Accept: application/json" \
-              -H "Authorization: ${CWA_API_KEY}" \
-              -H "Cache-Control: no-cache, no-store, max-age=0" \
-              -H "Pragma: no-cache" \
-              "https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}" \
-              -o "data/cwa-${dataset}.json"
+            # 每次請求加入唯一 cache-buster，避免高溫 CAP 被上游／代理快取成前一版。
+            cache_buster="$(date +%s%N)"
+            url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}?_=${cache_buster}"
+
+            curl --fail-with-body               --silent               --show-error               --retry 3               --retry-delay 2               --location               -H "Accept: application/json"               -H "Authorization: ${CWA_API_KEY}"               -H "Cache-Control: no-cache, no-store, max-age=0"               -H "Pragma: no-cache"               "${url}"               -o "data/cwa-${dataset}.json"
 
             echo "CWA ${dataset} 資料取得成功"
             wc -c "data/cwa-${dataset}.json"
@@ -66,7 +62,7 @@ jobs:
             python - "${dataset}" <<'PY'
           import json
           import sys
-          from datetime import datetime
+          from datetime import datetime, timezone, timedelta
 
           dataset = sys.argv[1]
           path = f"data/cwa-{dataset}.json"
@@ -77,59 +73,195 @@ jobs:
           print(f"{dataset}：JSON 格式正常")
 
           if not isinstance(data, dict):
-              raise SystemExit(
-                  f"{dataset}：錯誤，回傳資料不是 JSON 物件"
-              )
+              raise SystemExit(f"{dataset}：錯誤，回傳資料不是 JSON 物件")
 
-          if "records" not in data:
-              raise SystemExit(
-                  f"{dataset}：錯誤，找不到 records"
-              )
+          # W-C0033-005 為 CAP 高溫資訊，可能不是一般 datastore records。
+          if dataset == "W-C0033-005":
+              print(f"{dataset}：CAP 高溫資訊 JSON 保留原始結構")
 
-          print(f"{dataset}：records 存在")
+              # 把 CAP 常見的發布／更新時間欄位全部往下搜尋，
+              # 讓 Actions log 明確顯示這次抓到的是哪一版。
+              time_keys = {
+                  "sent", "Sent",
+                  "issueTime", "IssueTime",
+                  "publishTime", "PublishTime",
+                  "publishedAt", "PublishedAt",
+                  "publishDate", "PublishDate",
+                  "published", "Published",
+                  "updateTime", "UpdateTime",
+                  "updatedAt", "UpdatedAt",
+                  "modifiedAt", "ModifiedAt",
+              }
 
-          # 顯示這次實際抓到的最新觀測時間
-          latest_time = None
+              latest = None
+              seen = set()
 
-          records = data.get("records", {})
-          stations = records.get("Station", [])
+              def walk(node):
+                  global latest
+                  if not isinstance(node, (dict, list)):
+                      return
 
-          if isinstance(stations, list):
-              for station in stations:
-                  obs = station.get("ObsTime", {})
-                  dt = obs.get("DateTime") if isinstance(obs, dict) else None
+                  ident = id(node)
+                  if ident in seen:
+                      return
+                  seen.add(ident)
 
-                  if dt:
-                      try:
-                          parsed = datetime.fromisoformat(
-                              dt.replace("Z", "+00:00")
-                          )
+                  if isinstance(node, list):
+                      for item in node:
+                          walk(item)
+                      return
 
-                          if latest_time is None or parsed > latest_time:
-                              latest_time = parsed
+                  for key, value in node.items():
+                      if key in time_keys:
+                          if isinstance(value, dict):
+                              raw = (
+                                  value.get("value")
+                                  or value.get("datetime")
+                                  or value.get("DateTime")
+                                  or value.get("time")
+                                  or ""
+                              )
+                          else:
+                              raw = value
 
-                      except Exception:
-                          pass
+                          if raw:
+                              text = str(raw).replace("Z", "+00:00")
+                              try:
+                                  dt = datetime.fromisoformat(text)
+                                  if dt.tzinfo is None:
+                                      dt = dt.replace(tzinfo=timezone.utc)
+                                  if latest is None or dt > latest:
+                                      latest = dt
+                              except Exception:
+                                  pass
 
-          if latest_time:
-              print(
-                  f"{dataset}：本次抓到的最新 ObsTime = "
-                  f"{latest_time.isoformat()}"
-              )
+                      if isinstance(value, (dict, list)):
+                          walk(value)
+
+              walk(data)
+
+              if latest:
+                  taipei = latest.astimezone(timezone(timedelta(hours=8)))
+                  print(f"{dataset}：本次抓到的最新官方發布／更新時間 = {taipei.isoformat()}")
+              else:
+                  print(f"{dataset}：找不到可解析的官方發布／更新時間")
           else:
-              print(
-                  f"{dataset}：找不到可解析的 ObsTime"
-              )
+              if "records" not in data:
+                  raise SystemExit(f"{dataset}：錯誤，找不到 records")
+              print(f"{dataset}：records 存在")
+
+              latest_time = None
+              records = data.get("records", {})
+              stations = records.get("Station", [])
+
+              if isinstance(stations, list):
+                  for station in stations:
+                      obs = station.get("ObsTime", {})
+                      dt = obs.get("DateTime") if isinstance(obs, dict) else None
+                      if dt:
+                          try:
+                              parsed = datetime.fromisoformat(dt.replace("Z", "+00:00"))
+                              if latest_time is None or parsed > latest_time:
+                                  latest_time = parsed
+                          except Exception:
+                              pass
+
+              if latest_time:
+                  print(f"{dataset}：本次抓到的最新 ObsTime = {latest_time.isoformat()}")
+              else:
+                  print(f"{dataset}：找不到可解析的 ObsTime")
           PY
 
           done
+
+      - name: Verify high-temperature CAP is not an old cached version
+        run: |
+          set -euo pipefail
+
+          python <<'PY'
+          import json
+          from datetime import datetime, timezone, timedelta
+
+          path = "data/cwa-W-C0033-005.json"
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          keys = {
+              "sent", "Sent",
+              "issueTime", "IssueTime",
+              "publishTime", "PublishTime",
+              "publishedAt", "PublishedAt",
+              "publishDate", "PublishDate",
+              "published", "Published",
+              "updateTime", "UpdateTime",
+              "updatedAt", "UpdatedAt",
+              "modifiedAt", "ModifiedAt",
+          }
+
+          latest = None
+          seen = set()
+
+          def walk(node):
+              global latest
+              if not isinstance(node, (dict, list)):
+                  return
+              ident = id(node)
+              if ident in seen:
+                  return
+              seen.add(ident)
+
+              if isinstance(node, list):
+                  for item in node:
+                      walk(item)
+                  return
+
+              for key, value in node.items():
+                  if key in keys:
+                      raw = value
+                      if isinstance(value, dict):
+                          raw = (
+                              value.get("value")
+                              or value.get("datetime")
+                              or value.get("DateTime")
+                              or value.get("time")
+                              or ""
+                          )
+                      if raw:
+                          try:
+                              dt = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+                              if dt.tzinfo is None:
+                                  dt = dt.replace(tzinfo=timezone.utc)
+                              if latest is None or dt > latest:
+                                  latest = dt
+                          except Exception:
+                              pass
+                  if isinstance(value, (dict, list)):
+                      walk(value)
+
+          walk(data)
+
+          if latest:
+              taipei = latest.astimezone(timezone(timedelta(hours=8)))
+              print(f"W-C0033-005 最後發布／更新：{taipei.isoformat()}")
+
+              # 07:30 續發後仍抓到前一天 17:30 左右的版本時，
+              # 不允許這個舊版本繼續被提交到 GitHub Pages。
+              now = datetime.now(timezone(timedelta(hours=8)))
+              today_0730 = now.replace(hour=7, minute=30, second=0, microsecond=0)
+
+              if now >= today_0730 and taipei.date() < now.date():
+                  raise SystemExit(
+                      "W-C0033-005 仍是前一天版本，停止提交，避免網站繼續發布舊高溫資訊。"
+                  )
+          else:
+              print("W-C0033-005 無法解析發布時間，保留原資料流程。")
+          PY
 
       - name: Show downloaded files
         run: |
           echo "========================================"
           echo "CWA 資料檔案"
           echo "========================================"
-
           ls -lh data/cwa-*.json
 
       - name: Commit CWA data
@@ -143,10 +275,6 @@ jobs:
             echo "資料沒有變化，不需要提交"
           else
             git commit -m "Update CWA weather data"
-
-            # 同步最新 main，避免其他更新造成 non-fast-forward push 衝突
-            git fetch origin main
-            git rebase origin/main
-
+            git pull --rebase origin main
             git push origin HEAD:main
           fi
