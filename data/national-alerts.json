@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-27T15:27:46.928539+08:00",
+  "updatedAt": "2026-09-27T15:38:47.690151+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-EQ115065-2026-0927-153302",
+      "category": "地震",
+      "title": "地震",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-09-27T15:36:29+08:00",
+      "effective": "2026/9/27 下午 03:36:29",
+      "expires": "2026/9/27 下午 04:36:00",
+      "summary": "09/27 15:33花蓮縣近海發生規模4.4有感地震，最大震度花蓮縣水璉、花蓮縣花蓮市、彰化縣彰化市2級。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Earthquake/CWA-EQ115065-2026-0927-153302.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260927151840_0000",
       "category": "水庫放流",
