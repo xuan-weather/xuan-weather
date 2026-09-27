@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-27T13:27:52.306644+08:00",
+  "updatedAt": "2026-09-27T13:38:45.364783+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -43,20 +43,6 @@
       "expires": "2026/9/27 下午 05:00:00",
       "summary": "各地天氣高溫炎熱，今(27)日中午前後臺北市、新北市、桃園市、彰化縣、南投縣、臺南市、屏東縣為黃色燈號，請注意。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609271133.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609271050",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-27T10:50:01+08:00",
-      "effective": "2026/9/27 上午 10:48:41",
-      "expires": "2026/9/27 下午 01:30:00",
-      "summary": "苑裡鎮西平里69之10號前漏水搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609271050.cap",
       "isDrill": false
     },
     {
