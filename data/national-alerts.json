@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-27T23:46:02.522240+08:00",
+  "updatedAt": "2026-09-28T00:01:31.995942+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -99,20 +99,6 @@
       "expires": "2026/12/26 下午 03:52:00",
       "summary": "地方單位\\屏東縣政府\\環境保護局：恆春籍「小海豚1號及3號」半潛艇娛樂漁船擱淺案",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/OCA/2026/marinePollution/OCA-marinePollution_3164.cap",
-      "isDrill": false
-    },
-    {
-      "id": "HospitalReport_000194_20260927_20260926205954",
-      "category": "急門診通報",
-      "title": "急門診通報",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "衛生福利部",
-      "updated": "2026-09-26T20:59:54+08:00",
-      "effective": "2026/9/26 下午 08:59:54",
-      "expires": "2026/9/28 上午 12:00:00",
-      "summary": "2026-09-27 仁愛醫院 早上、下午、夜間停診，急診正常",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/MOHW/2026/HospitalReport/HospitalReport_000194_20260927_20260926205954.cap",
       "isDrill": false
     },
     {
