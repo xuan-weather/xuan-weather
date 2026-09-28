@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-29T07:10:55.851228+08:00",
+  "updatedAt": "2026-09-29T07:23:37.679707+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20260929071840_0001",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-09-29T07:18:40+08:00",
+      "effective": "2026/9/29 上午 07:18:40",
+      "expires": "2026/9/29 上午 10:19:00",
+      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260929071840_0001.cap",
+      "isDrill": false
+    },
+    {
+      "id": "CWA-Weather_heat_202609290718001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-09-29T07:18:10+08:00",
+      "effective": "2026/9/29 上午 07:17:00",
+      "expires": "2026/9/29 下午 05:00:00",
+      "summary": "各地天氣高溫炎熱，今(29)日白天雲林縣、臺南市、屏東縣為橙色燈號，有連續出現36度高溫的機率，請加強注意。臺北市、新北市、桃園市、苗栗縣、臺中市、彰化縣、南投縣、花蓮縣為黃色燈號，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609290718.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260929070840_0000",
       "category": "水庫放流",
@@ -29,20 +57,6 @@
       "expires": "2026/9/30 上午 05:47:00",
       "summary": "火災-一般(集合)住宅",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260929044515012.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20260929051840_0000",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-09-29T05:18:40+08:00",
-      "effective": "2026/9/29 上午 05:18:40",
-      "expires": "2026/9/29 上午 08:19:00",
-      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260929051840_0000.cap",
       "isDrill": false
     },
     {
