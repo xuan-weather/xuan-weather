@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-28T14:00:13.923489+08:00",
+  "updatedAt": "2026-09-28T14:20:34.838377+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609281410",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-28T14:10:01+08:00",
+      "effective": "2026/9/28 下午 02:09:36",
+      "expires": "2026/9/28 下午 06:00:00",
+      "summary": "仁義5街漏水搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281410.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260928131840_0001",
       "category": "水庫放流",
