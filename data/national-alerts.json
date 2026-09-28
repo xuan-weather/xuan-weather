@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-28T10:09:18.637231+08:00",
+  "updatedAt": "2026-09-28T10:23:50.735482+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609281010",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-28T10:10:01+08:00",
+      "effective": "2026/9/28 上午 09:44:00",
+      "expires": "2026/9/28 下午 12:30:00",
+      "summary": "管線搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281010.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609281000",
       "category": "停水",
@@ -15,20 +29,6 @@
       "expires": "2026/9/28 下午 04:00:00",
       "summary": "中山路40巷路面漏水搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281000.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609280950",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-28T09:50:03+08:00",
-      "effective": "2026/9/28 上午 09:44:00",
-      "expires": "2026/9/28 下午 12:30:00",
-      "summary": "管線搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609280950.cap",
       "isDrill": false
     },
     {
