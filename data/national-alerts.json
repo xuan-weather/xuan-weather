@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-28T13:52:55.394991+08:00",
+  "updatedAt": "2026-09-28T14:00:13.923489+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -71,20 +71,6 @@
       "expires": "2026/9/28 下午 05:00:00",
       "summary": "各地天氣高溫炎熱，今(28)日中午前後雲林縣為橙色燈號，有連續出現36度高溫的機率，請加強注意。臺北市、新北市、彰化縣、南投縣、臺南市、屏東縣、花蓮縣為黃色燈號，請注意。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609281139.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609281130",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-28T11:30:02+08:00",
-      "effective": "2026/9/24 下午 03:41:58",
-      "expires": "2026/9/28 下午 02:00:00",
-      "summary": "忠義二加壓站更換流量計停水施工",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281130.cap",
       "isDrill": false
     },
     {
