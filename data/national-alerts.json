@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-28T13:28:25.303023+08:00",
+  "updatedAt": "2026-09-28T13:41:46.177899+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -95,9 +95,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-28T11:20:02+08:00",
-      "effective": "2026/9/28 上午 11:13:53",
-      "expires": "2026/9/28 下午 01:30:00",
-      "summary": "泰山區信華三街漏水緊急搶修",
+      "effective": "2026/9/28 上午 11:19:55",
+      "expires": "2026/9/28 下午 04:00:00",
+      "summary": "關東路208巷 搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281120.cap",
       "isDrill": false
     },
