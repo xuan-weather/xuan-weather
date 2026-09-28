@@ -225,6 +225,53 @@ jobs:
           for station in hourly_stations:
               append_station(station, hourly_source=True)
 
+          # 重要：O-A0001 與 O-A0003 的 StationId 並不保證完全相同。
+          # 若只把 hourlyGust 存在 O-A0001 的 StationId，前端以 O-A0003
+          # 測站點擊排行時可能找不到同一測站，便會退回 10 分鐘陣風（例如 8.4）。
+          # 因此這裡再依「測站名稱／縣市＋鄉鎮」把官方整點陣風寫入 O-A0003
+          # 對應測站的歷史紀錄，讓兩個資料集可以可靠對齊。
+          def norm_key(value):
+              return str(value or '').replace('台', '臺').replace(' ', '').replace('　', '').strip()
+
+          hourly_by_name = {}
+          hourly_by_area = {}
+          for station in hourly_stations:
+              name = norm_key(station.get('StationName'))
+              ts_ms = parse_ts(station)
+              weather = station.get('WeatherElement') or {}
+              gust_info = weather.get('GustInfo') or {}
+              raw_gust = gust_info.get('PeakGustSpeed')
+              try:
+                  gust = float(raw_gust)
+              except (TypeError, ValueError):
+                  gust = None
+              if ts_ms is None or gust is None or not (0 <= gust <= 80):
+                  continue
+              item = {'ts': ts_ms, 'gust': round(gust, 1),
+                      'stationName': str(station.get('StationName') or '').strip()}
+              if name:
+                  hourly_by_name[name] = item
+              geo = station.get('GeoInfo') or {}
+              area_key = norm_key(geo.get('CountyName')) + '|' + norm_key(geo.get('TownName'))
+              if area_key != '|':
+                  hourly_by_area[area_key] = item
+
+          for station in stations:
+              station_id = str(station.get('StationId') or '').strip()
+              if not station_id:
+                  continue
+              name = norm_key(station.get('StationName'))
+              geo = station.get('GeoInfo') or {}
+              area_key = norm_key(geo.get('CountyName')) + '|' + norm_key(geo.get('TownName'))
+              hourly = hourly_by_name.get(name) or hourly_by_area.get(area_key)
+              if not hourly:
+                  continue
+              history['stations'].setdefault(station_id, []).append({
+                  'ts': hourly['ts'],
+                  'stationName': str(station.get('StationName') or hourly.get('stationName') or '').strip(),
+                  'hourlyGust': hourly['gust']
+              })
+
           # 再加入 O-A0003 全站 10 分鐘資料；同時間戳只補自己的欄位，
           # 不會覆蓋上面的 hourlyGust。
           for station in stations:
