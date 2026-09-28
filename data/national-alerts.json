@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-28T17:41:17.190802+08:00",
+  "updatedAt": "2026-09-28T17:54:18.680617+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609281750",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-28T17:50:01+08:00",
+      "effective": "2026/9/28 下午 04:12:54",
+      "expires": "2026/9/28 下午 06:00:00",
+      "summary": "豐原區三村路98巷54號 破管搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281750.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_heat_202609281729001",
       "category": "高溫",
