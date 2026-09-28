@@ -143,6 +143,15 @@ jobs:
               if temp is not None and (temp == 0 or temp < -50 or temp > 60):
                   temp = None
 
+              # O-A0001-001：整點前10分鐘平均風速，對應氣象署「平均風」排行。
+              hourly_wind = None
+              raw_hourly_wind = weather.get("WindSpeed", weather.get("WDSD"))
+              if raw_hourly_wind not in (None, "", "X", "T"):
+                  try:
+                      hourly_wind = float(raw_hourly_wind)
+                  except (TypeError, ValueError):
+                      hourly_wind = None
+
               # 最大10分鐘平均風：Max10MinAverage.WindSpeed
               max10min_wind = None
               max10 = weather.get("Max10MinAverage") or {}
@@ -166,12 +175,14 @@ jobs:
                           gust = None
 
               # 防止異常值污染今日排行；正常地面觀測不應出現這種極端值。
+              if hourly_wind is not None and not (0 <= hourly_wind <= 60):
+                  hourly_wind = None
               if max10min_wind is not None and not (0 <= max10min_wind <= 60):
                   max10min_wind = None
               if gust is not None and not (0 <= gust <= 80):
                   gust = None
 
-              if temp is None and max10min_wind is None and gust is None:
+              if temp is None and hourly_wind is None and max10min_wind is None and gust is None:
                   return
 
               point = {"ts": ts_ms}
@@ -180,6 +191,8 @@ jobs:
                   point["stationName"] = station_name
               if temp is not None:
                   point["temp"] = round(temp, 1)
+              if hourly_wind is not None and hourly_source:
+                  point["hourlyWind"] = round(hourly_wind, 1)
               if max10min_wind is not None:
                   point["max10MinWind"] = round(max10min_wind, 1)
               if gust is not None:
@@ -245,9 +258,22 @@ jobs:
                   gust = float(raw_gust)
               except (TypeError, ValueError):
                   gust = None
-              if ts_ms is None or gust is None or not (0 <= gust <= 80):
+              raw_wind = weather.get('WindSpeed', weather.get('WDSD'))
+              try:
+                  hourly_wind = float(raw_wind)
+              except (TypeError, ValueError):
+                  hourly_wind = None
+              if ts_ms is None or (gust is None and hourly_wind is None):
                   continue
-              item = {'ts': ts_ms, 'gust': round(gust, 1),
+              if gust is not None and not (0 <= gust <= 80):
+                  gust = None
+              if hourly_wind is not None and not (0 <= hourly_wind <= 60):
+                  hourly_wind = None
+              if gust is None and hourly_wind is None:
+                  continue
+              item = {'ts': ts_ms,
+                      'gust': round(gust, 1) if gust is not None else None,
+                      'wind': round(hourly_wind, 1) if hourly_wind is not None else None,
                       'stationName': str(station.get('StationName') or '').strip()}
               if name:
                   hourly_by_name[name] = item
@@ -266,11 +292,15 @@ jobs:
               hourly = hourly_by_name.get(name) or hourly_by_area.get(area_key)
               if not hourly:
                   continue
-              history['stations'].setdefault(station_id, []).append({
+              mapped_point = {
                   'ts': hourly['ts'],
-                  'stationName': str(station.get('StationName') or hourly.get('stationName') or '').strip(),
-                  'hourlyGust': hourly['gust']
-              })
+                  'stationName': str(station.get('StationName') or hourly.get('stationName') or '').strip()
+              }
+              if hourly.get('wind') is not None:
+                  mapped_point['hourlyWind'] = hourly['wind']
+              if hourly.get('gust') is not None:
+                  mapped_point['hourlyGust'] = hourly['gust']
+              history['stations'].setdefault(station_id, []).append(mapped_point)
 
           # 再加入 O-A0003 全站 10 分鐘資料；同時間戳只補自己的欄位，
           # 不會覆蓋上面的 hourlyGust。
@@ -328,6 +358,14 @@ jobs:
                       gust = float(point.get("windGust"))
                       if 0 <= gust <= 80:
                           item["windGust"] = round(gust, 1)
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  try:
+                      hourly_wind = float(point.get("hourlyWind"))
+                      if 0 <= hourly_wind <= 60:
+                          item["hourlyWind"] = round(hourly_wind, 1)
                           has_value = True
                   except (TypeError, ValueError):
                       pass
