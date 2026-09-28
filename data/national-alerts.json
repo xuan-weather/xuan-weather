@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-28T11:41:46.218099+08:00",
+  "updatedAt": "2026-09-28T11:53:53.322660+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609281140",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-28T11:40:01+08:00",
+      "effective": "2026/9/28 上午 11:39:53",
+      "expires": "2026/9/28 下午 05:00:00",
+      "summary": "龍山街151巷23弄破管",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281140.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_heat_202609281139001",
       "category": "高溫",
