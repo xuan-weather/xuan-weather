@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-29T02:17:29.506683+08:00",
+  "updatedAt": "2026-09-29T02:36:11.389477+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-EQ115066-2026-0929-022045",
+      "category": "地震",
+      "title": "地震",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-09-29T02:24:56+08:00",
+      "effective": "2026/9/29 上午 02:24:56",
+      "expires": "2026/9/29 上午 03:25:00",
+      "summary": "09/29 02:20臺灣東部海域發生規模5.0有感地震，最大震度花蓮縣水璉、花蓮縣花蓮市3級。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Earthquake/CWA-EQ115066-2026-0929-022045.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260929011840_0000",
       "category": "水庫放流",
