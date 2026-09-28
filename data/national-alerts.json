@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-28T19:54:15.384615+08:00",
+  "updatedAt": "2026-09-28T20:02:00.515223+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -155,20 +155,6 @@
       "expires": "2026/9/29 上午 06:00:00",
       "summary": "因桃園區龍壽街及龍壽街一段等沿線（一）汰換管線工程 龍壽街與文中路路口250mmPVCP斷管連絡停水",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281240.cap",
-      "isDrill": false
-    },
-    {
-      "id": "A2026092808095665445466760",
-      "category": "疏散避難",
-      "title": "疏散避難",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-28T08:15:02+08:00",
-      "effective": "2026/9/28 上午 08:15:00",
-      "expires": "2026/9/28 下午 08:00:00",
-      "summary": "[疏散避難]萬里溪堰塞湖目前穩定溢流仍存在有不確定性風險，請勿進入萬里溪堤防周邊及河床等縣府公告警戒區，違者將依災害防救法舉發裁罰。 [Evacuation and Shelter]The Wanli Stream landslide-dammed lake is currently experiencing stable overflow; however, residual uncertainties and potential risks remain. Members of the public are advised not to enter the county government-designated alert zones, including areas surrounding the Wanli Stream embankment and riverbed. Violators will be reported and subject to penalties in accordance with the Disaster Prevention and Protection Act. https://www.hl.gov.tw/kra/.Hualien County EOC03-8462119",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/evacuation/A2026092808095665445466760.cap",
       "isDrill": false
     },
     {
