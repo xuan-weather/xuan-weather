@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-28T16:56:39.821059+08:00",
+  "updatedAt": "2026-09-28T17:08:45.434139+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -102,34 +102,6 @@
       "isDrill": false
     },
     {
-      "id": "CWA-Weather_heat_202609281434001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-28T14:34:42+08:00",
-      "effective": "2026/9/28 下午 02:28:00",
-      "expires": "2026/9/28 下午 05:00:00",
-      "summary": "各地天氣高溫炎熱，今(28)日中午前後雲林縣為橙色燈號，有連續出現36度高溫的機率，請加強注意。基隆市、臺北市、新北市、桃園市、苗栗縣、彰化縣、南投縣、臺南市、屏東縣為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609281434.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609281420",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-28T14:20:02+08:00",
-      "effective": "2026/9/28 下午 02:13:57",
-      "expires": "2026/9/28 下午 05:00:00",
-      "summary": "嘉義縣民雄鄉中華路38旁200mmPVCP破管搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281420.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609281410",
       "category": "停水",
       "title": "停水",
@@ -155,48 +127,6 @@
       "expires": "2026/9/29 上午 06:00:00",
       "summary": "因桃園區龍壽街及龍壽街一段等沿線（一）汰換管線工程 龍壽街與文中路路口250mmPVCP斷管連絡停水",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281240.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609281140",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-28T11:40:01+08:00",
-      "effective": "2026/9/28 上午 11:39:53",
-      "expires": "2026/9/28 下午 05:00:00",
-      "summary": "龍山街151巷23弄破管",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281140.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609281000",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-28T10:00:02+08:00",
-      "effective": "2026/9/28 上午 09:53:34",
-      "expires": "2026/9/28 下午 05:00:00",
-      "summary": "09/28 09:30~17:00 『台南市中西區府前一街、金城街附近一帶』，因不明原因造成用戶無水或水壓降低中，已派員查處中，不便之處希祈見諒。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281000.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609280920",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-28T09:20:01+08:00",
-      "effective": "2026/9/28 上午 09:12:15",
-      "expires": "2026/9/28 下午 05:00:00",
-      "summary": "因配合新建工程處道路拓寬水溝改建，破管搶修。潭興路258巷口",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609280920.cap",
       "isDrill": false
     },
     {
@@ -253,20 +183,6 @@
       "expires": "2026/9/29 上午 12:00:00",
       "summary": "2026-09-28 仁愛醫院 下午、夜間停診，早上、急診正常",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/MOHW/2026/HospitalReport/HospitalReport_000194_20260928_20260927180041.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_heat_202609271734001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-09-27T17:34:00+08:00",
-      "effective": "2026/9/27 下午 05:32:00",
-      "expires": "2026/9/28 下午 05:00:00",
-      "summary": "各地天氣高溫炎熱，明(28)日中午前後臺北市、新北市、彰化縣、南投縣、雲林縣、臺南市、屏東縣、花蓮縣為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609271734.cap",
       "isDrill": false
     },
     {
