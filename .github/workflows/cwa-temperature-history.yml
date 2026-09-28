@@ -175,6 +175,9 @@ jobs:
                   return
 
               point = {"ts": ts_ms}
+              station_name = str(station.get("StationName") or "").strip()
+              if station_name:
+                  point["stationName"] = station_name
               if temp is not None:
                   point["temp"] = round(temp, 1)
               if max10min_wind is not None:
@@ -242,6 +245,8 @@ jobs:
                       continue
 
                   item = {"ts": ts}
+                  if point.get("stationName"):
+                      item["stationName"] = str(point.get("stationName")).strip()
                   has_value = False
                   try:
                       temp = float(point.get("temp"))
@@ -294,7 +299,11 @@ jobs:
           print("CWA 歷史測站數：", len(history["stations"]))
           print("C0B010 七堵歷史筆數：", len(history["stations"].get("C0B010", [])))
           rain_count = sum(1 for arr in history["stations"].values() if any("rain24h" in p for p in arr))
+          wind_count = sum(1 for arr in history["stations"].values() if any("max10MinWind" in p for p in arr))
+          gust_count = sum(1 for arr in history["stations"].values() if any("windGust" in p for p in arr))
           print("含 24 小時雨量歷史的測站數：", rain_count)
+          print("含 10 分鐘平均風歷史的測站數：", wind_count)
+          print("含陣風歷史的測站數：", gust_count)
           PY
 
       - name: Commit history
