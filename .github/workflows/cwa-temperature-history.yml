@@ -120,7 +120,7 @@ jobs:
               except Exception:
                   return None
 
-          def append_station(station, only_c0=False):
+          def append_station(station, only_c0=False, hourly_source=False):
               if not isinstance(station, dict):
                   return
               station_id = str(station.get("StationId") or "").strip()
@@ -183,7 +183,12 @@ jobs:
               if max10min_wind is not None:
                   point["max10MinWind"] = round(max10min_wind, 1)
               if gust is not None:
-                  point["windGust"] = round(gust, 1)
+                  if hourly_source:
+                      # O-A0001-001：整點「小時最大陣風」，獨立保存，
+                      # 不覆蓋 O-A0003-001 的 10 分鐘最大瞬間風。
+                      point["hourlyGust"] = round(gust, 1)
+                  else:
+                      point["windGust"] = round(gust, 1)
 
               history["stations"].setdefault(station_id, []).append(point)
 
@@ -214,13 +219,14 @@ jobs:
                   "rain24h": round(rain24h, 1)
               })
 
-          # 先放入 C0 自動站的逐時資料，確保像 C0B010 七堵即使未出現在
-          # 全測站 O-A0003 回傳中，也有跨裝置一致的歷史基礎。
+          # O-A0001-001：保留全站整點「小時最大陣風」歷史。
+          # 這是中央氣象署逐時資料的官方 PeakGustSpeed，
+          # 可補足「今日最大陣風」不能只看最新10分鐘值的問題。
           for station in hourly_stations:
-              append_station(station, only_c0=True)
+              append_station(station, hourly_source=True)
 
-          # 再加入 O-A0003 全站 10 分鐘資料；同時間戳會在清理階段以最後加入的
-          # O-A0003 數值覆蓋逐時 fallback。
+          # 再加入 O-A0003 全站 10 分鐘資料；同時間戳只補自己的欄位，
+          # 不會覆蓋上面的 hourlyGust。
           for station in stations:
               append_station(station)
 
@@ -279,6 +285,14 @@ jobs:
                   except (TypeError, ValueError):
                       pass
 
+                  try:
+                      hourly_gust = float(point.get("hourlyGust"))
+                      if 0 <= hourly_gust <= 80:
+                          item["hourlyGust"] = round(hourly_gust, 1)
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
                   if has_value:
                       # 同一時間戳若同時有溫度與雨量，合併保留兩個欄位。
                       if ts in unique:
@@ -300,10 +314,12 @@ jobs:
           print("C0B010 七堵歷史筆數：", len(history["stations"].get("C0B010", [])))
           rain_count = sum(1 for arr in history["stations"].values() if any("rain24h" in p for p in arr))
           wind_count = sum(1 for arr in history["stations"].values() if any("max10MinWind" in p for p in arr))
-          gust_count = sum(1 for arr in history["stations"].values() if any("windGust" in p for p in arr))
+          gust_count = sum(1 for arr in history["stations"].values() if any("windGust" in p or "hourlyGust" in p for p in arr))
+          hourly_gust_count = sum(1 for arr in history["stations"].values() if any("hourlyGust" in p for p in arr))
           print("含 24 小時雨量歷史的測站數：", rain_count)
           print("含 10 分鐘平均風歷史的測站數：", wind_count)
           print("含陣風歷史的測站數：", gust_count)
+          print("含整點官方小時最大陣風歷史的測站數：", hourly_gust_count)
           PY
 
       - name: Commit history
