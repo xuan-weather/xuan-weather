@@ -11,386 +11,298 @@ permissions:
 jobs:
   fetch-temperature-history:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # =========================================================
-      # 取得 CWA O-A0003-001
-      # 10 分鐘綜觀氣象資料
-      # =========================================================
       - name: Fetch CWA O-A0003-001
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -e
-
           mkdir -p data/history
-
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON" \
             -o /tmp/cwa-o-a0003-001.json
 
-          # 七堵 C0B010 如果沒有出現在全測站回傳中，
-          # 再用 stationId 明確補抓一次。
+          # 七堵等 C0 自動站若沒有出現在全測站回傳中，
+          # 再以 stationId 明確補抓，仍使用同一個 CWA 10 分鐘資料集。
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&stationId=C0B010" \
             -o /tmp/cwa-o-a0003-001-c0b010.json
 
-      # =========================================================
-      # 取得 O-A0001-001
-      # 全測站逐時資料
-      #
-      # 這裡不是只抓 C0。
-      # 改成抓全部測站，作為歷史資料的完整測站骨架。
-      # =========================================================
-      - name: Fetch CWA O-A0001-001 hourly fallback
+      - name: Fetch CWA O-A0001-001 hourly fallback for C0 stations
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -e
-
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON" \
             -o /tmp/cwa-o-a0001-001.json
 
-      # =========================================================
-      # 更新最近 30 小時歷史資料
-      # =========================================================
+
+      - name: Bootstrap CWA short-term history (last 26 hours)
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -e
+          mkdir -p /tmp/cwa-history
+          python - <<'PY2'
+          import json, os, re, subprocess, urllib.parse
+          from datetime import datetime, timedelta, timezone
+
+          api_key = os.environ.get("CWA_API_KEY", "")
+          metadata_url = (
+              "https://opendata.cwa.gov.tw/historyapi/v1/getMetadata/"
+              "O-A0003-001?Authorization=" + urllib.parse.quote(api_key, safe="")
+          )
+          metadata_path = "/tmp/cwa-history/metadata.json"
+
+          try:
+              subprocess.run([
+                  "curl", "--silent", "--show-error", "--fail", "--retry", "3",
+                  "--retry-delay", "2", "-H", "Accept: application/json",
+                  metadata_url, "-o", metadata_path
+              ], check=True)
+          except Exception as exc:
+              print("CWA historyAPI metadata 取得失敗，略過 bootstrap：", exc)
+              raise SystemExit(0)
+
+          try:
+              with open(metadata_path, "r", encoding="utf-8") as f:
+                  metadata = json.load(f)
+          except Exception as exc:
+              print("CWA historyAPI metadata 不是有效 JSON，略過 bootstrap：", exc)
+              raise SystemExit(0)
+
+          now = datetime.now(timezone.utc)
+          start = now - timedelta(hours=26)
+
+          def parse_time(value):
+              if not isinstance(value, str):
+                  return None
+              text = value.strip()
+              if not text:
+                  return None
+              try:
+                  dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
+                  if dt.tzinfo is None:
+                      dt = dt.replace(tzinfo=timezone.utc)
+                  return dt.astimezone(timezone.utc)
+              except Exception:
+                  pass
+              m = re.search(r"(20\d{2})[-/]?(\d{2})[-/]?(\d{2})[T _-]?(\d{2})[:.]?(\d{2})", text)
+              if m:
+                  try:
+                      return datetime(
+                          int(m.group(1)), int(m.group(2)), int(m.group(3)),
+                          int(m.group(4)), int(m.group(5)), tzinfo=timezone.utc
+                      )
+                  except Exception:
+                      return None
+              return None
+
+          candidates = []
+
+          def walk(node, inherited_time=None):
+              if isinstance(node, dict):
+                  local_time = inherited_time
+                  for key, value in node.items():
+                      key_lower = str(key).lower()
+                      if any(token in key_lower for token in ("datatime", "datetime", "obstime", "time", "date")):
+                          parsed = parse_time(value)
+                          if parsed:
+                              local_time = parsed
+                  for key, value in node.items():
+                      if isinstance(value, str) and value.startswith(("http://", "https://")):
+                          candidates.append((value, local_time))
+                      else:
+                          walk(value, local_time)
+              elif isinstance(node, list):
+                  for item in node:
+                      walk(item, inherited_time)
+
+          walk(metadata)
+
+          selected = []
+          seen = set()
+          for url, dt in candidates:
+              if dt is None or dt < start or dt > now + timedelta(hours=1):
+                  continue
+              # 只下載 O-A0003-001 的歷史檔；避免 metadata 中其他連結誤抓。
+              if "O-A0003-001" not in url.upper():
+                  continue
+              clean = url
+              if "Authorization=" not in clean:
+                  sep = "&" if "?" in clean else "?"
+                  clean = clean + sep + "Authorization=" + urllib.parse.quote(api_key, safe="")
+              if "format=" not in clean.lower():
+                  clean += "&format=JSON" if "?" in clean else "?format=JSON"
+              if clean in seen:
+                  continue
+              seen.add(clean)
+              selected.append((dt, clean))
+
+          selected.sort(key=lambda item: item[0])
+          print("CWA historyAPI 找到候選歷史檔：", len(selected))
+
+          for index, (dt, url) in enumerate(selected):
+              out = f"/tmp/cwa-history/frame-{index:03d}.json"
+              try:
+                  subprocess.run([
+                      "curl", "--silent", "--show-error", "--fail", "--retry", "2",
+                      "--retry-delay", "1", "-H", "Accept: application/json",
+                      url, "-o", out
+                  ], check=True)
+                  print("下載歷史檔：", dt.isoformat())
+              except Exception as exc:
+                  print("歷史檔下載失敗，略過：", dt.isoformat(), exc)
+
+          PY2
+
       - name: Update rolling 30-hour history
         run: |
           python - <<'PY'
-          import json
-          import os
+          import json, os
           from datetime import datetime, timedelta, timezone
 
-          # -----------------------------------------------------
-          # 資料來源
-          # -----------------------------------------------------
           source = "/tmp/cwa-o-a0003-001.json"
           explicit_source = "/tmp/cwa-o-a0003-001-c0b010.json"
           hourly_source = "/tmp/cwa-o-a0001-001.json"
-
           output = "data/history/cwa-o-a0003-001-history.json"
 
-          # -----------------------------------------------------
-          # 讀取測站資料
-          # -----------------------------------------------------
           def extract_stations(payload):
               stations = (
                   payload.get("records", {}).get("Station")
                   or payload.get("result", {}).get("records", {}).get("Station")
                   or []
               )
-
               return stations if isinstance(stations, list) else []
 
-          # -----------------------------------------------------
-          # O-A0003-001
-          # -----------------------------------------------------
           with open(source, "r", encoding="utf-8") as f:
               payload = json.load(f)
-
           stations = extract_stations(payload)
-
           if not stations:
-              raise SystemExit(
-                  "CWA O-A0003-001 找不到 records.Station"
-              )
+              raise SystemExit("CWA O-A0003-001 找不到 records.Station")
 
-          # -----------------------------------------------------
-          # C0B010 七堵補抓
-          # -----------------------------------------------------
           with open(explicit_source, "r", encoding="utf-8") as f:
               explicit_payload = json.load(f)
-
           explicit_stations = extract_stations(explicit_payload)
 
-          # -----------------------------------------------------
-          # O-A0001-001 全測站逐時資料
-          # -----------------------------------------------------
           with open(hourly_source, "r", encoding="utf-8") as f:
               hourly_payload = json.load(f)
-
           hourly_stations = extract_stations(hourly_payload)
 
-          # -----------------------------------------------------
-          # 載入既有歷史資料
-          # -----------------------------------------------------
-          history = {
-              "generatedAt": None,
-              "stations": {}
-          }
-
+          history = {"generatedAt": None, "stations": {}}
           if os.path.exists(output):
               try:
                   with open(output, "r", encoding="utf-8") as f:
                       old = json.load(f)
-
-                  if (
-                      isinstance(old, dict)
-                      and isinstance(old.get("stations"), dict)
-                  ):
+                  if isinstance(old, dict) and isinstance(old.get("stations"), dict):
                       history = old
-
               except Exception:
                   pass
 
-          # -----------------------------------------------------
-          # 只保留最近 30 小時
-          # -----------------------------------------------------
-          cutoff_ms = int(
-              (
-                  datetime.now(timezone.utc)
-                  - timedelta(hours=30)
-              ).timestamp() * 1000
-          )
+          cutoff_ms = int((datetime.now(timezone.utc) - timedelta(hours=30)).timestamp() * 1000)
 
-          # -----------------------------------------------------
-          # 加入單一測站資料
-          # -----------------------------------------------------
-          def append_station(station):
+          def append_station(station, only_c0=False):
               if not isinstance(station, dict):
                   return
-
-              station_id = str(
-                  station.get("StationId") or ""
-              ).strip()
-
-              if not station_id:
+              station_id = str(station.get("StationId") or "").strip()
+              if not station_id or (only_c0 and not station_id.startswith("C0")):
                   return
 
-              # -------------------------------------------------
-              # 取得觀測時間
-              # -------------------------------------------------
               obs = station.get("ObsTime")
-
               if isinstance(obs, dict):
-                  obs = (
-                      obs.get("DateTime")
-                      or obs.get("dateTime")
-                  )
-
+                  obs = obs.get("DateTime") or obs.get("dateTime")
               if not obs:
                   return
 
               try:
-                  dt = datetime.fromisoformat(
-                      str(obs).replace("Z", "+00:00")
-                  )
-
+                  dt = datetime.fromisoformat(str(obs).replace("Z", "+00:00"))
                   if dt.tzinfo is None:
-                      dt = dt.replace(
-                          tzinfo=timezone.utc
-                      )
-
-                  ts_ms = int(
-                      dt.timestamp() * 1000
-                  )
-
+                      dt = dt.replace(tzinfo=timezone.utc)
+                  ts_ms = int(dt.timestamp() * 1000)
               except Exception:
                   return
 
-              # -------------------------------------------------
-              # 取得氣溫
-              # -------------------------------------------------
-              weather = (
-                  station.get("WeatherElement")
-                  or {}
-              )
-
+              weather = station.get("WeatherElement") or {}
               try:
-                  temp = float(
-                      weather.get(
-                          "AirTemperature",
-                          weather.get("TEMP")
-                      )
-                  )
-
+                  temp = float(weather.get("AirTemperature", weather.get("TEMP")))
               except (TypeError, ValueError):
                   return
 
-              # -------------------------------------------------
-              # 過濾明顯異常值
-              # -------------------------------------------------
-              if temp < -50 or temp > 60:
+              if temp == -99 or temp < -50 or temp > 60:
                   return
 
-              # -------------------------------------------------
-              # 寫入歷史資料
-              # -------------------------------------------------
-              history["stations"].setdefault(
-                  station_id,
-                  []
-              ).append(
-                  {
-                      "ts": ts_ms,
-                      "temp": round(temp, 1)
-                  }
-              )
+              history["stations"].setdefault(station_id, []).append({
+                  "ts": ts_ms,
+                  "temp": round(temp, 1)
+              })
 
-          # =====================================================
-          # 第一層：
-          # O-A0001 全測站逐時資料
-          #
-          # 這一步非常重要。
-          #
-          # 先把所有有 O-A0001 資料的測站建立起來，
-          # 避免 O-A0003 某一個 10 分鐘時段暫時缺資料時，
-          # 該測站直接從歷史地圖消失。
-          # =====================================================
+          # 先吃 CWA historyAPI 的過去 26 小時檔案，讓剛建立 workflow 時也能
+          # 立即補齊過去資料，而不是只能從 workflow 建立當刻開始累積。
+          bootstrap_dir = "/tmp/cwa-history"
+          for filename in sorted(os.listdir(bootstrap_dir)) if os.path.isdir(bootstrap_dir) else []:
+              if not filename.endswith(".json") or not filename.startswith("frame-"):
+                  continue
+              path = os.path.join(bootstrap_dir, filename)
+              try:
+                  with open(path, "r", encoding="utf-8") as f:
+                      bootstrap_payload = json.load(f)
+                  for station in extract_stations(bootstrap_payload):
+                      append_station(station)
+              except Exception as exc:
+                  print("略過無法解析的 historyAPI 檔案：", filename, exc)
+
+          # 先放入 O-A0001 全測站逐時資料，建立「完整測站骨架」。
+          # O-A0003 有 10 分鐘資料時，後面會以同一時間戳的 10 分鐘資料覆蓋；
+          # 若某站暫時沒有 O-A0003 回傳，仍保留整點歷史資料，避免歷史滑桿整顆測站消失。
           for station in hourly_stations:
               append_station(station)
 
-          # =====================================================
-          # 第二層：
-          # O-A0003 全站 10 分鐘資料
-          #
-          # 同一時間的資料在後面清理時，
-          # O-A0003 會覆蓋 O-A0001 的逐時 fallback。
-          #
-          # 因此：
-          #
-          # O-A0003 有資料
-          # → 使用 10 分鐘資料
-          #
-          # O-A0003 沒資料
-          # → 保留 O-A0001 整點資料
-          # =====================================================
+          # 再加入 O-A0003 全站 10 分鐘資料；同時間戳會在清理階段以最後加入的
+          # O-A0003 數值覆蓋逐時 fallback。
           for station in stations:
               append_station(station)
 
-          # =====================================================
-          # 第三層：
-          # C0B010 七堵明確補抓
-          # =====================================================
+          # 最後加入明確指定 C0B010 的 O-A0003 回傳，優先補上七堵的 10 分鐘資料。
           for station in explicit_stations:
-
-              if (
-                  str(
-                      station.get("StationId") or ""
-                  ).strip()
-                  == "C0B010"
-              ):
+              if str(station.get("StationId") or "").strip() == "C0B010":
                   append_station(station)
 
-          # =====================================================
-          # 清理：
-          # 1. 移除 30 小時以前資料
-          # 2. 相同 timestamp 只保留最後加入的資料
-          #    → O-A0003 會覆蓋 O-A0001
-          # 3. 重新排序
-          # =====================================================
-          for station_id, arr in list(
-              history["stations"].items()
-          ):
-
+          for station_id, arr in list(history["stations"].items()):
               unique = {}
-
               for point in arr:
-
                   try:
                       ts = int(point["ts"])
                       temp = float(point["temp"])
-
-                  except (
-                      KeyError,
-                      TypeError,
-                      ValueError
-                  ):
+                  except (KeyError, TypeError, ValueError):
                       continue
-
-                  # 只保留最近 30 小時
-                  if ts < cutoff_ms:
-                      continue
-
-                  # 過濾明顯異常溫度
-                  if temp < -50 or temp > 60:
-                      continue
-
-                  # 相同 timestamp：
-                  # 後加入的 O-A0003 覆蓋前面的 O-A0001
-                  unique[ts] = {
-                      "ts": ts,
-                      "temp": round(temp, 1)
-                  }
-
-              # 依時間排序
-              cleaned = [
-                  unique[k]
-                  for k in sorted(unique)
-              ]
-
+                  if ts >= cutoff_ms and temp != -99 and -50 <= temp <= 60:
+                      unique[ts] = {"ts": ts, "temp": round(temp, 1)}
+              cleaned = [unique[k] for k in sorted(unique)]
               if cleaned:
                   history["stations"][station_id] = cleaned
               else:
                   del history["stations"][station_id]
 
-          # =====================================================
-          # 更新產生時間
-          # =====================================================
-          history["generatedAt"] = (
-              datetime.now(timezone.utc).isoformat()
-          )
+          history["generatedAt"] = datetime.now(timezone.utc).isoformat()
+          with open(output, "w", encoding="utf-8") as f:
+              json.dump(history, f, ensure_ascii=False, separators=(",", ":"))
 
-          # =====================================================
-          # 寫回 JSON
-          # =====================================================
-          with open(
-              output,
-              "w",
-              encoding="utf-8"
-          ) as f:
+          print("CWA 10分鐘歷史測站數：", len(history["stations"]))
+          print("C0B010 七堵歷史筆數：", len(history["stations"].get("C0B010", [])))
+          PY
 
-              json.dump(
-                  history,
-                  f,
-                  ensure_ascii=False,
-                  separators=(",", ":")
-              )
-
-          # =====================================================
-          # GitHub Actions 診斷資訊
-          # =====================================================
-          print(
-              "CWA 歷史資料測站數：",
-              len(history["stations"])
-          )
-
-          print(
-              "O-A0003 全站回傳數：",
-              len(stations)
-          )
-
-          print(
-              "O-A0001 全站回傳數：",
-              len(hourly_stations)
-          )
-
-          print(
-              "C0B010 七堵歷史筆數：",
-              len(
-                  history["stations"].get(
-                      "C0B010",
-                      []
-                  )
-              )
-          )
-
-      # =========================================================
-      # 提交歷史 JSON
-      # =========================================================
       - name: Commit history
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           git add data/history/cwa-o-a0003-001-history.json
-
           if git diff --cached --quiet; then
             echo "歷史資料沒有變化，不需要提交"
           else
