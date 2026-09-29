@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-29T21:22:58.036830+08:00",
+  "updatedAt": "2026-09-29T21:38:46.556845+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -85,20 +85,6 @@
       "expires": "2026/9/30 下午 03:30:00",
       "summary": "辦理台南市東區林森路一段230號_用戶新裝斷管停水施工",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291720.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609291710",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T17:10:02+08:00",
-      "effective": "2026/9/29 下午 05:08:21",
-      "expires": "2026/9/29 下午 09:30:00",
-      "summary": "豐原區南陽路480號破管搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291710.cap",
       "isDrill": false
     },
     {
