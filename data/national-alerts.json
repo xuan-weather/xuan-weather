@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-29T11:59:16.558285+08:00",
+  "updatedAt": "2026-09-29T12:27:58.313352+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609291220",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T12:20:01+08:00",
+      "effective": "2026/9/29 下午 12:14:04",
+      "expires": "2026/9/29 下午 03:00:00",
+      "summary": "125mm管線修理。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291220.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609291210",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T12:10:01+08:00",
+      "effective": "2026/9/29 上午 11:55:52",
+      "expires": "2026/9/29 下午 05:00:00",
+      "summary": "埔里鎮中山路二段313號前道路漏水搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291210.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609291150",
       "category": "停水",
@@ -109,11 +137,11 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-29T10:50:02+08:00",
-      "effective": "2026/9/29 上午 10:45:47",
-      "expires": "2026/9/29 下午 12:00:00",
-      "summary": "好美里管段測試",
+      "effective": "2026/9/29 上午 10:42:33",
+      "expires": "2026/9/29 下午 02:00:00",
+      "summary": "因大雅區雅環路二段52巷19號 破管漏水緊急搶修。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291050.cap",
-      "isDrill": true
+      "isDrill": false
     },
     {
       "id": "TWC_water_202609291040",
@@ -141,20 +169,6 @@
       "expires": "2026/9/29 下午 02:00:00",
       "summary": "09/29 10:30-14:00，因『台南市東區大同路二段403巷20號路面』路面漏水緊急搶修，造成該區域部分無水與降壓",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291030.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609291020",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T10:20:01+08:00",
-      "effective": "2026/9/29 上午 10:19:14",
-      "expires": "2026/9/29 下午 12:00:00",
-      "summary": "大藏寺前設備故障搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291020.cap",
       "isDrill": false
     },
     {
@@ -263,9 +277,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-29T08:40:01+08:00",
-      "effective": "2026/9/29 上午 08:27:35",
-      "expires": "2026/9/29 下午 12:00:00",
-      "summary": "配合降低漏水率政策辦理115~116年麻豆所分區計量管網委外建置及封閉漏水調查作業(中脇小區管線封閉確認)閥門操作停水",
+      "effective": "2026/9/22 上午 10:52:53",
+      "expires": "2026/9/29 下午 05:00:00",
+      "summary": "辦理「樹林區保安街二段及俊安街汰換管線工程」施工停水。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609290840.cap",
       "isDrill": false
     },
@@ -295,20 +309,6 @@
       "expires": "2026/9/29 下午 05:00:00",
       "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理西港區金砂及南海里等汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609290800.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609290750",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T07:50:01+08:00",
-      "effective": "2026/9/29 上午 07:44:42",
-      "expires": "2026/9/29 下午 12:00:00",
-      "summary": "09/29 08:00-12:00，因『台南市中西區府前路二段與府前一街口』路面漏水緊急搶修，造成該區域部分無水與降壓",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609290750.cap",
       "isDrill": false
     },
     {
