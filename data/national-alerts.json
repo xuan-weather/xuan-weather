@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-30T07:48:11.323837+08:00",
+  "updatedAt": "2026-09-30T07:55:58.100681+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609300750",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-30T07:50:01+08:00",
+      "effective": "2026/9/30 上午 07:44:08",
+      "expires": "2026/9/30 下午 06:00:00",
+      "summary": "斗六市虎溪、正心等汰換管線工程 115/9/30上午08時至下午18時暫停供水。(管線末端用戶可能因水流時間延至下午19時恢復供水，遇雨天則順延)。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609300750.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_heat_202609300732001",
       "category": "高溫",
