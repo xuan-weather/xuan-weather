@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-30T07:28:44.578002+08:00",
+  "updatedAt": "2026-09-30T07:39:05.755029+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_heat_202609300732001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-09-30T07:32:34+08:00",
+      "effective": "2026/9/30 上午 07:31:00",
+      "expires": "2026/9/30 下午 05:00:00",
+      "summary": "各地天氣高溫炎熱，今(30)日白天臺北市、新北市、桃園市、雲林縣、臺南市、屏東縣為橙色燈號，有連續出現36度高溫的機率，請加強注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609300732.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260930071840_0000",
       "category": "水庫放流",
