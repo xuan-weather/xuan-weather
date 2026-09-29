@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-29T10:10:36.002917+08:00",
+  "updatedAt": "2026-09-29T10:23:12.287398+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609291020",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T10:20:01+08:00",
+      "effective": "2026/9/29 上午 10:19:14",
+      "expires": "2026/9/29 下午 12:00:00",
+      "summary": "大藏寺前設備故障搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291020.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609291010",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T10:10:01+08:00",
+      "effective": "2026/9/21 下午 01:51:43",
+      "expires": "2026/9/29 下午 04:30:00",
+      "summary": "因辦理新裝工程(申請者:寶富達投資有限公司,裝置地址:嘉義縣水上鄉三鎮村南靖車站211號)需停水聯結施工。 (一)本公司於實際執行時，將儘量縮小停水範圍及時間，造成您的不便，敬請見諒。 (二)停水時間，請慎防火源，並請關閉抽水機電源，以免損壞。 (三)建築物之自來水進水口低於地面之用戶，在停水期間，請將總表前制水閥栓關閉，以避免發生可能虹吸污染。 (四)停水範圍區域內之用戶，請自行儲水備用，本公司於作業完成後，即恢復供水，管線末端及高地區域，可能會有較延遲復水現象，請諒察。 (五)如欲確認相關停復水進度，可至本公司停水查詢系統查詢：https://web.water.gov.tw/wateroffmap/map",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291010.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609291000",
       "category": "停水",
@@ -533,34 +561,6 @@
       "expires": "2026/9/29 下午 05:00:00",
       "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理富農路一段汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221540.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609221520",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-22T15:20:02+08:00",
-      "effective": "2026/9/22 下午 02:08:01",
-      "expires": "2026/10/1 下午 05:00:00",
-      "summary": "為辦理永康區大仁街等汰換管線工程(大灣路37巷6弄及大灣路41巷)，屆時因施工需停水，致使永康行政區部份停水，請貴用戶配合節約用水並預作儲水準備。造成不便之處，敬請見諒。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221520.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609221010",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-22T10:10:01+08:00",
-      "effective": "2026/9/22 上午 10:08:32",
-      "expires": "2026/9/29 下午 05:30:00",
-      "summary": "辦理「114年度岡山所分區計量管網委外建置及漏水調查工程」於梓官區大舍北路300號施工埋設窨井、擬停水施工，造成不便深感抱歉",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609221010.cap",
       "isDrill": false
     },
     {
