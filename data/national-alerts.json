@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-29T13:57:00.982884+08:00",
+  "updatedAt": "2026-09-29T14:08:25.563394+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609291400",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T14:00:01+08:00",
+      "effective": "2026/9/29 上午 11:55:07",
+      "expires": "2026/10/1 下午 06:00:00",
+      "summary": "辦理虎尾鎮西平路、復興路、復興路74巷等汰換管線工程管線及用戶改接。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291400.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609291350",
       "category": "停水",
@@ -214,20 +228,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609291030",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T10:30:02+08:00",
-      "effective": "2026/9/29 上午 10:28:22",
-      "expires": "2026/9/29 下午 02:00:00",
-      "summary": "09/29 10:30-14:00，因『台南市東區大同路二段403巷20號路面』路面漏水緊急搶修，造成該區域部分無水與降壓",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291030.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609290950",
       "category": "停水",
       "title": "停水",
@@ -319,9 +319,9 @@
       "msgType": "Update",
       "author": "台灣自來水公司",
       "updated": "2026-09-29T08:50:18+08:00",
-      "effective": "2026/9/29 上午 08:18:13",
-      "expires": "2026/9/29 下午 02:00:00",
-      "summary": "因 桃園區龍壽街336號 250mmPVCP漏水緊急搶修 停水",
+      "effective": "2026/9/29 上午 08:44:57",
+      "expires": "2026/9/29 下午 04:00:00",
+      "summary": "梓官區赤崁東路220號150mmpvcp破管搶修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609290850.cap",
       "isDrill": false
     },
@@ -645,20 +645,6 @@
       "expires": "2026/10/1 下午 05:00:00",
       "summary": "辦理善化區小新里成功路59號邊大任建設開發有限公司用戶新裝工程斷管連絡停水施工",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609240830.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609231040",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-23T10:40:02+08:00",
-      "effective": "2026/9/22 上午 08:36:53",
-      "expires": "2026/9/29 下午 02:00:00",
-      "summary": "福興小區水量計故障維修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609231040.cap",
       "isDrill": false
     },
     {
