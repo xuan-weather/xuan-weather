@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-29T12:27:58.313352+08:00",
+  "updatedAt": "2026-09-29T12:42:00.414477+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609291230",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T12:30:02+08:00",
+      "effective": "2026/9/29 下午 12:21:41",
+      "expires": "2026/9/29 下午 04:00:00",
+      "summary": "觀音區忠愛路一段127號漏水修理",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291230.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609291220",
       "category": "停水",
@@ -151,9 +165,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-29T10:40:01+08:00",
-      "effective": "2026/9/29 上午 10:32:30",
-      "expires": "2026/9/29 下午 12:30:00",
-      "summary": "沙鹿區福德路132號對面破管搶修作業，若造成不便，敬請見諒",
+      "effective": "2026/9/29 上午 10:38:52",
+      "expires": "2026/9/29 下午 01:30:00",
+      "summary": "山上區玉峰里中坑14號旁管線緊急維修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291040.cap",
       "isDrill": false
     },
