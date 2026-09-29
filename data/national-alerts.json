@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-30T01:44:19.654368+08:00",
+  "updatedAt": "2026-09-30T01:56:23.585339+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -29,20 +29,6 @@
       "expires": "2026/9/30 上午 04:19:00",
       "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20260930011840_0001.cap",
-      "isDrill": false
-    },
-    {
-      "id": "NFA_Fire_20260929233719002",
-      "category": "火災",
-      "title": "火災",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-30T01:03:24+08:00",
-      "effective": "2026/9/30 上午 01:03:24",
-      "expires": "2026/10/1 上午 01:03:00",
-      "summary": "火災-一般(集合)住宅",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260929233719002.cap",
       "isDrill": false
     },
     {
