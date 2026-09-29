@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-29T14:47:19.265220+08:00",
+  "updatedAt": "2026-09-29T15:01:06.045447+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609291450",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T14:50:01+08:00",
+      "effective": "2026/9/29 下午 01:49:33",
+      "expires": "2026/9/29 下午 06:00:00",
+      "summary": "後龍鎮中龍里中龍街三民路交叉口/管線搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291450.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609291440",
       "category": "停水",
@@ -85,20 +99,6 @@
       "expires": "2026/10/1 下午 06:00:00",
       "summary": "辦理虎尾鎮西平路、復興路、復興路74巷等汰換管線工程管線及用戶改接。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291400.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609291350",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T13:50:01+08:00",
-      "effective": "2026/9/29 下午 01:45:21",
-      "expires": "2026/9/29 下午 05:00:00",
-      "summary": "造橋鄉朝陽村仁愛路８號旁管線搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291350.cap",
       "isDrill": false
     },
     {
@@ -197,20 +197,6 @@
       "expires": "2026/9/29 下午 04:00:00",
       "summary": "觀音區忠愛路一段127號漏水修理",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291230.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609291220",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T12:20:01+08:00",
-      "effective": "2026/9/29 下午 12:14:04",
-      "expires": "2026/9/29 下午 03:00:00",
-      "summary": "125mm管線修理。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291220.cap",
       "isDrill": false
     },
     {
