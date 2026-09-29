@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-29T13:33:01.488036+08:00",
+  "updatedAt": "2026-09-29T13:46:13.057192+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609291340",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T13:40:02+08:00",
+      "effective": "2026/9/29 下午 01:33:01",
+      "expires": "2026/9/29 下午 05:00:00",
+      "summary": "為全面提升二水鄉鄉地區居民用水品質及強化區域供水之穩定度，辦理二水-115年二水鄉增設消防栓工程停水施工改接作業。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291340.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609291330",
       "category": "停水",
@@ -183,20 +197,6 @@
       "expires": "2026/9/29 下午 06:00:00",
       "summary": "辦理新化大德路大新路等汰換管線工程",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291100.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609291050",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T10:50:02+08:00",
-      "effective": "2026/9/29 上午 10:42:33",
-      "expires": "2026/9/29 下午 02:00:00",
-      "summary": "因大雅區雅環路二段52巷19號 破管漏水緊急搶修。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291050.cap",
       "isDrill": false
     },
     {
