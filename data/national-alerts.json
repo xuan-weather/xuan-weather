@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-29T17:29:50.005455+08:00",
+  "updatedAt": "2026-09-29T18:09:32.511266+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_heat_202609291730001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-09-29T17:30:32+08:00",
+      "effective": "2026/9/29 下午 05:29:00",
+      "expires": "2026/9/30 下午 05:00:00",
+      "summary": "各地天氣高溫炎熱，明(30)日白天臺北市、新北市、桃園市、雲林縣、臺南市、屏東縣為橙色燈號，有連續出現36度高溫的機率，請加強注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202609291730.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609291730",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T17:30:01+08:00",
+      "effective": "2026/9/29 下午 05:29:19",
+      "expires": "2026/9/30 下午 05:00:00",
+      "summary": "配合水利局污水工程管線遷改施工停水",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291730.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609291720",
       "category": "停水",
@@ -116,20 +144,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609291600",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T16:00:01+08:00",
-      "effective": "2026/9/29 下午 03:58:57",
-      "expires": "2026/9/29 下午 05:30:00",
-      "summary": "仁德區仁義五街15號_80mm破管搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291600.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609291530",
       "category": "停水",
       "title": "停水",
@@ -151,9 +165,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-29T15:20:01+08:00",
-      "effective": "2026/9/29 下午 03:15:23",
-      "expires": "2026/9/29 下午 05:30:00",
-      "summary": "左營區店仔頂路71號破管搶修",
+      "effective": "2026/9/29 下午 03:14:06",
+      "expires": "2026/9/30 上午 05:00:00",
+      "summary": "柑園街地區漏水調查，暫停供水",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291520.cap",
       "isDrill": false
     },
@@ -228,20 +242,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609291340",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T13:40:02+08:00",
-      "effective": "2026/9/29 下午 01:38:42",
-      "expires": "2026/9/29 下午 06:00:00",
-      "summary": "頭份市文化街與信義路口管線搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291340.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609291320",
       "category": "停水",
       "title": "停水",
@@ -305,9 +305,9 @@
       "msgType": "Update",
       "author": "台灣自來水公司",
       "updated": "2026-09-29T11:00:02+08:00",
-      "effective": "2026/9/22 下午 01:44:25",
-      "expires": "2026/9/29 下午 06:00:00",
-      "summary": "辦理新化大德路大新路等汰換管線工程",
+      "effective": "2026/9/29 上午 10:51:33",
+      "expires": "2026/10/1 下午 05:00:00",
+      "summary": "用戶用水新裝工程-宜蘭市林森路225號旁",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291100.cap",
       "isDrill": false
     },
@@ -375,25 +375,11 @@
       "msgType": "Update",
       "author": "台灣自來水公司",
       "updated": "2026-09-29T08:30:02+08:00",
-      "effective": "2026/9/28 下午 02:40:49",
-      "expires": "2026/9/29 下午 06:00:00",
-      "summary": "辦理雲縣東勢鄉永安路等汰換管線工程管線及用戶改接。",
+      "effective": "2026/9/23 下午 05:01:53",
+      "expires": "2026/9/30 下午 05:00:00",
+      "summary": "進行0304小區邊界封閉確認斷水測試，執行小區及次小區封閉， 執行小區及次小區封閉， 因測試停水時間為9:00-16:00。 作業範圍為:海浴路以東，彰濱五路一段以南，鹿草路一段以西，復興路以北。 影響村里為:鹿港鎮埔崙里、東石里、郭厝里、玉順里、海埔里等範圍，中正路、中華街、八德路、北興街、四維路、天祥街、崇文路、建國路、彰濱五路一段、彰濱五路二段、復興路、明德街、正興路、民生路、永吉街、永和街、永寧街、永康路、永昌街、永春街、永東街、永泰路、永瑞街、永祥街、永福路、永興街、永裕街、永豐路、永靖路、海浴路、自由路、進德街、鹿草路一段、鹿草路二段等周邊巷道",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609290830.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609290740",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T07:40:02+08:00",
-      "effective": "2026/9/29 上午 07:35:57",
-      "expires": "2026/9/29 下午 06:00:00",
-      "summary": "斗六市虎溪、正心等汰換管線工程 115/9/29上午08時至下午18時暫停供水。(管線末端用戶可能因水流時間延至下午19時恢復供水，遇雨天則順延)。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609290740.cap",
-      "isDrill": false
+      "isDrill": true
     },
     {
       "id": "NFA_Fire_20260929044515012",
@@ -407,20 +393,6 @@
       "expires": "2026/9/30 上午 05:47:00",
       "summary": "火災-一般(集合)住宅",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260929044515012.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609281830",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-28T18:30:02+08:00",
-      "effective": "2026/9/28 下午 06:21:13",
-      "expires": "2026/9/29 下午 06:00:00",
-      "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理嘉縣民雄鄉北斗村光明街汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。停水時間9月29日上午08時至18時，18時開始恢復供水，(部分管末端地區，需延遲60分鐘水壓回穩至正常)",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609281830.cap",
       "isDrill": false
     },
     {
