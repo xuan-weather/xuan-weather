@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-29T21:53:10.124483+08:00",
+  "updatedAt": "2026-09-29T22:03:16.277694+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -95,9 +95,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-09-29T17:00:02+08:00",
-      "effective": "2026/9/29 下午 04:57:31",
-      "expires": "2026/9/29 下午 10:00:00",
-      "summary": "新北市樹林區中華路341-3號前漏水修理",
+      "effective": "2026/9/29 下午 04:55:20",
+      "expires": "2026/9/30 下午 04:00:00",
+      "summary": "新竹市牛埔路汰換管線工程用戶線改接",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291700.cap",
       "isDrill": false
     },
