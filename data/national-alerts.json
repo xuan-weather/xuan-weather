@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-29T14:08:25.563394+08:00",
+  "updatedAt": "2026-09-29T14:29:01.475459+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609291420",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T14:20:01+08:00",
+      "effective": "2026/9/29 下午 02:15:23",
+      "expires": "2026/9/30 下午 05:00:00",
+      "summary": "制水閥故障更換",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291420.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609291410",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T14:10:01+08:00",
+      "effective": "2026/9/21 下午 01:24:48",
+      "expires": "2026/10/1 下午 12:00:00",
+      "summary": "燕巢水量計故障緊急搶修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291410.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609291400",
       "category": "停水",
