@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-29T09:27:11.579752+08:00",
+  "updatedAt": "2026-09-29T09:39:00.005727+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609290930",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-29T09:30:01+08:00",
+      "effective": "2026/9/23 下午 01:18:18",
+      "expires": "2026/9/30 上午 06:00:00",
+      "summary": "辦理「三奇小區斷水測試及檢漏作業」",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609290930.cap",
+      "isDrill": true
+    },
     {
       "id": "TWC_water_202609290920",
       "category": "停水",
