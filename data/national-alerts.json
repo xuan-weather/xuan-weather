@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-30T05:34:41.599821+08:00",
+  "updatedAt": "2026-09-30T05:56:14.738919+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609300550",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-30T05:50:01+08:00",
+      "effective": "2026/9/30 上午 05:40:04",
+      "expires": "2026/9/30 下午 05:00:00",
+      "summary": "埔里鎮大坪頂淨水場機電設備故障搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609300550.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260930051840_0000",
       "category": "水庫放流",
@@ -310,20 +324,6 @@
       "summary": "進行0304小區邊界封閉確認斷水測試，執行小區及次小區封閉， 執行小區及次小區封閉， 因測試停水時間為9:00-16:00。 作業範圍為:海浴路以東，彰濱五路一段以南，鹿草路一段以西，復興路以北。 影響村里為:鹿港鎮埔崙里、東石里、郭厝里、玉順里、海埔里等範圍，中正路、中華街、八德路、北興街、四維路、天祥街、崇文路、建國路、彰濱五路一段、彰濱五路二段、復興路、明德街、正興路、民生路、永吉街、永和街、永寧街、永康路、永昌街、永春街、永東街、永泰路、永瑞街、永祥街、永福路、永興街、永裕街、永豐路、永靖路、海浴路、自由路、進德街、鹿草路一段、鹿草路二段等周邊巷道",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609290830.cap",
       "isDrill": true
-    },
-    {
-      "id": "NFA_Fire_20260929044515012",
-      "category": "火災",
-      "title": "火災",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-29T05:47:07+08:00",
-      "effective": "2026/9/29 上午 05:47:07",
-      "expires": "2026/9/30 上午 05:47:00",
-      "summary": "火災-一般(集合)住宅",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260929044515012.cap",
-      "isDrill": false
     },
     {
       "id": "OCA-marinePollution_3164",
