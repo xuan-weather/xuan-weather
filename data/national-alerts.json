@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-30T04:56:56.329967+08:00",
+  "updatedAt": "2026-09-30T05:07:24.409931+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -127,20 +127,6 @@
       "expires": "2026/9/30 下午 05:30:00",
       "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理西屯區福安九街等汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291530.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609291520",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T15:20:01+08:00",
-      "effective": "2026/9/29 下午 03:14:06",
-      "expires": "2026/9/30 上午 05:00:00",
-      "summary": "柑園街地區漏水調查，暫停供水",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291520.cap",
       "isDrill": false
     },
     {
