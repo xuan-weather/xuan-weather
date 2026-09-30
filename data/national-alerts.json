@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-30T18:31:13.056551+08:00",
+  "updatedAt": "2026-09-30T18:46:59.630430+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609301830",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-30T18:30:02+08:00",
+      "effective": "2026/9/30 下午 01:45:48",
+      "expires": "2026/9/30 下午 09:00:00",
+      "summary": "管線漏水緊急搶修 修漏地點：宜蘭縣員山鄉永同路三段160巷5弄3號",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301830.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609301820",
       "category": "停水",
