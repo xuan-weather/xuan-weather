@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-09-30T16:00:27.916371+08:00",
+  "updatedAt": "2026-09-30T16:17:26.502235+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609301610",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-30T16:10:01+08:00",
+      "effective": "2026/9/30 下午 04:03:09",
+      "expires": "2026/9/30 下午 08:00:00",
+      "summary": "大內區頭社里漏水調查分段測試",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301610.cap",
+      "isDrill": true
+    },
+    {
+      "id": "TWC_water_202609301600",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-30T16:00:01+08:00",
+      "effective": "2026/9/30 下午 02:29:36",
+      "expires": "2026/10/1 下午 05:00:00",
+      "summary": "為辦理吉安鄉稻香村香源路22號80HIP新裝管線連絡工程，造成稻香村香源路局部地區停水，不便之處敬請見諒。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301600.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609301550",
       "category": "停水",
