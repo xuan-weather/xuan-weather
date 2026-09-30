@@ -1,8 +1,50 @@
 {
-  "updatedAt": "2026-09-30T17:00:07.754929+08:00",
+  "updatedAt": "2026-09-30T17:14:17.666733+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609301710",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-30T17:10:01+08:00",
+      "effective": "2026/9/30 下午 05:09:16",
+      "expires": "2026/9/30 下午 11:00:00",
+      "summary": "因牡丹鄉/石門村PVCP漏水搶修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301710.cap",
+      "isDrill": false
+    },
+    {
+      "id": "MOENV_airQuality_202609301710_003",
+      "category": "空氣品質",
+      "title": "空氣品質",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "環境部",
+      "updated": "2026-09-30T17:10:00+08:00",
+      "effective": "2026/9/30 下午 05:10:00",
+      "expires": "2026/9/30 下午 06:10:00",
+      "summary": "【AQI大於150】環境部提醒新店地區紅色警示(對所有族群不健康，宜減少在戶外活動)",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/EPA/2026/EPA_airQuality/MOENV_airQuality_202609301710_003.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202609301700",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-30T17:00:02+08:00",
+      "effective": "2026/9/30 上午 11:53:34",
+      "expires": "2026/9/30 下午 07:00:00",
+      "summary": "因玉井區仁愛街291號前100mmPVCP管線維修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301700.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609301650",
       "category": "停水",
@@ -281,20 +323,6 @@
       "expires": "2026/10/1 下午 12:57:00",
       "summary": "火災-一般(集合)住宅",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260930122748003.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609301200",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-30T12:00:01+08:00",
-      "effective": "2026/9/30 上午 11:51:27",
-      "expires": "2026/10/2 上午 06:00:00",
-      "summary": "大埔加壓站400mm管理用錶漏水搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301200.cap",
       "isDrill": false
     },
     {
