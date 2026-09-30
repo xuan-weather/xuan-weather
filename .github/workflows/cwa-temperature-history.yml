@@ -3,17 +3,10 @@ name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 on:
   workflow_dispatch:
   schedule:
-    # 每 5 分鐘檢查一次，從每小時第 3 分鐘開始，避開整點高負載。
-    # 例如台灣時間 11:13、11:18、11:23……；可在 CWA 11:10 更新後及時補抓。
-    - cron: '3-58/5 * * * *'
+    - cron: '*/10 * * * *'
 
 permissions:
   contents: write
-
-# 同一時間只允許一個歷史資料工作流程寫入，避免重疊執行造成漏批次或 push 衝突。
-concurrency:
-  group: cwa-temperature-history
-  cancel-in-progress: false
 
 jobs:
   fetch-temperature-history:
@@ -414,122 +407,15 @@ jobs:
           print("含整點官方小時最大陣風歷史的測站數：", hourly_gust_count)
           PY
 
-      - name: Build lightweight today temperature extremes summary
-        run: |
-          set -e
-          python - <<'PY'
-          import json
-          from datetime import datetime, timezone
-          from zoneinfo import ZoneInfo
-
-          history_path = "data/history/cwa-o-a0003-001-history.json"
-          output_path = "data/history/today-temperature-extremes.json"
-          tz = ZoneInfo("Asia/Taipei")
-          today = datetime.now(tz).date()
-
-          with open(history_path, "r", encoding="utf-8") as f:
-              history = json.load(f)
-
-          stations = []
-          for station_id, points in (history.get("stations") or {}).items():
-              if not isinstance(points, list):
-                  continue
-
-              max_temp = None
-              max_ts = None
-              station_name = ""
-              for point in points:
-                  if not isinstance(point, dict):
-                      continue
-                  try:
-                      ts = int(point.get("ts"))
-                      dt = datetime.fromtimestamp(ts / 1000, timezone.utc).astimezone(tz)
-                  except (TypeError, ValueError, OSError, OverflowError):
-                      continue
-                  if dt.date() != today:
-                      continue
-
-                  if point.get("stationName"):
-                      station_name = str(point.get("stationName")).strip()
-
-                  try:
-                      temp = float(point.get("temp"))
-                  except (TypeError, ValueError):
-                      temp = None
-                  if temp is None or not (-50 <= temp <= 60):
-                      continue
-
-                  if max_temp is None or temp > max_temp:
-                      max_temp = round(temp, 1)
-                      max_ts = ts
-
-                  # O-A0001 的官方 DailyExtreme 快照也已保存進歷史資料。
-                  try:
-                      daily_high = float(point.get("dailyHighTemp"))
-                  except (TypeError, ValueError):
-                      daily_high = None
-                  if daily_high is not None and  -50 <= daily_high <= 60:
-                      if max_temp is None or daily_high > max_temp:
-                          max_temp = round(daily_high, 1)
-                          occurred = point.get("dailyHighTime")
-                          try:
-                              dt2 = datetime.fromisoformat(str(occurred).replace("Z", "+00:00"))
-                              if dt2.tzinfo is None:
-                                  dt2 = dt2.replace(tzinfo=timezone.utc)
-                              max_ts = int(dt2.timestamp() * 1000)
-                          except Exception:
-                              max_ts = ts
-
-              if max_temp is None:
-                  continue
-
-              item = {
-                  "stationId": str(station_id).strip(),
-                  "stationName": station_name,
-                  "maxTemp": max_temp
-              }
-              if max_ts is not None:
-                  item["maxTime"] = datetime.fromtimestamp(max_ts / 1000, timezone.utc).astimezone(tz).isoformat()
-              stations.append(item)
-
-          stations.sort(key=lambda x: (-float(x.get("maxTemp", -999)), x.get("stationName", "")))
-          payload = {
-              "date": today.isoformat(),
-              "generatedAt": datetime.now(timezone.utc).isoformat(),
-              "stations": stations
-          }
-
-          with open(output_path, "w", encoding="utf-8") as f:
-              json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
-
-          hot_count = sum(1 for item in stations if float(item.get("maxTemp", -999)) >= 35)
-          print("今日高溫摘要測站數：", len(stations))
-          print("今日 >=35°C 測站數：", hot_count)
-          print("摘要日期：", today.isoformat())
-          PY
-
       - name: Commit history
         run: |
-          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # 本次工作已先產生新的歷史 JSON。
-          # 先把產物暫存到 /tmp，讓 working tree 回到乾淨狀態，
-          # 再同步遠端 main，避免 git pull --rebase 因「未提交變更」而失敗。
-          cp data/history/cwa-o-a0003-001-history.json /tmp/cwa-o-a0003-001-history.generated.json
-          cp data/history/today-temperature-extremes.json /tmp/today-temperature-extremes.generated.json
-          git restore --source=HEAD -- data/history/cwa-o-a0003-001-history.json data/history/today-temperature-extremes.json || true
-
-          git pull --rebase origin main
-
-          # 把本次工作產生的最新歷史資料與輕量高溫摘要放回來再提交。
-          cp /tmp/cwa-o-a0003-001-history.generated.json data/history/cwa-o-a0003-001-history.json
-          cp /tmp/today-temperature-extremes.generated.json data/history/today-temperature-extremes.json
-          git add data/history/cwa-o-a0003-001-history.json data/history/today-temperature-extremes.json
+          git add data/history/cwa-o-a0003-001-history.json
           if git diff --cached --quiet; then
             echo "歷史資料沒有變化，不需要提交"
           else
             git commit -m "Update CWA temperature rainfall wind and gust history"
+            git pull --rebase origin main
             git push origin main
           fi
