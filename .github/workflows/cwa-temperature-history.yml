@@ -3,10 +3,17 @@ name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/10 * * * *'
+    # 每 5 分鐘檢查一次，從每小時第 3 分鐘開始，避開整點高負載。
+    # 例如台灣時間 11:13、11:18、11:23……；可在 CWA 11:10 更新後及時補抓。
+    - cron: '3-58/5 * * * *'
 
 permissions:
   contents: write
+
+# 同一時間只允許一個歷史資料工作流程寫入，避免重疊執行造成漏批次或 push 衝突。
+concurrency:
+  group: cwa-temperature-history
+  cancel-in-progress: false
 
 jobs:
   fetch-temperature-history:
@@ -132,35 +139,6 @@ jobs:
 
               weather = station.get("WeatherElement") or {}
 
-              # CWA 官方當日極值：保存「數值＋發生時間」快照。
-              # 這樣跨日後，24 小時圖仍能取得前一天官方最高/最低溫，
-              # 不必寫死測站、日期或溫度，也不會只剩 10 分鐘採樣點。
-              daily_extreme = weather.get("DailyExtreme") or {}
-              daily_high = daily_extreme.get("DailyHigh") or {}
-              daily_low = daily_extreme.get("DailyLow") or {}
-              high_info = daily_high.get("TemperatureInfo") or {}
-              low_info = daily_low.get("TemperatureInfo") or {}
-
-              def parse_extreme_info(info):
-                  if not isinstance(info, dict):
-                      return None, None
-                  raw_value = info.get("AirTemperature")
-                  try:
-                      value = float(raw_value)
-                  except (TypeError, ValueError):
-                      value = None
-                  if value is not None and not (-50 <= value <= 60):
-                      value = None
-                  occurred = info.get("Occurred_at") or info.get("OccurredAt") or {}
-                  if isinstance(occurred, dict):
-                      occurred = occurred.get("DateTime") or occurred.get("dateTime")
-                  if occurred is not None:
-                      occurred = str(occurred).strip() or None
-                  return value, occurred
-
-              daily_high_value, daily_high_time = parse_extreme_info(high_info)
-              daily_low_value, daily_low_time = parse_extreme_info(low_info)
-
               # 溫度
               temp = None
               try:
@@ -220,12 +198,6 @@ jobs:
                   point["stationName"] = station_name
               if temp is not None:
                   point["temp"] = round(temp, 1)
-              if daily_high_value is not None and daily_high_time:
-                  point["dailyHighTemp"] = round(daily_high_value, 1)
-                  point["dailyHighTime"] = daily_high_time
-              if daily_low_value is not None and daily_low_time:
-                  point["dailyLowTemp"] = round(daily_low_value, 1)
-                  point["dailyLowTime"] = daily_low_time
               if hourly_wind is not None and hourly_source:
                   point["hourlyWind"] = round(hourly_wind, 1)
               if max10min_wind is not None:
@@ -373,23 +345,6 @@ jobs:
                           has_value = True
                   except (TypeError, ValueError):
                       pass
-                  if point.get("dailyHighTime") and point.get("dailyHighTemp") is not None:
-                      try:
-                          v = float(point.get("dailyHighTemp"))
-                          if -50 <= v <= 60:
-                              item["dailyHighTemp"] = round(v, 1)
-                              item["dailyHighTime"] = str(point.get("dailyHighTime")).strip()
-                      except (TypeError, ValueError):
-                          pass
-                  if point.get("dailyLowTime") and point.get("dailyLowTemp") is not None:
-                      try:
-                          v = float(point.get("dailyLowTemp"))
-                          if -50 <= v <= 60:
-                              item["dailyLowTemp"] = round(v, 1)
-                              item["dailyLowTime"] = str(point.get("dailyLowTime")).strip()
-                      except (TypeError, ValueError):
-                          pass
-
                   try:
                       rain24h = float(point.get("rain24h"))
                       if rain24h >= 0:
@@ -467,7 +422,10 @@ jobs:
           if git diff --cached --quiet; then
             echo "歷史資料沒有變化，不需要提交"
           else
-            git commit -m "Update CWA temperature rainfall wind and gust history"
+            # 先同步最新 main，再提交本次新抓到的資料。
+            # concurrency 已避免同一工作流程互相重疊。
             git pull --rebase origin main
+            git add data/history/cwa-o-a0003-001-history.json
+            git commit -m "Update CWA temperature rainfall wind and gust history"
             git push origin main
           fi
