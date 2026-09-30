@@ -3,7 +3,7 @@ name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '3-58/5 * * * *'
 
 permissions:
   contents: write
@@ -53,6 +53,50 @@ jobs:
             -H "Accept: application/json" \
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${CWA_API_KEY}&format=JSON" \
             -o /tmp/cwa-o-a0002-001.json
+
+      - name: Publish latest CWA JSON for GitHub Pages
+        run: |
+          set -e
+          mkdir -p data
+          cp /tmp/cwa-o-a0001-001.json data/cwa-O-A0001-001.json
+          cp /tmp/cwa-o-a0002-001.json data/cwa-O-A0002-001.json
+          cp /tmp/cwa-o-a0003-001.json data/cwa-O-A0003-001.json
+
+          # 七堵等 C0 測站若只在明確 stationId 回傳中出現，
+          # 將它合併回主 O-A0003-001 JSON，避免網站因單站缺資料而消失。
+          python - <<'PY2'
+          import json
+          from pathlib import Path
+
+          main_path = Path("data/cwa-O-A0003-001.json")
+          explicit_path = Path("/tmp/cwa-o-a0003-001-c0b010.json")
+
+          main = json.loads(main_path.read_text(encoding="utf-8"))
+          explicit = json.loads(explicit_path.read_text(encoding="utf-8"))
+
+          def stations(payload):
+              return (payload.get("records", {}).get("Station")
+                      or payload.get("result", {}).get("records", {}).get("Station")
+                      or [])
+
+          merged = stations(main)
+          explicit_stations = stations(explicit)
+          by_id = {str(x.get("StationId")): x for x in merged if x.get("StationId")}
+
+          for st in explicit_stations:
+              sid = str(st.get("StationId") or "")
+              if sid == "C0B010":
+                  by_id[sid] = st
+
+          merged = list(by_id.values())
+          if main.get("records") is not None:
+              main.setdefault("records", {})["Station"] = merged
+          elif main.get("result", {}).get("records") is not None:
+              main["result"]["records"]["Station"] = merged
+
+          main_path.write_text(json.dumps(main, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+          print("Published O-A0003-001 stations:", len(merged))
+          PY2
 
       - name: Update rolling 7-day history
         run: |
@@ -411,11 +455,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/history/cwa-o-a0003-001-history.json
+          git add data/cwa-O-A0001-001.json data/cwa-O-A0002-001.json data/cwa-O-A0003-001.json data/history/cwa-o-a0003-001-history.json
           if git diff --cached --quiet; then
             echo "歷史資料沒有變化，不需要提交"
           else
-            git commit -m "Update CWA temperature rainfall wind and gust history"
+            git commit -m "Update CWA realtime JSON and history"
             git pull --rebase origin main
             git push origin main
           fi
