@@ -1,0 +1,109 @@
+name: CWA Earthquake Reports - Fast Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub Actions 最短實務排程為 5 分鐘
+    # 與主要氣象 Workflow 錯開
+    - cron: '1-56/5 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cwa-earthquake-data
+  cancel-in-progress: false
+
+jobs:
+  fetch-earthquake:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch CWA significant felt earthquake reports
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p data
+
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0015-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o data/cwa-E-A0015-001.json
+
+          python - <<'PY'
+          import json
+
+          path = "data/cwa-E-A0015-001.json"
+
+          with open(path, "r", encoding="utf-8") as f:
+              payload = json.load(f)
+
+          records = payload.get("records") or payload.get("result", {}).get("records")
+
+          if not isinstance(records, dict) or not isinstance(records.get("Earthquake"), list):
+              raise SystemExit(
+                  "E-A0015-001 回傳格式錯誤：找不到 records.Earthquake"
+              )
+
+          print(
+              "E-A0015-001 地震報告數：",
+              len(records["Earthquake"])
+          )
+          PY
+
+      - name: Fetch CWA local felt earthquake reports
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0016-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o data/cwa-E-A0016-001.json
+
+          python - <<'PY'
+          import json
+
+          path = "data/cwa-E-A0016-001.json"
+
+          with open(path, "r", encoding="utf-8") as f:
+              payload = json.load(f)
+
+          records = payload.get("records") or payload.get("result", {}).get("records")
+
+          if not isinstance(records, dict) or not isinstance(records.get("Earthquake"), list):
+              raise SystemExit(
+                  "E-A0016-001 回傳格式錯誤：找不到 records.Earthquake"
+              )
+
+          print(
+              "E-A0016-001 地震報告數：",
+              len(records["Earthquake"])
+          )
+          PY
+
+      - name: Commit earthquake data
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/cwa-E-A0015-001.json data/cwa-E-A0016-001.json
+
+          if git diff --cached --quiet; then
+            echo "地震資料沒有變化，不需要提交"
+            exit 0
+          fi
+
+          git commit -m "Update CWA earthquake reports"
+
+          git pull --rebase origin main
+          git push origin main
