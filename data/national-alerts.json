@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-30T13:55:34.816628+08:00",
+  "updatedAt": "2026-09-30T14:05:53.337755+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609301400",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-30T14:00:01+08:00",
+      "effective": "2026/9/30 下午 01:57:50",
+      "expires": "2026/10/1 上午 05:00:00",
+      "summary": "棒球小區夜間漏水測試",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301400.cap",
+      "isDrill": true
+    },
     {
       "id": "TWC_water_202609301350",
       "category": "停水",
@@ -200,20 +214,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202609301130",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-30T11:30:03+08:00",
-      "effective": "2026/9/30 上午 09:18:56",
-      "expires": "2026/9/30 下午 02:00:00",
-      "summary": "大埤鄉怡然村怡美路41號前250mmHIPp管線維修停水",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301130.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202609301120",
       "category": "停水",
       "title": "停水",
@@ -253,20 +253,6 @@
       "expires": "2026/9/30 下午 05:00:00",
       "summary": "義二路202號消防設備緊急換新",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301050.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609301000",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-30T10:00:01+08:00",
-      "effective": "2026/9/30 上午 09:50:15",
-      "expires": "2026/9/30 下午 02:30:00",
-      "summary": "後龍鎮鄭美香附近(台1線)/管線搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301000.cap",
       "isDrill": false
     },
     {
