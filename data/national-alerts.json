@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-30T12:59:48.360057+08:00",
+  "updatedAt": "2026-09-30T13:14:14.069551+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-EQ115067-2026-0930-130024",
+      "category": "地震",
+      "title": "地震",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-09-30T13:06:03+08:00",
+      "effective": "2026/9/30 下午 01:06:03",
+      "expires": "2026/9/30 下午 02:06:00",
+      "summary": "09/30 13:00臺灣東部海域發生規模5.9有感地震，最大震度花蓮縣和平、宜蘭縣南澳、宜蘭縣宜蘭市、嘉義縣番路、彰化縣彰化市、雲林縣麥寮2級。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Earthquake/CWA-EQ115067-2026-0930-130024.cap",
+      "isDrill": false
+    },
     {
       "id": "NFA_Fire_20260930122748003",
       "category": "火災",
@@ -239,20 +253,6 @@
       "expires": "2026/9/30 下午 04:00:00",
       "summary": "辦理清水區靈泉小區等汰換管線工程(三)-管線改接",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609300950.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609300940",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-30T09:40:01+08:00",
-      "effective": "2026/9/30 上午 09:39:17",
-      "expires": "2026/9/30 下午 01:00:00",
-      "summary": "花蓮市司法新村14號及24號(挖損)漏水緊急搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609300940.cap",
       "isDrill": false
     },
     {
