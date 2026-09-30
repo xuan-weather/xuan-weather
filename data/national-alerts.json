@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-30T21:36:13.578169+08:00",
+  "updatedAt": "2026-09-30T21:50:45.782991+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "NFA_Fire_20260930210217005",
+      "category": "火災",
+      "title": "火災",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "內政部消防署",
+      "updated": "2026-09-30T21:39:23+08:00",
+      "effective": "2026/9/30 下午 09:39:23",
+      "expires": "2026/10/1 下午 09:39:00",
+      "summary": "火災-汽機車",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260930210217005.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260930211840_0001",
       "category": "水庫放流",
