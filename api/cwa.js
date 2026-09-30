@@ -1,3 +1,7 @@
+// Vercel Serverless Function: Xuan Weather → CWA official realtime proxy
+// Browser -> /api/cwa?dataset=O-A0003-001
+// CWA_API_KEY stays in Vercel Environment Variables only.
+
 const ALLOWED_DATASETS = new Set([
   'O-A0001-001',
   'O-A0002-001',
@@ -9,102 +13,92 @@ const ALLOWED_DATASETS = new Set([
   'E-A0016-001'
 ]);
 
+function setCors(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  res.setHeader('Vary', 'Origin');
+}
+
 module.exports = async function handler(req, res) {
+  setCors(res);
 
-  // ===== CORS：允許 GitHub Pages 呼叫 Vercel API =====
-  res.setHeader(
-    'Access-Control-Allow-Origin',
-    'https://xuan-weather.github.io'
-  );
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET, OPTIONS'
-  );
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'Content-Type'
-  );
-
-  // 處理瀏覽器 CORS 預檢
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
 
-  // 只允許 GET
   if (req.method !== 'GET') {
-    return res.status(405).json({
-      success: false,
-      error: 'Method Not Allowed'
-    });
+    res.setHeader('Allow', 'GET, OPTIONS');
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // 取得資料集名稱
   const dataset = String(req.query?.dataset || '').trim();
 
-  if (!dataset) {
-    return res.status(400).json({
-      success: false,
-      error: 'Missing dataset'
-    });
-  }
-
-  // 防止任意資料集被代理
   if (!ALLOWED_DATASETS.has(dataset)) {
     return res.status(400).json({
-      success: false,
-      error: `Dataset not allowed: ${dataset}`
+      error: 'Invalid dataset',
+      message: '不允許的 CWA dataset。'
     });
   }
 
-  // ===== CWA API Key：只放在 Vercel Server 端 =====
   const apiKey = String(process.env.CWA_API_KEY || '').trim();
 
   if (!apiKey) {
     return res.status(500).json({
-      success: false,
-      error: 'CWA_API_KEY is not configured'
+      error: 'Server configuration error',
+      message: 'Vercel 尚未設定 CWA_API_KEY。'
     });
   }
 
-  // ===== 官方 CWA API =====
+  const nonce = Date.now().toString();
+
   const upstreamUrl =
-    `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${encodeURIComponent(dataset)}`;
+    `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${encodeURIComponent(dataset)}?Authorization=${encodeURIComponent(apiKey)}&format=JSON&_=${nonce}`;
 
   try {
-
     const upstream = await fetch(upstreamUrl, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
-        'Authorization': apiKey
+        Accept: 'application/json',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache'
       },
       cache: 'no-store'
     });
 
     const text = await upstream.text();
 
-    let data;
+    let data = null;
 
     try {
-      data = JSON.parse(text);
-    } catch (parseError) {
+      data = text ? JSON.parse(text) : null;
+    } catch (_) {
       return res.status(502).json({
-        success: false,
-        error: 'CWA API returned invalid JSON',
-        upstreamStatus: upstream.status
+        error: 'Bad Gateway',
+        message: `CWA 回傳非 JSON（HTTP ${upstream.status}）。`
       });
     }
 
     if (!upstream.ok) {
-      return res.status(upstream.status).json(data);
+      return res.status(upstream.status).json({
+        error: 'CWA API Error',
+        message:
+          data?.message ||
+          data?.error ||
+          data?.result?.message ||
+          `CWA API 請求失敗（HTTP ${upstream.status}）。`
+      });
     }
 
-    // 不讓瀏覽器或 CDN 快取舊的 CWA 即時資料
     res.setHeader(
       'Cache-Control',
       'no-store, max-age=0, must-revalidate'
     );
 
+    res.setHeader('CDN-Cache-Control', 'no-store');
+    res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.setHeader(
       'Content-Type',
       'application/json; charset=utf-8'
@@ -114,12 +108,11 @@ module.exports = async function handler(req, res) {
 
   } catch (error) {
 
-    console.error('CWA API Error:', error);
+    console.error('CWA proxy error:', error);
 
     return res.status(502).json({
-      success: false,
-      error: 'Failed to fetch CWA API',
-      message: String(error?.message || error)
+      error: 'Bad Gateway',
+      message: '無法連線至中央氣象署資料服務，請稍後再試。'
     });
   }
 };
