@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-01T00:58:57.515417+08:00",
+  "updatedAt": "2026-10-01T01:12:10.905503+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -351,20 +351,6 @@
       "expires": "2026/10/1 上午 05:00:00",
       "summary": "台電停電",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301100.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609300930",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-30T09:30:02+08:00",
-      "effective": "2026/9/30 上午 09:23:32",
-      "expires": "2026/10/1 上午 01:00:00",
-      "summary": "為辦理「114 年鳳山所分區計量管網委外建置及漏水調查」，因施作五甲國中小 區供水區域封閉確認。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609300930.cap",
       "isDrill": false
     },
     {
