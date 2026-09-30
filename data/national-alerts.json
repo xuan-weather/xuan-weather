@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-30T10:48:09.749187+08:00",
+  "updatedAt": "2026-09-30T10:58:32.378904+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609301050",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-30T10:50:24+08:00",
+      "effective": "2026/9/30 上午 10:43:18",
+      "expires": "2026/9/30 下午 05:00:00",
+      "summary": "義二路202號消防設備緊急換新",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301050.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202609301030",
       "category": "停水",
