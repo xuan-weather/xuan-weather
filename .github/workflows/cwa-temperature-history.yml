@@ -416,16 +416,24 @@ jobs:
 
       - name: Commit history
         run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # 本次工作已先產生新的歷史 JSON。
+          # 先把產物暫存到 /tmp，讓 working tree 回到乾淨狀態，
+          # 再同步遠端 main，避免 git pull --rebase 因「未提交變更」而失敗。
+          cp data/history/cwa-o-a0003-001-history.json /tmp/cwa-o-a0003-001-history.generated.json
+          git restore --source=HEAD -- data/history/cwa-o-a0003-001-history.json
+
+          git pull --rebase origin main
+
+          # 把本次工作產生的最新歷史資料放回來再提交。
+          cp /tmp/cwa-o-a0003-001-history.generated.json data/history/cwa-o-a0003-001-history.json
           git add data/history/cwa-o-a0003-001-history.json
           if git diff --cached --quiet; then
             echo "歷史資料沒有變化，不需要提交"
           else
-            # 先同步最新 main，再提交本次新抓到的資料。
-            # concurrency 已避免同一工作流程互相重疊。
-            git pull --rebase origin main
-            git add data/history/cwa-o-a0003-001-history.json
             git commit -m "Update CWA temperature rainfall wind and gust history"
             git push origin main
           fi
