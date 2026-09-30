@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-09-30T12:21:07.584166+08:00",
+  "updatedAt": "2026-09-30T12:36:06.813491+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202609301220",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-09-30T12:20:01+08:00",
+      "effective": "2026/9/29 下午 04:19:47",
+      "expires": "2026/9/30 下午 06:30:00",
+      "summary": "為提升供水穩定度、降低管線漏水風險並確保民眾用水水質安全，辦理豐原區西安街等汰換管線工程，以強化整體供水系統效能，提供更安心可靠之用水服務。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301220.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20260930121840_0000",
       "category": "水庫放流",
@@ -57,20 +71,6 @@
       "expires": "2026/9/30 下午 05:00:00",
       "summary": "為全面提升二水鄉地區居民用水品質及強化區域供水之穩定度，辦理二水-115年二水鄉增設消防栓工程停水施工改接作業。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301150.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609301140",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-30T11:40:01+08:00",
-      "effective": "2026/9/30 上午 11:36:54",
-      "expires": "2026/9/30 下午 12:30:00",
-      "summary": "因下營區茅營里中營１０５４號前管線漏水，搶修需停水。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301140.cap",
       "isDrill": false
     },
     {
@@ -165,9 +165,9 @@
       "msgType": "Update",
       "author": "台灣自來水公司",
       "updated": "2026-09-30T10:20:01+08:00",
-      "effective": "2026/9/30 上午 09:15:32",
-      "expires": "2026/9/30 下午 12:30:00",
-      "summary": "梓官區民權路與公館路口漏水搶修",
+      "effective": "2026/9/30 上午 10:11:10",
+      "expires": "2026/9/30 下午 01:30:00",
+      "summary": "09/30 10:00-13:30，因『台南市東區裕華二街與裕孝三街口』路面漏水緊急搶修，造成該區域部水與降壓。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301020.cap",
       "isDrill": false
     },
@@ -379,20 +379,6 @@
       "expires": "2026/9/30 下午 05:00:00",
       "summary": "配合水利局污水工程管線遷改施工停水",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291730.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609291720",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-29T17:20:02+08:00",
-      "effective": "2026/9/29 下午 05:12:32",
-      "expires": "2026/9/30 下午 03:30:00",
-      "summary": "辦理台南市東區林森路一段230號_用戶新裝斷管停水施工",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609291720.cap",
       "isDrill": false
     },
     {
