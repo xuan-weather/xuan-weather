@@ -1,8 +1,78 @@
 {
-  "updatedAt": "2026-10-01T10:50:37.445568+08:00",
+  "updatedAt": "2026-10-01T11:32:26.548335+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_heat_202610011125001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-10-01T11:25:18+08:00",
+      "effective": "2026/10/1 上午 11:24:00",
+      "expires": "2026/10/1 下午 05:00:00",
+      "summary": "各地天氣高溫炎熱，今(1)日中午前後臺北市、新北市、彰化縣、南投縣、雲林縣為橙色燈號，有連續出現36度高溫的機率，請加強注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610011125.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202610011120",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T11:20:02+08:00",
+      "effective": "2026/10/1 上午 11:12:03",
+      "expires": "2026/10/1 下午 03:00:00",
+      "summary": "因桃園區興一街23號前150mmPVCP漏水搶修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011120.cap",
+      "isDrill": false
+    },
+    {
+      "id": "WRA_ReservoirWarn_20261001111840_0000",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-10-01T11:18:40+08:00",
+      "effective": "2026/10/1 上午 11:18:40",
+      "expires": "2026/10/1 下午 02:19:00",
+      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261001111840_0000.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202610011110",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T11:10:01+08:00",
+      "effective": "2026/9/29 下午 03:05:39",
+      "expires": "2026/10/1 下午 05:00:00",
+      "summary": "為提供供水穩定度、降低管線漏水風險並確保民眾用水水質安全,辦理玉井區和平街等汰換管線工程,以強化整體供水系統效能,提供更安心可靠之用水服務",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011110.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202610011100",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T11:00:02+08:00",
+      "effective": "2026/10/1 上午 10:58:54",
+      "expires": "2026/10/1 下午 02:30:00",
+      "summary": "豐原區圓環北路二段337號破管搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011100.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202610011040",
       "category": "停水",
@@ -242,20 +312,6 @@
       "isDrill": false
     },
     {
-      "id": "CWA-Weather_heat_202610010738001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "中央氣象署",
-      "updated": "2026-10-01T07:38:21+08:00",
-      "effective": "2026/10/1 上午 07:35:00",
-      "expires": "2026/10/1 下午 05:00:00",
-      "summary": "各地天氣高溫炎熱，今(1)日白天臺北市、新北市、彰化縣、南投縣、雲林縣、臺南市、屏東縣為橙色燈號，有連續出現36度高溫的機率，請加強注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610010738.cap",
-      "isDrill": false
-    },
-    {
       "id": "OCA-marinePollution_3167",
       "category": "海洋污染",
       "title": "海洋污染",
@@ -309,20 +365,6 @@
       "expires": "2026/10/1 下午 05:00:00",
       "summary": "配合水利局污水工程管線遷改施工停水",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301800.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609301730",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-30T17:30:01+08:00",
-      "effective": "2026/9/29 下午 03:05:39",
-      "expires": "2026/10/1 下午 05:00:00",
-      "summary": "為提供供水穩定度、降低管線漏水風險並確保民眾用水水質安全,辦理玉井區和平街等汰換管線工程,以強化整體供水系統效能,提供更安心可靠之用水服務",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301730.cap",
       "isDrill": false
     },
     {
@@ -449,20 +491,6 @@
       "expires": "2026/10/1 下午 03:00:00",
       "summary": "火災-其他",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260930133925014.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609301450",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-30T14:50:01+08:00",
-      "effective": "2026/9/30 下午 02:43:41",
-      "expires": "2026/10/1 上午 11:00:00",
-      "summary": "辦理分區計量管網流量計故障修復作業",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301450.cap",
       "isDrill": false
     },
     {
