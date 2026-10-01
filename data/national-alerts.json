@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-10-01T16:38:59.874983+08:00",
+  "updatedAt": "2026-10-01T16:53:17.846223+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202610011650",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T16:50:02+08:00",
+      "effective": "2026/9/29 下午 04:46:55",
+      "expires": "2026/10/1 下午 08:00:00",
+      "summary": "為辦理宜蘭縣冬山鄉自強路、龍祥路等汰換管線。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011650.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202610011640",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T16:40:01+08:00",
+      "effective": "2026/10/1 下午 04:35:22",
+      "expires": "2026/10/1 下午 07:00:00",
+      "summary": "豐原區豐勢路一段277號破管搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011640.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_strong-wind_202610011634001",
       "category": "強風",
