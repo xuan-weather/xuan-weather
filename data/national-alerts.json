@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-01T22:53:03.754792+08:00",
+  "updatedAt": "2026-10-01T23:01:41.342688+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_FloodWarn_20261001225730_0000",
+      "category": "淹水",
+      "title": "淹水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "水利署",
+      "updated": "2026-10-01T22:57:30+08:00",
+      "effective": "2026/10/1 下午 10:57:30",
+      "expires": "2026/10/2 上午 01:58:00",
+      "summary": "水利署訊屏東縣泰武鄉淹水二級警戒 (舊泰武站一小時雨量超過70mm) ,如持續降雨轄內易淹水村里及道路可能3小時內開始積淹水 (如：泰武鄉-佳平村,泰武村,平和村,佳興村,武潭村,萬安村)，建請即時注意淹水通報及應變，低窪地區及道路請特別注意防範積淹水。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/Flood/WRA_FloodWarn_20261001225730_0000.cap",
+      "isDrill": false
+    },
     {
       "id": "cwa.gov.tw_thunderstorm_20261001224853_000",
       "category": "雷雨",
