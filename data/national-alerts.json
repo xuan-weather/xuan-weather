@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-01T14:55:24.639696+08:00",
+  "updatedAt": "2026-10-01T15:07:13.978905+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -95,9 +95,9 @@
       "msgType": "Alert",
       "author": "台灣自來水公司",
       "updated": "2026-10-01T13:50:01+08:00",
-      "effective": "2026/10/1 下午 01:47:56",
-      "expires": "2026/10/1 下午 03:00:00",
-      "summary": "清水12號井場站機電設備異常搶修作業",
+      "effective": "2026/10/1 下午 01:46:35",
+      "expires": "2026/10/1 下午 05:00:00",
+      "summary": "善化區善化國小旁管線緊急維修",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011350.cap",
       "isDrill": false
     },
@@ -186,20 +186,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202610011240",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-10-01T12:40:01+08:00",
-      "effective": "2026/10/1 下午 12:30:39",
-      "expires": "2026/10/1 下午 03:00:00",
-      "summary": "永平路破管搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011240.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202610011230",
       "category": "停水",
       "title": "停水",
@@ -256,20 +242,6 @@
       "isDrill": false
     },
     {
-      "id": "TWC_water_202610011120",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-10-01T11:20:02+08:00",
-      "effective": "2026/10/1 上午 11:12:03",
-      "expires": "2026/10/1 下午 03:00:00",
-      "summary": "因桃園區興一街23號前150mmPVCP漏水搶修。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011120.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202610011110",
       "category": "停水",
       "title": "停水",
@@ -323,20 +295,6 @@
       "expires": "2026/10/1 下午 04:30:00",
       "summary": "配合臺中市新建工程處辦理西屯區市政路延伸工程-第2標(安和路至環中路三段)管線埋設工程安和路10-7號路口水源改接。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011030.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202610011020",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-10-01T10:20:01+08:00",
-      "effective": "2026/10/1 上午 10:16:39",
-      "expires": "2026/10/1 下午 03:00:00",
-      "summary": "名間鄉松山街、豐柏路因汰換工程挖損停水",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011020.cap",
       "isDrill": false
     },
     {
@@ -617,34 +575,6 @@
       "expires": "2026/10/1 下午 05:00:00",
       "summary": "為辦理吉安鄉稻香村香源路22號80HIP新裝管線連絡工程，造成稻香村香源路局部地區停水，不便之處敬請見諒。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301600.cap",
-      "isDrill": false
-    },
-    {
-      "id": "NFA_Fire_20260930141401003",
-      "category": "火災",
-      "title": "火災",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-30T15:01:16+08:00",
-      "effective": "2026/9/30 下午 03:01:16",
-      "expires": "2026/10/1 下午 03:01:00",
-      "summary": "火災-一般(集合)住宅",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260930141401003.cap",
-      "isDrill": false
-    },
-    {
-      "id": "NFA_Fire_20260930133925014",
-      "category": "火災",
-      "title": "火災",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "內政部消防署",
-      "updated": "2026-09-30T14:59:31+08:00",
-      "effective": "2026/9/30 下午 02:59:31",
-      "expires": "2026/10/1 下午 03:00:00",
-      "summary": "火災-其他",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20260930133925014.cap",
       "isDrill": false
     },
     {
