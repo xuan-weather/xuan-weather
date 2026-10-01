@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-01T14:36:17.854980+08:00",
+  "updatedAt": "2026-10-01T14:55:24.639696+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202610011450",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T14:50:01+08:00",
+      "effective": "2026/9/21 下午 01:24:48",
+      "expires": "2026/10/1 下午 05:00:00",
+      "summary": "燕巢水量計故障緊急搶修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011450.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_heat_202610011430001",
       "category": "高溫",
@@ -43,20 +57,6 @@
       "expires": "2026/10/1 下午 05:29:00",
       "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261001142840_0000.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202610011420",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "台灣自來水公司",
-      "updated": "2026-10-01T14:20:01+08:00",
-      "effective": "2026/9/21 下午 01:24:48",
-      "expires": "2026/10/1 下午 05:00:00",
-      "summary": "燕巢水量計故障緊急搶修。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011420.cap",
       "isDrill": false
     },
     {
