@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-01T22:20:07.960780+08:00",
+  "updatedAt": "2026-10-01T22:38:32.259561+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_extremely-rain_202610012230001",
+      "category": "降雨",
+      "title": "降雨",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-10-01T22:30:30+08:00",
+      "effective": "2026/10/1 下午 10:25:00",
+      "expires": "2026/10/2 上午 05:00:00",
+      "summary": "對流雲系發展旺盛，今(1)日晚至明(2日)晨屏東地區有局部大雨發生的機率，請注意雷擊及強陣風。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_RAIN/fifows_extremely-rain_202610012230.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20261001221840_0000",
       "category": "水庫放流",
