@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-01T09:18:41.514290+08:00",
+  "updatedAt": "2026-10-01T09:32:55.181391+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202610010920",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T09:20:01+08:00",
+      "effective": "2026/10/1 上午 09:12:26",
+      "expires": "2026/10/1 下午 04:00:00",
+      "summary": "因台中市烏日區成功東路79-3號前漏水搶修。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610010920.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202610010910",
       "category": "停水",
