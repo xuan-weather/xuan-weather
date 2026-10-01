@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-01T19:00:50.059868+08:00",
+  "updatedAt": "2026-10-01T19:16:08.032988+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -155,20 +155,6 @@
       "expires": "2026/10/3 下午 10:00:00",
       "summary": "大園區民生路121號民生用水，新裝工程-斷管連絡。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011600.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_extremely-rain_202610011540001",
-      "category": "降雨",
-      "title": "降雨",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "中央氣象署",
-      "updated": "2026-10-01T15:40:45+08:00",
-      "effective": "2026/10/1 下午 03:35:00",
-      "expires": "2026/10/1 下午 11:00:00",
-      "summary": "午後對流雲系發展旺盛，易有短延時強降雨，今(1)日屏東地區有局部大雨發生的機率，請注意雷擊及強陣風，低窪地區請慎防積水。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_RAIN/fifows_extremely-rain_202610011540.cap",
       "isDrill": false
     },
     {
