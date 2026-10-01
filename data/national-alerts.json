@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-01T23:36:39.733996+08:00",
+  "updatedAt": "2026-10-01T23:51:36.914358+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
@@ -46,34 +46,6 @@
       "isDrill": false
     },
     {
-      "id": "WRA_FloodWarn_20261001230730_0000",
-      "category": "淹水",
-      "title": "淹水",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-10-01T23:07:30+08:00",
-      "effective": "2026/10/1 下午 11:07:30",
-      "expires": "2026/10/2 上午 02:08:00",
-      "summary": "水利署訊屏東縣泰武鄉淹水一級警戒 (舊泰武站一小時雨量超過80mm) ,如持續降雨轄內易淹水村里及道路可能已經開始積淹水 (如：泰武鄉-佳平村,泰武村,平和村,佳興村,武潭村,萬安村)，建請即時注意淹水通報及應變，低窪地區及道路請特別注意防範積淹水。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/Flood/WRA_FloodWarn_20261001230730_0000.cap",
-      "isDrill": false
-    },
-    {
-      "id": "cwa.gov.tw_thunderstorm_20261001224853_000",
-      "category": "雷雨",
-      "title": "雷雨",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "中央氣象署",
-      "updated": "2026-10-01T22:49:14+08:00",
-      "effective": "2026/10/1 下午 10:48:00",
-      "expires": "2026/10/1 下午 11:48:00",
-      "summary": "115年10月01日22時48分氣象署發布大雷雨即時訊息，持續時間至23時48分；有致災性短延時強降雨發生，並伴隨較強陣風，請慎防溪(河)水暴漲、坍方、落石、低窪地區積水、低能見度",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/thunderstorm/cwa.gov.tw_thunderstorm_20261001224853_000.cap",
-      "isDrill": false
-    },
-    {
       "id": "CWA-Weather_extremely-rain_202610012249001",
       "category": "降雨",
       "title": "降雨",
@@ -99,20 +71,6 @@
       "expires": "2026/10/2 下午 11:00:00",
       "summary": "東北風增強，2日上午至晚上桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、澎湖縣、連江縣局部地區將有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610012239.cap",
-      "isDrill": false
-    },
-    {
-      "id": "cwa.gov.tw_thunderstorm_20261001223822_000",
-      "category": "雷雨",
-      "title": "雷雨",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "中央氣象署",
-      "updated": "2026-10-01T22:38:15+08:00",
-      "effective": "2026/10/1 下午 10:38:00",
-      "expires": "2026/10/1 下午 11:38:00",
-      "summary": "115年10月01日22時38分氣象署發布大雷雨即時訊息，持續時間至23時38分；有短延時強降雨發生，並伴隨較強陣風，請慎防溪(河)水暴漲、低窪地區積水、低能見度",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/thunderstorm/cwa.gov.tw_thunderstorm_20261001223822_000.cap",
       "isDrill": false
     },
     {
