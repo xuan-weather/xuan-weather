@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-01T23:20:06.521670+08:00",
+  "updatedAt": "2026-10-01T23:36:39.733996+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "cwa.gov.tw_thunderstorm_20261001232926_000",
+      "category": "雷雨",
+      "title": "雷雨",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-10-01T23:29:04+08:00",
+      "effective": "2026/10/1 下午 11:29:00",
+      "expires": "2026/10/2 上午 12:29:00",
+      "summary": "115年10月01日23時29分氣象署發布大雷雨即時訊息，持續時間至00時29分；有短延時強降雨發生，並伴隨較強陣風、閃電落雷，請慎防低窪地區積水、低能見度、雷擊",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/thunderstorm/cwa.gov.tw_thunderstorm_20261001232926_000.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20261001231840_0000",
       "category": "水庫放流",
