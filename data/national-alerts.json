@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-10-01T10:37:17.689633+08:00",
+  "updatedAt": "2026-10-01T10:50:37.445568+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202610011040",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T10:40:02+08:00",
+      "effective": "2026/9/30 下午 03:06:02",
+      "expires": "2026/10/6 下午 05:00:00",
+      "summary": "玉里鎮自強路銜接新興街新闢道路管線新建工程，管線連結",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011040.cap",
+      "isDrill": false
+    },
+    {
+      "id": "CWA-Weather_strong-wind_202610011037001",
+      "category": "強風",
+      "title": "強風",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-10-01T10:37:35+08:00",
+      "effective": "2026/10/1 上午 10:37:00",
+      "expires": "2026/10/2 下午 11:00:00",
+      "summary": "東北風增強，2日上午至晚上綠島、桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、澎湖縣、連江縣局部地區將有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610011037.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202610011030",
       "category": "停水",
@@ -393,20 +421,6 @@
       "expires": "2026/10/1 下午 05:00:00",
       "summary": "為辦理吉安鄉稻香村香源路22號80HIP新裝管線連絡工程，造成稻香村香源路局部地區停水，不便之處敬請見諒。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301600.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609301520",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-30T15:20:01+08:00",
-      "effective": "2026/9/30 下午 03:06:02",
-      "expires": "2026/10/5 下午 05:00:00",
-      "summary": "玉里鎮自強路銜接新興街新闢道路管線新建工程，管線連結",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301520.cap",
       "isDrill": false
     },
     {
