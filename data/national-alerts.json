@@ -1,8 +1,50 @@
 {
-  "updatedAt": "2026-10-01T11:59:52.037937+08:00",
+  "updatedAt": "2026-10-01T12:14:22.261256+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202610011210",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T12:10:01+08:00",
+      "effective": "2026/10/1 下午 12:05:53",
+      "expires": "2026/10/1 下午 04:00:00",
+      "summary": "信義街257巷前破管搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011210.cap",
+      "isDrill": false
+    },
+    {
+      "id": "WRA_ReservoirWarn_20261001120840_0001",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-10-01T12:08:40+08:00",
+      "effective": "2026/10/1 下午 12:08:40",
+      "expires": "2026/10/1 下午 03:09:00",
+      "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261001120840_0001.cap",
+      "isDrill": false
+    },
+    {
+      "id": "TWC_water_202610011200",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T12:00:02+08:00",
+      "effective": "2026/10/1 上午 11:33:27",
+      "expires": "2026/10/2 上午 07:00:00",
+      "summary": "蘆竹區龍壽街與文中路路口250mmPVCP斷管連絡",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011200.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202610011140",
       "category": "停水",
@@ -172,20 +214,6 @@
       "isDrill": false
     },
     {
-      "id": "WRA_ReservoirWarn_20261001100840_0000",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-10-01T10:08:40+08:00",
-      "effective": "2026/10/1 上午 10:08:40",
-      "expires": "2026/10/1 下午 01:09:00",
-      "summary": "水利署訊寶山第二水庫:(洩洪至石井溪):自由溢流,影響範圍:新竹縣，寶山鄉、峨眉鄉；新竹市，東區、北區、香山區",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261001100840_0000.cap",
-      "isDrill": false
-    },
-    {
       "id": "TWC_water_202610011000",
       "category": "停水",
       "title": "停水",
@@ -221,9 +249,9 @@
       "msgType": "Update",
       "author": "台灣自來水公司",
       "updated": "2026-10-01T09:40:02+08:00",
-      "effective": "2026/10/1 上午 09:31:16",
-      "expires": "2026/10/1 下午 12:00:00",
-      "summary": "銅鑼鄉新興路10號前漏水搶修",
+      "effective": "2026/10/1 上午 09:35:32",
+      "expires": "2026/10/1 下午 01:30:00",
+      "summary": "楊梅區新富一街128號 路面滲水施工",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610010940.cap",
       "isDrill": false
     },
@@ -309,20 +337,6 @@
       "expires": "2026/10/1 下午 05:00:00",
       "summary": "分區計量管網閥栓功能及管段封閉確認，將不定時短暫(每次約30分)停水",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610010800.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202610010750",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-10-01T07:50:02+08:00",
-      "effective": "2026/10/1 上午 07:46:13",
-      "expires": "2026/10/1 下午 12:00:00",
-      "summary": "斗六市虎溪、正心等汰換管線工程 115/10/1上午08時至中午12時暫停供水。(管線末端用戶可能因水流時間延至下午13時恢復供水，遇雨天則順延)。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610010750.cap",
       "isDrill": false
     },
     {
