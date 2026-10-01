@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-01T21:32:15.683865+08:00",
+  "updatedAt": "2026-10-01T21:49:39.354166+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202610012140",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T21:40:02+08:00",
+      "effective": "2026/10/1 下午 09:36:40",
+      "expires": "2026/10/2 上午 04:00:00",
+      "summary": "該區域水壓異常,進行漏水查修作業",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610012140.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20261001211840_0000",
       "category": "水庫放流",
