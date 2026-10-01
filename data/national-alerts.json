@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-01T09:46:54.186170+08:00",
+  "updatedAt": "2026-10-01T09:57:10.084402+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202610010950",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T09:50:01+08:00",
+      "effective": "2026/10/1 上午 09:46:51",
+      "expires": "2026/10/1 下午 05:00:00",
+      "summary": "嘉義縣番路鄉公興村1之1號附近破管搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610010950.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202610010940",
       "category": "停水",
