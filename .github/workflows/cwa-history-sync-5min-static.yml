@@ -8,12 +8,19 @@ on:
 permissions:
   contents: write
 
+# 所有 CWA 即時資料共用同一個鎖，避免多個 Workflow 同時抓取／push 舊資料覆蓋新資料。
+concurrency:
+  group: cwa-data-global
+  cancel-in-progress: false
+
 jobs:
   fetch-temperature-history:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Fetch CWA O-A0003-001
         env:
@@ -23,14 +30,14 @@ jobs:
           mkdir -p data/history
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&_=${{ github.run_id }}-${{ github.run_attempt }}" \
             -o /tmp/cwa-o-a0003-001.json
 
           # 七堵等 C0 自動站若沒有出現在全測站回傳中，
           # 再以 stationId 明確補抓，仍使用同一個 CWA 10 分鐘資料集。
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&stationId=C0B010" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&_=${{ github.run_id }}-${{ github.run_attempt }}&stationId=C0B010" \
             -o /tmp/cwa-o-a0003-001-c0b010.json
 
       - name: Fetch CWA O-A0001-001 hourly fallback for C0 stations
@@ -40,7 +47,7 @@ jobs:
           set -e
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON&_=${{ github.run_id }}-${{ github.run_attempt }}" \
             -o /tmp/cwa-o-a0001-001.json
 
 
@@ -51,7 +58,7 @@ jobs:
           set -e
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-002?Authorization=${CWA_API_KEY}&format=JSON" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-002?Authorization=${CWA_API_KEY}&format=JSON&_=${{ github.run_id }}-${{ github.run_attempt }}" \
             -o /tmp/cwa-w-c0033-002.json
 
       # 各專用警特報資料：網站依官方燈號／鄉鎮市區資料顯示，不自行推算。
@@ -62,7 +69,7 @@ jobs:
           set -e
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-003?Authorization=${CWA_API_KEY}&format=JSON" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-003?Authorization=${CWA_API_KEY}&format=JSON&_=${{ github.run_id }}-${{ github.run_attempt }}" \
             -o /tmp/cwa-w-c0033-003.json
 
       - name: Fetch CWA low-temperature alert W-C0033-004
@@ -72,7 +79,7 @@ jobs:
           set -e
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-004?Authorization=${CWA_API_KEY}&format=JSON" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-004?Authorization=${CWA_API_KEY}&format=JSON&_=${{ github.run_id }}-${{ github.run_attempt }}" \
             -o /tmp/cwa-w-c0033-004.json
 
       - name: Fetch CWA high-temperature information W-C0033-005
@@ -82,7 +89,7 @@ jobs:
           set -e
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-005?Authorization=${CWA_API_KEY}&format=JSON" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-005?Authorization=${CWA_API_KEY}&format=JSON&_=${{ github.run_id }}-${{ github.run_attempt }}" \
             -o /tmp/cwa-w-c0033-005.json
 
       - name: Fetch CWA strong-wind alert W-C0033-006
@@ -92,7 +99,7 @@ jobs:
           set -e
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-006?Authorization=${CWA_API_KEY}&format=JSON" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-006?Authorization=${CWA_API_KEY}&format=JSON&_=${{ github.run_id }}-${{ github.run_attempt }}" \
             -o /tmp/cwa-w-c0033-006.json
 
       - name: Fetch CWA O-A0002-001 rainfall
@@ -102,8 +109,35 @@ jobs:
           set -e
           curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${CWA_API_KEY}&format=JSON&_=${{ github.run_id }}-${{ github.run_attempt }}" \
             -o /tmp/cwa-o-a0002-001.json
+
+      - name: Validate CWA O-A0003-001 freshness
+        run: |
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          path = "/tmp/cwa-o-a0003-001.json"
+          data = json.load(open(path, encoding="utf-8"))
+          stations = (data.get("records", {}).get("Station") or data.get("result", {}).get("records", {}).get("Station") or [])
+          if not stations:
+              raise SystemExit("CWA O-A0003-001 沒有測站資料，停止發布，避免舊資料被覆蓋")
+          times = []
+          for st in stations:
+              obs = st.get("ObsTime") or {}
+              raw = obs.get("DateTime") if isinstance(obs, dict) else obs
+              if not raw: continue
+              try:
+                  dt = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+                  if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
+                  times.append(dt)
+              except Exception: pass
+          if not times:
+              raise SystemExit("CWA O-A0003-001 找不到有效 ObsTime，停止發布")
+          latest=max(times)
+          print("CWA O-A0003-001 最新觀測時間：", latest.isoformat())
+          print("本次測站數：", len(stations))
+          PY
 
       - name: Publish latest CWA JSON for GitHub Pages
         run: |
