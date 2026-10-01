@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-01T12:14:22.261256+08:00",
+  "updatedAt": "2026-10-01T12:31:21.064065+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "TWC_water_202610011220",
+      "category": "停水",
+      "title": "停水",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "台灣自來水公司",
+      "updated": "2026-10-01T12:20:02+08:00",
+      "effective": "2026/9/30 上午 11:46:25",
+      "expires": "2026/10/1 下午 04:00:00",
+      "summary": "興隆小區管理用錶漏水搶修",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202610011220.cap",
+      "isDrill": false
+    },
     {
       "id": "TWC_water_202610011210",
       "category": "停水",
@@ -533,20 +547,6 @@
       "expires": "2026/10/5 下午 05:00:00",
       "summary": "更換本公司大型水量計供水設備",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301330.cap",
-      "isDrill": false
-    },
-    {
-      "id": "TWC_water_202609301150",
-      "category": "停水",
-      "title": "停水",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "台灣自來水公司",
-      "updated": "2026-09-30T11:50:01+08:00",
-      "effective": "2026/9/30 上午 11:46:25",
-      "expires": "2026/10/1 下午 12:30:00",
-      "summary": "興隆小區管理用錶漏水搶修",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/TWC/2026/TWC_water/TWC_water_202609301150.cap",
       "isDrill": false
     },
     {
