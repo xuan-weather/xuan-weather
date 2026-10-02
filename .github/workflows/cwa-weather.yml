@@ -2,8 +2,13 @@ name: CWA Weather Data
 # Keep scheduled execution enabled
 on:
   workflow_dispatch:
+
   schedule:
+    # 每 5 分鐘自動更新
     - cron: '0-59/5 * * * *'
+
+    # 每小時第 17 分鐘再觸發一次，作為額外保險
+    - cron: '17 * * * *'
 
 permissions:
   contents: write
