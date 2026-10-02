@@ -1,22 +1,42 @@
 {
-  "updatedAt": "2026-10-03T00:38:33.734449+08:00",
+  "updatedAt": "2026-10-03T04:56:57.486981+08:00",
   "source": "NCDR 民生示警公開資料平台／中央氣象署",
   "feed": "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
   "alerts": [
     {
-      "id": "cwa.gov.tw_thunderstorm_20261002232917_000",
+      "id": "CWA-Weather_strong-wind_202610030428001",
+      "category": "強風",
+      "title": "強風",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-10-03T04:28:07+08:00",
+      "effective": "2026/10/3 上午 04:24:00",
+      "expires": "2026/10/3 下午 01:00:00",
+      "summary": "東北風偏強，3日晨至下午澎湖縣、連江縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610030428.cap",
+      "areas": [
+        "澎湖縣白沙鄉",
+        "連江縣北竿鄉",
+        "連江縣莒光鄉",
+        "連江縣南竿鄉"
+      ],
+      "counties": []
+    },
+    {
+      "id": "cwa.gov.tw_thunderstorm_20261003032802_000",
       "category": "雷雨",
       "title": "雷雨",
       "status": "Actual",
       "msgType": "Alert",
       "author": "中央氣象署",
-      "updated": "2026-10-02T23:30:08+08:00",
-      "effective": "2026/10/2 下午 11:29:00",
-      "expires": "2026/10/3 上午 02:29:00",
-      "summary": "115年10月02日23時29分氣象署發布大雷雨即時訊息，持續時間至02時29分；有短延時強降雨發生，並伴隨較強陣風、閃電落雷，請慎防低窪地區積水、低能見度、雷擊",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/thunderstorm/cwa.gov.tw_thunderstorm_20261002232917_000.cap",
+      "updated": "2026-10-03T03:29:04+08:00",
+      "effective": "2026/10/3 上午 03:28:00",
+      "expires": "2026/10/3 上午 04:58:00",
+      "summary": "115年10月03日03時28分氣象署發布大雷雨即時訊息，持續時間至04時58分；有短延時強降雨發生，並伴隨較強陣風、閃電落雷，請慎防溪(河)水暴漲、低窪地區積水、低能見度、雷擊",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/thunderstorm/cwa.gov.tw_thunderstorm_20261003032802_000.cap",
       "areas": [
-        "宜蘭縣及其沿海(共6個鄉鎮)"
+        "宜蘭縣(共6個鄉鎮)"
       ],
       "counties": []
     },
@@ -35,28 +55,6 @@
       "areas": [
         "宜蘭縣大同鄉",
         "宜蘭縣南澳鄉"
-      ],
-      "counties": []
-    },
-    {
-      "id": "CWA-Weather_strong-wind_202610022225001",
-      "category": "強風",
-      "title": "強風",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-10-02T22:25:34+08:00",
-      "effective": "2026/10/2 下午 10:24:00",
-      "expires": "2026/10/3 下午 01:00:00",
-      "summary": "東北風偏強，2日晚上至3日下午桃園市、澎湖縣、連江縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610022225.cap",
-      "areas": [
-        "桃園市蘆竹區",
-        "澎湖縣湖西鄉",
-        "澎湖縣白沙鄉",
-        "連江縣北竿鄉",
-        "連江縣莒光鄉",
-        "連江縣南竿鄉"
       ],
       "counties": []
     }
