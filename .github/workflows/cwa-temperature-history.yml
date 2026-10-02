@@ -3,7 +3,7 @@ name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 on:
   workflow_dispatch:
   schedule:
-    - cron: '3-58/5 * * * *'
+    - cron: '3-59/5 * * * *'
 
 permissions:
   contents: write
@@ -42,7 +42,6 @@ jobs:
             -H "Accept: application/json" \
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON" \
             -o /tmp/cwa-o-a0001-001.json
-
 
       - name: Fetch CWA O-A0002-001 rainfall
         env:
