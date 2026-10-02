@@ -2,18 +2,12 @@ name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - "CWA Weather Data"
-    types:
-      - completed
 
 permissions:
   contents: write
 
 jobs:
   fetch-temperature-history:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
