@@ -3,11 +3,8 @@ name: CWA Weather Data
 on:
   workflow_dispatch:
   schedule:
-    # 第一組：每 5 分鐘執行一次，避開整 5 分鐘高峰
+    # 每 5 分鐘執行一次，避開整 5 分鐘高峰
     - cron: '2-59/5 * * * *'
-
-    # 第二組：錯開 2 分鐘，再增加一組自動觸發機會
-    - cron: '4-59/5 * * * *'
 
 permissions:
   contents: write
