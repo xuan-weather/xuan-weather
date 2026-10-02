@@ -1,5 +1,5 @@
 name: CWA Weather Data
-
+# Keep scheduled execution enabled
 on:
   workflow_dispatch:
   schedule:
