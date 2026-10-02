@@ -2,14 +2,18 @@ name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '3-58/5 * * * *'
+  workflow_run:
+    workflows:
+      - "CWA Weather Data"
+    types:
+      - completed
 
 permissions:
   contents: write
 
 jobs:
   fetch-temperature-history:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -21,38 +25,25 @@ jobs:
         run: |
           set -e
           mkdir -p data/history
-          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
-            -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON" \
-            -o /tmp/cwa-o-a0003-001.json
+          curl --silent --show-error --fail --retry 3 --retry-delay 2             -H "Accept: application/json"             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON"             -o /tmp/cwa-o-a0003-001.json
 
           # 七堵等 C0 自動站若沒有出現在全測站回傳中，
           # 再以 stationId 明確補抓，仍使用同一個 CWA 10 分鐘資料集。
-          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
-            -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&stationId=C0B010" \
-            -o /tmp/cwa-o-a0003-001-c0b010.json
+          curl --silent --show-error --fail --retry 3 --retry-delay 2             -H "Accept: application/json"             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&stationId=C0B010"             -o /tmp/cwa-o-a0003-001-c0b010.json
 
       - name: Fetch CWA O-A0001-001 hourly fallback for C0 stations
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -e
-          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
-            -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON" \
-            -o /tmp/cwa-o-a0001-001.json
-
+          curl --silent --show-error --fail --retry 3 --retry-delay 2             -H "Accept: application/json"             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON"             -o /tmp/cwa-o-a0001-001.json
 
       - name: Fetch CWA O-A0002-001 rainfall
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -e
-          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
-            -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${CWA_API_KEY}&format=JSON" \
-            -o /tmp/cwa-o-a0002-001.json
+          curl --silent --show-error --fail --retry 3 --retry-delay 2             -H "Accept: application/json"             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${CWA_API_KEY}&format=JSON"             -o /tmp/cwa-o-a0002-001.json
 
       - name: Publish latest CWA JSON for GitHub Pages
         run: |
