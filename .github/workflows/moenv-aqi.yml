@@ -3,7 +3,7 @@ name: MOENV AQI Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: '5 * * * *'
+    - cron: '6 * * * *'
 
 permissions:
   contents: write
@@ -25,7 +25,15 @@ jobs:
 
           echo "開始讀取 MOENV AQX_P_432..."
 
-          curl             --silent             --show-error             --fail             --retry 3             --retry-delay 2             -H "Accept: application/json"             "https://data.moenv.gov.tw/api/v2/aqx_p_432?format=json&offset=0&limit=1000&api_key=${MOENV_API_KEY}"             -o data/aqx-p-432.json
+          curl \
+            --silent \
+            --show-error \
+            --fail \
+            --retry 3 \
+            --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://data.moenv.gov.tw/api/v2/aqx_p_432?format=json&offset=0&limit=1000&api_key=${MOENV_API_KEY}" \
+            -o data/aqx-p-432.json
 
           echo "AQI 資料下載完成"
           echo "檔案大小："
