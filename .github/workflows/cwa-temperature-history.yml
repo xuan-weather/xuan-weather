@@ -3,7 +3,8 @@ name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 on:
   workflow_dispatch:
   schedule:
-    - cron: '3-58/5 * * * *'
+  # 每 5 分鐘自動更新
+  - cron: '3-58/5 * * * *'
 
 permissions:
   contents: write
