@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: '2-59/5 * * * *'
+  - cron: '*/5 * * * *'
+    timezone: 'Asia/Taipei'
 
   repository_dispatch:
     types: [cwa-weather]
