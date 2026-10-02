@@ -2,13 +2,11 @@ name: MOENV AQI Data
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '5 * * * *'
 
 permissions:
   contents: write
-
-concurrency:
-  group: moenv-aqi-data
-  cancel-in-progress: false
 
 jobs:
   fetch-aqi-data:
@@ -27,9 +25,7 @@ jobs:
 
           echo "開始讀取 MOENV AQX_P_432..."
 
-          cache_buster="$(date +%s%N)"
-
-          curl             --silent             --show-error             --fail             --retry 3             --retry-delay 2             -H "Accept: application/json"             -H "Cache-Control: no-cache, no-store, max-age=0"             -H "Pragma: no-cache"             "https://data.moenv.gov.tw/api/v2/aqx_p_432?format=json&offset=0&limit=1000&api_key=${MOENV_API_KEY}&_=${cache_buster}"             -o data/aqx-p-432.json
+          curl             --silent             --show-error             --fail             --retry 3             --retry-delay 2             -H "Accept: application/json"             "https://data.moenv.gov.tw/api/v2/aqx_p_432?format=json&offset=0&limit=1000&api_key=${MOENV_API_KEY}"             -o data/aqx-p-432.json
 
           echo "AQI 資料下載完成"
           echo "檔案大小："
@@ -37,7 +33,7 @@ jobs:
 
       - name: Validate AQI JSON
         run: |
-          python -c "import json; d=json.load(open('data/aqx-p-432.json',encoding='utf-8')); assert isinstance(d,list), 'AQI 回傳不是 JSON 陣列'; assert len(d)>0, 'AQI 資料為空'; assert isinstance(d[0],dict), 'AQI 測站資料格式錯誤'; print('AQI records：',len(d)); print('第一個測站：',d[0].get('sitename','-')); print('第一筆 AQI：',d[0].get('aqi','-')); print('資料發布時間：',d[0].get('publishtime','-'))"
+          python -c "import json; d=json.load(open('data/aqx-p-432.json',encoding='utf-8')); assert isinstance(d,list), 'AQI 回傳不是 JSON 陣列'; assert len(d)>0, 'AQI 資料為空'; assert isinstance(d[0],dict), 'AQI 測站資料格式錯誤'; print('AQI records：',len(d)); print('第一個測站：',d[0].get('sitename','-')); print('第一筆 AQI：',d[0].get('aqi','-'))"
 
       - name: Commit AQI data
         run: |
@@ -50,6 +46,5 @@ jobs:
             echo "AQI 資料沒有變化，不需要提交"
           else
             git commit -m "Update MOENV AQI data"
-            git pull --rebase origin main
-            git push origin main
+            git push
           fi
