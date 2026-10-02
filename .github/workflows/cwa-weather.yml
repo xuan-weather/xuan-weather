@@ -3,14 +3,16 @@ name: CWA Weather Data
 on:
   workflow_dispatch:
   schedule:
-    # 避開整 5 分鐘的高峰，降低 GitHub Actions 排程延遲機率
-    # 仍維持每 5 分鐘執行一次
+    # 第一組：每 5 分鐘執行一次，避開整 5 分鐘高峰
     - cron: '2-59/5 * * * *'
+
+    # 第二組：錯開 2 分鐘，再增加一組自動觸發機會
+    - cron: '4-59/5 * * * *'
 
 permissions:
   contents: write
 
-# 避免每 5 分鐘排程重疊造成舊資料覆蓋新資料或 git push 衝突
+# 避免兩個排程同時執行時互相覆蓋或 git push 衝突
 concurrency:
   group: cwa-weather-data
   cancel-in-progress: false
@@ -52,7 +54,6 @@ jobs:
             echo "正在取得 CWA：${dataset}"
             echo "========================================"
 
-            # 每次請求加入唯一 cache-buster，避免高溫 CAP 被上游／代理快取成前一版。
             cache_buster="$(date +%s%N)"
             url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}?_=${cache_buster}"
 
@@ -88,12 +89,9 @@ jobs:
           if not isinstance(data, dict):
               raise SystemExit(f"{dataset}：錯誤，回傳資料不是 JSON 物件")
 
-          # W-C0033-005 為 CAP 高溫資訊，可能不是一般 datastore records。
           if dataset == "W-C0033-005":
               print(f"{dataset}：CAP 高溫資訊 JSON 保留原始結構")
 
-              # 把 CAP 常見的發布／更新時間欄位全部往下搜尋，
-              # 讓 Actions log 明確顯示這次抓到的是哪一版。
               time_keys = {
                   "sent", "Sent",
                   "issueTime", "IssueTime",
@@ -147,7 +145,9 @@ jobs:
                                   dt = datetime.fromisoformat(text)
 
                                   if dt.tzinfo is None:
-                                      dt = dt.replace(tzinfo=timezone.utc)
+                                      dt = dt.replace(
+                                          tzinfo=timezone.utc
+                                      )
 
                                   if latest is None or dt > latest:
                                       latest = dt
@@ -321,8 +321,6 @@ jobs:
                   f"{taipei.isoformat()}"
               )
 
-              # 07:30 續發後仍抓到前一天 17:30 左右的版本時，
-              # 不允許這個舊版本繼續被提交到 GitHub Pages。
               now = datetime.now(
                   timezone(timedelta(hours=8))
               )
