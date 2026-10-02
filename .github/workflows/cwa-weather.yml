@@ -3,7 +3,9 @@ name: CWA Weather Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/5 * * * *'
+    # 避開整 5 分鐘的高峰，降低 GitHub Actions 排程延遲機率
+    # 仍維持每 5 分鐘執行一次
+    - cron: '2-59/5 * * * *'
 
 permissions:
   contents: write
@@ -54,7 +56,18 @@ jobs:
             cache_buster="$(date +%s%N)"
             url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}?_=${cache_buster}"
 
-            curl --fail-with-body               --silent               --show-error               --retry 3               --retry-delay 2               --location               -H "Accept: application/json"               -H "Authorization: ${CWA_API_KEY}"               -H "Cache-Control: no-cache, no-store, max-age=0"               -H "Pragma: no-cache"               "${url}"               -o "data/cwa-${dataset}.json"
+            curl --fail-with-body \
+              --silent \
+              --show-error \
+              --retry 3 \
+              --retry-delay 2 \
+              --location \
+              -H "Accept: application/json" \
+              -H "Authorization: ${CWA_API_KEY}" \
+              -H "Cache-Control: no-cache, no-store, max-age=0" \
+              -H "Pragma: no-cache" \
+              "${url}" \
+              -o "data/cwa-${dataset}.json"
 
             echo "CWA ${dataset} 資料取得成功"
             wc -c "data/cwa-${dataset}.json"
@@ -98,12 +111,15 @@ jobs:
 
               def walk(node):
                   global latest
+
                   if not isinstance(node, (dict, list)):
                       return
 
                   ident = id(node)
+
                   if ident in seen:
                       return
+
                   seen.add(ident)
 
                   if isinstance(node, list):
@@ -126,12 +142,16 @@ jobs:
 
                           if raw:
                               text = str(raw).replace("Z", "+00:00")
+
                               try:
                                   dt = datetime.fromisoformat(text)
+
                                   if dt.tzinfo is None:
                                       dt = dt.replace(tzinfo=timezone.utc)
+
                                   if latest is None or dt > latest:
                                       latest = dt
+
                               except Exception:
                                   pass
 
@@ -141,35 +161,66 @@ jobs:
               walk(data)
 
               if latest:
-                  taipei = latest.astimezone(timezone(timedelta(hours=8)))
-                  print(f"{dataset}：本次抓到的最新官方發布／更新時間 = {taipei.isoformat()}")
+                  taipei = latest.astimezone(
+                      timezone(timedelta(hours=8))
+                  )
+
+                  print(
+                      f"{dataset}：本次抓到的最新官方發布／更新時間 = "
+                      f"{taipei.isoformat()}"
+                  )
               else:
-                  print(f"{dataset}：找不到可解析的官方發布／更新時間")
+                  print(
+                      f"{dataset}：找不到可解析的官方發布／更新時間"
+                  )
+
           else:
               if "records" not in data:
-                  raise SystemExit(f"{dataset}：錯誤，找不到 records")
+                  raise SystemExit(
+                      f"{dataset}：錯誤，找不到 records"
+                  )
+
               print(f"{dataset}：records 存在")
 
               latest_time = None
+
               records = data.get("records", {})
               stations = records.get("Station", [])
 
               if isinstance(stations, list):
                   for station in stations:
                       obs = station.get("ObsTime", {})
-                      dt = obs.get("DateTime") if isinstance(obs, dict) else None
+
+                      dt = (
+                          obs.get("DateTime")
+                          if isinstance(obs, dict)
+                          else None
+                      )
+
                       if dt:
                           try:
-                              parsed = datetime.fromisoformat(dt.replace("Z", "+00:00"))
-                              if latest_time is None or parsed > latest_time:
+                              parsed = datetime.fromisoformat(
+                                  dt.replace("Z", "+00:00")
+                              )
+
+                              if (
+                                  latest_time is None
+                                  or parsed > latest_time
+                              ):
                                   latest_time = parsed
+
                           except Exception:
                               pass
 
               if latest_time:
-                  print(f"{dataset}：本次抓到的最新 ObsTime = {latest_time.isoformat()}")
+                  print(
+                      f"{dataset}：本次抓到的最新 ObsTime = "
+                      f"{latest_time.isoformat()}"
+                  )
               else:
-                  print(f"{dataset}：找不到可解析的 ObsTime")
+                  print(
+                      f"{dataset}：找不到可解析的 ObsTime"
+                  )
           PY
 
           done
@@ -183,6 +234,7 @@ jobs:
           from datetime import datetime, timezone, timedelta
 
           path = "data/cwa-W-C0033-005.json"
+
           with open(path, "r", encoding="utf-8") as f:
               data = json.load(f)
 
@@ -203,21 +255,28 @@ jobs:
 
           def walk(node):
               global latest
+
               if not isinstance(node, (dict, list)):
                   return
+
               ident = id(node)
+
               if ident in seen:
                   return
+
               seen.add(ident)
 
               if isinstance(node, list):
                   for item in node:
                       walk(item)
+
                   return
 
               for key, value in node.items():
+
                   if key in keys:
                       raw = value
+
                       if isinstance(value, dict):
                           raw = (
                               value.get("value")
@@ -226,35 +285,69 @@ jobs:
                               or value.get("time")
                               or ""
                           )
+
                       if raw:
                           try:
-                              dt = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+                              dt = datetime.fromisoformat(
+                                  str(raw).replace(
+                                      "Z",
+                                      "+00:00"
+                                  )
+                              )
+
                               if dt.tzinfo is None:
-                                  dt = dt.replace(tzinfo=timezone.utc)
+                                  dt = dt.replace(
+                                      tzinfo=timezone.utc
+                                  )
+
                               if latest is None or dt > latest:
                                   latest = dt
+
                           except Exception:
                               pass
+
                   if isinstance(value, (dict, list)):
                       walk(value)
 
           walk(data)
 
           if latest:
-              taipei = latest.astimezone(timezone(timedelta(hours=8)))
-              print(f"W-C0033-005 最後發布／更新：{taipei.isoformat()}")
+              taipei = latest.astimezone(
+                  timezone(timedelta(hours=8))
+              )
+
+              print(
+                  f"W-C0033-005 最後發布／更新："
+                  f"{taipei.isoformat()}"
+              )
 
               # 07:30 續發後仍抓到前一天 17:30 左右的版本時，
               # 不允許這個舊版本繼續被提交到 GitHub Pages。
-              now = datetime.now(timezone(timedelta(hours=8)))
-              today_0730 = now.replace(hour=7, minute=30, second=0, microsecond=0)
+              now = datetime.now(
+                  timezone(timedelta(hours=8))
+              )
 
-              if now >= today_0730 and taipei.date() < now.date():
+              today_0730 = now.replace(
+                  hour=7,
+                  minute=30,
+                  second=0,
+                  microsecond=0
+              )
+
+              if (
+                  now >= today_0730
+                  and taipei.date() < now.date()
+              ):
                   raise SystemExit(
-                      "W-C0033-005 仍是前一天版本，停止提交，避免網站繼續發布舊高溫資訊。"
+                      "W-C0033-005 仍是前一天版本，"
+                      "停止提交，避免網站繼續發布舊高溫資訊。"
                   )
+
           else:
-              print("W-C0033-005 無法解析發布時間，保留原資料流程。")
+              print(
+                  "W-C0033-005 無法解析發布時間，"
+                  "保留原資料流程。"
+              )
           PY
 
       - name: Show downloaded files
@@ -262,12 +355,14 @@ jobs:
           echo "========================================"
           echo "CWA 資料檔案"
           echo "========================================"
+
           ls -lh data/cwa-*.json
 
       - name: Commit CWA data
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add data/cwa-*.json
 
