@@ -2,13 +2,16 @@ name: CWA Weather Data
 
 on:
   workflow_dispatch:
+
   schedule:
-    - cron: '0-59/5 * * * *'
+    - cron: '2-59/5 * * * *'
+
+  repository_dispatch:
+    types: [cwa-weather]
 
 permissions:
   contents: write
 
-# 避免兩個排程同時執行時互相覆蓋或 git push 衝突
 concurrency:
   group: cwa-weather-data
   cancel-in-progress: false
