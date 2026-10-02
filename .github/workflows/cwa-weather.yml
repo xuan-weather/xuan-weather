@@ -3,6 +3,7 @@ name: CWA Weather Data
 on:
   workflow_dispatch:
   schedule:
+    # 每 5 分鐘自動更新 CWA 即時資料
     - cron: '0-59/5 * * * *'
 
 permissions:
