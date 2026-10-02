@@ -1,0 +1,137 @@
+name: CWA Realtime Observation
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub Actions 最短排程間隔為 5 分鐘
+    - cron: '*/5 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cwa-realtime-observation
+  cancel-in-progress: false
+
+jobs:
+  fetch-realtime:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch CWA O-A0003-001
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p data
+
+          cache_buster="$(date +%s%N)"
+
+          url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?_=${cache_buster}"
+
+          echo "取得 CWA O-A0003-001..."
+
+          curl --fail-with-body \
+            --silent \
+            --show-error \
+            --retry 3 \
+            --retry-delay 2 \
+            --location \
+            -H "Accept: application/json" \
+            -H "Authorization: ${CWA_API_KEY}" \
+            -H "Cache-Control: no-cache, no-store, max-age=0" \
+            -H "Pragma: no-cache" \
+            "${url}" \
+            -o data/cwa-O-A0003-001.json
+
+          echo "CWA O-A0003-001 取得成功"
+
+          wc -c data/cwa-O-A0003-001.json
+
+      - name: Verify CWA observation time
+        run: |
+          set -euo pipefail
+
+          python <<'PY'
+          import json
+          from datetime import datetime
+
+          path = "data/cwa-O-A0003-001.json"
+
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          if not isinstance(data, dict):
+              raise SystemExit("CWA 回傳不是 JSON 物件")
+
+          records = data.get("records", {})
+
+          if not isinstance(records, dict):
+              raise SystemExit("CWA records 格式錯誤")
+
+          stations = records.get("Station", [])
+
+          if not isinstance(stations, list):
+              raise SystemExit("CWA Station 格式錯誤")
+
+          latest = None
+
+          for station in stations:
+              obs = station.get("ObsTime", {})
+
+              if not isinstance(obs, dict):
+                  continue
+
+              value = obs.get("DateTime")
+
+              if not value:
+                  continue
+
+              try:
+                  dt = datetime.fromisoformat(
+                      value.replace("Z", "+00:00")
+                  )
+
+                  if latest is None or dt > latest:
+                      latest = dt
+
+              except Exception:
+                  pass
+
+          if latest is None:
+              raise SystemExit(
+                  "找不到 O-A0003-001 的 ObsTime"
+              )
+
+          print(
+              "CWA O-A0003-001 最新 ObsTime：",
+              latest.isoformat()
+          )
+          PY
+
+      - name: Commit realtime observation
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/cwa-O-A0003-001.json
+
+          if git diff --cached --quiet; then
+            echo "O-A0003-001 沒有新資料"
+            exit 0
+          fi
+
+          git commit -m "Update CWA realtime observation"
+
+          git pull --rebase origin main
+
+          git push origin HEAD:main
