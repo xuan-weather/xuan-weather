@@ -2,6 +2,8 @@ name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '3-58/5 * * * *'
 
 permissions:
   contents: write
