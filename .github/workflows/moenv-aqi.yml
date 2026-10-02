@@ -3,7 +3,7 @@ name: MOENV AQI Data
 on:
   workflow_dispatch:
   schedule:
-  - cron: '1-59/10 * * * *'
+      - cron: '0-59/5 * * * *'
 
 permissions:
   contents: write
