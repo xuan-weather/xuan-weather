@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 # 避免每 5 分鐘排程重疊造成舊資料覆蓋新資料或 git push 衝突
 concurrency:
@@ -279,17 +278,3 @@ jobs:
             git pull --rebase origin main
             git push origin HEAD:main
           fi
-
-      # workflow_run 在此專案目前沒有穩定跟著每次 CWA 更新觸發。
-      # 改由主要 CWA workflow 成功完成後直接使用 workflow_dispatch API
-      # 啟動歷史同步；workflow_dispatch 是 GITHUB_TOKEN 可正常觸發的例外。
-      - name: Trigger CWA history sync
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-
-          echo "觸發 cwa-history-sync-5min-static.yml..."
-          gh workflow run cwa-history-sync-5min-static.yml             --repo "${GITHUB_REPOSITORY}"             --ref main
-
-          echo "歷史同步 Workflow 已送出"
