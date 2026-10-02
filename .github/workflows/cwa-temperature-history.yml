@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # 每 5 分鐘自動更新 10 分鐘溫度、雨量、風速、陣風歷史
-    - cron: '3-58/5 * * * *'
+    - cron: '4-59/5 * * * *'
 
 permissions:
   contents: write
