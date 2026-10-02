@@ -1,0 +1,19 @@
+name: CWA Schedule Test
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check schedule
+        run: |
+          echo "================================"
+          echo "CWA 自動排程測試"
+          echo "觸發方式：${{ github.event_name }}"
+          echo "UTC 時間：$(date -u '+%Y-%m-%d %H:%M:%S')"
+          echo "================================"
