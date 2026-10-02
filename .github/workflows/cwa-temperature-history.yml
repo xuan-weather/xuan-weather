@@ -4,14 +4,14 @@ on:
   workflow_dispatch:
   schedule:
   # 每 5 分鐘自動更新
-  - cron: '3-58/5 * * * *'
+  - cron: '*/5 * * * *'
 
 permissions:
   contents: write
 
 concurrency:
   group: cwa-temperature-history
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   fetch-temperature-history:
