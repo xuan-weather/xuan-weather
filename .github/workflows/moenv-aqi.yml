@@ -2,8 +2,8 @@ name: MOENV AQI Data
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '17 * * * *'
+  repository_dispatch:
+    types: [cwa-external-timer]
 
 permissions:
   contents: write
