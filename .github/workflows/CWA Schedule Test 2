@@ -1,4 +1,4 @@
-name: CWA Schedule Test
+name: CWA Schedule Test 2
 
 on:
   workflow_dispatch:
