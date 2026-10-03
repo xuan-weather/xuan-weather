@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: cwa-cwa-data-publish
+  group: cwa-history-sync-5min-static
   cancel-in-progress: false
 
 jobs:
