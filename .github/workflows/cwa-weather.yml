@@ -3,10 +3,9 @@ name: CWA Weather Data
 on:
   workflow_dispatch:
 
+  # 每 5 分鐘檢查一次 CWA 最新資料
   schedule:
-    # 每 5 分鐘檢查一次 CWA 最新資料
-    schedule:
-  - cron: '*/5 * * * *'
+    - cron: '*/5 * * * *'
 
 permissions:
   contents: write
