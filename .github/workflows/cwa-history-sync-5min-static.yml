@@ -466,6 +466,16 @@ jobs:
           print("含整點官方小時最大陣風歷史的測站數：", hourly_gust_count)
           PY
 
+      - name: Restore realtime CWA JSON before history commit
+        run: |
+          set -euo pipefail
+
+          # History workflow 會暫時把最新 CWA JSON 放到 data/ 供網站流程使用，
+          # 但這個 workflow 不負責提交 realtime JSON。
+          # 在 git pull/rebase 前先還原這些未追蹤的工作區變更，
+          # 避免出現「cannot pull with rebase: You have unstaged changes」。
+          git restore -- data/cwa-*.json || true
+
       - name: Commit history
         run: |
           git config user.name "github-actions[bot]"
