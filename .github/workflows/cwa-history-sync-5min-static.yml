@@ -3,7 +3,7 @@ name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 on:
   workflow_dispatch:
   schedule:
-    - cron: '3-58/5 * * * *'
+    - cron: '*/5 * * * *'
 
 permissions:
   contents: write
@@ -21,25 +21,37 @@ jobs:
         run: |
           set -e
           mkdir -p data/history
-          curl --silent --show-error --fail --retry 3 --retry-delay 2             -H "Accept: application/json"             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON"             -o /tmp/cwa-o-a0003-001.json
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-o-a0003-001.json
 
           # 七堵等 C0 自動站若沒有出現在全測站回傳中，
           # 再以 stationId 明確補抓，仍使用同一個 CWA 10 分鐘資料集。
-          curl --silent --show-error --fail --retry 3 --retry-delay 2             -H "Accept: application/json"             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&stationId=C0B010"             -o /tmp/cwa-o-a0003-001-c0b010.json
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&stationId=C0B010" \
+            -o /tmp/cwa-o-a0003-001-c0b010.json
 
       - name: Fetch CWA O-A0001-001 hourly fallback for C0 stations
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -e
-          curl --silent --show-error --fail --retry 3 --retry-delay 2             -H "Accept: application/json"             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON"             -o /tmp/cwa-o-a0001-001.json
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-o-a0001-001.json
 
       - name: Fetch CWA O-A0002-001 rainfall
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -e
-          curl --silent --show-error --fail --retry 3 --retry-delay 2             -H "Accept: application/json"             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${CWA_API_KEY}&format=JSON"             -o /tmp/cwa-o-a0002-001.json
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-o-a0002-001.json
 
       - name: Publish latest CWA JSON for GitHub Pages
         run: |
@@ -302,10 +314,12 @@ jobs:
                   hourly_wind = None
               if gust is None and hourly_wind is None:
                   continue
-              item = {'ts': ts_ms,
-                      'gust': round(gust, 1) if gust is not None else None,
-                      'wind': round(hourly_wind, 1) if hourly_wind is not None else None,
-                      'stationName': str(station.get('StationName') or '').strip()}
+              item = {
+                  'ts': ts_ms,
+                  'gust': round(gust, 1) if gust is not None else None,
+                  'wind': round(hourly_wind, 1) if hourly_wind is not None else None,
+                  'stationName': str(station.get('StationName') or '').strip()
+              }
               if name:
                   hourly_by_name[name] = item
               geo = station.get('GeoInfo') or {}
