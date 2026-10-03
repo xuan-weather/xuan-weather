@@ -3,7 +3,7 @@ name: CWA Earthquake Reports - Fast Sync
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [cwa-external-timer]
+    types: [hourly-data-update]
 
 permissions:
   contents: write
