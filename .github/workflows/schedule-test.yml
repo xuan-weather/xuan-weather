@@ -1,0 +1,23 @@
+name: Schedule Test
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test scheduled trigger
+        run: |
+          echo "================================"
+          echo "GitHub Schedule Test"
+          echo "UTC time: $(date -u)"
+          echo "Event: ${{ github.event_name }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "================================"
