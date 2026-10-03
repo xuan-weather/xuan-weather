@@ -1,0 +1,761 @@
+name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cwa-history-sync-5min-static
+  cancel-in-progress: false
+
+jobs:
+  fetch-temperature-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch CWA O-A0003-001
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -e
+          mkdir -p data/history
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-o-a0003-001.json
+
+          # 七堵等 C0 自動站若沒有出現在全測站回傳中，
+          # 再以 stationId 明確補抓，仍使用同一個 CWA 10 分鐘資料集。
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&stationId=C0B010" \
+            -o /tmp/cwa-o-a0003-001-c0b010.json
+
+      - name: Fetch CWA O-A0001-001 hourly fallback for C0 stations
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -e
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-o-a0001-001.json
+
+      - name: Fetch CWA official weather alert content W-C0033-002
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -e
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-002?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-w-c0033-002.json
+
+      - name: Fetch CWA O-A0002-001 rainfall
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -e
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-o-a0002-001.json
+
+      - name: Publish latest CWA JSON for GitHub Pages
+        run: |
+          set -e
+          mkdir -p data
+          cp /tmp/cwa-o-a0001-001.json data/cwa-O-A0001-001.json
+          cp /tmp/cwa-o-a0002-001.json data/cwa-O-A0002-001.json
+          cp /tmp/cwa-o-a0003-001.json data/cwa-O-A0003-001.json
+          cp /tmp/cwa-w-c0033-002.json data/cwa-W-C0033-002.json
+
+          # 七堵等 C0 測站若只在明確 stationId 回傳中出現，
+          # 將它合併回主 O-A0003-001 JSON，避免網站因單站缺資料而消失。
+          python - <<'PY2'
+          import json
+          from pathlib import Path
+
+          main_path = Path("data/cwa-O-A0003-001.json")
+          explicit_path = Path("/tmp/cwa-o-a0003-001-c0b010.json")
+
+          main = json.loads(main_path.read_text(encoding="utf-8"))
+          explicit = json.loads(explicit_path.read_text(encoding="utf-8"))
+
+          def stations(payload):
+              return (payload.get("records", {}).get("Station")
+                      or payload.get("result", {}).get("records", {}).get("Station")
+                      or [])
+
+          merged = stations(main)
+          explicit_stations = stations(explicit)
+          by_id = {str(x.get("StationId")): x for x in merged if x.get("StationId")}
+
+          for st in explicit_stations:
+              sid = str(st.get("StationId") or "")
+              if sid == "C0B010":
+                  by_id[sid] = st
+
+          merged = list(by_id.values())
+          if main.get("records") is not None:
+              main.setdefault("records", {})["Station"] = merged
+          elif main.get("result", {}).get("records") is not None:
+              main["result"]["records"]["Station"] = merged
+
+          main_path.write_text(
+              json.dumps(main, ensure_ascii=False, separators=(",", ":")),
+              encoding="utf-8"
+          )
+          print("Published O-A0003-001 stations:", len(merged))
+          PY2
+
+      - name: Update rolling 7-day history
+        run: |
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timedelta, timezone
+
+          source = "/tmp/cwa-o-a0003-001.json"
+          explicit_source = "/tmp/cwa-o-a0003-001-c0b010.json"
+          hourly_source = "/tmp/cwa-o-a0001-001.json"
+          rainfall_source = "/tmp/cwa-o-a0002-001.json"
+          output = "data/history/cwa-o-a0003-001-history.json"
+
+          def extract_stations(payload):
+              stations = (
+                  payload.get("records", {}).get("Station")
+                  or payload.get("result", {}).get("records", {}).get("Station")
+                  or []
+              )
+              return stations if isinstance(stations, list) else []
+
+          with open(source, "r", encoding="utf-8") as f:
+              payload = json.load(f)
+          stations = extract_stations(payload)
+          if not stations:
+              raise SystemExit("CWA O-A0003-001 找不到 records.Station")
+
+          with open(explicit_source, "r", encoding="utf-8") as f:
+              explicit_payload = json.load(f)
+          explicit_stations = extract_stations(explicit_payload)
+
+          with open(hourly_source, "r", encoding="utf-8") as f:
+              hourly_payload = json.load(f)
+          hourly_stations = extract_stations(hourly_payload)
+
+          with open(rainfall_source, "r", encoding="utf-8") as f:
+              rainfall_payload = json.load(f)
+          rainfall_stations = extract_stations(rainfall_payload)
+          if not rainfall_stations:
+              raise SystemExit("CWA O-A0002-001 找不到 records.Station")
+
+          history = {"generatedAt": None, "stations": {}}
+          if os.path.exists(output):
+              try:
+                  with open(output, "r", encoding="utf-8") as f:
+                      old = json.load(f)
+                  if isinstance(old, dict) and isinstance(old.get("stations"), dict):
+                      history = old
+              except Exception:
+                  pass
+
+          cutoff_ms = int(
+              (datetime.now(timezone.utc) - timedelta(days=7)).timestamp() * 1000
+          )
+
+          def parse_ts(station):
+              obs = station.get("ObsTime")
+              if isinstance(obs, dict):
+                  obs = obs.get("DateTime") or obs.get("dateTime")
+              if not obs:
+                  return None
+              try:
+                  dt = datetime.fromisoformat(
+                      str(obs).replace("Z", "+00:00")
+                  )
+                  if dt.tzinfo is None:
+                      dt = dt.replace(tzinfo=timezone.utc)
+                  return int(dt.timestamp() * 1000)
+              except Exception:
+                  return None
+
+          def append_station(station, only_c0=False, hourly_source=False):
+              if not isinstance(station, dict):
+                  return
+
+              station_id = str(
+                  station.get("StationId") or ""
+              ).strip()
+
+              if not station_id or (
+                  only_c0 and not station_id.startswith("C0")
+              ):
+                  return
+
+              ts_ms = parse_ts(station)
+              if ts_ms is None:
+                  return
+
+              weather = station.get("WeatherElement") or {}
+
+              # 溫度
+              temp = None
+              try:
+                  raw_temp = weather.get(
+                      "AirTemperature",
+                      weather.get("TEMP")
+                  )
+                  if raw_temp not in (None, "", "X", "T"):
+                      temp = float(raw_temp)
+              except (TypeError, ValueError):
+                  temp = None
+
+              if temp is not None and (
+                  temp == 0 or temp < -50 or temp > 60
+              ):
+                  temp = None
+
+              # O-A0001-001：整點前10分鐘平均風速，
+              # 對應氣象署「平均風」排行。
+              hourly_wind = None
+              raw_hourly_wind = weather.get(
+                  "WindSpeed",
+                  weather.get("WDSD")
+              )
+
+              if raw_hourly_wind not in (None, "", "X", "T"):
+                  try:
+                      hourly_wind = float(raw_hourly_wind)
+                  except (TypeError, ValueError):
+                      hourly_wind = None
+
+              # 最大10分鐘平均風：Max10MinAverage.WindSpeed
+              max10min_wind = None
+              max10 = weather.get("Max10MinAverage") or {}
+
+              if isinstance(max10, dict):
+                  raw_wind = max10.get("WindSpeed")
+                  if raw_wind not in (None, "", "X", "T"):
+                      try:
+                          max10min_wind = float(raw_wind)
+                      except (TypeError, ValueError):
+                          max10min_wind = None
+
+              # 最大瞬間風速：GustInfo.PeakGustSpeed
+              gust = None
+              gust_info = weather.get("GustInfo") or {}
+
+              if isinstance(gust_info, dict):
+                  raw_gust = gust_info.get("PeakGustSpeed")
+                  if raw_gust not in (None, "", "X", "T"):
+                      try:
+                          gust = float(raw_gust)
+                      except (TypeError, ValueError):
+                          gust = None
+
+              # 防止異常值污染今日排行。
+              if hourly_wind is not None and not (
+                  0 <= hourly_wind <= 60
+              ):
+                  hourly_wind = None
+
+              if max10min_wind is not None and not (
+                  0 <= max10min_wind <= 60
+              ):
+                  max10min_wind = None
+
+              if gust is not None and not (
+                  0 <= gust <= 80
+              ):
+                  gust = None
+
+              if (
+                  temp is None
+                  and hourly_wind is None
+                  and max10min_wind is None
+                  and gust is None
+              ):
+                  return
+
+              point = {"ts": ts_ms}
+
+              station_name = str(
+                  station.get("StationName") or ""
+              ).strip()
+
+              if station_name:
+                  point["stationName"] = station_name
+
+              if temp is not None:
+                  point["temp"] = round(temp, 1)
+
+              if hourly_wind is not None and hourly_source:
+                  point["hourlyWind"] = round(hourly_wind, 1)
+
+              if max10min_wind is not None:
+                  point["max10MinWind"] = round(
+                      max10min_wind,
+                      1
+                  )
+
+              if gust is not None:
+                  if hourly_source:
+                      # O-A0001-001：
+                      # 整點「小時最大陣風」獨立保存。
+                      point["hourlyGust"] = round(gust, 1)
+                  else:
+                      point["windGust"] = round(gust, 1)
+
+              history["stations"].setdefault(
+                  station_id,
+                  []
+              ).append(point)
+
+          def append_rainfall_station(station):
+              if not isinstance(station, dict):
+                  return
+
+              station_id = str(
+                  station.get("StationId") or ""
+              ).strip()
+
+              if not station_id:
+                  return
+
+              ts_ms = parse_ts(station)
+              if ts_ms is None:
+                  return
+
+              rainfall = station.get("RainfallElement") or {}
+
+              past24 = (
+                  rainfall.get("Past24hr")
+                  or rainfall.get("Past24HR")
+                  or rainfall.get("Past24Hour")
+                  or {}
+              )
+
+              raw = (
+                  past24.get("Precipitation")
+                  if isinstance(past24, dict)
+                  else None
+              )
+
+              if raw in (None, "", "X", "T"):
+                  return
+
+              try:
+                  rain24h = float(raw)
+              except (TypeError, ValueError):
+                  return
+
+              if rain24h < 0:
+                  return
+
+              history["stations"].setdefault(
+                  station_id,
+                  []
+              ).append({
+                  "ts": ts_ms,
+                  "rain24h": round(rain24h, 1)
+              })
+
+          # O-A0001-001：
+          # 保留全站整點「小時最大陣風」歷史。
+          for station in hourly_stations:
+              append_station(
+                  station,
+                  hourly_source=True
+              )
+
+          # 依測站名稱／縣市＋鄉鎮進行資料對齊。
+          def norm_key(value):
+              return (
+                  str(value or "")
+                  .replace("台", "臺")
+                  .replace(" ", "")
+                  .replace("　", "")
+                  .strip()
+              )
+
+          hourly_by_name = {}
+          hourly_by_area = {}
+
+          for station in hourly_stations:
+              name = norm_key(
+                  station.get("StationName")
+              )
+
+              ts_ms = parse_ts(station)
+              weather = station.get("WeatherElement") or {}
+              gust_info = weather.get("GustInfo") or {}
+              raw_gust = gust_info.get("PeakGustSpeed")
+
+              try:
+                  gust = float(raw_gust)
+              except (TypeError, ValueError):
+                  gust = None
+
+              raw_wind = weather.get(
+                  "WindSpeed",
+                  weather.get("WDSD")
+              )
+
+              try:
+                  hourly_wind = float(raw_wind)
+              except (TypeError, ValueError):
+                  hourly_wind = None
+
+              if ts_ms is None or (
+                  gust is None and hourly_wind is None
+              ):
+                  continue
+
+              if gust is not None and not (
+                  0 <= gust <= 80
+              ):
+                  gust = None
+
+              if hourly_wind is not None and not (
+                  0 <= hourly_wind <= 60
+              ):
+                  hourly_wind = None
+
+              if gust is None and hourly_wind is None:
+                  continue
+
+              item = {
+                  "ts": ts_ms,
+                  "gust": (
+                      round(gust, 1)
+                      if gust is not None
+                      else None
+                  ),
+                  "wind": (
+                      round(hourly_wind, 1)
+                      if hourly_wind is not None
+                      else None
+                  ),
+                  "stationName": str(
+                      station.get("StationName") or ""
+                  ).strip()
+              }
+
+              if name:
+                  hourly_by_name[name] = item
+
+              geo = station.get("GeoInfo") or {}
+
+              area_key = (
+                  norm_key(geo.get("CountyName"))
+                  + "|"
+                  + norm_key(geo.get("TownName"))
+              )
+
+              if area_key != "|":
+                  hourly_by_area[area_key] = item
+
+          for station in stations:
+              station_id = str(
+                  station.get("StationId") or ""
+              ).strip()
+
+              if not station_id:
+                  continue
+
+              name = norm_key(
+                  station.get("StationName")
+              )
+
+              geo = station.get("GeoInfo") or {}
+
+              area_key = (
+                  norm_key(geo.get("CountyName"))
+                  + "|"
+                  + norm_key(geo.get("TownName"))
+              )
+
+              hourly = (
+                  hourly_by_name.get(name)
+                  or hourly_by_area.get(area_key)
+              )
+
+              if not hourly:
+                  continue
+
+              mapped_point = {
+                  "ts": hourly["ts"],
+                  "stationName": str(
+                      station.get("StationName")
+                      or hourly.get("stationName")
+                      or ""
+                  ).strip()
+              }
+
+              if hourly.get("wind") is not None:
+                  mapped_point["hourlyWind"] = hourly["wind"]
+
+              if hourly.get("gust") is not None:
+                  mapped_point["hourlyGust"] = hourly["gust"]
+
+              history["stations"].setdefault(
+                  station_id,
+                  []
+              ).append(mapped_point)
+
+          # 加入 O-A0003 全站 10 分鐘資料。
+          for station in stations:
+              append_station(station)
+
+          # 加入明確指定 C0B010 的 O-A0003 回傳。
+          for station in explicit_stations:
+              if (
+                  str(
+                      station.get("StationId") or ""
+                  ).strip()
+                  == "C0B010"
+              ):
+                  append_station(station)
+
+          # O-A0002-001：
+          # 獨立保存雨量站自己的 24 小時累積雨量。
+          for station in rainfall_stations:
+              append_rainfall_station(station)
+
+          for station_id, arr in list(
+              history["stations"].items()
+          ):
+              unique = {}
+
+              for point in arr:
+                  try:
+                      ts = int(point["ts"])
+                  except (
+                      KeyError,
+                      TypeError,
+                      ValueError
+                  ):
+                      continue
+
+                  if ts < cutoff_ms:
+                      continue
+
+                  item = {"ts": ts}
+
+                  if point.get("stationName"):
+                      item["stationName"] = str(
+                          point.get("stationName")
+                      ).strip()
+
+                  has_value = False
+
+                  try:
+                      temp = float(point.get("temp"))
+                      if temp != 0 and -50 <= temp <= 60:
+                          item["temp"] = round(temp, 1)
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  try:
+                      rain24h = float(
+                          point.get("rain24h")
+                      )
+                      if rain24h >= 0:
+                          item["rain24h"] = round(
+                              rain24h,
+                              1
+                          )
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  try:
+                      max10min_wind = float(
+                          point.get("max10MinWind")
+                      )
+                      if 0 <= max10min_wind <= 60:
+                          item["max10MinWind"] = round(
+                              max10min_wind,
+                              1
+                          )
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  try:
+                      gust = float(
+                          point.get("windGust")
+                      )
+                      if 0 <= gust <= 80:
+                          item["windGust"] = round(
+                              gust,
+                              1
+                          )
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  try:
+                      hourly_wind = float(
+                          point.get("hourlyWind")
+                      )
+                      if 0 <= hourly_wind <= 60:
+                          item["hourlyWind"] = round(
+                              hourly_wind,
+                              1
+                          )
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  try:
+                      hourly_gust = float(
+                          point.get("hourlyGust")
+                      )
+                      if 0 <= hourly_gust <= 80:
+                          item["hourlyGust"] = round(
+                              hourly_gust,
+                              1
+                          )
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  if has_value:
+                      # 同一時間戳若同時有溫度與雨量，
+                      # 合併保留兩個欄位。
+                      if ts in unique:
+                          unique[ts].update(item)
+                      else:
+                          unique[ts] = item
+
+              cleaned = [
+                  unique[k]
+                  for k in sorted(unique)
+              ]
+
+              if cleaned:
+                  history["stations"][station_id] = cleaned
+              else:
+                  del history["stations"][station_id]
+
+          history["generatedAt"] = (
+              datetime.now(timezone.utc).isoformat()
+          )
+
+          with open(
+              output,
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  history,
+                  f,
+                  ensure_ascii=False,
+                  separators=(",", ":")
+              )
+
+          print(
+              "CWA 歷史測站數：",
+              len(history["stations"])
+          )
+
+          print(
+              "C0B010 七堵歷史筆數：",
+              len(
+                  history["stations"].get(
+                      "C0B010",
+                      []
+                  )
+              )
+          )
+
+          rain_count = sum(
+              1
+              for arr in history["stations"].values()
+              if any(
+                  "rain24h" in p
+                  for p in arr
+              )
+          )
+
+          wind_count = sum(
+              1
+              for arr in history["stations"].values()
+              if any(
+                  "max10MinWind" in p
+                  for p in arr
+              )
+          )
+
+          gust_count = sum(
+              1
+              for arr in history["stations"].values()
+              if any(
+                  "windGust" in p
+                  or "hourlyGust" in p
+                  for p in arr
+              )
+          )
+
+          hourly_gust_count = sum(
+              1
+              for arr in history["stations"].values()
+              if any(
+                  "hourlyGust" in p
+                  for p in arr
+              )
+          )
+
+          print(
+              "含 24 小時雨量歷史的測站數：",
+              rain_count
+          )
+
+          print(
+              "含 10 分鐘平均風歷史的測站數：",
+              wind_count
+          )
+
+          print(
+              "含陣風歷史的測站數：",
+              gust_count
+          )
+
+          print(
+              "含整點官方小時最大陣風歷史的測站數：",
+              hourly_gust_count
+          )
+          PY
+
+      - name: Commit history
+        run: |
+          set -e
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # 本工作流只提交歷史資料。
+          # 即時 CWA JSON 由 CWA Weather Data 工作流負責發布。
+          git restore \
+            data/cwa-O-A0001-001.json \
+            data/cwa-O-A0002-001.json \
+            data/cwa-O-A0003-001.json \
+            data/cwa-W-C0033-002.json
+
+          git add data/history/cwa-o-a0003-001-history.json
+
+          if git diff --cached --quiet; then
+            echo "歷史資料沒有變化，不需要提交"
+          else
+            git commit -m "Update CWA weather history"
+            git pull --rebase origin main
+            git push origin main
+          fi
