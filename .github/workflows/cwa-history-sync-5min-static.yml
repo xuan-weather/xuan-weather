@@ -466,15 +466,28 @@ jobs:
           print("含整點官方小時最大陣風歷史的測站數：", hourly_gust_count)
           PY
 
-      - name: Commit history
+            - name: Commit history
         run: |
+          set -e
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # 本工作流只提交歷史資料。
+          # 即時 CWA JSON 由 CWA Weather Data 工作流負責發布，
+          # 不要讓這裡產生的即時 JSON 修改留在工作目錄。
+          git restore \
+            data/cwa-O-A0001-001.json \
+            data/cwa-O-A0002-001.json \
+            data/cwa-O-A0003-001.json \
+            data/cwa-W-C0033-002.json
+
           git add data/history/cwa-o-a0003-001-history.json
+
           if git diff --cached --quiet; then
             echo "歷史資料沒有變化，不需要提交"
           else
-            git commit -m "Update CWA realtime JSON and history"
+            git commit -m "Update CWA weather history"
             git pull --rebase origin main
             git push origin main
           fi
