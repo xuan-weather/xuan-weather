@@ -5,7 +5,8 @@ on:
 
   schedule:
     # 每 5 分鐘檢查一次 CWA 最新資料
-    - cron: '3-58/5 * * * *'
+    schedule:
+  - cron: '*/5 * * * *'
 
 permissions:
   contents: write
