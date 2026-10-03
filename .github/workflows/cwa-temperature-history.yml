@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # 每 5 分鐘自動更新
-    - cron: '*/5 * * * *'
+    - cron: '3-58/5 * * * *'
 
 permissions:
   contents: write
