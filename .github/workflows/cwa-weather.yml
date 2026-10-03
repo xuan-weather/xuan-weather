@@ -5,7 +5,7 @@ on:
 
   # 每 5 分鐘檢查一次 CWA 最新資料
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '2-59/5 * * * *'
 
 permissions:
   contents: write
@@ -152,7 +152,9 @@ jobs:
               walk(data)
 
               if latest:
-                  taipei = latest.astimezone(timezone(timedelta(hours=8)))
+                  taipei = latest.astimezone(
+                      timezone(timedelta(hours=8))
+                  )
                   print(
                       f"{dataset}：本次抓到的最新官方發布／更新時間 = "
                       f"{taipei.isoformat()}"
