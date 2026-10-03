@@ -10,7 +10,7 @@ permissions:
 
 # 避免每 5 分鐘排程重疊造成舊資料覆蓋新資料或 git push 衝突
 concurrency:
-  group: cwa-weather-data
+  group: cwa-weather-data-main
   cancel-in-progress: false
 
 jobs:
