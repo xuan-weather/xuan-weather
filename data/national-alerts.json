@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-04T01:33:49.229958+08:00",
+  "updatedAt": "2026-10-04T04:10:30.925695+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20261004021840_0000",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-10-04T02:18:40+08:00",
+      "effective": "2026/10/4 上午 02:18:40",
+      "expires": "2026/10/4 上午 05:19:00",
+      "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261004021840_0000.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20261004011840_0000",
       "category": "水庫放流",
@@ -18,20 +32,6 @@
       "isDrill": false
     },
     {
-      "id": "WRA_ReservoirWarn_20261004001840_0000",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-10-04T00:18:40+08:00",
-      "effective": "2026/10/4 上午 12:18:40",
-      "expires": "2026/10/4 上午 03:19:00",
-      "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261004001840_0000.cap",
-      "isDrill": false
-    },
-    {
       "id": "NFA_Fire_20261003223645004",
       "category": "火災",
       "title": "火災",
@@ -43,20 +43,6 @@
       "expires": "2026/10/4 下午 11:15:00",
       "summary": "火災-一般(集合)住宅",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/NFA/2026/NFA_Fire/NFA_Fire_20261003223645004.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_extremely-rain_202610032259001",
-      "category": "降雨",
-      "title": "降雨",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-10-03T22:59:21+08:00",
-      "effective": "2026/10/3 下午 10:55:00",
-      "expires": "2026/10/4 上午 06:00:00",
-      "summary": "對流雲系發展旺盛，易有短延時強降雨，今(3日)晚至明(4日)晨宜蘭縣山區有局部大雨或豪雨，宜蘭、花蓮地區及新北、桃園山區有局部大雨發生的機率，請注意雷擊及強陣風，山區請留意坍方、落石及溪水暴漲，低窪地區請慎防積水。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_RAIN/fifows_extremely-rain_202610032259.cap",
       "isDrill": false
     },
     {
