@@ -3,7 +3,7 @@ name: CWA Schedule Test
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '3-58/5 * * * *'
 
 permissions:
   contents: read
