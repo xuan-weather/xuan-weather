@@ -3,7 +3,7 @@ name: CWA Weather Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: '3-58/5 * * * *
+    - cron: - cron: '3-58/5 * * * *'
 
 permissions:
   contents: write
