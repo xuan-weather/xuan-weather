@@ -2,10 +2,8 @@ name: CWA Earthquake Reports - Fast Sync
 
 on:
   workflow_dispatch:
-  schedule:
-    # GitHub Actions 最短實務排程為 5 分鐘
-    # 與主要氣象 Workflow 錯開
-    - cron: '1-56/5 * * * *'
+  repository_dispatch:
+    types: [cwa-external-timer]
 
 permissions:
   contents: write
