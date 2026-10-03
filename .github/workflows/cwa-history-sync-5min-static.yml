@@ -3,7 +3,7 @@ name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '3-58/5 * * * *'
 
 permissions:
   contents: write
@@ -43,6 +43,17 @@ jobs:
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON" \
             -o /tmp/cwa-o-a0001-001.json
 
+
+      - name: Fetch CWA official weather alert content W-C0033-002
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -e
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-002?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-w-c0033-002.json
+
       - name: Fetch CWA O-A0002-001 rainfall
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
@@ -60,6 +71,7 @@ jobs:
           cp /tmp/cwa-o-a0001-001.json data/cwa-O-A0001-001.json
           cp /tmp/cwa-o-a0002-001.json data/cwa-O-A0002-001.json
           cp /tmp/cwa-o-a0003-001.json data/cwa-O-A0003-001.json
+          cp /tmp/cwa-w-c0033-002.json data/cwa-W-C0033-002.json
 
           # 七堵等 C0 測站若只在明確 stationId 回傳中出現，
           # 將它合併回主 O-A0003-001 JSON，避免網站因單站缺資料而消失。
@@ -314,12 +326,10 @@ jobs:
                   hourly_wind = None
               if gust is None and hourly_wind is None:
                   continue
-              item = {
-                  'ts': ts_ms,
-                  'gust': round(gust, 1) if gust is not None else None,
-                  'wind': round(hourly_wind, 1) if hourly_wind is not None else None,
-                  'stationName': str(station.get('StationName') or '').strip()
-              }
+              item = {'ts': ts_ms,
+                      'gust': round(gust, 1) if gust is not None else None,
+                      'wind': round(hourly_wind, 1) if hourly_wind is not None else None,
+                      'stationName': str(station.get('StationName') or '').strip()}
               if name:
                   hourly_by_name[name] = item
               geo = station.get('GeoInfo') or {}
@@ -456,7 +466,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/cwa-O-A0001-001.json data/cwa-O-A0002-001.json data/cwa-O-A0003-001.json data/history/cwa-o-a0003-001-history.json
+          git add data/cwa-O-A0001-001.json data/cwa-O-A0002-001.json data/cwa-O-A0003-001.json data/cwa-W-C0033-002.json data/history/cwa-o-a0003-001-history.json
           if git diff --cached --quiet; then
             echo "歷史資料沒有變化，不需要提交"
           else
