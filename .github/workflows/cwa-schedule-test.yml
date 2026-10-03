@@ -1,0 +1,24 @@
+name: CWA Schedule Test 2
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '3-58/5 * * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Scheduled trigger
+        run: |
+          echo "CWA Schedule Test 2"
+          echo "UTC time:"
+          date -u
+          echo "Event:"
+          echo "${{ github.event_name }}"
+          echo "Run ID:"
+          echo "${{ github.run_id }}"
