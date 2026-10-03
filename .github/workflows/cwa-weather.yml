@@ -10,7 +10,7 @@ permissions:
 
 # 避免每 5 分鐘排程重疊造成舊資料覆蓋新資料或 git push 衝突
 concurrency:
-  group: cwa-weather-data-main
+  group: cwa-weather-data
   cancel-in-progress: false
 
 jobs:
@@ -264,56 +264,17 @@ jobs:
           echo "========================================"
           ls -lh data/cwa-*.json
 
-      - name: Commit CWA data safely
+      - name: Commit CWA data
         run: |
-          set -euo pipefail
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # 先備份本次剛從 CWA 取得的 JSON。
-          # 若遠端 main 在本次執行期間有新 commit，
-          # rebase 發生衝突時可以重新套回「這一次抓到的最新 CWA 資料」。
-          mkdir -p /tmp/cwa-publish
-          cp data/cwa-*.json /tmp/cwa-publish/
 
           git add data/cwa-*.json
 
           if git diff --cached --quiet; then
             echo "資料沒有變化，不需要提交"
-            exit 0
-          fi
-
-          git commit -m "Update CWA weather data"
-
-          for attempt in 1 2 3; do
-            echo "Push attempt ${attempt}/3"
-
-            if git pull --rebase origin main; then
-              if git push origin HEAD:main; then
-                echo "CWA data push 成功"
-                exit 0
-              fi
-            else
-              echo "rebase 發生衝突，保留遠端 main 並重新套用本次 CWA 最新資料"
-              git rebase --abort || true
-            fi
-
-            # 遠端可能在本次執行期間又有新 commit。
-            # 以遠端 main 為基準重新建立本次資料提交，
-            # 不覆蓋其他 workflow 已經推上去的內容。
-            git fetch origin main
-            git reset --hard origin/main
-            cp /tmp/cwa-publish/cwa-*.json data/
-
-            git add data/cwa-*.json
-            if git diff --cached --quiet; then
-              echo "遠端已有相同資料，不需要提交"
-              exit 0
-            fi
-
+          else
             git commit -m "Update CWA weather data"
-          done
-
-          echo "CWA data push 連續 3 次失敗"
-          exit 1
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
