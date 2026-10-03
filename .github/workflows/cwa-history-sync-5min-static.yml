@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: cwa-weather-data
+  cancel-in-progress: false
+
 jobs:
   fetch-temperature-history:
     runs-on: ubuntu-latest
