@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: cwa-history-sync
+  group: cwa-weather-data
   cancel-in-progress: false
 
 jobs:
@@ -466,25 +466,15 @@ jobs:
           print("含整點官方小時最大陣風歷史的測站數：", hourly_gust_count)
           PY
 
-      - name: Restore realtime CWA JSON before history commit
-        run: |
-          set -euo pipefail
-
-          # History workflow 會暫時把最新 CWA JSON 放到 data/ 供網站流程使用，
-          # 但這個 workflow 不負責提交 realtime JSON。
-          # 在 git pull/rebase 前先還原這些未追蹤的工作區變更，
-          # 避免出現「cannot pull with rebase: You have unstaged changes」。
-          git restore -- data/cwa-*.json || true
-
       - name: Commit history
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/history/cwa-o-a0003-001-history.json
+          git add data/cwa-O-A0001-001.json data/cwa-O-A0002-001.json data/cwa-O-A0003-001.json data/cwa-W-C0033-002.json data/history/cwa-o-a0003-001-history.json
           if git diff --cached --quiet; then
             echo "歷史資料沒有變化，不需要提交"
           else
-            git commit -m "Update CWA history"
+            git commit -m "Update CWA realtime JSON and history"
             git pull --rebase origin main
             git push origin main
           fi
