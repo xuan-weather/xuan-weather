@@ -1,6 +1,8 @@
 name: CWA Weather Data
 
 on:
+  schedule:
+    - cron: "*/5 * * * *"
   workflow_dispatch:
   repository_dispatch:
     types: [cwa-external-timer]
