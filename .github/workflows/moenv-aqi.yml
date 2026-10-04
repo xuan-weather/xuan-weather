@@ -46,9 +46,26 @@ jobs:
           p = Path("data/aqx-p-432.json")
           data = json.loads(p.read_text(encoding="utf-8"))
 
-          records = data.get("records", [])
+          # MOENV API 可能直接回傳陣列，
+          # 也可能回傳 {"records": [...]}。
+          if isinstance(data, list):
+              records = data
+          elif isinstance(data, dict):
+              records = data.get("records", [])
+          else:
+              records = []
+
           if not records:
               raise SystemExit("AQI 回傳沒有 records")
+
+          # 確認 records 內容確實是物件
+          records = [
+              r for r in records
+              if isinstance(r, dict)
+          ]
+
+          if not records:
+              raise SystemExit("AQI records 格式錯誤")
 
           times = sorted({
               str(r.get("publishtime", "")).strip()
