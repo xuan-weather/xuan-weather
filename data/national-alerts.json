@@ -1,8 +1,36 @@
 {
-  "updatedAt": "2026-10-05T05:39:13.809305+08:00",
+  "updatedAt": "2026-10-05T07:04:29.675210+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20261005061840_0001",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-10-05T06:18:40+08:00",
+      "effective": "2026/10/5 上午 06:18:40",
+      "expires": "2026/10/5 上午 09:19:00",
+      "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261005061840_0001.cap",
+      "isDrill": false
+    },
+    {
+      "id": "WRA_ReservoirWarn_20261005061840_0000",
+      "category": "水庫放流",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-10-05T06:18:40+08:00",
+      "effective": "2026/10/5 上午 06:18:40",
+      "expires": "2026/10/5 上午 09:19:00",
+      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261005061840_0000.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_extremely-rain_202610050454001",
       "category": "降雨",
@@ -29,34 +57,6 @@
       "expires": "2026/10/5 下午 11:00:00",
       "summary": "東北風偏強，5日晨至晚上蘭嶼、綠島、新北市、桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、雲林縣、嘉義縣、臺南市、屏東縣、澎湖縣、連江縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610050430.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20261005041840_0001",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-10-05T04:18:40+08:00",
-      "effective": "2026/10/5 上午 04:18:40",
-      "expires": "2026/10/5 上午 07:19:00",
-      "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261005041840_0001.cap",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20261005041840_0000",
-      "category": "水庫放流",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-10-05T04:18:40+08:00",
-      "effective": "2026/10/5 上午 04:18:40",
-      "expires": "2026/10/5 上午 07:19:00",
-      "summary": "水利署訊湖山水庫:(洩洪至北港溪):自由溢流,影響範圍:雲林縣，古坑鄉、虎尾鎮、水林鄉、斗六市、莿桐鄉、土庫鎮、斗南鎮、北港鎮、元長鄉、口湖鄉、大埤鄉；嘉義縣，新港鄉、溪口鄉、六腳鄉、東石鄉",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261005041840_0000.cap",
       "isDrill": false
     },
     {
