@@ -1,0 +1,228 @@
+name: CWA Today Temperature Extremes
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 與既有 CWA 歷史同步錯開 1 分鐘，盡快產生最新今日高溫摘要
+    - cron: '4-59/5 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cwa-today-temperature-extremes
+  cancel-in-progress: true
+
+jobs:
+  build-today-temperature-extremes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch latest CWA O-A0003-001
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -e
+          mkdir -p data/history
+
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-o-a0003-001.json
+
+      - name: Build today high-temperature summary
+        run: |
+          python - <<'PY'
+          import json
+          from datetime import datetime, timedelta, timezone
+          from pathlib import Path
+
+          history_path = Path("data/history/cwa-o-a0003-001-history.json")
+          summary_path = Path("data/history/today-temperature-extremes.json")
+          current_path = Path("/tmp/cwa-o-a0003-001.json")
+
+          if history_path.exists():
+              try:
+                  history = json.loads(history_path.read_text(encoding="utf-8"))
+              except Exception:
+                  history = {"generatedAt": None, "stations": {}}
+          else:
+              history = {"generatedAt": None, "stations": {}}
+
+          if not isinstance(history, dict) or not isinstance(history.get("stations"), dict):
+              history = {"generatedAt": None, "stations": {}}
+
+          def extract_stations(payload):
+              stations = (
+                  payload.get("records", {}).get("Station")
+                  or payload.get("result", {}).get("records", {}).get("Station")
+                  or []
+              )
+              return stations if isinstance(stations, list) else []
+
+          current_payload = json.loads(current_path.read_text(encoding="utf-8"))
+          current_stations = extract_stations(current_payload)
+
+          # 台灣時間今天 00:00。
+          taipei = timezone(timedelta(hours=8))
+          now_tw = datetime.now(timezone.utc).astimezone(taipei)
+          today_start = datetime(
+              now_tw.year, now_tw.month, now_tw.day, tzinfo=taipei
+          )
+          today_start_ms = int(today_start.timestamp() * 1000)
+
+          def parse_ts(station):
+              obs = station.get("ObsTime")
+              if isinstance(obs, dict):
+                  obs = obs.get("DateTime") or obs.get("dateTime")
+              if not obs:
+                  return None
+              try:
+                  dt = datetime.fromisoformat(str(obs).replace("Z", "+00:00"))
+                  if dt.tzinfo is None:
+                      dt = dt.replace(tzinfo=timezone.utc)
+                  return int(dt.timestamp() * 1000)
+              except Exception:
+                  return None
+
+          # 最新 O-A0003 批次也直接併入本次計算。
+          # 即使歷史 Workflow 還沒完成 commit，也不會漏掉剛發布的
+          # 10:55、10:51、10:48 這類最新觀測。
+          station_order = {}
+          station_meta = {}
+
+          for idx, station in enumerate(current_stations):
+              sid = str(station.get("StationId") or "").strip()
+              if not sid:
+                  continue
+
+              station_order[sid] = idx
+              geo = station.get("GeoInfo") or {}
+              station_meta[sid] = {
+                  "stationName": str(station.get("StationName") or "").strip(),
+                  "county": str(geo.get("CountyName") or "").replace("台", "臺"),
+                  "town": str(geo.get("TownName") or "")
+              }
+
+              ts = parse_ts(station)
+              weather = station.get("WeatherElement") or {}
+              raw_temp = weather.get("AirTemperature", weather.get("TEMP"))
+
+              try:
+                  temp = float(raw_temp)
+              except (TypeError, ValueError):
+                  temp = None
+
+              if (
+                  ts is not None
+                  and temp is not None
+                  and temp != 0
+                  and -50 <= temp <= 60
+              ):
+                  history.setdefault("stations", {}).setdefault(sid, []).append({
+                      "ts": ts,
+                      "stationName": station_meta[sid]["stationName"],
+                      "temp": round(temp, 1)
+                  })
+
+          result = []
+
+          for sid, points in history.get("stations", {}).items():
+              if not isinstance(points, list):
+                  continue
+
+              best = None
+              station_name = station_meta.get(str(sid), {}).get("stationName", "")
+
+              for point in points:
+                  try:
+                      ts = int(point.get("ts"))
+                      temp = float(point.get("temp"))
+                  except (TypeError, ValueError, AttributeError):
+                      continue
+
+                  if ts < today_start_ms:
+                      continue
+
+                  if not (-50 <= temp <= 60):
+                      continue
+
+                  name = str(point.get("stationName") or "").strip()
+                  if name:
+                      station_name = name
+
+                  if (
+                      best is None
+                      or temp > best["temp"]
+                      or (temp == best["temp"] and ts < best["ts"])
+                  ):
+                      best = {"temp": round(temp, 1), "ts": ts}
+
+              if best is None:
+                  continue
+
+              meta = station_meta.get(str(sid), {})
+              result.append({
+                  "stationId": str(sid),
+                  "stationName": station_name or str(sid),
+                  "county": meta.get("county", ""),
+                  "town": meta.get("town", ""),
+                  "maxTemp": best["temp"],
+                  "maxTempTime": datetime.fromtimestamp(
+                      best["ts"] / 1000, tz=timezone.utc
+                  ).astimezone(taipei).isoformat()
+              })
+
+          # 氣象署「今天 → 高溫」以最高溫降冪排列。
+          # 同溫度維持目前 O-A0003 測站順序，避免排行每次刷新亂跳。
+          result.sort(
+              key=lambda x: (
+                  -float(x["maxTemp"]),
+                  station_order.get(x["stationId"], 10**9)
+              )
+          )
+
+          payload = {
+              "date": now_tw.date().isoformat(),
+              "generatedAt": datetime.now(timezone.utc).isoformat(),
+              "source": "CWA O-A0003-001",
+              "stations": result
+          }
+
+          summary_path.write_text(
+              json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
+              encoding="utf-8"
+          )
+
+          print("今日高溫摘要測站數：", len(result))
+          for item in result[:10]:
+              print(
+                  item["stationName"],
+                  item["maxTemp"],
+                  item["maxTempTime"]
+              )
+          PY
+
+      - name: Commit today's temperature summary
+        run: |
+          set -e
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/history/today-temperature-extremes.json
+
+          if git diff --cached --quiet; then
+            echo "今日高溫摘要沒有變化，不需要提交"
+            exit 0
+          fi
+
+          git commit -m "Update CWA today temperature extremes"
+
+          # 既有歷史 Workflow 可能同時提交其他 CWA JSON；
+          # 先 rebase 再 push，避免兩個 Workflow 互相覆蓋。
+          git pull --rebase origin main
+          git push origin main
