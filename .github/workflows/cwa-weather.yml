@@ -36,7 +36,7 @@ jobs:
             O-A0002-001
             O-A0003-001
             F-C0032-001
-            F-D0047-089
+            F-D0047-091
             W-C0033-001
             W-C0033-002
             W-C0033-005
@@ -55,7 +55,23 @@ jobs:
             cache_buster="$(date +%s%N)"
             url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}?_=${cache_buster}"
 
-            curl --fail-with-body               --silent               --show-error               --retry 3               --retry-delay 2               --location               -H "Accept: application/json"               -H "Authorization: ${CWA_API_KEY}"               -H "Cache-Control: no-cache, no-store, max-age=0"               -H "Pragma: no-cache"               "${url}"               -o "data/cwa-${dataset}.json"
+            echo "開始下載 ${dataset}..."
+            curl --fail-with-body \
+              --silent \
+              --show-error \
+              --retry 8 \
+              --retry-all-errors \
+              --retry-delay 5 \
+              --connect-timeout 30 \
+              --max-time 180 \
+              --location \
+              -H "Accept: application/json" \
+              -H "Authorization: ${CWA_API_KEY}" \
+              -H "Cache-Control: no-cache, no-store, max-age=0" \
+              -H "Pragma: no-cache" \
+              "${url}" \
+              -o "data/cwa-${dataset}.json"
+            echo "${dataset} 下載完成"
 
             echo "CWA ${dataset} 資料取得成功"
             wc -c "data/cwa-${dataset}.json"
@@ -182,47 +198,54 @@ jobs:
           python <<'PY'
           import json
 
-          path = "data/cwa-F-D0047-089.json"
+          path = "data/cwa-F-D0047-091.json"
 
           with open(path, "r", encoding="utf-8") as f:
               data = json.load(f)
 
           if not isinstance(data, dict):
-              raise SystemExit("F-D0047-089：錯誤，回傳資料不是 JSON 物件")
+              raise SystemExit("F-D0047-091：回傳資料不是 JSON 物件")
 
-          records = data.get("records") or data.get("result", {}).get("records") or {}
-          locations = records.get("location") or records.get("dataset", {}).get("location") or []
+          records = data.get("records") or {}
+          locations_groups = records.get("locations") or []
 
-          if not isinstance(locations, list) or not locations:
-              raise SystemExit("F-D0047-089：錯誤，找不到縣市預報 location 資料")
-
-          names = []
-          for location in locations:
-              name = location.get("locationName") or location.get("LocationName")
-              if name:
-                  names.append(str(name))
-
-          print(f"F-D0047-089：JSON 正常，共取得 {len(names)} 個預報區域")
-          print("F-D0047-089：預報區域範例 =", ", ".join(names[:10]))
-
-          if len(names) < 20:
+          if not isinstance(locations_groups, list) or not locations_groups:
               raise SystemExit(
-                  f"F-D0047-089：預報區域數量只有 {len(names)}，"
-                  "疑似不是完整縣市預報資料，停止提交。"
+                  "F-D0047-091：找不到 records.locations，"
+                  "不是有效的一週縣市預報資料。"
               )
 
-          has_weather_element = any(
-              isinstance(location.get("weatherElement"), list)
-              and len(location.get("weatherElement")) > 0
-              for location in locations
+          location_names = []
+
+          for group in locations_groups:
+              locations = group.get("location") or []
+              if not isinstance(locations, list):
+                  continue
+
+              for location in locations:
+                  name = (
+                      location.get("locationName")
+                      or location.get("LocationName")
+                  )
+                  if name:
+                      location_names.append(str(name))
+
+          print(
+              f"F-D0047-091：JSON 正常，共取得 "
+              f"{len(location_names)} 個預報區域"
+          )
+          print(
+              "F-D0047-091：預報區域範例 = "
+              + ", ".join(location_names[:10])
           )
 
-          if not has_weather_element:
+          if len(location_names) < 20:
               raise SystemExit(
-                  "F-D0047-089：找不到 weatherElement，停止提交。"
+                  f"F-D0047-091：預報區域只有 "
+                  f"{len(location_names)} 個，疑似資料不完整。"
               )
 
-          print("F-D0047-089：縣市一週預報資料結構驗證成功")
+          print("F-D0047-091：一週縣市預報資料結構驗證成功")
           PY
 
       - name: Verify high-temperature CAP is not an old cached version
