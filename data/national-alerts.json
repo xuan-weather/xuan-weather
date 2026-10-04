@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-04T22:25:30.638078+08:00",
+  "updatedAt": "2026-10-04T22:34:39.084652+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_strong-wind_202610042224001",
+      "category": "強風",
+      "title": "強風",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-10-04T22:24:37+08:00",
+      "effective": "2026/10/4 下午 10:22:00",
+      "expires": "2026/10/5 下午 11:00:00",
+      "summary": "東北風增強，4日晚上至5日晚上蘭嶼、綠島、新北市、桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、雲林縣、嘉義縣、臺南市、屏東縣、澎湖縣、連江縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610042224.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20261004221840_0001",
       "category": "水庫放流",
@@ -113,20 +127,6 @@
       "expires": "2026/10/5 下午 05:00:00",
       "summary": "天氣高溫炎熱，明(5)日中午前後南投縣為橙色燈號，有連續出現36度高溫的機率，請加強注意。臺南市、屏東縣為黃色燈號，請注意。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610041724.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_strong-wind_202610041625001",
-      "category": "強風",
-      "title": "強風",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-10-04T16:25:59+08:00",
-      "effective": "2026/10/4 下午 04:21:00",
-      "expires": "2026/10/5 下午 11:00:00",
-      "summary": "東北風增強，4日晚上至5日晚上蘭嶼、綠島、新北市、桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、雲林縣、嘉義縣、臺南市、屏東縣、澎湖縣、連江縣局部地區將有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610041625.cap",
       "isDrill": false
     },
     {
