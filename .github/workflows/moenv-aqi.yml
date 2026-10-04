@@ -2,7 +2,7 @@ name: MOENV AQI Data
 
 on:
   schedule:
-    - cron: '5 * * * *'
+    - cron: - cron: '20 * * * *'
   workflow_dispatch:
   repository_dispatch:
     types: [hourly-data-update]
