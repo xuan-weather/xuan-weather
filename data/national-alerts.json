@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-05T07:04:29.675210+08:00",
+  "updatedAt": "2026-10-05T08:10:23.260084+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_heat_202610050731001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-10-05T07:31:47+08:00",
+      "effective": "2026/10/5 上午 07:29:00",
+      "expires": "2026/10/5 下午 05:00:00",
+      "summary": "天氣高溫炎熱，今(5)日中午前後南投縣為橙色燈號，有連續出現36度高溫的機率，請加強注意。臺南市、屏東縣為黃色燈號，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610050731.cap",
+      "isDrill": false
+    },
     {
       "id": "WRA_ReservoirWarn_20261005061840_0001",
       "category": "水庫放流",
