@@ -1,0 +1,75 @@
+name: hourly-data-update
+
+on:
+  workflow_run:
+    workflows:
+      - "CWA Weather Data"
+    types:
+      - completed
+
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  trigger-moenv:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check trigger time
+        id: check_time
+        run: |
+          set -euo pipefail
+
+          # 使用台灣時間
+          TAIPEI_TIME="$(TZ=Asia/Taipei date '+%Y-%m-%d %H:%M:%S')"
+          HOUR="$(TZ=Asia/Taipei date '+%H')"
+          MINUTE="$(TZ=Asia/Taipei date '+%M')"
+
+          echo "目前台灣時間：${TAIPEI_TIME}"
+          echo "小時：${HOUR}"
+          echo "分鐘：${MINUTE}"
+
+          # 手動 Run 時直接允許
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "manual=true" >> "$GITHUB_OUTPUT"
+            echo "allow=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # 只在每小時 20～24 分觸發 MOENV
+          # CWA Weather Data 每 5 分鐘執行，
+          # 因此這裡只會在每小時這個時間窗口送出一次 AQI 更新。
+          if [ "$MINUTE" -ge 20 ] && [ "$MINUTE" -le 24 ]; then
+            echo "manual=false" >> "$GITHUB_OUTPUT"
+            echo "allow=true" >> "$GITHUB_OUTPUT"
+            echo "進入 MOENV AQI 更新時間窗口"
+          else
+            echo "manual=false" >> "$GITHUB_OUTPUT"
+            echo "allow=false" >> "$GITHUB_OUTPUT"
+            echo "目前不在 MOENV AQI 更新時間窗口，跳過"
+          fi
+
+      - name: Trigger MOENV AQI Data
+        if: steps.check_time.outputs.allow == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          echo "========================================"
+          echo "開始觸發 MOENV AQI Data"
+          echo "========================================"
+
+          gh workflow run moenv-aqi.yml \
+            --repo "${{ github.repository }}" \
+            --ref main
+
+          echo "MOENV AQI Data workflow_dispatch 已送出"
+
+      - name: Skip
+        if: steps.check_time.outputs.allow != 'true'
+        run: |
+          echo "本次不是 MOENV AQI 更新時間"
+          echo "不觸發 API"
