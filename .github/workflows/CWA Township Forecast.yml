@@ -2,7 +2,7 @@ name: CWA Township Forecast
 
 on:
   schedule:
-    # 鄉鎮預報每天約 05:30 / 11:30 / 17:30 / 23:30 發布
+    # 鄉鎮 1 週預報每天約 05:30 / 11:30 / 17:30 / 23:30 發布
     # 發布後約 10 分鐘抓取一次
     - cron: '40 21,3,9,15 * * *'
   workflow_dispatch:
@@ -24,44 +24,43 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch all 22 county/city township forecasts
+      - name: Fetch all 22 county/city 7-day township forecasts
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -euo pipefail
           mkdir -p data/cwa-township
 
-          # F-D0047-093 的全臺產品在目前 API 狀態下直接查詢會異常，
-          # 因此改用氣象署正式提供的 22 個縣市鄉鎮預報資料集，
-          # 每個資料集抓完整縣市，再合併成一份全臺鄉鎮資料。
+          # 這裡要抓「未來 1 週」產品，而不是「未來 2 天」產品。
+          # 001/005/009... 是 2 天；003/007/011... 才是 1 週。
           datasets=(
-            F-D0047-001
-            F-D0047-005
-            F-D0047-009
-            F-D0047-013
-            F-D0047-017
-            F-D0047-021
-            F-D0047-025
-            F-D0047-029
-            F-D0047-033
-            F-D0047-037
-            F-D0047-041
-            F-D0047-045
-            F-D0047-049
-            F-D0047-053
-            F-D0047-057
-            F-D0047-061
-            F-D0047-065
-            F-D0047-069
-            F-D0047-073
-            F-D0047-077
-            F-D0047-081
-            F-D0047-085
+            F-D0047-003
+            F-D0047-007
+            F-D0047-011
+            F-D0047-015
+            F-D0047-019
+            F-D0047-023
+            F-D0047-027
+            F-D0047-031
+            F-D0047-035
+            F-D0047-039
+            F-D0047-043
+            F-D0047-047
+            F-D0047-051
+            F-D0047-055
+            F-D0047-059
+            F-D0047-063
+            F-D0047-067
+            F-D0047-071
+            F-D0047-075
+            F-D0047-079
+            F-D0047-083
+            F-D0047-087
           )
 
           for dataset in "${datasets[@]}"; do
             echo "========================================"
-            echo "取得 ${dataset}"
+            echo "取得 ${dataset}（1週）"
             echo "========================================"
 
             cache_buster="$(date +%s%N)"
@@ -87,7 +86,7 @@ jobs:
             echo "${dataset} 下載完成"
           done
 
-      - name: Merge all township forecasts
+      - name: Merge all 7-day township forecasts
         run: |
           set -euo pipefail
 
@@ -103,193 +102,240 @@ jobs:
           const seen = new Set();
 
           for (const file of files) {
-            const full = `data/cwa-township/${file}`;
-            const json = JSON.parse(fs.readFileSync(full, 'utf8'));
-
-            const records =
-              json?.records ||
-              json?.result?.records ||
-              {};
-
-            // 氣象署 REST datastore 的縣市資料結構通常是：
-            // records.locations[0].location
-            const lowerGroups = records.locations || [];
-            const upperGroups = records.Locations || [];
-
-            const groups = lowerGroups.length
-              ? lowerGroups
-              : upperGroups;
-
+            const json = JSON.parse(fs.readFileSync(`data/cwa-township/${file}`, 'utf8'));
+            const records = json?.records || json?.result?.records || {};
+            const groups = records.locations || records.Locations || [];
             const groupArray = Array.isArray(groups) ? groups : [groups];
 
             for (const group of groupArray) {
-              const cityName =
-                group?.locationsName ||
-                group?.LocationsName ||
-                '';
-
-              const locations =
-                group?.location ||
-                group?.Location ||
-                [];
-
-              const locationArray =
-                Array.isArray(locations) ? locations : [];
-
+              const cityName = group?.locationsName || group?.LocationsName || '';
+              const locations = group?.location || group?.Location || [];
+              const locationArray = Array.isArray(locations) ? locations : [locations];
               const normalizedLocations = [];
 
               for (const location of locationArray) {
-                const geocode = String(
-                  location?.geocode ??
-                  location?.Geocode ??
-                  ''
-                ).trim();
-
-                const name =
-                  location?.locationName ||
-                  location?.LocationName ||
-                  '';
-
-                // 同一鄉鎮只保留一次
+                const geocode = String(location?.geocode ?? location?.Geocode ?? '').trim();
+                const name = location?.locationName || location?.LocationName || '';
                 const key = geocode || `${cityName}|${name}`;
-
-                if (seen.has(key)) {
-                  continue;
-                }
-
+                if (!name || seen.has(key)) continue;
                 seen.add(key);
                 normalizedLocations.push(location);
               }
 
-              if (normalizedLocations.length > 0) {
-                allGroups.push({
-                  LocationsName: cityName,
-                  Location: normalizedLocations
-                });
+              if (normalizedLocations.length) {
+                allGroups.push({LocationsName: cityName, Location: normalizedLocations});
               }
             }
           }
-
-          const total = allGroups.reduce(
-            (sum, group) => sum + group.Location.length,
-            0
-          );
 
           const uniqueGeocodes = new Set();
-
           for (const group of allGroups) {
             for (const location of group.Location) {
-              const code = String(
-                location?.Geocode ??
-                location?.geocode ??
-                ''
-              ).trim();
-
-              if (code) {
-                uniqueGeocodes.add(code);
-              }
+              const code = String(location?.Geocode ?? location?.geocode ?? '').trim();
+              if (code) uniqueGeocodes.add(code);
             }
           }
 
-          console.log(`合併縣市資料組數：${allGroups.length}`);
-          console.log(`合併 Location 數量：${total}`);
+          console.log(`合併 Location：${[...allGroups].reduce((n,g)=>n+g.Location.length,0)}`);
           console.log(`不重複 Geocode：${uniqueGeocodes.size}`);
 
-          // 368 鄉鎮為正常目標；允許少量資料暫時缺失，
-          // 但低於 300 就完全拒絕覆蓋網站舊資料。
           if (uniqueGeocodes.size < 300) {
-            throw new Error(
-              `全臺鄉鎮資料異常：只有 ${uniqueGeocodes.size} 個 Geocode，拒絕覆蓋舊資料`
-            );
+            throw new Error(`全臺鄉鎮資料異常：只有 ${uniqueGeocodes.size} 個 Geocode，拒絕覆蓋`);
           }
 
-          const output = {
+          fs.writeFileSync(path, JSON.stringify({
             success: true,
-            records: {
-              Locations: allGroups
-            }
-          };
+            records: {Locations: allGroups}
+          }, null, 2), 'utf8');
 
-          fs.writeFileSync(
-            path,
-            JSON.stringify(output, null, 2),
-            'utf8'
-          );
-
-          console.log(
-            `✓ 已建立 ${path}，共 ${uniqueGeocodes.size} 個鄉鎮市區`
-          );
+          console.log(`✓ 已建立 ${path}`);
           NODE
 
-      - name: Validate township forecast
+      - name: Build lightweight 7-day web data
         run: |
           set -euo pipefail
 
           node <<'NODE'
           const fs = require('fs');
+          const sourcePath = 'data/cwa-F-D0047-093.json';
+          const outputPath = 'data/cwa-F-D0047-093-web.json';
+          const source = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
+          const groups = source?.records?.Locations || [];
 
-          const path = 'data/cwa-F-D0047-093.json';
-          const json = JSON.parse(fs.readFileSync(path, 'utf8'));
+          const today = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Taipei'
+          }).format(new Date());
 
-          const groups = json?.records?.Locations || [];
+          const normalize = value => String(value || '').replace(/台/g, '臺').trim();
+          const toArray = value => Array.isArray(value) ? value : (value && typeof value === 'object' ? [value] : []);
 
-          const locations = groups.flatMap(group =>
-            Array.isArray(group?.Location) ? group.Location : []
-          );
+          const valueOf = (time, keys) => {
+            const values = toArray(time?.ElementValue ?? time?.elementValue ?? time?.Parameter ?? time?.parameter);
+            for (const value of values) {
+              if (value == null) continue;
+              if (typeof value !== 'object') {
+                const text = String(value).trim();
+                if (text) return text;
+                continue;
+              }
+              for (const key of keys) {
+                if (value[key] !== undefined && value[key] !== null && String(value[key]).trim() !== '') {
+                  return String(value[key]).trim();
+                }
+              }
+            }
+            return '';
+          };
 
-          const unique = new Set(
-            locations
-              .map(item =>
-                String(item?.Geocode || '').trim()
-              )
-              .filter(Boolean)
-          );
+          const elementByName = (elements, names) => {
+            const wanted = new Set(names.map(v => String(v).toLowerCase()));
+            return elements.find(e => wanted.has(String(e?.elementName ?? e?.ElementName ?? '').trim().toLowerCase())) || null;
+          };
 
-          console.log(`最終 Location：${locations.length}`);
-          console.log(`最終不重複 Geocode：${unique.size}`);
+          const buildDays = location => {
+            const elements = toArray(location?.WeatherElement ?? location?.weatherElement);
+            const avgTemp = elementByName(elements, ['平均溫度','T','溫度']);
+            const maxTemp = elementByName(elements, ['最高溫度','MaxT']);
+            const minTemp = elementByName(elements, ['最低溫度','MinT']);
+            const pop = elementByName(elements, ['12小時降雨機率','PoP','PoP12h']);
+            const wx = elementByName(elements, ['天氣現象','Wx','Weather']);
+            const days = new Map();
 
-          if (unique.size < 300) {
-            throw new Error(
-              `F-D0047-093 最終資料異常：${unique.size} 個鄉鎮`
-            );
+            const add = (time, patch) => {
+              const start = time?.StartTime ?? time?.startTime ?? '';
+              const end = time?.EndTime ?? time?.endTime ?? '';
+              const match = String(start).match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):/);
+              if (!match) return;
+              const date = match[1];
+              const hour = Number(match[2]);
+              const period = hour >= 18 ? 'night' : 'day';
+              const key = `${date}|${period}`;
+              if (!days.has(key)) days.set(key, {date, period, start, end, min:null, max:null, pop:null, wx:'', wxCode:'1'});
+              Object.assign(days.get(key), patch);
+            };
+
+            for (const time of toArray(avgTemp?.Time ?? avgTemp?.time)) add(time, {avg:valueOf(time,['Temperature','T'])});
+            for (const time of toArray(maxTemp?.Time ?? maxTemp?.time)) {
+              const v = valueOf(time,['MaxTemperature','MaxT']);
+              add(time, {max: v === '-' ? null : Number(v)});
+            }
+            for (const time of toArray(minTemp?.Time ?? minTemp?.time)) {
+              const v = valueOf(time,['MinTemperature','MinT']);
+              add(time, {min: v === '-' ? null : Number(v)});
+            }
+            for (const time of toArray(pop?.Time ?? pop?.time)) {
+              const v = valueOf(time,['ProbabilityOfPrecipitation','PoP','PoP12h']);
+              add(time, {pop: v === '-' ? null : Number(v)});
+            }
+            for (const time of toArray(wx?.Time ?? wx?.time)) {
+              add(time, {
+                wx: valueOf(time,['Weather','Wx']) || '',
+                wxCode: valueOf(time,['WeatherCode','WxCode','code','Code']) || '1'
+              });
+            }
+
+            return [...days.values()]
+              .filter(x => x.date > today)
+              .sort((a,b) => `${a.date}${a.period}`.localeCompare(`${b.date}${b.period}`))
+              .slice(0,14)
+              .map(x => ({
+                date:x.date,
+                period:x.period,
+                start:x.start,
+                end:x.end,
+                min:Number.isFinite(x.min) ? x.min : null,
+                max:Number.isFinite(x.max) ? x.max : null,
+                pop:Number.isFinite(x.pop) ? x.pop : null,
+                wx:x.wx || '--',
+                wxCode:x.wxCode || '1'
+              }));
+          };
+
+          const counties = {};
+          let townCount = 0;
+          let minDayCount = 99;
+
+          for (const group of groups) {
+            const county = normalize(group?.LocationsName || group?.locationsName || '');
+            if (!county) continue;
+            if (!counties[county]) counties[county] = {};
+
+            for (const location of toArray(group?.Location ?? group?.location)) {
+              const town = normalize(location?.LocationName || location?.locationName || '');
+              if (!town) continue;
+              const days = buildDays(location);
+              if (!days.length) continue;
+              counties[county][town] = {
+                geocode: location?.Geocode || location?.geocode || '',
+                lat: location?.Latitude || location?.latitude || '',
+                lon: location?.Longitude || location?.longitude || '',
+                days
+              };
+              townCount++;
+              minDayCount = Math.min(minDayCount, new Set(days.map(x=>x.date)).size);
+            }
           }
 
-          console.log(
-            `✓ 鄉鎮市區資料驗證成功：${unique.size} 個`
-          );
+          if (townCount < 300) throw new Error(`輕量資料鄉鎮不足：${townCount}`);
+          if (minDayCount < 7) throw new Error(`輕量資料不足 7 天，最少只有 ${minDayCount} 天`);
+
+          const output = {
+            success:true,
+            source:'cwa-F-D0047-093.json（22 個縣市 1 週產品合併）',
+            generatedAt:new Date().toISOString(),
+            startDate:new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei'}).format(new Date(Date.now()+86400000)),
+            days:7,
+            counties
+          };
+
+          fs.writeFileSync(outputPath, JSON.stringify(output), 'utf8');
+          console.log(`✓ ${outputPath}：${townCount} 鄉鎮，至少 ${minDayCount} 天`);
           NODE
 
-      - name: Commit CWA township forecast
+      - name: Validate township forecast
         run: |
           set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+          const raw = JSON.parse(fs.readFileSync('data/cwa-F-D0047-093.json','utf8'));
+          const groups = raw?.records?.Locations || [];
+          const locations = groups.flatMap(g => Array.isArray(g?.Location) ? g.Location : []);
+          const unique = new Set(locations.map(x => String(x?.Geocode || '').trim()).filter(Boolean));
+          if (unique.size < 300) throw new Error(`原始鄉鎮資料異常：${unique.size}`);
 
+          const lite = JSON.parse(fs.readFileSync('data/cwa-F-D0047-093-web.json','utf8'));
+          const towns = Object.values(lite.counties || {}).reduce((n, c) => n + Object.keys(c || {}).length, 0);
+          const minDays = Math.min(...Object.values(lite.counties || {}).flatMap(c => Object.values(c || {}).map(t => new Set((t.days || []).map(d => d.date)).size)));
+          if (towns < 300) throw new Error(`輕量資料鄉鎮異常：${towns}`);
+          if (minDays < 7) throw new Error(`輕量資料天數異常：${minDays}`);
+          console.log(`✓ 原始：${unique.size} 鄉鎮；輕量：${towns} 鄉鎮；最少 ${minDays} 天`);
+          NODE
+
+      - name: Commit CWA township 7-day forecast
+        run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add data/cwa-F-D0047-093.json
+          git add data/cwa-township data/cwa-F-D0047-093.json data/cwa-F-D0047-093-web.json
 
           if git diff --cached --quiet; then
             echo "資料沒有變化，不需要提交"
             exit 0
           fi
 
-          git commit -m "Update CWA township forecast"
+          git commit -m "Update CWA 7-day township forecast"
 
           for attempt in 1 2 3 4 5; do
             echo "Git push attempt ${attempt}/5"
-
             git pull --rebase origin main
-
             if git push origin HEAD:main; then
-              echo "CWA township forecast push succeeded."
+              echo "CWA township 7-day forecast push succeeded."
               exit 0
             fi
-
             if [ "${attempt}" -eq 5 ]; then
               echo "Git push failed after 5 attempts."
               exit 1
             fi
-
-            echo "Remote main changed; retrying..."
             sleep 5
           done
