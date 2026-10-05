@@ -17,6 +17,7 @@ concurrency:
 jobs:
   fetch:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,9 +31,24 @@ jobs:
           set -euo pipefail
           mkdir -p data
 
-          curl -fsSL --retry 4 --retry-delay 3 \
+          # 使用 Authorization header，並加入 cache-buster 避免拿到舊快取。
+          cache_buster="$(date +%s%N)"
+          url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-093?_=${cache_buster}"
+
+          curl --fail-with-body \
+            --silent \
+            --show-error \
+            --retry 8 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --connect-timeout 30 \
+            --max-time 180 \
+            --location \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-093?Authorization=${CWA_API_KEY}&format=JSON" \
+            -H "Authorization: ${CWA_API_KEY}" \
+            -H "Cache-Control: no-cache, no-store, max-age=0" \
+            -H "Pragma: no-cache" \
+            "$url" \
             -o data/cwa-F-D0047-093.json
 
       - name: Validate township forecast
@@ -44,19 +60,34 @@ jobs:
           const fs = require('fs');
           const p = 'data/cwa-F-D0047-093.json';
           const json = JSON.parse(fs.readFileSync(p, 'utf8'));
-          const groups = json?.records?.Locations || json?.result?.records?.Locations || [];
+
+          const groups =
+            json?.records?.Locations ||
+            json?.result?.records?.Locations ||
+            [];
+
           const locations = (Array.isArray(groups) ? groups : [groups])
             .flatMap(g => Array.isArray(g?.Location) ? g.Location : []);
-          const unique = new Set(locations.map(x => String(x?.Geocode || '').trim()).filter(Boolean));
+
+          const unique = new Set(
+            locations
+              .map(x => String(x?.Geocode || '').trim())
+              .filter(Boolean)
+          );
+
           if (unique.size < 300) {
-            throw new Error(`F-D0047-093 鄉鎮數量異常：${unique.size}，拒絕覆蓋舊資料`);
+            throw new Error(
+              `F-D0047-093 鄉鎮數量異常：${unique.size}，拒絕覆蓋舊資料`
+            );
           }
+
           console.log(`Validated ${unique.size} township forecasts.`);
           NODE
 
       - name: Commit CWA township forecast
         run: |
           set -euo pipefail
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -71,6 +102,7 @@ jobs:
 
           for attempt in 1 2 3 4 5; do
             echo "Git push attempt ${attempt}/5"
+
             git pull --rebase origin main
 
             if git push origin HEAD:main; then
@@ -83,5 +115,6 @@ jobs:
               exit 1
             fi
 
+            echo "Remote main changed; retrying..."
             sleep 5
           done
