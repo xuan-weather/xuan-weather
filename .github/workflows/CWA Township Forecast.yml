@@ -24,7 +24,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch CWA F-D0047-093
+      - name: Fetch CWA F-D0047-089 (全臺鄉鎮)
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
@@ -33,7 +33,7 @@ jobs:
 
           # 使用 Authorization header，並加入 cache-buster 避免拿到舊快取。
           cache_buster="$(date +%s%N)"
-          url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-093?_=${cache_buster}"
+          url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-089?_=${cache_buster}"
 
           curl --fail-with-body \
             --silent \
@@ -77,11 +77,11 @@ jobs:
 
           if (unique.size < 300) {
             throw new Error(
-              `F-D0047-093 鄉鎮數量異常：${unique.size}，拒絕覆蓋舊資料`
+              `F-D0047-089 鄉鎮數量異常：${unique.size}，拒絕覆蓋舊資料`
             );
           }
 
-          console.log(`Validated ${unique.size} township forecasts.`);
+          console.log(`Validated ${unique.size} township forecasts from F-D0047-089.`);
           NODE
 
       - name: Commit CWA township forecast
