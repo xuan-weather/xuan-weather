@@ -1,0 +1,87 @@
+name: CWA Township Forecast
+
+on:
+  schedule:
+    # 氣象署鄉鎮預報約每 6 小時更新；在 05:30/11:30/17:30/23:30
+    # 發布後約 10 分鐘抓取一次，避免太早拿到舊批次。
+    - cron: '40 21,3,9,15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cwa-township-forecast
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch CWA F-D0047-093
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p data
+
+          curl -fsSL --retry 4 --retry-delay 3 \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-093?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o data/cwa-F-D0047-093.json
+
+      - name: Validate township forecast
+        run: |
+          set -euo pipefail
+          test -s data/cwa-F-D0047-093.json
+
+          node <<'NODE'
+          const fs = require('fs');
+          const p = 'data/cwa-F-D0047-093.json';
+          const json = JSON.parse(fs.readFileSync(p, 'utf8'));
+          const groups = json?.records?.Locations || json?.result?.records?.Locations || [];
+          const locations = (Array.isArray(groups) ? groups : [groups])
+            .flatMap(g => Array.isArray(g?.Location) ? g.Location : []);
+          const unique = new Set(locations.map(x => String(x?.Geocode || '').trim()).filter(Boolean));
+          if (unique.size < 300) {
+            throw new Error(`F-D0047-093 鄉鎮數量異常：${unique.size}，拒絕覆蓋舊資料`);
+          }
+          console.log(`Validated ${unique.size} township forecasts.`);
+          NODE
+
+      - name: Commit CWA township forecast
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/cwa-F-D0047-093.json
+
+          if git diff --cached --quiet; then
+            echo "資料沒有變化，不需要提交"
+            exit 0
+          fi
+
+          git commit -m "Update CWA township forecast"
+
+          for attempt in 1 2 3 4 5; do
+            echo "Git push attempt ${attempt}/5"
+            git pull --rebase origin main
+
+            if git push origin HEAD:main; then
+              echo "CWA township forecast push succeeded."
+              exit 0
+            fi
+
+            if [ "${attempt}" -eq 5 ]; then
+              echo "Git push failed after 5 attempts."
+              exit 1
+            fi
+
+            sleep 5
+          done
