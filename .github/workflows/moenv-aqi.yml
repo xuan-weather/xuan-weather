@@ -2,11 +2,12 @@ name: MOENV AQI Data
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    # 環境部通常在每小時過後幾分鐘才發布上一整點資料
+    # 改成每小時 15 分執行，避免 21:00 太早抓到 20:00
+    - cron: '15 * * * *'
       timezone: 'Asia/Taipei'
+
   workflow_dispatch:
-  repository_dispatch:
-    types: [hourly-data-update]
 
 permissions:
   contents: write
