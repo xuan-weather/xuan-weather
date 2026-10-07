@@ -1,34 +1,34 @@
 {
-  "updatedAt": "2026-10-07T11:47:31.260354+08:00",
+  "updatedAt": "2026-10-08T01:32:31.758377+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
     {
-      "id": "WRA_ReservoirWarn_20261007111840_0000",
+      "id": "WRA_ReservoirWarn_20261008011840_0000",
       "category": "水庫放流",
       "title": "水庫放流",
       "status": "Actual",
       "msgType": "Update",
       "author": "水利署",
-      "updated": "2026-10-07T11:18:40+08:00",
-      "effective": "2026/10/7 上午 11:18:40",
-      "expires": "2026/10/7 下午 02:19:00",
+      "updated": "2026-10-08T01:18:40+08:00",
+      "effective": "2026/10/8 上午 01:18:40",
+      "expires": "2026/10/8 上午 04:19:00",
       "summary": "水利署訊鯉魚潭水庫:(洩洪至景山溪):自由溢流,影響範圍:苗栗縣，三義鄉；臺中市，外埔區、大甲區、后里區、大安區",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261007111840_0000.cap",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/WRA/2026/ReservoirDis/WRA_ReservoirWarn_20261008011840_0000.cap",
       "isDrill": false
     },
     {
-      "id": "CWA-Weather_strong-wind_202610071030001",
+      "id": "CWA-Weather_strong-wind_202610072227001",
       "category": "強風",
       "title": "強風",
       "status": "Actual",
       "msgType": "Update",
       "author": "中央氣象署",
-      "updated": "2026-10-07T10:30:51+08:00",
-      "effective": "2026/10/7 上午 10:30:00",
+      "updated": "2026-10-07T22:27:43+08:00",
+      "effective": "2026/10/7 下午 10:26:00",
       "expires": "2026/10/8 下午 11:00:00",
-      "summary": "東北風偏強，7日上午至8日晚上桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、雲林縣、嘉義縣、屏東縣、臺東縣(含蘭嶼、綠島)、澎湖縣、連江縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610071030.cap",
+      "summary": "東北風偏強，7日晚上至8日晚上桃園市、新竹縣、苗栗縣、臺中市、彰化縣、雲林縣、屏東縣、臺東縣(含蘭嶼、綠島)、澎湖縣、連江縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610072227.cap",
       "isDrill": false
     }
   ]
