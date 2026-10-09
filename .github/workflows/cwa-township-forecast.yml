@@ -1,0 +1,86 @@
+name: CWA Township 3-Day Forecast
+
+on:
+  # 氣象署鄉鎮預報通常每日發布 4 次；在發布後約 30 分鐘同步，避免每 5 分鐘重複下載大型預報檔。
+  schedule:
+    - cron: "0 4,10,16,22 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cwa-township-forecast
+  cancel-in-progress: false
+
+jobs:
+  fetch-township-forecast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch county-specific 2-day township forecast datasets
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CWA_API_KEY:-}" || { echo "缺少 CWA_API_KEY secret"; exit 1; }
+          mkdir -p data
+          datasets=(
+            F-D0047-001 F-D0047-005 F-D0047-009 F-D0047-013
+            F-D0047-017 F-D0047-021 F-D0047-025 F-D0047-029
+            F-D0047-033 F-D0047-037 F-D0047-041 F-D0047-045
+            F-D0047-049 F-D0047-053 F-D0047-057 F-D0047-061
+            F-D0047-065 F-D0047-069 F-D0047-073 F-D0047-077
+            F-D0047-081 F-D0047-085
+          )
+          for dataset in "${datasets[@]}"; do
+            echo "========================================"
+            echo "正在取得鄉鎮逐時預報：${dataset}"
+            cache_buster="$(date +%s%N)"
+            url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}?_=${cache_buster}"
+            curl --fail-with-body --silent --show-error --retry 5 --retry-all-errors --retry-delay 4 \
+              --connect-timeout 30 --max-time 180 --location \
+              -H "Accept: application/json" \
+              -H "Authorization: ${CWA_API_KEY}" \
+              -H "Cache-Control: no-cache, no-store, max-age=0" \
+              -H "Pragma: no-cache" \
+              "${url}" -o "data/cwa-${dataset}.json"
+            python - "${dataset}" <<'PY'
+          import json, sys
+          dataset = sys.argv[1]
+          path = f"data/cwa-{dataset}.json"
+          with open(path, encoding="utf-8") as f:
+              data = json.load(f)
+          if not isinstance(data, dict):
+              raise SystemExit(f"{dataset}: 回傳不是 JSON 物件")
+          records = data.get("records") or data.get("Records") or {}
+          groups = records.get("Locations") or records.get("locations") or []
+          if not groups:
+              raise SystemExit(f"{dataset}: 找不到 records.Locations，拒絕覆蓋有效資料")
+          locations = []
+          for group in groups:
+              locations.extend(group.get("Location") or group.get("location") or [])
+          if not locations:
+              raise SystemExit(f"{dataset}: 沒有鄉鎮 Location 資料")
+          print(f"{dataset}: JSON 正常；取得 {len(locations)} 個鄉鎮／地區")
+          print("範例地點：" + ", ".join(str(x.get("LocationName") or x.get("locationName") or "?") for x in locations[:5]))
+          PY
+          done
+
+      - name: Commit township forecast data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/cwa-F-D0047-*.json
+          if git diff --cached --quiet; then
+            echo "鄉鎮預報資料沒有變化，不需要提交"
+          else
+            git commit -m "Update CWA township 3-day forecasts"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
