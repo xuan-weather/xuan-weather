@@ -1,8 +1,22 @@
 {
-  "updatedAt": "2026-10-11T06:47:11.916033+08:00",
+  "updatedAt": "2026-10-11T09:20:19.856296+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
+    {
+      "id": "CWA-Weather_heat_202610110725001",
+      "category": "高溫",
+      "title": "高溫",
+      "status": "Actual",
+      "msgType": "Alert",
+      "author": "中央氣象署",
+      "updated": "2026-10-11T07:25:58+08:00",
+      "effective": "2026/10/11 上午 07:25:00",
+      "expires": "2026/10/11 下午 05:00:00",
+      "summary": "天氣高溫炎熱，今(11)日中午前後南投縣為黃色燈號，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610110725.cap",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_strong-wind_202610110430001",
       "category": "強風",
