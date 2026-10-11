@@ -1,48 +1,20 @@
 {
-  "updatedAt": "2026-10-11T09:20:19.856296+08:00",
+  "updatedAt": "2026-10-11T22:17:05.936253+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
     {
-      "id": "CWA-Weather_heat_202610110725001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "中央氣象署",
-      "updated": "2026-10-11T07:25:58+08:00",
-      "effective": "2026/10/11 上午 07:25:00",
-      "expires": "2026/10/11 下午 05:00:00",
-      "summary": "天氣高溫炎熱，今(11)日中午前後南投縣為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610110725.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_strong-wind_202610110430001",
+      "id": "CWA-Weather_strong-wind_202610111635001",
       "category": "強風",
       "title": "強風",
       "status": "Actual",
       "msgType": "Update",
       "author": "中央氣象署",
-      "updated": "2026-10-11T04:30:35+08:00",
-      "effective": "2026/10/11 上午 04:29:00",
+      "updated": "2026-10-11T16:35:03+08:00",
+      "effective": "2026/10/11 下午 04:34:00",
       "expires": "2026/10/11 下午 11:00:00",
-      "summary": "東北風偏強，11日晨至晚上苗栗縣、臺中市、彰化縣、屏東縣、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610110430.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_heat_202610101724001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-10-10T17:24:15+08:00",
-      "effective": "2026/10/10 下午 05:23:00",
-      "expires": "2026/10/11 下午 05:00:00",
-      "summary": "天氣高溫炎熱，明(11)日中午前後南投縣為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610101724.cap",
+      "summary": "東北風偏強，11日下午至11日晚上桃園市、苗栗縣、臺中市、彰化縣、雲林縣、屏東縣、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610111635.cap",
       "isDrill": false
     }
   ]
