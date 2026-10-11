@@ -105,5 +105,7 @@ jobs:
             echo "No new temperature-map history changes to commit."
           else
             git commit -m "chore: save hourly Taiwan temperature map"
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           fi
