@@ -11,7 +11,7 @@ permissions:
 
 # 避免同一工作流程重疊執行，降低舊資料覆蓋新資料或 git push 衝突
 concurrency:
-  group: cwa-data-global
+  group: cwa-weather-data
   cancel-in-progress: false
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Fetch all CWA datasets
         env:
@@ -36,6 +36,7 @@ jobs:
           datasets=(
             O-A0001-001
             O-A0002-001
+            O-A0003-001
             F-C0032-001
             F-D0047-089
             F-D0047-091
@@ -51,54 +52,6 @@ jobs:
             E-A0016-001
           )
 
-          # 先檢查代表性資料集是否能正常回應，避免 API 無回應時 16 個資料集輪流逾時。
-          echo "先檢查 CWA API：O-A0003-001"
-          preflight_tmp="data/cwa-O-A0003-001.json.preflight"
-          preflight_cache_buster="$(date +%s%N)"
-          rm -f "$preflight_tmp"
-
-          if ! curl --fail-with-body \
-            --silent \
-            --show-error \
-            --connect-timeout 5 \
-            --max-time 8 \
-            --location \
-            -H "Accept: application/json" \
-            -H "Cache-Control: no-cache, no-store, max-age=0" \
-            -H "Pragma: no-cache" \
-            --get \
-            --data-urlencode "Authorization=${CWA_API_KEY}" \
-            --data-urlencode "format=JSON" \
-            --data-urlencode "_=${preflight_cache_buster}" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001" \
-            -o "$preflight_tmp"; then
-            rm -f "$preflight_tmp"
-            echo "::error::CWA API 預檢查失敗；本次停止下載，保留所有既有 JSON。"
-            exit 1
-          fi
-
-          if ! python - "$preflight_tmp" <<'PY'
-          import json
-          import sys
-
-          with open(sys.argv[1], "r", encoding="utf-8") as f:
-              data = json.load(f)
-
-          records = data.get("records") if isinstance(data, dict) else None
-          stations = records.get("Station") if isinstance(records, dict) else None
-          if not isinstance(stations, list) or not stations:
-              raise SystemExit("O-A0003-001：預檢查回傳沒有有效測站資料")
-          print(f"O-A0003-001：預檢查成功，共 {len(stations)} 個測站")
-          PY
-          then
-            rm -f "$preflight_tmp"
-            echo "::error::CWA API 預檢查資料無效；本次停止下載，保留所有既有 JSON。"
-            exit 1
-          fi
-
-          mv "$preflight_tmp" "data/cwa-O-A0003-001.json"
-          echo "O-A0003-001 預檢查資料已保存"
-
           for dataset in "${datasets[@]}"; do
             echo "========================================"
             echo "正在取得 CWA：${dataset}"
@@ -106,26 +59,26 @@ jobs:
 
             # 每次請求加入唯一 cache-buster，避免高溫 CAP 被上游／代理快取成前一版。
             cache_buster="$(date +%s%N)"
-            url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}"
+            url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}?_=${cache_buster}"
 
             echo "開始下載 ${dataset}..."
-            # 依氣象署官方 API 規格將 Authorization 放在 query parameter；每個資料集只嘗試一次，單次最多 15 秒；失敗時保留舊檔，避免整批工作被重試拖長。
+            # 先下載到暫存檔；只有成功才覆蓋正式 JSON，避免逾時留下半截檔案。
             tmp_file="data/cwa-${dataset}.json.tmp"
             rm -f "$tmp_file"
 
             if curl --fail-with-body \
               --silent \
               --show-error \
-              --connect-timeout 5 \
-              --max-time 15 \
+              --retry 1 \
+              --retry-all-errors \
+              --retry-delay 3 \
+              --connect-timeout 15 \
+              --max-time 35 \
               --location \
               -H "Accept: application/json" \
+              -H "Authorization: ${CWA_API_KEY}" \
               -H "Cache-Control: no-cache, no-store, max-age=0" \
               -H "Pragma: no-cache" \
-              --get \
-              --data-urlencode "Authorization=${CWA_API_KEY}" \
-              --data-urlencode "format=JSON" \
-              --data-urlencode "_=${cache_buster}" \
               "${url}" \
               -o "$tmp_file"; then
               mv "$tmp_file" "data/cwa-${dataset}.json"
@@ -165,6 +118,8 @@ jobs:
           if dataset == "W-C0033-005":
               print(f"{dataset}：CAP 高溫資訊 JSON 保留原始結構")
 
+              # 把 CAP 常見的發布／更新時間欄位全部往下搜尋，
+              # 讓 Actions log 明確顯示這次抓到的是哪一版。
               time_keys = {
                   "sent", "Sent",
                   "issueTime", "IssueTime",
