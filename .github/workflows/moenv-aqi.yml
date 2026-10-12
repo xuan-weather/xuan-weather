@@ -1,0 +1,126 @@
+name: MOENV AQI Data
+
+on:
+  schedule:
+    # 環境部通常在每小時過後幾分鐘才發布上一整點資料
+    # 維持每小時第 15 分鐘執行
+    - cron: '15 * * * *'
+      timezone: 'Asia/Taipei'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# 避免同一個 AQI workflow 的多次執行同時推送。
+# 不會取消正在執行的任務。
+concurrency:
+  group: moenv-aqi-data
+  cancel-in-progress: false
+
+jobs:
+  fetch-aqi-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch MOENV AQX_P_432
+        env:
+          MOENV_API_KEY: ${{ secrets.MOENV_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p data
+
+          if [ -z "${MOENV_API_KEY:-}" ]; then
+            echo "::error::尚未設定 MOENV_API_KEY，請確認 Repository Secrets。"
+            exit 1
+          fi
+
+          echo "開始讀取 MOENV AQX_P_432..."
+
+          curl \\
+            --silent \\
+            --show-error \\
+            --fail \\
+            --retry 3 \\
+            --retry-delay 5 \\
+            -H "Authorization: Bearer ${MOENV_API_KEY}" \\
+            "https://data.moenv.gov.tw/api/v2/aqx_p_432?api_key=${MOENV_API_KEY}&limit=1000&sort=publishtime%20desc" \\
+            -o data/aqx-p-432.json
+
+          echo "AQI 資料下載完成"
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path("data/aqx-p-432.json")
+          data = json.loads(p.read_text(encoding="utf-8"))
+
+          # MOENV API 可能直接回傳陣列，也可能回傳 {"records": [...]}。
+          if isinstance(data, list):
+              records = data
+          elif isinstance(data, dict):
+              records = data.get("records", [])
+          else:
+              records = []
+
+          if not isinstance(records, list) or not records:
+              raise SystemExit("AQI 回傳沒有 records")
+
+          records = [r for r in records if isinstance(r, dict)]
+          if not records:
+              raise SystemExit("AQI records 格式錯誤")
+
+          times = sorted({
+              str(r.get("publishtime", "")).strip()
+              for r in records
+              if r.get("publishtime")
+          })
+
+          print("AQI records:", len(records))
+          print("最新 publishtime:", times[-1] if times else "未知")
+          PY
+
+      - name: Commit and push AQI data safely
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/aqx-p-432.json
+
+          if git diff --cached --quiet; then
+            echo "AQI 資料沒有變化，不需要 commit"
+            exit 0
+          fi
+
+          git commit -m "Update MOENV AQI data"
+
+          # 若其他 workflow 或使用者先更新 main，先 rebase 再推送。
+          # rebase 發生同一 AQI JSON 檔案衝突時，保留本次剛抓取的資料。
+          for attempt in 1 2 3; do
+            echo "推送嘗試 ${attempt}/3"
+            git fetch origin main
+
+            if ! git rebase --strategy-option=theirs origin/main; then
+              echo "Rebase 無法自動完成，停止以避免覆蓋其他變更。"
+              git rebase --abort || true
+              exit 1
+            fi
+
+            if git push origin HEAD:main; then
+              echo "AQI 資料已成功推送到 main"
+              exit 0
+            fi
+
+            echo "推送遭拒，稍後重新同步遠端 main。"
+            sleep $((attempt * 3))
+          done
+
+          echo "::error::重試 3 次仍無法推送 AQI 資料。"
+          exit 1
