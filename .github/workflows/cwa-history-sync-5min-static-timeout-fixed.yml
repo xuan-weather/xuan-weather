@@ -1,87 +1,130 @@
 name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 
 on:
-  # 即時 CWA 資料成功發布後才更新歷史，避免與 CWA Weather Data 同時重抓相同 API。
-  workflow_run:
-    workflows: ["CWA Weather Data"]
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
+  repository_dispatch:
+    types: [cwa-external-timer]
 
 permissions:
   contents: write
 
 concurrency:
-  group: cwa-history-after-weather-success
+  group: cwa-history-sync-5min-static
   cancel-in-progress: false
 
 jobs:
   fetch-temperature-history:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
-      - name: Prepare history inputs from latest published CWA JSON
-        if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+      - name: Fetch CWA O-A0003-001
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
-          set -euo pipefail
+          set -e
           mkdir -p data/history
+          curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 45 \
+            --retry 2 --retry-delay 3 --retry-all-errors \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-o-a0003-001.json
 
-          # CWA Weather Data 已經抓取並發布這些資料；歷史工作直接重用，
-          # 避免再重複呼叫 O-A0003、O-A0001、O-A0002 與 W-C0033-002。
-          test -s data/cwa-O-A0003-001.json
-          test -s data/cwa-O-A0001-001.json
-          test -s data/cwa-O-A0002-001.json
-
-          cp data/cwa-O-A0003-001.json /tmp/cwa-o-a0003-001.json
-          cp data/cwa-O-A0001-001.json /tmp/cwa-o-a0001-001.json
-          cp data/cwa-O-A0002-001.json /tmp/cwa-o-a0002-001.json
-
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          for filename in (
-              "/tmp/cwa-o-a0003-001.json",
-              "/tmp/cwa-o-a0001-001.json",
-              "/tmp/cwa-o-a0002-001.json",
-          ):
-              data = json.loads(Path(filename).read_text(encoding="utf-8"))
-              records = data.get("records", {})
-              if not isinstance(records, dict):
-                  raise SystemExit(f"{filename}: records 格式不正確")
-              print(f"{filename}: JSON 正常")
-          PY
-
-          # 七堵 C0B010 是額外補充資料，只保留這一個必要的額外 API 請求。
-          # 請求失敗時使用空的補充清單，仍可用主資料更新其餘測站歷史。
-          if [ -n "${CWA_API_KEY:-}" ] && curl --silent --show-error --fail \
-            --connect-timeout 8 --max-time 20 \
-            --retry 0 \
+          # 七堵等 C0 自動站若沒有出現在全測站回傳中，
+          # 再以 stationId 明確補抓，仍使用同一個 CWA 10 分鐘資料集。
+          curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 45 \
+            --retry 2 --retry-delay 3 --retry-all-errors \
             -H "Accept: application/json" \
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&stationId=C0B010" \
-            -o /tmp/cwa-o-a0003-001-c0b010.json; then
-            python - <<'PY2'
+            -o /tmp/cwa-o-a0003-001-c0b010.json
+
+      - name: Fetch CWA O-A0001-001 hourly fallback for C0 stations
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -e
+          curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 45 \
+            --retry 2 --retry-delay 3 --retry-all-errors \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-o-a0001-001.json
+
+      - name: Fetch CWA official weather alert content W-C0033-002
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -e
+          curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 45 \
+            --retry 2 --retry-delay 3 --retry-all-errors \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-002?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-w-c0033-002.json
+
+      - name: Fetch CWA O-A0002-001 rainfall
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -e
+          curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 45 \
+            --retry 2 --retry-delay 3 --retry-all-errors \
+            -H "Accept: application/json" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o /tmp/cwa-o-a0002-001.json
+
+      - name: Publish latest CWA JSON for GitHub Pages
+        run: |
+          set -e
+          mkdir -p data
+          cp /tmp/cwa-o-a0001-001.json data/cwa-O-A0001-001.json
+          cp /tmp/cwa-o-a0002-001.json data/cwa-O-A0002-001.json
+          cp /tmp/cwa-o-a0003-001.json data/cwa-O-A0003-001.json
+          cp /tmp/cwa-w-c0033-002.json data/cwa-W-C0033-002.json
+
+          # 七堵等 C0 測站若只在明確 stationId 回傳中出現，
+          # 將它合併回主 O-A0003-001 JSON，避免網站因單站缺資料而消失。
+          python - <<'PY2'
           import json
           from pathlib import Path
-          p = Path("/tmp/cwa-o-a0003-001-c0b010.json")
-          data = json.loads(p.read_text(encoding="utf-8"))
-          records = data.get("records", {}).get("Station", [])
-          if not isinstance(records, list):
-              raise SystemExit("C0B010 補充資料格式不正確")
-          print("C0B010 supplemental stations:", len(records))
+
+          main_path = Path("data/cwa-O-A0003-001.json")
+          explicit_path = Path("/tmp/cwa-o-a0003-001-c0b010.json")
+
+          main = json.loads(main_path.read_text(encoding="utf-8"))
+          explicit = json.loads(explicit_path.read_text(encoding="utf-8"))
+
+          def stations(payload):
+              return (payload.get("records", {}).get("Station")
+                      or payload.get("result", {}).get("records", {}).get("Station")
+                      or [])
+
+          merged = stations(main)
+          explicit_stations = stations(explicit)
+          by_id = {str(x.get("StationId")): x for x in merged if x.get("StationId")}
+
+          for st in explicit_stations:
+              sid = str(st.get("StationId") or "")
+              if sid == "C0B010":
+                  by_id[sid] = st
+
+          merged = list(by_id.values())
+          if main.get("records") is not None:
+              main.setdefault("records", {})["Station"] = merged
+          elif main.get("result", {}).get("records") is not None:
+              main["result"]["records"]["Station"] = merged
+
+          main_path.write_text(
+              json.dumps(main, ensure_ascii=False, separators=(",", ":")),
+              encoding="utf-8"
+          )
+          print("Published O-A0003-001 stations:", len(merged))
           PY2
-          else
-            echo "::warning::C0B010 補抓失敗，本次以主資料更新其他測站歷史。"
-            printf '%s\n' '{"records":{"Station":[]}}' > /tmp/cwa-o-a0003-001-c0b010.json
-          fi
 
       - name: Update rolling 7-day history
         run: |
@@ -710,7 +753,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # 本工作流只提交歷史資料；即時 JSON 由 CWA Weather Data 發布。
+          # 本工作流只提交歷史資料。
+          # 即時 CWA JSON 由 CWA Weather Data 工作流負責發布。
           git restore \
             data/cwa-O-A0001-001.json \
             data/cwa-O-A0002-001.json \
