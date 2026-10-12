@@ -1,10 +1,8 @@
-name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
+name: CWA History Legacy (Manual Only)
 
 on:
+  # 舊版保留為手動備援；自動歷史更新由新版流程負責。
   workflow_dispatch:
-  schedule:
-    # 每 5 分鐘自動更新
-    - cron: '3-58/5 * * * *'
 
 permissions:
   contents: write
