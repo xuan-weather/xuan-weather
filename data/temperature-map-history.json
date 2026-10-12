@@ -1,6 +1,13 @@
 {
-  "updatedAt": "2026-10-13T01:01:00+08:00",
+  "updatedAt": "2026-10-13T02:01:00+08:00",
   "items": [
+    {
+      "capturedAt": "2026-10-13T02:01:00+08:00",
+      "targetHour": "2026-10-13T01:00:00+08:00",
+      "image": "temperature-map-history/2026-10-13-01.jpg",
+      "observationTime": "歷史整點重建：2026/10/13 01:00（只取整點時間戳，非其他分鐘資料）",
+      "stationCount": 848
+    },
     {
       "capturedAt": "2026-10-13T01:01:00+08:00",
       "targetHour": "2026-10-13T00:00:00+08:00",
