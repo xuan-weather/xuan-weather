@@ -1,6 +1,13 @@
 {
-  "updatedAt": "2026-10-12T17:04:00+08:00",
+  "updatedAt": "2026-10-12T17:39:00+08:00",
   "items": [
+    {
+      "capturedAt": "2026-10-12T17:39:00+08:00",
+      "targetHour": "2026-10-12T17:00:00+08:00",
+      "image": "temperature-map-history/2026-10-12-17.jpg",
+      "observationTime": "CWA 觀測時間：2026/10/12 17:20",
+      "stationCount": 784
+    },
     {
       "capturedAt": "2026-10-12T17:04:00+08:00",
       "targetHour": "2026-10-12T16:00:00+08:00",
