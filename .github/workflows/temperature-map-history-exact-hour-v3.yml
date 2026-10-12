@@ -1,0 +1,232 @@
+name: 氣溫分布每小時紀錄
+
+on:
+  # 改由外部計時器每小時呼叫 GitHub repository_dispatch 觸發，避免依賴 Actions 排程。
+  repository_dispatch:
+    types: [hourly-temperature-map]
+  # 保留手動執行按鈕，方便測試。
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temperature-map-history
+  cancel-in-progress: false
+
+jobs:
+  capture-map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Capture current Taiwan temperature distribution map
+        env:
+          SITE_URL: https://xuan-weather.github.io/xuan-weather/
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+          const path = require('path');
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ viewport: { width: 1920, height: 1200 }, deviceScaleFactor: 2 });
+            page.setDefaultTimeout(45000);
+            try {
+              await page.goto(process.env.SITE_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+              await page.waitForTimeout(18000);
+              const mapTab = page.locator('#tabMap');
+              await mapTab.click();
+              const map = page.locator('#map.leaflet-container');
+              await map.waitFor({ state: 'visible', timeout: 45000 });
+
+              // 地圖原本在隱藏分頁時可能已初始化；切換顯示後強制重新計算尺寸，
+              // 避免 Leaflet 圖磚只鋪滿上半部、下半部露出黑色背景。
+              await page.evaluate(() => {
+                window.dispatchEvent(new Event('resize'));
+                const el = document.querySelector('#map');
+                if (el) {
+                  el.style.background = '#0b1220';
+                  el.getBoundingClientRect();
+                }
+              });
+              await page.waitForTimeout(1200);
+
+              const tempButton = page.locator('#mapModeBtnGroup button').filter({ hasText: '氣溫' }).first();
+              if (await tempButton.count()) await tempButton.click();
+
+              // 再觸發一次 resize，讓 Leaflet 在切換圖層後重新鋪設地圖圖磚。
+              await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+              await page.waitForTimeout(5000);
+              await page.locator('#map .leaflet-tile').first().waitFor({ state: 'visible', timeout: 30000 });
+
+              // 記錄地圖實際尺寸，並確認容器不是零尺寸。
+              const mapSize = await page.locator('#map').evaluate(el => {
+                const r = el.getBoundingClientRect();
+                return { width: Math.round(r.width), height: Math.round(r.height) };
+              });
+              if (mapSize.width < 300 || mapSize.height < 200) {
+                throw new Error(`地圖容器尺寸異常：${mapSize.width}x${mapSize.height}`);
+              }
+
+              // 以台灣時間前一小時為目標，從 repository 的歷史測站 JSON 重建，
+              // 不再把網站目前的即時氣溫直接截圖當作歷史資料。
+              const now = new Date();
+              const taipeiOffset = 8 * 60 * 60 * 1000;
+              const currentHour = Math.floor((now.getTime() + taipeiOffset) / 3600000) * 3600000 - taipeiOffset;
+              const targetHour = new Date(currentHour - 3600000);
+              const formatTaipei = date => new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+              }).formatToParts(date).reduce((a,p)=>(a[p.type]=p.value,a),{});
+              const targetParts = formatTaipei(targetHour);
+              const captureParts = formatTaipei(now);
+              const stamp = `${targetParts.year}-${targetParts.month}-${targetParts.day}-${targetParts.hour}`;
+              const isoLocal = `${captureParts.year}-${captureParts.month}-${captureParts.day}T${captureParts.hour}:${captureParts.minute}:00+08:00`;
+              const targetIso = `${targetParts.year}-${targetParts.month}-${targetParts.day}T${targetParts.hour}:00:00+08:00`;
+
+              const historyPath = path.join(process.cwd(), 'data', 'history', 'cwa-o-a0003-001-history.json');
+              if (!fs.existsSync(historyPath)) {
+                throw new Error(`找不到歷史測站資料：${historyPath}；停止保存，避免回退成即時地圖。`);
+              }
+              const historyPayload = JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+              const stationHistory = historyPayload && historyPayload.stations;
+              if (!stationHistory || typeof stationHistory !== 'object') {
+                throw new Error('歷史測站 JSON 缺少 stations 物件；停止保存。');
+              }
+
+              // 嚴格選取目標整點的觀測值：19:00 執行時只取每站 ts == 18:00。
+              // 不可用 18:10、18:50 或該小時最後一筆資料替代整點資料。
+              const historicalTemps = {};
+              for (const [stationId, records] of Object.entries(stationHistory)) {
+                if (!Array.isArray(records)) continue;
+                let selected = null;
+                for (const record of records) {
+                  const ts = Number(record && record.ts);
+                  const temp = Number(record && record.temp);
+                  if (Number.isFinite(ts) && ts === targetHour.getTime() &&
+                      record.temp !== null && record.temp !== '' &&
+                      Number.isFinite(temp) && temp > -80 && temp < 65) {
+                    selected = { ts, temp };
+                    break;
+                  }
+                }
+                if (selected) historicalTemps[String(stationId)] = selected.temp;
+              }
+              if (Object.keys(historicalTemps).length < 50) {
+                throw new Error(`整點 ${targetIso} 僅找到 ${Object.keys(historicalTemps).length} 個具有「完全相同時間戳」的有效測站，少於 50 站；停止保存。此流程不會以其他分鐘的資料冒充整點資料。請確認歷史 JSON 是否保存該整點的紀錄。`);
+              }
+
+              // 用網站原有測站座標、圓點樣式與圖例，只替換氣溫值為歷史 JSON 中的值。
+              // 沒有前一小時有效氣溫的測站設為 NaN，讓原有氣溫圖層略過該站。
+              await page.evaluate((temps) => {
+                if (typeof parseStationElement !== 'function' || typeof renderMapMarkers !== 'function') {
+                  throw new Error('網站地圖缺少 parseStationElement/renderMapMarkers，無法安全重建歷史圖。');
+                }
+                const originalParseStationElement = parseStationElement;
+                parseStationElement = function(station) {
+                  const data = originalParseStationElement(station);
+                  const id = String(station && station.StationId != null ? station.StationId : '').trim();
+                  if (Object.prototype.hasOwnProperty.call(temps, id)) {
+                    data.temp = Number(temps[id]);
+                  } else {
+                    data.temp = NaN;
+                  }
+                  return data;
+                };
+                if (typeof currentMapMode !== 'undefined') currentMapMode = 'temp';
+                // 截圖需呈現全部有歷史氣溫的測站，不沿用使用者上次的地圖篩選。
+                if (typeof mapFilterPass === 'function') mapFilterPass = () => true;
+                document.querySelectorAll('#mapModeBtnGroup button').forEach(button => button.classList.remove('active'));
+                const tempButton = document.querySelector('#btnMapTemp');
+                if (tempButton) tempButton.classList.add('active');
+                renderMapMarkers();
+                if (typeof map !== 'undefined' && map && typeof map.invalidateSize === 'function') {
+                  map.invalidateSize(true);
+                }
+              }, historicalTemps);
+              await page.waitForTimeout(1200);
+
+              const markerCount = await page.locator('#map .leaflet-marker-icon').count();
+              if (markerCount < 50) {
+                throw new Error(`歷史氣溫重建後測站圓點只有 ${markerCount} 個，少於 50 站；停止保存。請確認歷史站 ID 與網站測站 ID 能對應。`);
+              }
+
+              // 標籤明確註明為歷史重建，不使用即時地圖的觀測時間。
+              const observationTime = `歷史整點重建：${targetParts.year}/${targetParts.month}/${targetParts.day} ${targetParts.hour}:00（只取整點時間戳，非其他分鐘資料）`;
+              await page.evaluate((label) => {
+                const el = document.querySelector('#mapObsTimeTag');
+                if (el) el.textContent = label;
+              }, `歷史氣溫整點重建：${targetParts.year}/${targetParts.month}/${targetParts.day} ${targetParts.hour}:00`);
+              console.log(`歷史資料來源：${historyPath}`);
+              console.log(`目標整點：${targetIso}；只接受 ts === ${targetHour.getTime()}；歷史有效站數 ${Object.keys(historicalTemps).length}；地圖圓點 ${markerCount}`);
+              const imageDir = path.join(process.cwd(), 'temperature-map-history');
+              fs.mkdirSync(imageDir, { recursive: true });
+              const imageName = `${stamp}.jpg`;
+              const imagePath = path.join(imageDir, imageName);
+              // 允許覆寫同一目標小時的舊圖片：舊版可能保存的是即時地圖，
+              // 本版改用歷史測站資料重建，必須讓同一個小時的舊錯誤圖片能被修正。
+              await page.locator('#map').screenshot({
+                path: imagePath,
+                type: 'jpeg',
+                quality: 95,
+                timeout: 45000,
+                animations: 'disabled'
+              });
+              console.log(`地圖容器尺寸：${mapSize.width}x${mapSize.height}`);
+              const manifestPath = path.join(process.cwd(), 'data', 'temperature-map-history.json');
+              fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
+              let items = [];
+              if (fs.existsSync(manifestPath)) {
+                try { const old = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); items = Array.isArray(old) ? old : (Array.isArray(old.items) ? old.items : []); } catch {}
+              }
+              items = items.filter(x => x && x.image !== `temperature-map-history/${imageName}`);
+              items.unshift({ capturedAt: isoLocal, targetHour: targetIso, image: `temperature-map-history/${imageName}`, observationTime, stationCount: markerCount });
+              // 保留最近 30 天的每小時截圖，避免 GitHub Pages 與儲存庫無限膨脹。
+              const cutoff = now.getTime() - 30 * 24 * 60 * 60 * 1000;
+              const keep = [];
+              for (const item of items) {
+                const ts = Date.parse(item.capturedAt || '');
+                if (Number.isFinite(ts) && ts >= cutoff) keep.push(item);
+                else if (item.image) {
+                  const rel = String(item.image).replace(/^\/+/, '');
+                  if (rel.startsWith('temperature-map-history/') && !rel.includes('..')) {
+                    try { fs.rmSync(path.join(process.cwd(), rel), { force: true }); } catch {}
+                  }
+                }
+              }
+              keep.sort((a,b) => Date.parse(b.capturedAt || 0) - Date.parse(a.capturedAt || 0));
+              fs.writeFileSync(manifestPath, JSON.stringify({ updatedAt: isoLocal, items: keep }, null, 2) + '\n');
+              console.log(`已擷取 ${imageName}；測站圓點 ${markerCount}；${observationTime}`);
+            } finally { await browser.close(); }
+          })().catch(err => { console.error(err); process.exit(1); });
+          NODE
+
+      - name: Commit hourly image and manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temperature-map-history data/temperature-map-history.json
+          if git diff --cached --quiet; then
+            echo "No new temperature-map history changes to commit."
+          else
+            git commit -m "chore: save hourly Taiwan temperature map"
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
+          fi
