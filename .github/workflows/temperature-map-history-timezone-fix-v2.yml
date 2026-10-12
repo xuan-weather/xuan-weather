@@ -134,7 +134,7 @@ jobs:
               if (observationAge < 0 || observationAge > 90 * 60 * 1000) {
                 throw new Error(`地圖觀測資料過舊或時間異常：「${timeLabel}」（延遲 ${Math.round(observationAge/60000)} 分鐘）；停止保存。請檢查網站地圖資料載入與時區格式。`);
               }
-              if (observation.getTime() < targetHour.getTime() || observation.getTime() >= currentHour) {
+              if (observation.getTime() < targetHour.getTime() || observation.getTime() > currentHour) {
                 throw new Error(`地圖觀測時間 ${timeLabel} 不屬於目標上一整點時段 ${targetIso} 至下一整點；停止保存。`);
               }
 
