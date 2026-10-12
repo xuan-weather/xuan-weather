@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: cwa-data-global
+  group: cwa-history-after-weather-success
   cancel-in-progress: false
 
 jobs:
