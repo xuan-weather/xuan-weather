@@ -30,14 +30,17 @@ jobs:
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: python scripts/fetch_cwa_rainfall.py
+      
       - name: Commit updated public data file
         run: |
-          if git diff --quiet -- data/rainfall-latest.json; then
+          git add data/rainfall-latest.json
+
+          if git diff --cached --quiet; then
             echo "No rainfall data changes to commit."
             exit 0
           fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/rainfall-latest.json
           git commit -m "chore: update CWA rainfall observations"
           git push
