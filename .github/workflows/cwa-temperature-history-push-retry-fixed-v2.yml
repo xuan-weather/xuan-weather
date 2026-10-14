@@ -27,19 +27,21 @@ jobs:
           set -e
           mkdir -p data/history
           curl --silent --show-error --fail \
-            --connect-timeout 20 --max-time 75 \
-            --retry 3 --retry-delay 5 --retry-all-errors \
+            --connect-timeout 20 --max-time 45 --http1.1 --ipv4 \
+            --retry 2 --retry-delay 3 --retry-all-errors \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -H "Authorization: ${CWA_API_KEY}" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?format=JSON" \
             -o /tmp/cwa-o-a0003-001.json
 
           # 七堵等 C0 自動站若沒有出現在全測站回傳中，
           # 再以 stationId 明確補抓，仍使用同一個 CWA 10 分鐘資料集。
           curl --silent --show-error --fail \
-            --connect-timeout 20 --max-time 75 \
-            --retry 3 --retry-delay 5 --retry-all-errors \
+            --connect-timeout 20 --max-time 45 --http1.1 --ipv4 \
+            --retry 2 --retry-delay 3 --retry-all-errors \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&stationId=C0B010" \
+            -H "Authorization: ${CWA_API_KEY}" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?format=JSON&stationId=C0B010" \
             -o /tmp/cwa-o-a0003-001-c0b010.json
 
       - name: Fetch CWA O-A0001-001 hourly fallback for C0 stations
@@ -48,10 +50,11 @@ jobs:
         run: |
           set -e
           curl --silent --show-error --fail \
-            --connect-timeout 20 --max-time 75 \
-            --retry 3 --retry-delay 5 --retry-all-errors \
+            --connect-timeout 20 --max-time 45 --http1.1 --ipv4 \
+            --retry 2 --retry-delay 3 --retry-all-errors \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -H "Authorization: ${CWA_API_KEY}" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?format=JSON" \
             -o /tmp/cwa-o-a0001-001.json
 
       - name: Fetch CWA official weather alert content W-C0033-002
@@ -60,10 +63,11 @@ jobs:
         run: |
           set -e
           curl --silent --show-error --fail \
-            --connect-timeout 20 --max-time 75 \
-            --retry 3 --retry-delay 5 --retry-all-errors \
+            --connect-timeout 20 --max-time 45 --http1.1 --ipv4 \
+            --retry 2 --retry-delay 3 --retry-all-errors \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-002?Authorization=${CWA_API_KEY}&format=JSON" \
+            -H "Authorization: ${CWA_API_KEY}" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-002?format=JSON" \
             -o /tmp/cwa-w-c0033-002.json
 
       - name: Fetch CWA O-A0002-001 rainfall
@@ -72,10 +76,11 @@ jobs:
         run: |
           set -e
           curl --silent --show-error --fail \
-            --connect-timeout 20 --max-time 75 \
-            --retry 3 --retry-delay 5 --retry-all-errors \
+            --connect-timeout 20 --max-time 45 --http1.1 --ipv4 \
+            --retry 2 --retry-delay 3 --retry-all-errors \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -H "Authorization: ${CWA_API_KEY}" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?format=JSON" \
             -o /tmp/cwa-o-a0002-001.json
 
       - name: Validate downloaded CWA JSON before publishing
