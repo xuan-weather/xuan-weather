@@ -15,7 +15,7 @@ concurrency:
 jobs:
   fetch-temperature-history:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -27,8 +27,8 @@ jobs:
           set -e
           mkdir -p data/history
           curl --silent --show-error --fail \
-            --connect-timeout 15 --max-time 45 \
-            --retry 2 --retry-delay 3 --retry-all-errors \
+            --connect-timeout 20 --max-time 75 \
+            --retry 3 --retry-delay 5 --retry-all-errors \
             -H "Accept: application/json" \
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON" \
             -o /tmp/cwa-o-a0003-001.json
@@ -36,8 +36,8 @@ jobs:
           # 七堵等 C0 自動站若沒有出現在全測站回傳中，
           # 再以 stationId 明確補抓，仍使用同一個 CWA 10 分鐘資料集。
           curl --silent --show-error --fail \
-            --connect-timeout 15 --max-time 45 \
-            --retry 2 --retry-delay 3 --retry-all-errors \
+            --connect-timeout 20 --max-time 75 \
+            --retry 3 --retry-delay 5 --retry-all-errors \
             -H "Accept: application/json" \
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&stationId=C0B010" \
             -o /tmp/cwa-o-a0003-001-c0b010.json
@@ -48,8 +48,8 @@ jobs:
         run: |
           set -e
           curl --silent --show-error --fail \
-            --connect-timeout 15 --max-time 45 \
-            --retry 2 --retry-delay 3 --retry-all-errors \
+            --connect-timeout 20 --max-time 75 \
+            --retry 3 --retry-delay 5 --retry-all-errors \
             -H "Accept: application/json" \
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=${CWA_API_KEY}&format=JSON" \
             -o /tmp/cwa-o-a0001-001.json
@@ -60,8 +60,8 @@ jobs:
         run: |
           set -e
           curl --silent --show-error --fail \
-            --connect-timeout 15 --max-time 45 \
-            --retry 2 --retry-delay 3 --retry-all-errors \
+            --connect-timeout 20 --max-time 75 \
+            --retry 3 --retry-delay 5 --retry-all-errors \
             -H "Accept: application/json" \
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-002?Authorization=${CWA_API_KEY}&format=JSON" \
             -o /tmp/cwa-w-c0033-002.json
@@ -72,11 +72,48 @@ jobs:
         run: |
           set -e
           curl --silent --show-error --fail \
-            --connect-timeout 15 --max-time 45 \
-            --retry 2 --retry-delay 3 --retry-all-errors \
+            --connect-timeout 20 --max-time 75 \
+            --retry 3 --retry-delay 5 --retry-all-errors \
             -H "Accept: application/json" \
             "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${CWA_API_KEY}&format=JSON" \
             -o /tmp/cwa-o-a0002-001.json
+
+      - name: Validate downloaded CWA JSON before publishing
+        run: |
+          set -e
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          files = {
+              "/tmp/cwa-o-a0003-001.json": True,
+              "/tmp/cwa-o-a0003-001-c0b010.json": False,
+              "/tmp/cwa-o-a0001-001.json": False,
+              "/tmp/cwa-w-c0033-002.json": False,
+              "/tmp/cwa-o-a0002-001.json": True,
+          }
+
+          for filename, require_stations in files.items():
+              path = Path(filename)
+              if not path.is_file() or path.stat().st_size == 0:
+                  raise SystemExit(f"CWA 回傳檔案不存在或為空：{filename}")
+
+              try:
+                  payload = json.loads(path.read_text(encoding="utf-8"))
+              except Exception as exc:
+                  raise SystemExit(f"CWA 回傳不是有效 JSON：{filename}: {exc}")
+
+              if not isinstance(payload, dict):
+                  raise SystemExit(f"CWA JSON 根節點不是物件：{filename}")
+
+              if require_stations:
+                  records = payload.get("records") or payload.get("result", {}).get("records") or {}
+                  stations = records.get("Station") if isinstance(records, dict) else None
+                  if not isinstance(stations, list) or not stations:
+                      raise SystemExit(f"CWA JSON 缺少有效測站資料：{filename}")
+
+              print(f"Validated {filename} ({path.stat().st_size} bytes)")
+          PY
 
       - name: Publish latest CWA JSON for GitHub Pages
         run: |
