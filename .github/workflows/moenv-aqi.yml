@@ -80,15 +80,15 @@ jobs:
           PY
 
       - name: Commit and push AQI data
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+  run: |
+    git config user.name "github-actions[bot]"
+    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add data/aqx-p-432.json
+    git add .
+    git diff --cached --quiet && exit 0
+    git commit -m "Update MOENV AQI data"
 
-          if git diff --cached --quiet; then
-            echo "AQI 資料沒有變化，不需要 commit"
-          else
-            git commit -m "Update MOENV AQI data"
-            git push
+    git fetch origin main
+    git rebase origin/main
+    git push origin HEAD:main
           fi
