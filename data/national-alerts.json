@@ -1,20 +1,20 @@
 {
-  "updatedAt": "2026-10-15T12:35:53.786614+08:00",
+  "updatedAt": "2026-10-15T17:24:09.987186+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
     {
-      "id": "CWA-Weather_strong-wind_202610151026001",
+      "id": "CWA-Weather_strong-wind_202610151625001",
       "category": "強風",
       "title": "強風",
       "status": "Actual",
       "msgType": "Update",
       "author": "中央氣象署",
-      "updated": "2026-10-15T10:26:14+08:00",
-      "effective": "2026/10/15 上午 10:23:00",
+      "updated": "2026-10-15T16:25:46+08:00",
+      "effective": "2026/10/15 下午 04:23:00",
       "expires": "2026/10/15 下午 10:00:00",
-      "summary": "東北風偏強，15日上午至晚上桃園市、苗栗縣、臺中市、屏東縣、臺東縣、澎湖縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610151026.cap",
+      "summary": "東北風偏強，15日下午至晚上桃園市、臺中市、屏東縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610151625.cap",
       "isDrill": false
     }
   ]
