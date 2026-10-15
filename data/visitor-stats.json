@@ -2,8 +2,10 @@
   "source": "GoatCounter",
   "site": "taiwanweather.goatcounter.com",
   "timezone": "Asia/Taipei",
-  "date_taipei": null,
-  "cumulative_total": null,
-  "today_total": null,
-  "updated_at": null
+  "date_taipei": "2026-10-15",
+  "cumulative_total": 232,
+  "today_total": 8,
+  "today_start_taipei": "2026-10-15T00:00:00+08:00",
+  "stats_through_taipei": "2026-10-15T20:00:00+08:00",
+  "updated_at": "2026-10-15T12:56:56+00:00"
 }
