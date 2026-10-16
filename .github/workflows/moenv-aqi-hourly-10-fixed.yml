@@ -1,0 +1,103 @@
+name: MOENV AQI Data
+
+on:
+  schedule:
+    # 台灣時間每小時第 10 分鐘嘗試更新；GitHub Actions 可能延遲啟動
+    - cron: '10 * * * *'
+      timezone: 'Asia/Taipei'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: moenv-aqi-data
+  cancel-in-progress: false
+
+jobs:
+  fetch-aqi-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Fetch MOENV AQX_P_432
+        env:
+          MOENV_API_KEY: ${{ secrets.MOENV_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p data
+
+          if [ -z "${MOENV_API_KEY:-}" ]; then
+            echo "::error::尚未設定 GitHub Secret MOENV_API_KEY"
+            exit 1
+          fi
+
+          echo "開始讀取 MOENV AQX_P_432..."
+          curl \
+            --silent \
+            --show-error \
+            --fail \
+            --location \
+            --connect-timeout 20 \
+            --max-time 90 \
+            --retry 3 \
+            --retry-delay 5 \
+            -H "Authorization: Bearer ${MOENV_API_KEY}" \
+            "https://data.moenv.gov.tw/api/v2/aqx_p_432?api_key=${MOENV_API_KEY}&limit=1000&sort=publishtime%20desc" \
+            -o data/aqx-p-432.json
+
+          echo "檢查 AQI JSON 格式與資料時間..."
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/aqx-p-432.json")
+          try:
+              payload = json.loads(path.read_text(encoding="utf-8"))
+          except Exception as exc:
+              raise SystemExit(f"AQI 回傳不是有效 JSON：{exc}")
+
+          if isinstance(payload, list):
+              records = payload
+          elif isinstance(payload, dict):
+              records = payload.get("records", [])
+          else:
+              records = []
+
+          if not isinstance(records, list) or not records:
+              raise SystemExit("AQI 回傳沒有有效 records")
+
+          records = [row for row in records if isinstance(row, dict)]
+          if not records:
+              raise SystemExit("AQI records 格式錯誤")
+
+          times = sorted({
+              str(row.get("publishtime", "")).strip()
+              for row in records
+              if row.get("publishtime")
+          })
+
+          print(f"AQI records: {len(records)}")
+          print(f"最新 publishtime: {times[-1] if times else '資料未提供 publishtime'}")
+          PY
+
+      - name: Commit and push AQI data
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/aqx-p-432.json
+
+          if git diff --cached --quiet; then
+            echo "AQI 檔案內容沒有變化，不需要 commit"
+          else
+            git commit -m "Update MOENV AQI data"
+            git push
+          fi
