@@ -1,0 +1,172 @@
+name: CWA Township 2-Day Forecast
+
+on:
+  # GitHub Actions cron 使用 UTC；以下換算為臺灣時間 05:30、11:30、17:30、23:30。
+  # 讓鄉鎮短期預報發布後約 30 分鐘同步，避免每 5 分鐘重複呼叫 API。
+  schedule:
+    - cron: "30 21,3,9,15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cwa-township-2day-forecast
+  cancel-in-progress: false
+
+jobs:
+  fetch-township-forecast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check CWA API secret
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CWA_API_KEY:-}" || {
+            echo "::error::缺少 Repository Secret：CWA_API_KEY"
+            exit 1
+          }
+
+      - name: Fetch county-specific 2-day township forecast datasets
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data
+
+          # 各縣市「鄉鎮市區」未來 2 天預報；臺南市使用 F-D0047-077。
+          datasets=(
+            F-D0047-001 F-D0047-005 F-D0047-009 F-D0047-013
+            F-D0047-017 F-D0047-021 F-D0047-025 F-D0047-029
+            F-D0047-033 F-D0047-037 F-D0047-041 F-D0047-045
+            F-D0047-049 F-D0047-053 F-D0047-057 F-D0047-061
+            F-D0047-065 F-D0047-069 F-D0047-073 F-D0047-077
+            F-D0047-081 F-D0047-085
+          )
+
+          for dataset in "${datasets[@]}"; do
+            echo "========================================"
+            echo "正在取得 ${dataset}"
+            cache_buster="$(date +%s%N)"
+            url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}?_=${cache_buster}"
+            tmp_file="$(mktemp)"
+
+            # 先下載到暫存檔並驗證；失敗時不覆蓋 repo 中既有的有效 JSON。
+            curl --fail-with-body --silent --show-error \
+              --retry 5 --retry-all-errors --retry-delay 4 \
+              --connect-timeout 30 --max-time 180 --location \
+              -H "Accept: application/json" \
+              -H "Authorization: ${CWA_API_KEY}" \
+              -H "Cache-Control: no-cache, no-store, max-age=0" \
+              -H "Pragma: no-cache" \
+              "${url}" -o "${tmp_file}"
+
+            python - "${dataset}" "${tmp_file}" <<'PY'
+          import json, sys
+          dataset, path = sys.argv[1], sys.argv[2]
+          with open(path, encoding="utf-8") as f:
+              data = json.load(f)
+          if not isinstance(data, dict):
+              raise SystemExit(f"{dataset}: 回傳不是 JSON 物件")
+          records = data.get("records") or data.get("Records") or {}
+          groups = records.get("Locations") or records.get("locations") or []
+          if isinstance(groups, dict):
+              groups = [groups]
+          if not isinstance(groups, list) or not groups:
+              raise SystemExit(f"{dataset}: 找不到 records.Locations，拒絕覆蓋有效資料")
+          locations = []
+          for group in groups:
+              if not isinstance(group, dict):
+                  continue
+              rows = group.get("Location") or group.get("location") or []
+              if isinstance(rows, dict):
+                  rows = [rows]
+              if isinstance(rows, list):
+                  locations.extend(rows)
+          if not locations:
+              raise SystemExit(f"{dataset}: 沒有鄉鎮 Location 資料")
+          print(f"{dataset}: JSON 正常；取得 {len(locations)} 個鄉鎮／地區")
+          PY
+
+            mv "${tmp_file}" "data/cwa-${dataset}.json"
+          done
+
+      - name: Validate downloaded 2-day township datasets only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          import json, os
+
+          # 只驗證本工作流程負責下載的 22 個「未來 2 天」資料集。
+          # 不使用 glob，避免把 7 天預報的 093.json、093-web.json、
+          # 或其他工作流程留下的 089/091 等檔案誤當成本次資料。
+          datasets = [
+              "F-D0047-001", "F-D0047-005", "F-D0047-009", "F-D0047-013",
+              "F-D0047-017", "F-D0047-021", "F-D0047-025", "F-D0047-029",
+              "F-D0047-033", "F-D0047-037", "F-D0047-041", "F-D0047-045",
+              "F-D0047-049", "F-D0047-053", "F-D0047-057", "F-D0047-061",
+              "F-D0047-065", "F-D0047-069", "F-D0047-073", "F-D0047-077",
+              "F-D0047-081", "F-D0047-085",
+          ]
+
+          for dataset in datasets:
+              path = f"data/cwa-{dataset}.json"
+              if not os.path.isfile(path) or os.path.getsize(path) == 0:
+                  raise SystemExit(f"缺少本次 2 天預報檔案：{path}")
+              with open(path, encoding="utf-8") as f:
+                  data = json.load(f)
+              records = data.get("records") or data.get("Records") or {}
+              groups = records.get("Locations") or records.get("locations") or []
+              if isinstance(groups, dict):
+                  groups = [groups]
+              count = 0
+              for group in groups if isinstance(groups, list) else []:
+                  if not isinstance(group, dict):
+                      continue
+                  rows = group.get("Location") or group.get("location") or []
+                  count += len(rows) if isinstance(rows, list) else (1 if isinstance(rows, dict) else 0)
+              if count == 0:
+                  raise SystemExit(f"{os.path.basename(path)} 沒有有效鄉鎮資料")
+              print(f"✓ {os.path.basename(path)}：{count} 個地點")
+          print("✓ 22 個 2 天鄉鎮預報資料集全部通過驗證")
+          PY
+
+      - name: Commit township forecast data
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/cwa-F-D0047-*.json
+
+          if git diff --cached --quiet; then
+            echo "鄉鎮預報資料沒有變化，不需要提交"
+            exit 0
+          fi
+
+          git commit -m "Update CWA township 2-day forecasts"
+
+          # 避免同步期間 main 有新提交造成 push rejected。
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              echo "鄉鎮短期預報資料已成功推送。"
+              exit 0
+            fi
+            if [ "${attempt}" -eq 5 ]; then
+              echo "::error::推送失敗，已重試 5 次"
+              exit 1
+            fi
+            sleep 5
+          done
