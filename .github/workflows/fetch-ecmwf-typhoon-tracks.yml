@@ -41,14 +41,41 @@ jobs:
       - name: Fetch and parse ECMWF track products
         run: python scripts/fetch_ecmwf_typhoon_tracks.py
 
+      
       - name: Commit updated JSON
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/typhoon-model-tracks.json
-          if git diff --cached --quiet; then
-            echo "No data changes to commit."
-          else
+
+          cp data/typhoon-model-tracks.json /tmp/typhoon-model-tracks.json
+
+          for attempt in 1 2 3; do
+            echo "Push attempt ${attempt}/3"
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            cp /tmp/typhoon-model-tracks.json data/typhoon-model-tracks.json
+            git add data/typhoon-model-tracks.json
+
+            if git diff --cached --quiet; then
+              echo "No data changes to commit."
+              exit 0
+            fi
+
             git commit -m "Update ECMWF typhoon track data"
-            git push
+
+            if git push origin HEAD:main; then
+              echo "JSON update pushed successfully."
+              exit 0
+            fi
+
+            echo "Push failed; retrying with latest main."
+          done
+
+          echo "Failed to push after 3 attempts."
+          exit 1
+
           fi
