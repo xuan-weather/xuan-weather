@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """Fetch official ECMWF tropical-cyclone track BUFR products.
 
@@ -106,131 +105,72 @@ def download(cfg, model_name, cycle, target):
 
 
 def decode_bufr(path, model_name, cycle):
-    """Decode BUFR using ecCodes JSON mode."""
+    """Decode conservatively; never join unrelated BUFR coordinates."""
     proc = subprocess.run(
         ["bufr_dump", "-j", "s", str(path)],
         text=True,
         capture_output=True,
         check=False,
     )
-
     if proc.returncode != 0:
-        detail = (
-            proc.stderr
-            or proc.stdout
-            or "bufr_dump returned no diagnostic"
-        ).strip()
-
+        detail = (proc.stderr or proc.stdout or "bufr_dump failed").strip()
         raise RuntimeError(
-            f"bufr_dump failed (exit {proc.returncode}): "
-            f"{detail[:500]}"
+            f"bufr_dump failed (exit {proc.returncode}): {detail[:500]}"
         )
 
     try:
         data = json.loads(proc.stdout)
     except json.JSONDecodeError as exc:
-        raise RuntimeError(
-            f"bufr_dump output is not valid JSON: {exc}; "
-            f"output prefix={proc.stdout[:300]!r}"
-        ) from exc
+        raise RuntimeError(f"bufr_dump JSON parse failed: {exc}") from exc
 
-    values = []
+    # A recursive global list of every latitude and longitude is not enough
+    # to reconstruct a forecast track: BUFR can contain multiple subsets,
+    # storms, metadata fields, and forecast times. Do not guess pairing/order.
+    # Inspect whether the dump exposes explicit subset/message boundaries and
+    # explicit lead-time fields before publishing any coordinates.
+    summary = {
+        "topLevelType": type(data).__name__,
+        "topLevelCount": len(data) if isinstance(data, (list, dict)) else None,
+        "coordinateKeys": {},
+        "timeKeys": {},
+        "subsetMarkers": 0,
+    }
+
+    coord_names = {
+        "latitude", "longitude", "latitudeofcenter", "longitudeofcenter",
+        "latitudeofstormcenter", "longitudeofstormcenter",
+    }
+    time_names = {
+        "forecasttime", "forecastperiod", "step", "leadtime",
+        "timeperiod", "hour", "validitytime",
+    }
 
     def walk(obj):
         if isinstance(obj, dict):
-            key = obj.get("key")
-            if key is not None and "value" in obj:
-                values.append(
-                    (str(key).lower(), obj["value"])
-                )
-
-            for child in obj.values():
-                if isinstance(child, (dict, list)):
-                    walk(child)
-
+            key = str(obj.get("key", "")).lower().replace("_", "").replace(" ", "")
+            if key:
+                if key in coord_names:
+                    summary["coordinateKeys"][key] = summary["coordinateKeys"].get(key, 0) + 1
+                if key in time_names:
+                    summary["timeKeys"][key] = summary["timeKeys"].get(key, 0) + 1
+                if "subset" in key or "message" in key:
+                    summary["subsetMarkers"] += 1
+            for value in obj.values():
+                if isinstance(value, (dict, list)):
+                    walk(value)
         elif isinstance(obj, list):
-            for child in obj:
-                if isinstance(child, (dict, list)):
-                    walk(child)
+            for value in obj:
+                if isinstance(value, (dict, list)):
+                    walk(value)
 
     walk(data)
-
-    def collect(keys):
-        found = []
-
-        for key, value in values:
-            normalized = key.replace("_", "").replace(" ", "")
-
-            if normalized in keys:
-                if isinstance(value, (int, float)):
-                    if not isinstance(value, bool):
-                        found.append(float(value))
-
-        return found
-
-    latitudes = collect({
-        "latitude",
-        "latitudeofcenter",
-        "latitudeofstormcenter",
-    })
-
-    longitudes = collect({
-        "longitude",
-        "longitudeofcenter",
-        "longitudeofstormcenter",
-    })
-
-    if len(latitudes) < 2 or len(latitudes) != len(longitudes):
-        return [], (
-            "BUFR downloaded, but matching latitude/longitude "
-            f"arrays were not found. "
-            f"Decoded latitude values={len(latitudes)}, "
-            f"longitude values={len(longitudes)}. "
-            "Inspect bufr_dump JSON structure before mapping."
-        )
-
-    points = []
-
-    for index, (lat, lon) in enumerate(
-        zip(latitudes, longitudes)
-    ):
-        if not (-90 <= lat <= 90):
-            continue
-
-        if not (-360 <= lon <= 360):
-            continue
-
-        lon = ((lon + 180) % 360) - 180
-
-        points.append({
-            "lat": round(lat, 3),
-            "lon": round(lon, 3),
-            "leadHours": index * 6,
-        })
-
-    if len(points) < 2:
-        return [], (
-            "BUFR was downloaded, but fewer than two "
-            "valid coordinate pairs were decoded."
-        )
-
-    track = {
-        "model": model_name,
-        "stormId": None,
-        "stormName": "ECMWF tropical cyclone",
-        "cycleTime": cycle.strftime(
-            "%Y-%m-%dT%H:%M:%SZ"
-        ),
-        "source": (
-            "https://www.ecmwf.int/en/forecasts/"
-            "datasets/open-data"
-        ),
-        "points": points,
-    }
-
-    return [track], (
-        f"Decoded {len(points)} coordinate pairs "
-        "from BUFR."
+    return [], (
+        "BUFR file downloaded, but no verified track was emitted. "
+        "The previous parser mixed coordinates from the entire file and "
+        "guessed lead hours as index*6, which can create false tracks. "
+        "This safe parser intentionally withholds the line until the BUFR "
+        "subset/storm grouping and forecast-time fields are mapped. "
+        f"Structure summary: {json.dumps(summary, ensure_ascii=False)[:1200]}"
     )
 
 
