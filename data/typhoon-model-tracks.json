@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-17T04:27:48.099798+00:00",
+  "updatedAt": "2026-10-17T04:32:21.682875+00:00",
   "region": {
     "west": 108,
     "south": 4,
@@ -9,16 +9,16 @@
   "tracks": [],
   "models": {
     "ECMWF IFS": {
-      "status": "pending",
-      "message": "產品尚不可用：404 Client Error: Not Found for url: https://data.ecmwf.int/forecasts/20261015/18z/ifs/0p25/oper/20261015180000-90h-oper-tf.bufr"
+      "status": "unavailable",
+      "message": "Command '['bufr_dump', '-j', '/tmp/tmp8qqjck9c/ECMWF_IFS_2026101506.bufr']' returned non-zero exit status 1."
     },
     "ECMWF AIFS": {
-      "status": "pending",
-      "message": "產品尚不可用：404 Client Error: Not Found for url: https://data.ecmwf.int/forecasts/20261015/18z/aifs-single/0p25/oper/20261015180000-240h-oper-tf.bufr"
+      "status": "unavailable",
+      "message": "404 Client Error: Not Found for url: https://data.ecmwf.int/forecasts/20261015/06z/aifs-single/0p25/oper/20261015060000-240h-oper-tf.bufr"
     },
     "AIFS ENS": {
-      "status": "pending",
-      "message": "產品尚不可用：404 Client Error: Not Found for url: https://data.ecmwf.int/forecasts/20261015/18z/aifs-ens/0p25/enfo/20261015180000-240h-enfo-tf.bufr"
+      "status": "unavailable",
+      "message": "404 Client Error: Not Found for url: https://data.ecmwf.int/forecasts/20261015/06z/aifs-ens/0p25/enfo/20261015060000-240h-enfo-tf.bufr"
     }
   }
 }
