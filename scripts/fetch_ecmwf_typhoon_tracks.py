@@ -53,7 +53,7 @@ def download(cfg, model_name, cycle, target):
             # for the AI models.
             if cfg["model"] != "ifs":
                 kwargs["model"] = cfg["model"]
-            Client(source="ecmwf").retrieve(**kwargs)
+            Client(source="aws").retrieve(**kwargs)
             if target.exists() and target.stat().st_size > 0:
                 return step
             last_error = "Download command completed but produced an empty file"
