@@ -1,26 +1,290 @@
 {
-  "updatedAt": "2026-10-17T05:01:54.357988+00:00",
+  "updatedAt": "2026-10-17T05:07:18.081083+00:00",
   "region": {
     "west": 108,
     "south": 4,
     "east": 145,
     "north": 36
   },
-  "tracks": [],
+  "tracks": [
+    {
+      "model": "ECMWF IFS",
+      "stormId": "36W",
+      "stormName": "CHAMPI",
+      "cycleTime": "2026-10-16T18:00:00Z",
+      "source": "https://www.ecmwf.int/en/forecasts/datasets/open-data",
+      "points": [
+        {
+          "lat": 11.9,
+          "lon": 150.2,
+          "leadHours": 0
+        },
+        {
+          "lat": 12.6,
+          "lon": 148.6,
+          "leadHours": 6
+        },
+        {
+          "lat": 12.7,
+          "lon": 147.5,
+          "leadHours": 12
+        },
+        {
+          "lat": 12.9,
+          "lon": 146.2,
+          "leadHours": 18
+        },
+        {
+          "lat": 13.1,
+          "lon": 145.2,
+          "leadHours": 24
+        },
+        {
+          "lat": 13.3,
+          "lon": 143.9,
+          "leadHours": 30
+        },
+        {
+          "lat": 13.4,
+          "lon": 143.0,
+          "leadHours": 36
+        },
+        {
+          "lat": 13.6,
+          "lon": 142.1,
+          "leadHours": 42
+        },
+        {
+          "lat": 14.0,
+          "lon": 141.1,
+          "leadHours": 48
+        },
+        {
+          "lat": 14.5,
+          "lon": 140.1,
+          "leadHours": 54
+        },
+        {
+          "lat": 15.2,
+          "lon": 139.2,
+          "leadHours": 60
+        },
+        {
+          "lat": 15.7,
+          "lon": 138.3,
+          "leadHours": 66
+        },
+        {
+          "lat": 16.4,
+          "lon": 137.1,
+          "leadHours": 72
+        },
+        {
+          "lat": 16.9,
+          "lon": 135.9,
+          "leadHours": 78
+        },
+        {
+          "lat": 17.5,
+          "lon": 134.7,
+          "leadHours": 84
+        },
+        {
+          "lat": 18.0,
+          "lon": 133.4,
+          "leadHours": 90
+        },
+        {
+          "lat": 18.6,
+          "lon": 132.0,
+          "leadHours": 96
+        },
+        {
+          "lat": 19.2,
+          "lon": 130.9,
+          "leadHours": 102
+        },
+        {
+          "lat": 19.9,
+          "lon": 129.7,
+          "leadHours": 108
+        },
+        {
+          "lat": 20.2,
+          "lon": 128.9,
+          "leadHours": 114
+        },
+        {
+          "lat": 20.6,
+          "lon": 128.1,
+          "leadHours": 120
+        },
+        {
+          "lat": 20.8,
+          "lon": 127.6,
+          "leadHours": 126
+        },
+        {
+          "lat": 21.0,
+          "lon": 127.0,
+          "leadHours": 132
+        },
+        {
+          "lat": 21.4,
+          "lon": 126.6,
+          "leadHours": 138
+        },
+        {
+          "lat": 21.6,
+          "lon": 125.9,
+          "leadHours": 144
+        }
+      ]
+    },
+    {
+      "model": "ECMWF IFS",
+      "stormId": "70W",
+      "stormName": "70W",
+      "cycleTime": "2026-10-16T18:00:00Z",
+      "source": "https://www.ecmwf.int/en/forecasts/datasets/open-data",
+      "points": [
+        {
+          "lat": 12.6,
+          "lon": 148.6,
+          "leadHours": 0
+        },
+        {
+          "lat": 12.7,
+          "lon": 147.5,
+          "leadHours": 6
+        },
+        {
+          "lat": 12.9,
+          "lon": 146.2,
+          "leadHours": 12
+        },
+        {
+          "lat": 13.1,
+          "lon": 145.2,
+          "leadHours": 18
+        },
+        {
+          "lat": 13.3,
+          "lon": 143.9,
+          "leadHours": 24
+        },
+        {
+          "lat": 13.4,
+          "lon": 143.0,
+          "leadHours": 30
+        },
+        {
+          "lat": 13.6,
+          "lon": 142.1,
+          "leadHours": 36
+        },
+        {
+          "lat": 14.0,
+          "lon": 141.1,
+          "leadHours": 42
+        },
+        {
+          "lat": 14.5,
+          "lon": 140.1,
+          "leadHours": 48
+        },
+        {
+          "lat": 15.2,
+          "lon": 139.2,
+          "leadHours": 54
+        },
+        {
+          "lat": 15.7,
+          "lon": 138.3,
+          "leadHours": 60
+        },
+        {
+          "lat": 16.4,
+          "lon": 137.1,
+          "leadHours": 66
+        },
+        {
+          "lat": 16.9,
+          "lon": 135.9,
+          "leadHours": 72
+        },
+        {
+          "lat": 17.5,
+          "lon": 134.7,
+          "leadHours": 78
+        },
+        {
+          "lat": 18.0,
+          "lon": 133.4,
+          "leadHours": 84
+        },
+        {
+          "lat": 18.6,
+          "lon": 132.0,
+          "leadHours": 90
+        },
+        {
+          "lat": 19.2,
+          "lon": 130.9,
+          "leadHours": 96
+        },
+        {
+          "lat": 19.9,
+          "lon": 129.7,
+          "leadHours": 102
+        },
+        {
+          "lat": 20.2,
+          "lon": 128.9,
+          "leadHours": 108
+        },
+        {
+          "lat": 20.6,
+          "lon": 128.1,
+          "leadHours": 114
+        },
+        {
+          "lat": 20.8,
+          "lon": 127.6,
+          "leadHours": 120
+        },
+        {
+          "lat": 21.0,
+          "lon": 127.0,
+          "leadHours": 126
+        },
+        {
+          "lat": 21.4,
+          "lon": 126.6,
+          "leadHours": 132
+        },
+        {
+          "lat": 21.6,
+          "lon": 125.9,
+          "leadHours": 138
+        }
+      ]
+    }
+  ],
   "models": {
     "ECMWF IFS": {
-      "status": "downloaded_unparsed",
-      "message": "BUFR file downloaded, but no verified track was emitted. The previous parser mixed coordinates from the entire file and guessed lead hours as index*6, which can create false tracks. This safe parser intentionally withholds the line until the BUFR subset/storm grouping and forecast-time fields are mapped. Structure summary: {\"topLevelType\": \"dict\", \"topLevelCount\": 1, \"coordinateKeys\": {\"latitude\": 469, \"longitude\": 469}, \"timeKeys\": {\"hour\": 13, \"timeperiod\": 215}, \"subsetMarkers\": 26}",
+      "status": "available",
+      "message": "Parsed 2 regional storm track(s) from BUFR (step=144h)",
       "cycleTime": "2026-10-16T18:00:00Z",
       "source": "ECMWF Open Data"
     },
     "ECMWF AIFS": {
       "status": "unavailable",
-      "message": "No product retrieved from recent cycles. Last errors: 2026-10-16 06Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261016/06z/aifs-single/0p25/oper/20261016060000-240h-oper-tf.bufr | 2026-10-16 00Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261016/00z/aifs-single/0p25/oper/20261016000000-240h-oper-tf.bufr | 2026-10-15 18Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261015/18z/aifs-single/0p25/oper/20261015180000-240h-oper-tf.bufr"
+      "message": "No product retrieved from recent cycles. Last errors: 2026-10-16 00Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261016/00z/aifs-single/0p25/oper/20261016000000-240h-oper-tf.bufr | 2026-10-15 18Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261015/18z/aifs-single/0p25/oper/20261015180000-240h-oper-tf.bufr"
     },
     "AIFS ENS": {
       "status": "unavailable",
-      "message": "No product retrieved from recent cycles. Last errors: 2026-10-16 06Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261016/06z/aifs-ens/0p25/enfo/20261016060000-240h-enfo-tf.bufr | 2026-10-16 00Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261016/00z/aifs-ens/0p25/enfo/20261016000000-240h-enfo-tf.bufr | 2026-10-15 18Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261015/18z/aifs-ens/0p25/enfo/20261015180000-240h-enfo-tf.bufr"
+      "message": "No product retrieved from recent cycles. Last errors: 2026-10-16 00Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261016/00z/aifs-ens/0p25/enfo/20261016000000-240h-enfo-tf.bufr | 2026-10-15 18Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261015/18z/aifs-ens/0p25/enfo/20261015180000-240h-enfo-tf.bufr"
     }
   }
 }
