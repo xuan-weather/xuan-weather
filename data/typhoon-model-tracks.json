@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-17T04:36:59.486748+00:00",
+  "updatedAt": "2026-10-17T04:42:57.488078+00:00",
   "region": {
     "west": 108,
     "south": 4,
@@ -10,15 +10,15 @@
   "models": {
     "ECMWF IFS": {
       "status": "unavailable",
-      "message": "No product retrieved from recent cycles. Last errors: 2026-10-16 00Z: HTTPError: 404 Client Error: Not Found for url: https://data.ecmwf.int/forecasts/20261016/00z/ifs/0p25/oper/20261016000000-240h-oper-tf.bufr | 2026-10-15 18Z: bufr_dump failed (exit 1): NAME \tbufr_dump\n\nDESCRIPTION\n\tDump the content of a BUFR file in different formats.\n\nUSAGE \n\tbufr_dump [options] bufr_file bufr_file ...\n\nOPTIONS\n\t-j s|f"
+      "message": "No product retrieved from recent cycles. Last errors: 2026-10-16 00Z: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261016/00z/ifs/0p25/oper/20261016000000-240h-oper-tf.bufr | 2026-10-15 18Z: bufr_dump failed (exit 1): NAME \tbufr_dump\n\nDESCRIPTION\n\tDump the content of a BUFR file in different formats.\n\nUSAGE \n\tbufr_dump [options] bufr_file bufr_file ...\n\nOPTIONS\n\t-j s|f"
     },
     "ECMWF AIFS": {
       "status": "unavailable",
-      "message": "No product retrieved from recent cycles. Last errors: 2026-10-16 00Z: HTTPError: 404 Client Error: Not Found for url: https://data.ecmwf.int/forecasts/20261016/00z/aifs-single/0p25/oper/20261016000000-240h-oper-tf.bufr | 2026-10-15 18Z: HTTPError: 404 Client Error: Not Found for url: https://data.ecmwf.int/forecasts/20261015/18z/aifs-single/0p25/oper/20261015180000-240h-oper-tf.bufr"
+      "message": "No product retrieved from recent cycles. Last errors: 2026-10-16 00Z: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261016/00z/aifs-single/0p25/oper/20261016000000-240h-oper-tf.bufr | 2026-10-15 18Z: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261015/18z/aifs-single/0p25/oper/20261015180000-240h-oper-tf.bufr"
     },
     "AIFS ENS": {
       "status": "unavailable",
-      "message": "No product retrieved from recent cycles. Last errors: 2026-10-16 00Z: HTTPError: 404 Client Error: Not Found for url: https://data.ecmwf.int/forecasts/20261016/00z/aifs-ens/0p25/enfo/20261016000000-240h-enfo-tf.bufr | 2026-10-15 18Z: HTTPError: 404 Client Error: Not Found for url: https://data.ecmwf.int/forecasts/20261015/18z/aifs-ens/0p25/enfo/20261015180000-240h-enfo-tf.bufr"
+      "message": "No product retrieved from recent cycles. Last errors: 2026-10-16 00Z: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261016/00z/aifs-ens/0p25/enfo/20261016000000-240h-enfo-tf.bufr | 2026-10-15 18Z: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261015/18z/aifs-ens/0p25/enfo/20261015180000-240h-enfo-tf.bufr"
     }
   }
 }
