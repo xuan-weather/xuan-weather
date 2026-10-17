@@ -29,9 +29,14 @@ jobs:
       - name: Install ecCodes and Python dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y eccodes
+          sudo apt-get install -y libeccodes-tools
           python -m pip install --upgrade pip
-          pip install ecmwf-opendata
+          python -m pip install ecmwf-opendata
+
+      - name: Verify ecCodes tools
+        run: |
+          command -v bufr_dump
+          bufr_dump -V
 
       - name: Fetch and parse ECMWF track products
         run: python scripts/fetch_ecmwf_typhoon_tracks.py
