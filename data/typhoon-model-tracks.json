@@ -1,0 +1,17 @@
+{
+  "updatedAt": null,
+  "region": {"west": 108, "south": 4, "east": 145, "north": 36},
+  "tracks": [],
+  "models": {
+    "ECMWF IFS": {"status": "pending", "message": "等待接入 BUFR 路徑解碼器"},
+    "ECMWF AIFS": {"status": "pending", "message": "等待接入 BUFR 路徑解碼器"},
+    "GFS": {"status": "pending", "message": "等待確認可用的即時路徑資料端點"},
+    "GEFS": {"status": "pending", "message": "等待確認可用的系集路徑資料端點"},
+    "WN3C": {"status": "pending", "message": "等待取得可驗證的資料來源"},
+    "WN2C": {"status": "pending", "message": "等待取得可驗證的資料來源"},
+    "GEML": {"status": "pending", "message": "等待確認可用的即時路徑資料端點"},
+    "AIFS ENS": {"status": "pending", "message": "等待接入 BUFR 路徑解碼器"},
+    "AIGEFS": {"status": "pending", "message": "等待確認可用的路徑資料端點"},
+    "AICON": {"status": "pending", "message": "等待確認可用的路徑資料端點"}
+  }
+}
