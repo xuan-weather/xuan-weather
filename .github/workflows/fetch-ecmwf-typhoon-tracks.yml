@@ -1,0 +1,49 @@
+
+name: Fetch ECMWF Typhoon Tracks
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+  push:
+    paths:
+      - "scripts/fetch_ecmwf_typhoon_tracks.py"
+      - ".github/workflows/fetch-ecmwf-typhoon-tracks.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ecmwf-typhoon-tracks
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ecCodes and Python dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y eccodes
+          python -m pip install --upgrade pip
+          pip install ecmwf-opendata
+
+      - name: Fetch and parse ECMWF track products
+        run: python scripts/fetch_ecmwf_typhoon_tracks.py
+
+      - name: Commit updated JSON
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/typhoon-model-tracks.json
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+          else
+            git commit -m "Update ECMWF typhoon track data"
+            git push
+          fi
