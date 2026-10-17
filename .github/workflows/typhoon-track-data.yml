@@ -1,0 +1,49 @@
+
+name: Typhoon Track Data Validation
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "data/typhoon-model-tracks.json"
+      - ".github/workflows/typhoon-track-data.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: typhoon-track-data-validation
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check track JSON exists
+        run: |
+          if [ ! -f data/typhoon-model-tracks.json ]; then
+            echo "::error::找不到 data/typhoon-model-tracks.json"
+            exit 1
+          fi
+
+      - name: Validate JSON syntax
+        run: |
+          node -e "
+          const fs = require('fs');
+          const file = 'data/typhoon-model-tracks.json';
+          const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+          if (!data || typeof data !== 'object') {
+            throw new Error('JSON 根節點必須是物件');
+          }
+          console.log('JSON 語法正確');
+          "
+
+      - name: Report validation result
+        run: |
+          echo "颱風路徑 JSON 格式檢查完成。"
+          echo "注意：格式正確不代表已取得真實預報資料。"
