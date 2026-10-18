@@ -48,7 +48,12 @@ def download(cfg, model_name, cycle, target):
             }
             if cfg["model"] != "ifs":
                 args["model"] = cfg["model"]
-            Client(source="aws").retrieve(**args)
+                        Client(
+                source="aws",
+                maximum_retries=2,
+                retry_after=(10, 20, 2),
+                use_server_retry_after=False,
+            ).retrieve(**args)
             if target.exists() and target.stat().st_size:
                 print(f"{model_name}: downloaded {target.stat().st_size} bytes; {cycle:%Y-%m-%d %HZ}, step={step}")
                 return step
