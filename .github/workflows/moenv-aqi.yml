@@ -1,11 +1,6 @@
 name: MOENV AQI Data
 
 on:
-  schedule:
-    # 台灣時間每小時第 10 分鐘執行
-    - cron: '10 * * * *'
-      timezone: 'Asia/Taipei'
-
   workflow_dispatch:
 
 permissions:
