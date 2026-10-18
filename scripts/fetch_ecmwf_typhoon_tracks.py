@@ -489,9 +489,11 @@ def main():
                     errors.append(message)
                     print(f"{name}: {message}")
 
-                    # Stop trying older cycles after a rate-limit response.
-                    if is_rate_limit_error(exc):
-                        break
+                                if is_rate_limit_error(exc):
+                import time
+                print(f"{name}: 伺服器限流，等待 15 秒後繼續嘗試較早時次")
+                time.sleep(15)
+                continue
 
             if not fetched:
                 if previous_track_count > 0:
