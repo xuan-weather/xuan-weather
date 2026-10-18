@@ -1,0 +1,146 @@
+name: CWA Township 7-Day Forecast Refresh
+
+on:
+  schedule:
+    # 台灣時間 05:40、11:40、17:40、23:40
+    - cron: "40 21,3,9,15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cwa-township-7day-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download and validate official 7-day forecast
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CWA_API_KEY:-}" || { echo "::error::缺少 CWA_API_KEY Secret"; exit 1; }
+          mkdir -p data
+          tmp="$(mktemp)"
+          url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-093?Authorization=${CWA_API_KEY}&format=JSON&_=$(date +%s%N)"
+          curl --fail-with-body --silent --show-error --location \
+            --retry 5 --retry-all-errors --retry-delay 4 \
+            --connect-timeout 30 --max-time 180 \
+            -H "Cache-Control: no-cache, no-store, max-age=0" \
+            -H "Pragma: no-cache" "$url" -o "$tmp"
+          python - "$tmp" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding="utf-8"))
+          groups=d.get("records",{}).get("Locations",[])
+          if isinstance(groups,dict): groups=[groups]
+          count=0
+          for g in groups:
+              rows=g.get("Location",[]) if isinstance(g,dict) else []
+              count += len(rows) if isinstance(rows,list) else (1 if isinstance(rows,dict) else 0)
+          if not isinstance(d,dict) or not groups or count < 300:
+              raise SystemExit(f"官方預報驗證失敗（地點數={count}），不覆蓋舊資料")
+          print(f"官方 JSON 驗證通過：{len(groups)} 組、{count} 個地點")
+          PY
+          mv "$tmp" data/cwa-F-D0047-093.json
+
+      - name: Rebuild web forecast JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          import json
+          from pathlib import Path
+          from datetime import datetime,timedelta,timezone
+          src=Path("data/cwa-F-D0047-093.json")
+          dst=Path("data/cwa-F-D0047-093-web.json")
+          tz=timezone(timedelta(hours=8)); today=datetime.now(tz).date()
+          raw=json.loads(src.read_text(encoding="utf-8"))
+          groups=raw.get("records",{}).get("Locations",[])
+          if isinstance(groups,dict): groups=[groups]
+          def element_map(loc,names):
+              for e in loc.get("WeatherElement",[]) or []:
+                  if e.get("ElementName") in names:
+                      out={}
+                      for t in e.get("Time",[]) or []:
+                          k=t.get("StartTime") or t.get("DataTime"); v=t.get("ElementValue") or []
+                          if k: out[k]=v[0] if v and isinstance(v[0],dict) else {}
+                      return out
+              return {}
+          def getval(mapping,key,keys):
+              for k in keys:
+                  v=mapping.get(key,{}).get(k)
+                  if v not in (None,"","-","NA","N/A"):
+                      try: return float(v) if "." in str(v) else int(v)
+                      except (ValueError,TypeError): return v
+              return None
+          def nearest(mapping,start,keys):
+              if not mapping: return None
+              target=datetime.fromisoformat(start.replace("Z","+00:00"))
+              k=min(mapping,key=lambda x:abs((datetime.fromisoformat(x.replace("Z","+00:00"))-target).total_seconds()))
+              return getval(mapping,k,keys)
+          counties={}; dates=set(); total=0
+          for group in groups:
+              if not isinstance(group,dict): continue
+              county=group.get("LocationsName") or group.get("LocationName")
+              locs=group.get("Location",[]) or []
+              if isinstance(locs,dict): locs=[locs]
+              if not county: continue
+              out={}
+              for loc in locs:
+                  if not isinstance(loc,dict) or not loc.get("LocationName"): continue
+                  els=loc.get("WeatherElement",[]) or []
+                  wx=element_map(loc,["天氣現象"]); lows=element_map(loc,["最低溫度"]); highs=element_map(loc,["最高溫度"]); pops=element_map(loc,["12小時降雨機率","降雨機率"])
+                  periods=next((e.get("Time",[]) for e in els if e.get("ElementName")=="天氣現象"),[])
+                  if not periods: periods=next((e.get("Time",[]) for e in els if e.get("ElementName")=="最低溫度"),[])
+                  days=[]
+                  for p in periods or []:
+                      start=p.get("StartTime") or p.get("DataTime")
+                      if not start: continue
+                      try: dt=datetime.fromisoformat(start.replace("Z","+00:00")).astimezone(tz)
+                      except ValueError: continue
+                      day=dt.date()
+                      if day<today or day>=today+timedelta(days=7): continue
+                      w=wx.get(start,{})
+                      low=getval(lows,start,["MinTemperature","Temperature"]); high=getval(highs,start,["MaxTemperature","Temperature"]); pop=getval(pops,start,["ProbabilityOfPrecipitation"])
+                      if low is None: low=nearest(lows,start,["MinTemperature","Temperature"])
+                      if high is None: high=nearest(highs,start,["MaxTemperature","Temperature"])
+                      if pop is None: pop=nearest(pops,start,["ProbabilityOfPrecipitation"])
+                      desc=w.get("Weather") or w.get("天氣現象") or ""; code=w.get("WeatherCode") or w.get("WeatherCodeValue") or ""
+                      if not desc and low is None and high is None: continue
+                      days.append({"date":day.isoformat(),"period":"night" if dt.hour>=18 else "day","start":start,"end":p.get("EndTime",""),"min":low,"max":high,"pop":pop,"wx":desc,"wxCode":str(code)})
+                      dates.add(day.isoformat())
+                  days.sort(key=lambda x:(x["date"],x["start"]))
+                  if days: out[loc["LocationName"]]={"geocode":str(loc.get("Geocode","")),"lat":str(loc.get("Latitude","")),"lon":str(loc.get("Longitude","")),"days":days}
+              if out: counties[county]=out; total+=len(out)
+          if total<300 or len(dates)<5: raise SystemExit(f"整合驗證失敗：鄉鎮 {total}、日期 {len(dates)}；不覆蓋舊 web JSON")
+          ds=sorted(dates)
+          result={"success":True,"source":"CWA F-D0047-093 官方全臺鄉鎮一週預報","generatedAt":datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00","Z"),"startDate":ds[0],"days":min(7,len(ds)),"counties":counties}
+          tmp=dst.with_suffix(".json.tmp"); tmp.write_text(json.dumps(result,ensure_ascii=False,separators=(",",":")),encoding="utf-8"); tmp.replace(dst)
+          print(f"完成：{total} 鄉鎮；{ds[0]} 至 {ds[-1]}")
+          PY
+
+      - name: Commit and push updated JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/cwa-F-D0047-093.json data/cwa-F-D0047-093-web.json
+          if git diff --cached --quiet; then echo "資料沒有變化"; exit 0; fi
+          git commit -m "Refresh CWA township 7-day forecast"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then exit 0; fi
+            git rebase --abort 2>/dev/null || true
+            if [ "$attempt" -eq 5 ]; then echo "::error::推送重試 5 次仍失敗"; exit 1; fi
+            sleep $((attempt * 4))
+          done
