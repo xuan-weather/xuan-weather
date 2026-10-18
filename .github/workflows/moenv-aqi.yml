@@ -2,7 +2,7 @@ name: MOENV AQI Data
 
 on:
   schedule:
-    # 台灣時間每小時第 10 分鐘嘗試更新；GitHub Actions 可能延遲啟動
+    # 台灣時間每小時第 10 分鐘執行
     - cron: '10 * * * *'
       timezone: 'Asia/Taipei'
 
@@ -24,11 +24,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Fetch MOENV AQX_P_432
         env:
           MOENV_API_KEY: ${{ secrets.MOENV_API_KEY }}
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p data
@@ -38,7 +39,8 @@ jobs:
             exit 1
           fi
 
-          echo "開始讀取 MOENV AQX_P_432..."
+          echo "開始下載環境部 AQX_P_432..."
+
           curl \
             --silent \
             --show-error \
@@ -52,12 +54,14 @@ jobs:
             "https://data.moenv.gov.tw/api/v2/aqx_p_432?api_key=${MOENV_API_KEY}&limit=1000&sort=publishtime%20desc" \
             -o data/aqx-p-432.json
 
-          echo "檢查 AQI JSON 格式與資料時間..."
+          echo "檢查 AQI JSON 格式..."
+
           python - <<'PY'
           import json
           from pathlib import Path
 
           path = Path("data/aqx-p-432.json")
+
           try:
               payload = json.loads(path.read_text(encoding="utf-8"))
           except Exception as exc:
@@ -73,7 +77,11 @@ jobs:
           if not isinstance(records, list) or not records:
               raise SystemExit("AQI 回傳沒有有效 records")
 
-          records = [row for row in records if isinstance(row, dict)]
+          records = [
+              row for row in records
+              if isinstance(row, dict)
+          ]
+
           if not records:
               raise SystemExit("AQI records 格式錯誤")
 
@@ -83,21 +91,63 @@ jobs:
               if row.get("publishtime")
           })
 
-          print(f"AQI records: {len(records)}")
-          print(f"最新 publishtime: {times[-1] if times else '資料未提供 publishtime'}")
+          print(f"AQI records：{len(records)}")
+          print(
+              "最新 publishtime："
+              + (times[-1] if times else "資料未提供 publishtime")
+          )
           PY
 
-      - name: Commit and push AQI data
+          # 保存已驗證的下載結果，避免同步 GitHub 時遺失。
+          cp data/aqx-p-432.json \
+            "$RUNNER_TEMP/aqx-p-432.json"
+
+          echo "AQI 資料驗證完成。"
+
+      - name: Commit and push AQI data safely
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
+
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add data/aqx-p-432.json
+          saved_file="$RUNNER_TEMP/aqx-p-432.json"
 
-          if git diff --cached --quiet; then
-            echo "AQI 檔案內容沒有變化，不需要 commit"
-          else
-            git commit -m "Update MOENV AQI data"
-            git push
+          if [ ! -s "$saved_file" ]; then
+            echo "::error::找不到已驗證的 AQI 資料"
+            exit 1
           fi
+
+          # 每次推送前先同步最新 main，再放回本次下載的 AQI。
+          for attempt in 1 2 3 4 5; do
+            echo "同步及推送嘗試：第 ${attempt} 次"
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            cp "$saved_file" data/aqx-p-432.json
+            git add data/aqx-p-432.json
+
+            if git diff --cached --quiet; then
+              echo "AQI 檔案內容沒有變化，不需要 commit"
+              exit 0
+            fi
+
+            git commit -m "Update MOENV AQI data"
+
+            if git push origin HEAD:main; then
+              echo "AQI 資料已成功推送至 main"
+              exit 0
+            fi
+
+            echo "推送未成功，將重新同步最新 main 後再試。"
+
+            if [ "$attempt" -lt 5 ]; then
+              sleep $((attempt * 4))
+            fi
+          done
+
+          echo "::error::重試 5 次仍無法推送 AQI 資料"
+          exit 1
