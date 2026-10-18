@@ -31,16 +31,16 @@ jobs:
           test -n "${CWA_API_KEY:-}" || { echo "::error::缺少 CWA_API_KEY Secret"; exit 1; }
           mkdir -p data
           tmp="$(mktemp)"
-          url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-093?_=$(date +%s%N)"
+          url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-093?Authorization=${CWA_API_KEY}&format=JSON&_=$(date +%s%N)"
           curl --fail-with-body --silent --show-error --location \
             --retry 5 --retry-all-errors --retry-delay 4 \
             --connect-timeout 30 --max-time 180 \
-            -H "Authorization: ${CWA_API_KEY}" \
             -H "Cache-Control: no-cache, no-store, max-age=0" \
             -H "Pragma: no-cache" "$url" -o "$tmp"
           python - "$tmp" <<'PY'
           import json,sys
           d=json.load(open(sys.argv[1],encoding="utf-8"))
+          if not isinstance(d,dict): raise SystemExit("官方 API 回傳不是 JSON 物件")
           groups=d.get("records",{}).get("Locations",[])
           if isinstance(groups,dict): groups=[groups]
           count=0
