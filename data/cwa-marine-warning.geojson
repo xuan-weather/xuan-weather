@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","name":"CWA official marine typhoon warning geometry","metadata":{"source":"中央氣象署 W-C0034-002 KMZ","generated_at_utc":"2026-10-18T14:48:20.873921+00:00","warning_geometry_count":0,"note":"若 count 為 0，代表 KMZ 內未找到可明確識別的警戒區域幾何；不以文字海域或固定座標代畫。"},"features":[]}
