@@ -1,28 +1,17 @@
-
 #!/usr/bin/env python3
-"""Fetch official ECMWF tropical-cyclone BUFR tracks and preserve published tracks."""
+"""Fetch official ECMWF tropical-cyclone BUFR tracks safely."""
 
 import json
 import subprocess
 import tempfile
+import time
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 OUT = Path("data/typhoon-model-tracks.json")
 
-REGION = {
-    "west": 108,
-    "south": 4,
-    "east": 145,
-    "north": 36,
-}
-
-SEARCH_REGION = {
-    "west": 95,
-    "south": -5,
-    "east": 160,
-    "north": 48,
-}
+REGION = {"west": 108, "south": 4, "east": 145, "north": 36}
+SEARCH_REGION = {"west": 95, "south": -5, "east": 160, "north": 48}
 
 MODELS = {
     "ECMWF IFS": {"model": "ifs", "stream": "oper"},
@@ -35,10 +24,7 @@ def candidate_cycles(now):
     """Try the latest six-hour cycle and recent previous cycles."""
     hour = (now.hour // 6) * 6
     latest = now.replace(
-        hour=hour,
-        minute=0,
-        second=0,
-        microsecond=0,
+        hour=hour, minute=0, second=0, microsecond=0
     )
     return [
         latest - timedelta(hours=back)
@@ -47,13 +33,11 @@ def candidate_cycles(now):
 
 
 def candidate_steps(model_name, cycle):
-    """Choose forecast steps without changing the existing IFS settings."""
+    """Keep the existing IFS forecast-step settings."""
     if model_name in ("ECMWF AIFS", "AIFS ENS"):
         return [360, 240, 144]
-
     if model_name == "ECMWF IFS" and cycle.hour in (6, 18):
         return [144]
-
     return [240]
 
 
@@ -62,17 +46,14 @@ def is_rate_limit_error(exc):
     return any(
         marker in message
         for marker in (
-            "503",
-            "429",
-            "slow down",
-            "too many requests",
-            "rate limit",
+            "503", "429", "slow down",
+            "too many requests", "rate limit",
         )
     )
 
 
 def download(cfg, model_name, cycle, target):
-    """Download a real ECMWF Open Data BUFR product."""
+    """Download an official ECMWF BUFR track product."""
     from ecmwf.opendata import Client
 
     errors = []
@@ -93,7 +74,6 @@ def download(cfg, model_name, cycle, target):
             args["model"] = cfg["model"]
 
         try:
-            # Keep retries finite so a throttled request cannot wait indefinitely.
             client = Client(
                 source="aws",
                 maximum_retries=2,
@@ -119,11 +99,11 @@ def download(cfg, model_name, cycle, target):
             errors.append(message)
             target.unlink(missing_ok=True)
 
-            # Do not keep requesting other steps after a rate-limit response.
             if is_rate_limit_error(exc):
+                # Stop trying other steps for this cycle.
+                # The caller will wait and then try an older cycle.
                 raise RuntimeError(message) from exc
 
-            # Other errors, including 404, can try the next candidate step.
             print(f"{model_name}: {message}")
 
     raise RuntimeError("; ".join(errors))
@@ -134,11 +114,9 @@ def entries(node):
     if isinstance(node, dict):
         if "key" in node:
             yield str(node["key"]), node.get("value")
-
         for value in node.values():
             if isinstance(value, (dict, list)):
                 yield from entries(value)
-
     elif isinstance(node, list):
         for value in node:
             if isinstance(value, (dict, list)):
@@ -153,10 +131,9 @@ def find_value(node, wanted):
 
 
 def centre_nodes(node, found=None):
-    """Find centre coordinates marked with meteorological significance 1."""
+    """Find centre coordinates with meteorological significance 1."""
     if found is None:
         found = []
-
     if not isinstance(node, (dict, list)):
         return found
 
@@ -166,39 +143,31 @@ def centre_nodes(node, found=None):
         if key == "meteorologicalAttributeSignificance"
     ]
     lats = [
-        value for key, value in pairs
-        if key == "latitude"
+        value for key, value in pairs if key == "latitude"
     ]
     lons = [
-        value for key, value in pairs
-        if key == "longitude"
+        value for key, value in pairs if key == "longitude"
     ]
 
     if sigs == [1] and len(lats) == 1 and len(lons) == 1:
         try:
-            lat = float(lats[0])
-            lon = float(lons[0])
-
+            lat, lon = float(lats[0]), float(lons[0])
             if -90 <= lat <= 90 and -360 <= lon <= 360:
                 found.append((lat, lon))
         except (TypeError, ValueError):
             pass
-
         return found
 
     children = node.values() if isinstance(node, dict) else node
-
     for child in children:
         if isinstance(child, (dict, list)):
             centre_nodes(child, found)
-
     return found
 
 
 def time_periods(message):
-    """Read non-negative forecast timePeriod values."""
+    """Read non-negative BUFR forecast timePeriod values."""
     values = []
-
     for key, value in entries(message):
         if key == "timePeriod":
             try:
@@ -207,20 +176,19 @@ def time_periods(message):
                     values.append(number)
             except (TypeError, ValueError):
                 continue
-
     return values
 
 
 def in_search_region(lat, lon):
-    region = SEARCH_REGION
+    r = SEARCH_REGION
     return (
-        region["south"] <= lat <= region["north"]
-        and region["west"] <= lon <= region["east"]
+        r["south"] <= lat <= r["north"]
+        and r["west"] <= lon <= r["east"]
     )
 
 
 def decode_bufr(path, model_name, cycle):
-    """Decode real BUFR data with ecCodes; do not invent track points."""
+    """Decode official BUFR data; never fabricate track points."""
     proc = subprocess.run(
         ["bufr_dump", "-j", "s", str(path)],
         text=True,
@@ -253,7 +221,6 @@ def decode_bufr(path, model_name, cycle):
     for message in messages:
         storm_id = find_value(message, "stormIdentifier")
         raw_name = find_value(message, "longStormName")
-
         storm_name = str(
             raw_name or storm_id or "Unnamed storm"
         ).strip()
@@ -264,14 +231,12 @@ def decode_bufr(path, model_name, cycle):
         if len(centres) < 2:
             continue
 
-        # The first centre is the initial point; later leads come from BUFR.
         leads = [0] + periods
         count = min(len(centres), len(leads))
         points = []
 
         for (lat, lon), lead in zip(centres[:count], leads[:count]):
             lon = ((lon + 180) % 360) - 180
-
             point = {
                 "lat": round(lat, 3),
                 "lon": round(lon, 3),
@@ -292,15 +257,13 @@ def decode_bufr(path, model_name, cycle):
             continue
 
         decoded_count += 1
-
         if not any(
-            in_search_region(point["lat"], point["lon"])
-            for point in points
+            in_search_region(p["lat"], p["lon"])
+            for p in points
         ):
             continue
 
         regional_count += 1
-
         tracks.append({
             "model": model_name,
             "stormId": str(storm_id) if storm_id else None,
@@ -322,19 +285,17 @@ def same_path(track_a, track_b):
 
     if len(points_a) < 4 or len(points_b) < 4:
         return False
-
     if track_a.get("cycleTime") != track_b.get("cycleTime"):
         return False
 
     coords_a = {
-        (round(point["lat"], 1), round(point["lon"], 1))
-        for point in points_a
+        (round(p["lat"], 1), round(p["lon"], 1))
+        for p in points_a
     }
     coords_b = {
-        (round(point["lat"], 1), round(point["lon"], 1))
-        for point in points_b
+        (round(p["lat"], 1), round(p["lon"], 1))
+        for p in points_b
     }
-
     overlap = len(coords_a & coords_b)
 
     return (
@@ -344,14 +305,12 @@ def same_path(track_a, track_b):
 
 
 def deduplicate_tracks(tracks):
-    """Remove duplicate lines without removing unrelated model tracks."""
     result = []
 
     for track in tracks:
         duplicate_index = next(
             (
-                index
-                for index, kept in enumerate(result)
+                i for i, kept in enumerate(result)
                 if kept.get("model") == track.get("model")
                 and same_path(kept, track)
             ),
@@ -363,7 +322,6 @@ def deduplicate_tracks(tracks):
             continue
 
         old = result[duplicate_index]
-
         old_named = bool(
             old.get("stormName")
             and old.get("stormName") != old.get("stormId")
@@ -387,26 +345,20 @@ def deduplicate_tracks(tracks):
 
 
 def load_existing_data():
-    """Load the currently published JSON so existing IFS tracks are retained."""
+    """Read the published JSON before attempting to update it."""
     if not OUT.exists():
         return {"tracks": [], "models": {}}
 
     try:
         data = json.loads(OUT.read_text(encoding="utf-8"))
-
         if not isinstance(data, dict):
             raise ValueError("Existing JSON is not an object")
-
         if not isinstance(data.get("tracks"), list):
             data["tracks"] = []
-
         if not isinstance(data.get("models"), dict):
             data["models"] = {}
-
         return data
-
     except (OSError, json.JSONDecodeError, ValueError) as exc:
-        # Do not silently overwrite a broken existing file.
         raise RuntimeError(
             f"Cannot safely read existing {OUT}: {exc}"
         ) from exc
@@ -416,7 +368,7 @@ def main():
     now = datetime.now(timezone.utc)
     previous = load_existing_data()
 
-    # Start with the published tracks; new real tracks are merged later.
+    # Start with the published tracks so a failed refresh cannot erase them.
     result = {
         "updatedAt": now.isoformat(),
         "region": previous.get("region", REGION),
@@ -449,11 +401,9 @@ def main():
 
                 try:
                     step = download(cfg, name, cycle, path)
-
                     tracks, decoded_count, regional_count = decode_bufr(
                         path, name, cycle
                     )
-
                     result["tracks"].extend(tracks)
 
                     state = {
@@ -472,12 +422,9 @@ def main():
                                 "display region"
                             )
                         ),
-                        "cycleTime": cycle.strftime(
-                            "%Y-%m-%dT%H:%M:%SZ"
-                        ),
+                        "cycleTime": cycle.strftime("%Y-%m-%dT%H:%M:%SZ"),
                         "source": "ECMWF Open Data",
                     }
-
                     fetched = True
                     break
 
@@ -489,22 +436,25 @@ def main():
                     errors.append(message)
                     print(f"{name}: {message}")
 
-                                if is_rate_limit_error(exc):
-                import time
-                print(f"{name}: 伺服器限流，等待 15 秒後繼續嘗試較早時次")
-                time.sleep(15)
-                continue
+                    if is_rate_limit_error(exc):
+                        print(
+                            f"{name}: ECMWF 伺服器限流，"
+                            "等待 15 秒後嘗試較早時次"
+                        )
+                        time.sleep(15)
+
+                    # Continue to the next older cycle.
+                    continue
 
             if not fetched:
                 if previous_track_count > 0:
-                    # Keep the old model status and tracks if refresh fails.
+                    # Keep previous model status and tracks if refresh fails.
                     state = dict(previous_state)
                     state["message"] = (
                         "本次更新失敗，保留先前已發布路徑。"
                         + (
                             " 最近錯誤：" + " | ".join(errors[-2:])
-                            if errors
-                            else ""
+                            if errors else ""
                         )
                     )
                 else:
@@ -518,7 +468,7 @@ def main():
             result["models"][name] = state
             print(f"{name}: {state['status']} — {state['message']}")
 
-    # Preserve existing tracks and add only tracks decoded from official BUFR.
+    # Keep existing routes and add only tracks decoded from official BUFR.
     result["tracks"] = deduplicate_tracks(result["tracks"])
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(
@@ -527,8 +477,7 @@ def main():
     )
 
     print(
-        f"Wrote {OUT}: "
-        f"{len(result['tracks'])} regional track(s)"
+        f"Wrote {OUT}: {len(result['tracks'])} regional track(s)"
     )
 
 
