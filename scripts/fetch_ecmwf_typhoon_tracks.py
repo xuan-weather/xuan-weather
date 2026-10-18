@@ -23,6 +23,13 @@ def candidate_cycles(now):
 
 
 def candidate_steps(model_name, cycle):
+    # ECMWF's official Open Data catalogue lists AIFS Single and AIFS ENS
+    # tropical-cyclone BUFR tracks up to step 360 for all 00/06/12/18 UTC runs.
+    # The previous step=240 request returned 404 for AIFS products. Try the
+    # documented maximum first, then fall back to shorter steps only if needed.
+    if model_name in ("ECMWF AIFS", "AIFS ENS"):
+        return [360, 240, 144]
+    # Keep the existing, working IFS behavior unchanged.
     if model_name == "ECMWF IFS" and cycle.hour in (6, 18):
         return [144]
     return [240]
@@ -73,7 +80,7 @@ def find_value(node, wanted):
 
 
 def centre_nodes(node, found=None):
-    """Return only the smallest nodes that carry significance=1 and one centre coordinate pair."""
+    """Return smallest nodes carrying significance=1 and one centre coordinate pair."""
     if found is None:
         found = []
     if not isinstance(node, (dict, list)):
@@ -98,7 +105,7 @@ def centre_nodes(node, found=None):
 
 
 def time_periods(message):
-    """Read forecast lead hours from BUFR timePeriod values in their encoded order."""
+    """Read forecast lead hours from BUFR timePeriod values in encoded order."""
     values = []
     for key, value in entries(message):
         if key == "timePeriod":
@@ -137,8 +144,7 @@ def decode_bufr(path, model_name, cycle):
             continue
 
         # In this BUFR product, the first centre is the analysis/initial point (lead 0);
-        # the following timePeriod entries describe subsequent forecast points. Refuse to
-        # invent missing times; keep only the number of points for which a lead is known.
+        # following timePeriod entries describe subsequent forecast points. Never invent times.
         leads = [0] + periods
         count = min(len(centres), len(leads))
         points = []
@@ -177,12 +183,12 @@ def same_path(a, b):
 def deduplicate_tracks(tracks):
     result = []
     for track in tracks:
-        duplicate_index = next((i for i, kept in enumerate(result) if kept.get("model") == track.get("model") and same_path(kept, track)), None)
+        duplicate_index = next((i for i, kept in enumerate(result)
+                                if kept.get("model") == track.get("model") and same_path(kept, track)), None)
         if duplicate_index is None:
             result.append(track)
             continue
         old = result[duplicate_index]
-        # Prefer the named storm record; otherwise keep the track with more points.
         old_named = bool(old.get("stormName") and old.get("stormName") != old.get("stormId"))
         new_named = bool(track.get("stormName") and track.get("stormName") != track.get("stormId"))
         if (new_named and not old_named) or (new_named == old_named and len(track.get("points", [])) > len(old.get("points", []))):
@@ -206,7 +212,9 @@ def main():
                     result["tracks"].extend(tracks)
                     state = {
                         "status": "available" if regional_count else "no_regional_tracks",
-                        "message": (f"Parsed {regional_count} regional storm track(s) from BUFR (step={step}h)" if regional_count else f"BUFR decoded ({decoded_count} storm record(s)), but none intersect the display region"),
+                        "message": (f"Parsed {regional_count} regional storm track(s) from BUFR (step={step}h)"
+                                    if regional_count else
+                                    f"BUFR decoded ({decoded_count} storm record(s)), but none intersect the display region"),
                         "cycleTime": cycle.strftime("%Y-%m-%dT%H:%M:%SZ"), "source": "ECMWF Open Data",
                     }
                     break
@@ -215,7 +223,7 @@ def main():
             if errors and state["status"] == "unavailable":
                 state["message"] = "No product retrieved from recent cycles. Last errors: " + " | ".join(errors[-2:])
             result["models"][name] = state
-            print(f"{name}: {state['status']} â {state['message']}")
+            print(f"{name}: {state['status']} — {state['message']}")
 
     result["tracks"] = deduplicate_tracks(result["tracks"])
     OUT.parent.mkdir(parents=True, exist_ok=True)
