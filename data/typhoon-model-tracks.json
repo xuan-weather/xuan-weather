@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-18T09:19:03.190492+00:00",
+  "updatedAt": "2026-10-18T09:26:42.654951+00:00",
   "region": {
     "west": 108,
     "south": 4,
@@ -140,6 +140,224 @@
           "leadHours": 144
         }
       ]
+    },
+    {
+      "model": "ECMWF AIFS",
+      "stormId": "36W",
+      "stormName": "CHAMPI",
+      "cycleTime": "2026-10-18T00:00:00Z",
+      "source": "https://www.ecmwf.int/en/forecasts/datasets/open-data",
+      "points": [
+        {
+          "lat": 13.1,
+          "lon": 143.5,
+          "leadHours": 0
+        },
+        {
+          "lat": 13.3,
+          "lon": 142.3,
+          "leadHours": 6
+        },
+        {
+          "lat": 13.6,
+          "lon": 141.4,
+          "leadHours": 12
+        },
+        {
+          "lat": 13.6,
+          "lon": 140.3,
+          "leadHours": 18
+        },
+        {
+          "lat": 14.2,
+          "lon": 139.2,
+          "leadHours": 24
+        },
+        {
+          "lat": 14.7,
+          "lon": 138.3,
+          "leadHours": 30
+        },
+        {
+          "lat": 15.0,
+          "lon": 137.5,
+          "leadHours": 36
+        },
+        {
+          "lat": 15.6,
+          "lon": 136.4,
+          "leadHours": 42
+        },
+        {
+          "lat": 15.9,
+          "lon": 135.5,
+          "leadHours": 48
+        },
+        {
+          "lat": 16.4,
+          "lon": 134.4,
+          "leadHours": 54
+        },
+        {
+          "lat": 16.7,
+          "lon": 133.3,
+          "leadHours": 60
+        },
+        {
+          "lat": 17.3,
+          "lon": 131.9,
+          "leadHours": 66
+        },
+        {
+          "lat": 17.8,
+          "lon": 130.7,
+          "leadHours": 72
+        },
+        {
+          "lat": 18.4,
+          "lon": 129.6,
+          "leadHours": 78
+        },
+        {
+          "lat": 19.0,
+          "lon": 128.5,
+          "leadHours": 84
+        },
+        {
+          "lat": 19.5,
+          "lon": 127.6,
+          "leadHours": 90
+        },
+        {
+          "lat": 19.8,
+          "lon": 127.1,
+          "leadHours": 96
+        },
+        {
+          "lat": 20.1,
+          "lon": 126.5,
+          "leadHours": 102
+        },
+        {
+          "lat": 20.4,
+          "lon": 125.7,
+          "leadHours": 108
+        },
+        {
+          "lat": 21.2,
+          "lon": 125.1,
+          "leadHours": 114
+        },
+        {
+          "lat": 21.8,
+          "lon": 124.5,
+          "leadHours": 120
+        },
+        {
+          "lat": 22.3,
+          "lon": 123.7,
+          "leadHours": 126
+        },
+        {
+          "lat": 23.2,
+          "lon": 122.9,
+          "leadHours": 132
+        },
+        {
+          "lat": 24.0,
+          "lon": 121.7,
+          "leadHours": 138
+        },
+        {
+          "lat": 23.5,
+          "lon": 121.7,
+          "leadHours": 144
+        },
+        {
+          "lat": 24.9,
+          "lon": 120.6,
+          "leadHours": 150
+        },
+        {
+          "lat": 25.0,
+          "lon": 120.4,
+          "leadHours": 156
+        },
+        {
+          "lat": 25.2,
+          "lon": 119.8,
+          "leadHours": 162
+        },
+        {
+          "lat": 25.7,
+          "lon": 119.5,
+          "leadHours": 168
+        },
+        {
+          "lat": 26.0,
+          "lon": 119.5,
+          "leadHours": 174
+        }
+      ]
+    },
+    {
+      "model": "AIFS ENS",
+      "stormId": "77W",
+      "stormName": "77W",
+      "cycleTime": "2026-10-18T00:00:00Z",
+      "source": "https://www.ecmwf.int/en/forecasts/datasets/open-data",
+      "points": [
+        {
+          "lat": 19.0,
+          "lon": 174.0,
+          "leadHours": 0
+        },
+        {
+          "lat": 19.8,
+          "lon": 171.5,
+          "leadHours": 6
+        },
+        {
+          "lat": 19.2,
+          "lon": 169.8,
+          "leadHours": 12
+        },
+        {
+          "lat": 19.0,
+          "lon": 168.4,
+          "leadHours": 18
+        },
+        {
+          "lat": 19.5,
+          "lon": 166.9,
+          "leadHours": 24
+        },
+        {
+          "lat": 19.8,
+          "lon": 165.9,
+          "leadHours": 30
+        },
+        {
+          "lat": 20.4,
+          "lon": 163.9,
+          "leadHours": 36
+        },
+        {
+          "lat": 20.1,
+          "lon": 161.7,
+          "leadHours": 42
+        },
+        {
+          "lat": 20.4,
+          "lon": 159.8,
+          "leadHours": 48
+        },
+        {
+          "lat": 20.9,
+          "lon": 158.3,
+          "leadHours": 54
+        }
+      ]
     }
   ],
   "models": {
@@ -150,12 +368,16 @@
       "source": "ECMWF Open Data"
     },
     "ECMWF AIFS": {
-      "status": "unavailable",
-      "message": "No product retrieved from recent cycles. Last errors: 2026-10-18 06Z: RuntimeError: step=240: HTTPError: 503 Server Error: Slow Down for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261018/06z/aifs-single/0p25/oper/20261018060000-240h-oper-tf.bufr"
+      "status": "available",
+      "message": "Parsed 2 regional storm track(s) from BUFR (step=360h)",
+      "cycleTime": "2026-10-18T00:00:00Z",
+      "source": "ECMWF Open Data"
     },
     "AIFS ENS": {
-      "status": "unavailable",
-      "message": "No product retrieved from recent cycles. Last errors: 2026-10-18 06Z: RuntimeError: step=144: HTTPError: 503 Server Error: Slow Down for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261018/06z/aifs-ens/0p25/enfo/20261018060000-144h-enfo-tf.bufr"
+      "status": "available",
+      "message": "Parsed 1 regional storm track(s) from BUFR (step=360h)",
+      "cycleTime": "2026-10-18T00:00:00Z",
+      "source": "ECMWF Open Data"
     }
   }
 }
