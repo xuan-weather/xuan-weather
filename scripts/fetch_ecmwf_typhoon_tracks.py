@@ -223,8 +223,13 @@ def main():
                         "cycleTime": cycle.strftime("%Y-%m-%dT%H:%M:%SZ"), "source": "ECMWF Open Data",
                     }
                     break
-                except Exception as exc:
-                    errors.append(f"{cycle:%Y-%m-%d %HZ}: {type(exc).__name__}: {exc}")
+                        except Exception as exc:
+            message = f"step={step}: {type(exc).__name__}: {exc}"
+            errors.append(message)
+
+            if any(code in str(exc) for code in ("503", "429", "Slow Down")):
+                target.unlink(missing_ok=True)
+                raise RuntimeError(message) from exc
             if errors and state["status"] == "unavailable":
                 state["message"] = "No product retrieved from recent cycles. Last errors: " + " | ".join(errors[-2:])
             result["models"][name] = state
