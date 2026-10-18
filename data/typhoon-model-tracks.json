@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-18T04:38:51.817638+00:00",
+  "updatedAt": "2026-10-18T09:19:03.190492+00:00",
   "region": {
     "west": 108,
     "south": 4,
@@ -151,11 +151,11 @@
     },
     "ECMWF AIFS": {
       "status": "unavailable",
-      "message": "No product retrieved from recent cycles. Last errors: 2026-10-17 00Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261017/00z/aifs-single/0p25/oper/20261017000000-240h-oper-tf.bufr | 2026-10-16 18Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261016/18z/aifs-single/0p25/oper/20261016180000-240h-oper-tf.bufr"
+      "message": "No product retrieved from recent cycles. Last errors: 2026-10-18 06Z: RuntimeError: step=240: HTTPError: 503 Server Error: Slow Down for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261018/06z/aifs-single/0p25/oper/20261018060000-240h-oper-tf.bufr"
     },
     "AIFS ENS": {
       "status": "unavailable",
-      "message": "No product retrieved from recent cycles. Last errors: 2026-10-17 00Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261017/00z/aifs-ens/0p25/enfo/20261017000000-240h-enfo-tf.bufr | 2026-10-16 18Z: RuntimeError: step=240: HTTPError: 404 Client Error: Not Found for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261016/18z/aifs-ens/0p25/enfo/20261016180000-240h-enfo-tf.bufr"
+      "message": "No product retrieved from recent cycles. Last errors: 2026-10-18 06Z: RuntimeError: step=144: HTTPError: 503 Server Error: Slow Down for url: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com/20261018/06z/aifs-ens/0p25/enfo/20261018060000-144h-enfo-tf.bufr"
     }
   }
 }
