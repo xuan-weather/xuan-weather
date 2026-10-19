@@ -1,34 +1,20 @@
 {
-  "updatedAt": "2026-10-19T14:52:53.759667+08:00",
+  "updatedAt": "2026-10-19T22:16:35.000517+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
     {
-      "id": "CWA-Weather_heat_202610191430001",
+      "id": "CWA-Weather_heat_202610191712001",
       "category": "高溫",
       "title": "高溫",
       "status": "Actual",
       "msgType": "Update",
       "author": "中央氣象署",
-      "updated": "2026-10-19T14:30:36+08:00",
-      "effective": "2026/10/19 下午 02:28:00",
-      "expires": "2026/10/19 下午 05:00:00",
-      "summary": "天氣高溫炎熱，今(19)日中午前後新北市、桃園市、臺中市為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610191430.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_heat_202610181724001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-10-18T17:24:34+08:00",
-      "effective": "2026/10/18 下午 05:22:00",
-      "expires": "2026/10/19 下午 05:00:00",
-      "summary": "天氣高溫炎熱，明(19)日中午前後臺中市、臺南市、屏東縣為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610181724.cap",
+      "updated": "2026-10-19T17:12:23+08:00",
+      "effective": "2026/10/19 下午 05:11:00",
+      "expires": "2026/10/20 下午 05:00:00",
+      "summary": "天氣高溫炎熱，明(20)日中午前後新北市為黃色燈號，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610191712.cap",
       "isDrill": false
     }
   ]
