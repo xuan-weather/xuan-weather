@@ -1,20 +1,20 @@
 {
-  "updatedAt": "2026-10-21T01:45:32.582939+08:00",
+  "updatedAt": "2026-10-21T04:54:57.459371+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
     {
-      "id": "CWA-Weather_strong-wind_202610202228001",
+      "id": "CWA-Weather_strong-wind_202610210437001",
       "category": "強風",
       "title": "強風",
       "status": "Actual",
       "msgType": "Update",
       "author": "中央氣象署",
-      "updated": "2026-10-20T22:28:09+08:00",
-      "effective": "2026/10/20 下午 10:25:00",
+      "updated": "2026-10-21T04:37:18+08:00",
+      "effective": "2026/10/21 上午 04:35:00",
       "expires": "2026/10/21 下午 11:00:00",
-      "summary": "東北風增強，明(21)日上午至晚上新北市、桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、雲林縣、嘉義縣、臺南市、屏東縣、臺東縣(含蘭嶼、綠島)、澎湖縣、金門縣、連江縣局部地區將有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610202228.cap",
+      "summary": "東北風增強，21日上午至晚上新北市、桃園市、新竹市、新竹縣、苗栗縣、臺中市、彰化縣、雲林縣、嘉義縣、臺南市、屏東縣、臺東縣(含蘭嶼、綠島)、澎湖縣、金門縣、連江縣局部地區將有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意。",
+      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610210437.cap",
       "isDrill": false
     },
     {
