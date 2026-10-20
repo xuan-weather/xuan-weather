@@ -3,10 +3,10 @@
   "site": "taiwanweather.goatcounter.com",
   "timezone": "Asia/Taipei",
   "date_taipei": "2026-10-20",
-  "cumulative_visits": 252,
-  "today_visits": 0,
-  "total_pageviews": 252,
+  "cumulative_visits": 253,
+  "today_visits": 1,
+  "total_pageviews": 253,
   "today_start_taipei": "2026-10-20T00:00:00+08:00",
-  "stats_through_taipei": "2026-10-20T06:00:00+08:00",
-  "updated_at": "2026-10-19T22:17:21+00:00"
+  "stats_through_taipei": "2026-10-20T08:00:00+08:00",
+  "updated_at": "2026-10-20T00:15:30+00:00"
 }
