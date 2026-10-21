@@ -1993,10 +1993,10 @@
         "wind_speed": "",
         "wind_direc": "",
         "publishtime": "2026\/10\/21 09:00:00",
-        "co_8hr": "",
+        "co_8hr": "0.2",
         "pm2.5_avg": "",
         "pm10_avg": "",
-        "so2_avg": "",
+        "so2_avg": "1",
         "longitude": "120.26964",
         "latitude": "23.85493",
         "siteid": "85"
