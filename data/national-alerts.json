@@ -1,22 +1,8 @@
 {
-  "updatedAt": "2026-10-21T15:30:15.860374+08:00",
+  "updatedAt": "2026-10-21T21:09:45.658965+08:00",
   "source": "NCDR 民生示警公開資料平台",
   "feed": "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
   "alerts": [
-    {
-      "id": "CWA-Weather_heat_202610211125001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-10-21T11:25:49+08:00",
-      "effective": "2026/10/21 上午 11:25:00",
-      "expires": "2026/10/21 下午 05:00:00",
-      "summary": "天氣高溫炎熱，今(21)日中午前後南投縣、臺南市、高雄市、屏東縣為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610211125.cap",
-      "isDrill": false
-    },
     {
       "id": "CWA-Weather_strong-wind_202610211055001",
       "category": "強風",
@@ -29,20 +15,6 @@
       "expires": "2026/10/22 下午 11:00:00",
       "summary": "颱風外圍環流影響及東北風明顯偏強，21日上午至22日晚上蘭嶼、綠島、臺中市、澎湖縣局部地區有平均風9級以上或陣風11級以上發生的機率(橙色燈號)，基隆市、新北市、桃園市、新竹市、苗栗縣、彰化縣、雲林縣、嘉義縣、臺南市、屏東縣、宜蘭縣、花蓮縣、臺東縣、金門縣、連江縣局部地區有平均風6級以上或陣風8級以上發生的機率(黃色燈號)，請注意防範。",
       "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/Weather_warnings_WIND/fifows_strong-wind_202610211055.cap",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_heat_202610201727001",
-      "category": "高溫",
-      "title": "高溫",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-10-20T17:27:40+08:00",
-      "effective": "2026/10/20 下午 05:26:00",
-      "expires": "2026/10/21 下午 05:00:00",
-      "summary": "天氣高溫炎熱，明(21)日中午前後南投縣地區、臺南市地區、高雄市地區、屏東縣地區為黃色燈號，請注意。",
-      "link": "https://alerts.ncdr.nat.gov.tw/Capstorage/CWA/2026/heatWave/fifows_heat_202610201727.cap",
       "isDrill": false
     }
   ]
