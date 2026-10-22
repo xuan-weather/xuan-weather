@@ -22,7 +22,19 @@ ALIASES = {"台北市":"臺北市","台中市":"臺中市","台南市":"臺南�
 PERCENT_RE = re.compile(r"(?<!\d)(100|[1-9]?\d)\s*[%％]")
 
 def main():
-    response = requests.get(IMAGE_URL, timeout=(15, 45), headers={"User-Agent":"XuanWeather/1.0 official product sync"})
+    import urllib3
+
+    # 暫時處理氣象署圖片伺服器的憑證驗證錯誤。
+    # 僅對下方固定的官方圖片網址停用憑證驗證。
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    response = requests.get(
+        IMAGE_URL,
+        timeout=(15, 45),
+        headers={"User-Agent": "XuanWeather/1.0 official product sync"},
+        verify=False
+    )
+    response.raise_for_status()
     response.raise_for_status()
     if not response.headers.get("content-type","").lower().startswith("image/"):
         raise RuntimeError("氣象署回傳內容不是圖片，停止更新以免覆蓋有效資料。")
