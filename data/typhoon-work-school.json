@@ -1,24 +1,24 @@
 {
   "sourceName": "行政院人事行政總處",
   "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31",
-  "updatedAt": "2026-10-22T09:20:16.406965+00:00",
+  "updatedAt": "2026-10-22T14:36:45.941124+00:00",
   "announcements": [
     {
       "county": "臺北市",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "臺北市；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "新北市",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "新北市；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
@@ -27,61 +27,61 @@
       "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "桃園市；桃園市復興區巴崚國民小學、三光國民小學、光華國民小學、高義國民小學:今天下午01:00起停止上班、停止上課。 復興區立幼兒園華陵分班:今天中午12:00起照常上班、停止上課。",
+      "summary": "桃園市；明天停止上班、停止上課。 桃園市復興區巴崚國民小學、三光國民小學、光華國民小學、高義國民小學:今天下午01:00起停止上班、停止上課。 復興區立幼兒園華陵分班:今天中午12:00起照常上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "臺中市",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "臺中市；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "臺南市",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "臺南市；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "高雄市",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "高雄市；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "基隆市",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "北部地區；基隆市；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "新竹市",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "新竹市；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "嘉義市",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "南部地區；嘉義市；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
@@ -90,70 +90,70 @@
       "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "新竹縣；尖石鄉玉峰國民小學:今天下午04:00起停止上班、停止上課。 尖石鄉玉峰國民小學:明天停止上班、停止上課。 尖石鄉石磊國民小學:今天下午04:00起停止上班、停止上課。 尖石鄉石磊國民小學:明天停止上班、停止上課。 尖石鄉秀巒國民小學（含田埔分校）:今天下午04:00起停止上班、停止上課。 尖石鄉秀巒國民小學（含田埔分校）:明天停止上班、停止上課。 尖石鄉新光國民小學:今天下午04:00起停止上班、停止上課。 尖石鄉新光國民小學:明天停止上班、停止上課。",
+      "summary": "新竹縣；明天停止上班、停止上課。 尖石鄉玉峰國民小學:今天下午04:00起停止上班、停止上課。 尖石鄉石磊國民小學:今天下午04:00起停止上班、停止上課。 尖石鄉秀巒國民小學（含田埔分校）:今天下午04:00起停止上班、停止上課。 尖石鄉新光國民小學:今天下午04:00起停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "苗栗縣",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "中部地區；苗栗縣；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "彰化縣",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "彰化縣；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "南投縣",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "南投縣；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "雲林縣",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "雲林縣；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "嘉義縣",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "嘉義縣；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "屏東縣",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "屏東縣；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "宜蘭縣",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "東部地區；宜蘭縣；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
@@ -162,7 +162,7 @@
       "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "花蓮縣；豐濱鄉:今天下午01:00起停止上班、停止上課。",
+      "summary": "花蓮縣；明天停止上班、停止上課。 豐濱鄉:今天下午01:00起停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
@@ -171,34 +171,34 @@
       "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "臺東縣；綠島鄉:今天下午停止上班、停止上課。 蘭嶼鄉:今天下午停止上班、停止上課。",
+      "summary": "臺東縣；綠島鄉:今天下午停止上班、停止上課。 綠島鄉:明天停止上班、停止上課。 蘭嶼鄉:今天下午停止上班、停止上課。 蘭嶼鄉:明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "澎湖縣",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "外島地區；澎湖縣；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "金門縣",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "normal",
+      "school": "normal",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "金門縣；明天照常上班、照常上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
       "county": "連江縣",
-      "work": "unknown",
-      "school": "unknown",
+      "work": "stop",
+      "school": "stop",
       "date": "—",
       "publishedAt": "",
-      "summary": "官方頁面未找到此縣市的可辨識公告項目，請查看原始公告。",
+      "summary": "連江縣；明天停止上班、停止上課。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     }
   ]
