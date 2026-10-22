@@ -1,6 +1,9 @@
 name: MOENV AQI Data
 
 on:
+  # GitHub Actions 使用 UTC；每小時第 5 分鐘執行，台灣時間也會是每小時 xx:05。
+  schedule:
+    - cron: '5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -42,10 +45,11 @@ jobs:
             --show-error \
             --fail \
             --location \
-            --connect-timeout 20 \
-            --max-time 90 \
-            --retry 3 \
-            --retry-delay 5 \
+            --connect-timeout 30 \
+            --max-time 120 \
+            --retry 5 \
+            --retry-all-errors \
+            --retry-delay 10 \
             -H "Authorization: Bearer ${MOENV_API_KEY}" \
             "https://data.moenv.gov.tw/api/v2/aqx_p_432?api_key=${MOENV_API_KEY}&limit=1000&sort=publishtime%20desc" \
             -o data/aqx-p-432.json
