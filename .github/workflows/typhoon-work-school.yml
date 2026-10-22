@@ -1,0 +1,45 @@
+name: Sync official work-school suspension notices
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+  push:
+    paths:
+      - 'fetch_typhoon_work_school.py'
+      - '.github/workflows/typhoon-work-school.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-work-school-notices
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch and parse official DGPA notices
+        run: python fetch_typhoon_work_school.py
+
+      - name: Commit updated JSON when changed
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/typhoon-work-school.json
+          if git diff --cached --quiet; then
+            echo 'Official notice JSON unchanged.'
+          else
+            git commit -m 'chore: sync official work-school suspension notices'
+            git push
+          fi
