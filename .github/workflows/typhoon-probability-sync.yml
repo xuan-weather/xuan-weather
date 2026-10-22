@@ -1,0 +1,50 @@
+name: Sync CWA Typhoon Probability Map OCR
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-typhoon-probability
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install OCR dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-chi-tra
+          python -m pip install --upgrade pip
+          python -m pip install requests pillow pytesseract numpy rapidocr_onnxruntime
+
+      - name: Verify OCR dependencies
+        run: |
+          python -c "import numpy; print('numpy:', numpy.__version__)"
+          python -c "import pytesseract; print('Tesseract wrapper: OK')"
+          python -c "from PIL import Image; print('Pillow: OK')"
+          python -c "from rapidocr_onnxruntime import RapidOCR; print('RapidOCR: OK')"
+
+      - name: Fetch official CWA map and extract exact city percentages
+        run: python scripts/fetch_typhoon_probability.py
+
+      - name: Commit updated JSON if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/typhoon-probability.json
+          if git diff --cached --quiet; then
+            echo "No JSON changes to commit."
+          else
+            git commit -m "chore: sync exact CWA typhoon probability data"
+            git push
+          fi
