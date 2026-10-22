@@ -2,11 +2,11 @@
   "source": "GoatCounter",
   "site": "taiwanweather.goatcounter.com",
   "timezone": "Asia/Taipei",
-  "date_taipei": "2026-10-22",
+  "date_taipei": "2026-10-23",
   "cumulative_visits": 259,
-  "today_visits": 2,
+  "today_visits": 0,
   "total_pageviews": 259,
-  "today_start_taipei": "2026-10-22T00:00:00+08:00",
-  "stats_through_taipei": "2026-10-22T23:00:00+08:00",
-  "updated_at": "2026-10-22T15:08:51+00:00"
+  "today_start_taipei": "2026-10-23T00:00:00+08:00",
+  "stats_through_taipei": "2026-10-23T03:00:00+08:00",
+  "updated_at": "2026-10-22T19:59:27+00:00"
 }
