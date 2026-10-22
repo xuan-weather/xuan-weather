@@ -60,126 +60,95 @@ def main():
     image = Image.open(BytesIO(r.content)).convert('RGB')
     if image.width < 200 or image.height < 200:
         raise RuntimeError(f'官方圖尺寸異常：{image.size}')
-    # OCR the actual official graphic. CWA map labels often merge city names
-    # and percentages into one OCR token (e.g. "新北市基隆市100%"), so parse
-    # both individual words and reconstructed text lines rather than requiring
-    # exact city-name and percentage tokens.
-    scale = 3
-    original_size = image.size
+    # OCR official graphic with multiple preprocessing modes and geometric matching.
+    # City labels and percentages may be on separate OCR lines, so match nearby tokens.
+    scale = 4
     enlarged = image.resize((image.width * scale, image.height * scale))
     gray = ImageOps.grayscale(enlarged)
-    gray = ImageEnhance.Contrast(gray).enhance(1.8)
-    gray = ImageEnhance.Sharpness(gray).enhance(2)
-
-    # Keep the image OCR-only; do not infer values from colors or fill missing values.
-    city_patterns = sorted(CITIES, key=len, reverse=True)
-    city_regex = re.compile("|".join(re.escape(c) for c in city_patterns))
-    percent_regex = re.compile(r"(?<!\d)(100|[1-9]?\d)\s*%?")
+    gray = ImageEnhance.Contrast(gray).enhance(2.2)
+    gray = ImageEnhance.Sharpness(gray).enhance(2.0)
+    city_regex = re.compile("|".join(re.escape(c) for c in sorted(CITIES, key=len, reverse=True)))
+    percent_regex = re.compile(r"(?<!\d)(100|[1-9]?\d)\s*[%％]")
     detections = {}
 
-    def add_detection(city, percent, x, y, confidence):
-        if city not in CITIES or not (0 <= percent <= 100) or confidence < 10:
-            return
-        # Keep the strongest reading for a city, but prefer confidence over position.
-        old = detections.get(city)
-        score = confidence
-        if old is None or score > old["score"]:
-            detections[city] = {
-                "percent": int(percent), "score": score,
-                "x": float(x), "y": float(y)
-            }
+    def clean_text(value):
+        return re.sub(r"[\s·•,，。:：;；]", "", str(value or "")).replace("台", "臺")
 
-    # Several page segmentation modes help when the official map layout changes.
-    for psm in (11, 6, 12):
-        data = pytesseract.image_to_data(
-            gray, lang="chi_tra+eng",
-            config=f"--psm {psm}",
-            output_type=Output.DICT
-        )
-        lines = {}
-        n = len(data.get("text", []))
-        for i in range(n):
-            raw = (data["text"][i] or "").strip()
-            if not raw:
-                continue
-            try:
-                conf = float(data["conf"][i])
-            except (TypeError, ValueError):
-                conf = -1
-            x0 = float(data["left"][i]) / scale
-            y0 = float(data["top"][i]) / scale
-            w0 = float(data["width"][i]) / scale
-            h0 = float(data["height"][i]) / scale
-            key = (data.get("page_num", [1]*n)[i],
-                   data.get("block_num", [0]*n)[i],
-                   data.get("par_num", [0]*n)[i],
-                   data.get("line_num", [0]*n)[i])
-            lines.setdefault(key, []).append({
-                "text": re.sub(r"\s+", "", raw),
-                "x": x0 + w0/2, "y": y0 + h0/2,
-                "left": x0, "right": x0+w0,
-                "conf": conf
-            })
-
-        for tokens in lines.values():
-            tokens.sort(key=lambda t: t["left"])
-            line_text = "".join(t["text"] for t in tokens)
-            if not line_text:
-                continue
-
-            # Locate city labels and percentage strings in the reconstructed line.
-            city_hits = []
-            for match in city_regex.finditer(line_text):
-                city_hits.append((norm(match.group(0)), match.start(), match.end()))
-            percent_hits = []
-            for match in percent_regex.finditer(line_text):
-                # Reject obvious fragments embedded in longer digit sequences.
-                try:
-                    p = int(match.group(1))
-                except ValueError:
+    def associate(city_hits, percent_hits, pass_name):
+        pairs = []
+        for city, cx, cy, cc in city_hits:
+            for percent, px, py, pc in percent_hits:
+                dx, dy = abs(cx-px), abs(cy-py)
+                if dx > max(95, image.width*0.12) or dy > max(65, image.height*0.12):
                     continue
-                percent_hits.append((p, match.start(), match.end()))
-
-            if not city_hits or not percent_hits:
+                dist = (dx*dx + (dy*1.35)**2) ** 0.5
+                pairs.append((dist, city, percent, min(cc,pc), px, py, pass_name))
+        pairs.sort(key=lambda p: (p[0], -p[3]))
+        used_cities, used_percent = set(), set()
+        for dist, city, percent, conf, px, py, pass_name in pairs:
+            pkey=(percent, round(px/12), round(py/12))
+            if city in used_cities or pkey in used_percent:
                 continue
+            used_cities.add(city); used_percent.add(pkey)
+            score=conf-dist*0.12
+            if city not in detections or score > detections[city]['score']:
+                detections[city]={'percent':int(percent),'score':score,'x':px,'y':py,'pass':pass_name}
 
-            # Approximate character positions along the line using token geometry.
-            # This lets fused tokens still associate a nearby percentage with its label.
-            char_map = []
-            for token in tokens:
-                txt = token["text"]
-                for j in range(len(txt)):
-                    char_map.append((token["x"], token["y"], token["conf"]))
-            if len(char_map) < len(line_text):
-                char_map.extend([(tokens[-1]["x"], tokens[-1]["y"], tokens[-1]["conf"])] *
-                                (len(line_text)-len(char_map)))
+    variants=[('gray',gray),('threshold',gray.point(lambda v:255 if v>155 else 0)),
+              ('autocontrast',ImageOps.autocontrast(gray))]
+    for variant_name, processed in variants:
+        for psm in (11,12,6,4):
+            data=pytesseract.image_to_data(processed,lang='chi_tra+eng',
+                config=f'--oem 1 --psm {psm}',output_type=Output.DICT)
+            n=len(data.get('text',[])); lines={}; tokens=[]
+            for i in range(n):
+                raw=(data['text'][i] or '').strip()
+                if not raw: continue
+                try: conf=float(data['conf'][i])
+                except (TypeError,ValueError): conf=-1
+                if conf < 0: continue
+                x=float(data['left'][i])/scale; y=float(data['top'][i])/scale
+                w=float(data['width'][i])/scale; h=float(data['height'][i])/scale
+                token={'text':clean_text(raw),'x':x+w/2,'y':y+h/2,'left':x,'right':x+w,'conf':conf}
+                tokens.append(token)
+                key=(data.get('page_num',[1]*n)[i],data.get('block_num',[0]*n)[i],
+                     data.get('par_num',[0]*n)[i],data.get('line_num',[0]*n)[i])
+                lines.setdefault(key,[]).append(token)
+            city_hits=[]; percent_hits=[]
+            for t in tokens:
+                for m in city_regex.finditer(t['text']):
+                    city=clean_text(m.group(0))
+                    if city in CITIES: city_hits.append((city,t['x'],t['y'],t['conf']))
+                for m in percent_regex.finditer(t['text']):
+                    percent_hits.append((int(m.group(1)),t['x'],t['y'],t['conf']))
+            # Also parse reconstructed lines in case a label is split across tokens.
+            for row in lines.values():
+                row.sort(key=lambda t:t['left']); txt=''.join(t['text'] for t in row)
+                pos=[]
+                for t in row:
+                    chars=max(1,len(t['text']))
+                    for j in range(chars):
+                        pos.append((t['left']+(t['right']-t['left'])*(j+0.5)/chars,t['y'],t['conf']))
+                for m in city_regex.finditer(txt):
+                    city=clean_text(m.group(0))
+                    if city in CITIES and m.start()<len(pos):
+                        x,y,c=pos[m.start()]; city_hits.append((city,x,y,c))
+                for m in percent_regex.finditer(txt):
+                    if m.start()<len(pos):
+                        x,y,c=pos[min((m.start()+m.end()-1)//2,len(pos)-1)]
+                        percent_hits.append((int(m.group(1)),x,y,c))
+            def dedupe(items):
+                out={}
+                for item in items:
+                    key=(item[0],round(item[1]/8),round(item[2]/8))
+                    if key not in out or item[3]>out[key][3]: out[key]=item
+                return list(out.values())
+            associate(dedupe(city_hits),dedupe(percent_hits),f'{variant_name}/psm{psm}')
 
-            for p, p_start, p_end in percent_hits:
-                p_idx = (p_start + p_end - 1) // 2
-                px, py, pconf = char_map[min(p_idx, len(char_map)-1)]
-                # Prefer a city label on the same line closest to this percentage.
-                city, cstart, cend = min(
-                    city_hits,
-                    key=lambda hit: abs(((hit[1]+hit[2]-1)//2) - p_idx)
-                )
-                c_idx = (cstart + cend - 1) // 2
-                cx, cy, cconf = char_map[min(c_idx, len(char_map)-1)]
-                # If a line contains several cities, only pair when the textual
-                # distance is local; otherwise it is too ambiguous to trust.
-                char_distance = abs(p_idx - c_idx)
-                if len(city_hits) > 1 and char_distance > 18:
-                    continue
-                if abs(py-cy) > 28:
-                    continue
-                add_detection(city, p, px, py, min(pconf, cconf))
-
-    values = {city: {"percent": item["percent"]}
-              for city, item in detections.items()}
+    values={city:{'percent':item['percent']} for city,item in detections.items()}
     print(f'OCR 診斷：辨識到 {len(values)} 個地點：' + ', '.join(f'{k}={v["percent"]}%' for k,v in values.items()))
-    if len(values) < 5:
-        # Preserve prior file only as a last-known cache, but mark the attempt as failed separately;
-        # front end will not mistake this run for a fresh successful result.
-        raise RuntimeError(f'官方圖 OCR 僅辨識 {len(values)}/{len(CITIES)} 個地點，低於安全門檻；不發布不完整新資料。請檢查 OCR 語言包、官方圖版面及下方 OCR 診斷紀錄。')
+    if len(values)<5:
+        raise RuntimeError(f'官方圖 OCR 僅辨識 {len(values)}/{len(CITIES)} 個地點，低於安全門檻；不發布不完整新資料。若仍不足，應改用氣象署機器可讀資料來源，不能填入猜測值。')
     payload={
         'source':'中央氣象署官方 120 小時颱風暴風侵襲機率圖',
         'source_url':IMAGE_URL,
