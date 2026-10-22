@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-22T22:22:46.207780+08:00",
+  "updatedAt": "2026-10-22T22:42:31.445167+08:00",
   "source": "NCDR 民生示警公開資料平台（JSON Atom + ATOM Feed；目標告警時間以 CAP sent 為準）",
   "feed": [
     "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
