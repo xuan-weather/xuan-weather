@@ -1,0 +1,371 @@
+name: 更新國家級警報
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-national-alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 抓取 NCDR 示警並解析官方 CAP 發布時間
+        shell: python
+        run: |
+          import json
+          import re
+          import urllib.request
+          import xml.etree.ElementTree as ET
+          from datetime import datetime, timezone, timedelta
+          from pathlib import Path
+
+          TZ = timezone(timedelta(hours=8))
+          FEED_URLS = [
+              "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
+              "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx",
+          ]
+
+          CWA_921_DRILL_DATE = "2026-09-21"
+          CWA_921_DRILL_ID = "CWA_PWS_202609210921_DRILL"
+          CWA_921_DRILL_LINK = "https://scweb.cwa.gov.tw/zh-tw/pws"
+
+          EXCLUDED_CATEGORIES = {
+              "道路施工", "開放路邊停車", "開放臨時停車",
+              "國家公園入園示警", "海灘水質", "捷運營運", "鐵路事故",
+          }
+
+          def clean(value):
+              if value is None:
+                  return ""
+              if isinstance(value, (dict, list)):
+                  return ""
+              return re.sub(r"\s+", " ", str(value)).strip()
+
+          def parse_time(value):
+              s = clean(value)
+              if not s:
+                  return None
+              try:
+                  dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+                  if dt.tzinfo is None:
+                      dt = dt.replace(tzinfo=TZ)
+                  return dt.astimezone(TZ)
+              except Exception:
+                  pass
+              m = re.search(
+                  r"(\d{4})[/-](\d{1,2})[/-](\d{1,2})"
+                  r".*?(上午|下午)?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?",
+                  s,
+              )
+              if not m:
+                  return None
+              y, mo, day = map(int, m.group(1, 2, 3))
+              ap, hh, mm, ss = m.group(4) or "", int(m.group(5)), int(m.group(6)), int(m.group(7) or 0)
+              if ap == "下午" and hh < 12:
+                  hh += 12
+              if ap == "上午" and hh == 12:
+                  hh = 0
+              return datetime(y, mo, day, hh, mm, ss, tzinfo=TZ)
+
+          def local_name(tag):
+              return tag.split("}", 1)[-1] if "}" in tag else tag
+
+          def xml_text(el, names):
+              wanted = {n.lower() for n in names}
+              for node in el.iter():
+                  if local_name(node.tag).lower() in wanted and node.text and node.text.strip():
+                      return clean(node.text)
+              return ""
+
+          def xml_entries(raw):
+              root = ET.fromstring(raw.lstrip(b"\xef\xbb\xbf"))
+              result = []
+              for entry in root.iter():
+                  if local_name(entry.tag).lower() != "entry":
+                      continue
+                  item = {}
+                  for node in list(entry):
+                      key = local_name(node.tag).lower()
+                      if key == "category":
+                          item["category"] = node.attrib.get("term") or clean(node.text)
+                      elif key == "link":
+                          item["link"] = node.attrib.get("href") or clean(node.text)
+                      elif key in ("title", "id", "updated", "published", "summary", "description",
+                                   "effective", "expires", "status", "msgtype", "sent", "author"):
+                          if key == "author":
+                              item[key] = xml_text(node, ["name"]) or clean(node.text)
+                          else:
+                              item[key] = clean(node.text)
+                  item.setdefault("summary", xml_text(entry, ["summary", "description"]))
+                  item.setdefault("title", xml_text(entry, ["title"]))
+                  item.setdefault("id", xml_text(entry, ["id"]))
+                  item.setdefault("updated", xml_text(entry, ["updated", "published", "sent"]))
+                  item.setdefault("effective", xml_text(entry, ["effective"]))
+                  item.setdefault("expires", xml_text(entry, ["expires"]))
+                  item.setdefault("status", xml_text(entry, ["status"]) or "Actual")
+                  item.setdefault("msgType", xml_text(entry, ["msgType"]) or "Alert")
+                  if item.get("title") or item.get("id"):
+                      result.append(item)
+              return result
+
+          def json_entries(payload):
+              # 支援 JSON Atom Feed 常見的 entries/items/alerts/data 結構，
+              # 並遞迴尋找包含標題或識別碼的示警物件。
+              if isinstance(payload, list):
+                  nodes = payload
+              elif isinstance(payload, dict):
+                  nodes = None
+                  for key in ("entries", "entry", "items", "alerts", "data", "results"):
+                      if isinstance(payload.get(key), list):
+                          nodes = payload[key]
+                          break
+                  if nodes is None:
+                      nodes = [payload]
+              else:
+                  return []
+              result = []
+              for node in nodes:
+                  if isinstance(node, dict):
+                      item = {}
+                      for key, value in node.items():
+                          k = str(key).split("}")[-1].lower()
+                          if isinstance(value, dict):
+                              if k == "category":
+                                  item[k] = value.get("term") or value.get("name") or value.get("value") or ""
+                              elif k == "link":
+                                  item[k] = value.get("href") or value.get("url") or value.get("value") or ""
+                              elif k == "author":
+                                  item[k] = value.get("name") or value.get("value") or ""
+                          elif isinstance(value, (str, int, float)):
+                              aliases = {
+                                  "msgtype": "msgType", "message_type": "msgType",
+                                  "publishedat": "publishedAt", "publishtime": "publishTime",
+                                  "senttime": "sent", "updatedat": "updated",
+                              }
+                              item[aliases.get(k, k)] = clean(value)
+                      if item.get("title") or item.get("id") or item.get("identifier"):
+                          item["id"] = item.get("id") or item.get("identifier") or ""
+                          item["title"] = item.get("title") or item.get("name") or ""
+                          item["summary"] = item.get("summary") or item.get("description") or ""
+                          item["updated"] = item.get("updated") or item.get("published") or item.get("sent") or item.get("publishedAt") or item.get("publishTime") or ""
+                          item["status"] = item.get("status") or "Actual"
+                          item["msgType"] = item.get("msgType") or "Alert"
+                          result.append(item)
+                      # JSON Feed sometimes nests the actual entries under a wrapper object.
+                      for value in node.values():
+                          if isinstance(value, (dict, list)) and value is not node:
+                              result.extend(json_entries(value))
+                  elif isinstance(node, list):
+                      result.extend(json_entries(node))
+              return result
+
+          def fetch(url):
+              req = urllib.request.Request(
+                  url,
+                  headers={
+                      "User-Agent": "Xuan-Weather-National-Alert/4.0",
+                      "Accept": "application/json, application/atom+xml, application/xml, text/xml, */*",
+                  },
+              )
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  raw = response.read()
+                  content_type = response.headers.get("Content-Type", "")
+              try:
+                  payload = json.loads(raw.decode("utf-8-sig", "replace"))
+                  items = json_entries(payload)
+                  if items:
+                      return items
+              except Exception:
+                  pass
+              try:
+                  return xml_entries(raw)
+              except Exception as exc:
+                  raise RuntimeError(f"{url} 解析失敗（Content-Type={content_type}）：{exc}")
+
+          def parse_cap_time(link):
+              if not link or not re.search(r"\.cap(?:$|\?)", link, re.I):
+                  return None
+              try:
+                  req = urllib.request.Request(
+                      link,
+                      headers={"User-Agent": "Xuan-Weather-National-Alert/4.0", "Accept": "application/xml, text/xml, */*"},
+                  )
+                  with urllib.request.urlopen(req, timeout=15) as response:
+                      raw = response.read()
+                  root = ET.fromstring(raw.lstrip(b"\xef\xbb\xbf"))
+                  sent = xml_text(root, ["sent"])
+                  effective = xml_text(root, ["effective"])
+                  expires = xml_text(root, ["expires"])
+                  event = xml_text(root, ["event"])
+                  category = xml_text(root, ["category"])
+                  return {
+                      "sent": sent,
+                      "effective": effective,
+                      "expires": expires,
+                      "event": event,
+                      "category": category,
+                  }
+              except Exception as exc:
+                  print(f"CAP 讀取失敗（保留 Feed 時間）：{link} | {exc}")
+                  return None
+
+          def normalize(raw):
+              item = dict(raw)
+              item["category"] = clean(item.get("category") or item.get("event") or "")
+              item["title"] = clean(item.get("title") or item.get("headline") or item["category"] or "NCDR 示警")
+              item["summary"] = clean(item.get("summary") or item.get("description") or item.get("content") or "")
+              item["author"] = clean(item.get("author") or item.get("sender") or "")
+              item["status"] = clean(item.get("status") or "Actual")
+              item["msgType"] = clean(item.get("msgType") or item.get("msgtype") or "Alert")
+              item["id"] = clean(item.get("id") or item.get("identifier") or "")
+              item["link"] = clean(item.get("link") or item.get("url") or "")
+              item["updated"] = clean(item.get("updated") or item.get("published") or item.get("sent") or item.get("publishedAt") or item.get("publishTime") or "")
+              item["effective"] = clean(item.get("effective") or "")
+              item["expires"] = clean(item.get("expires") or "")
+              return item
+
+          # 兩個公開 Feed 合併：其中一個漏掉特定告警時，另一個仍有機會補上。
+          collected = []
+          feed_errors = []
+          for url in FEED_URLS:
+              try:
+                  items = [normalize(x) for x in fetch(url)]
+                  print(f"Feed 成功：{url}，取得 {len(items)} 筆")
+                  for item in items:
+                      item["feedSource"] = url
+                  collected.extend(items)
+              except Exception as exc:
+                  feed_errors.append(f"{url}: {exc}")
+                  print(f"Feed 失敗：{url} | {exc}")
+
+          if not collected:
+              raise RuntimeError("所有 NCDR Feed 都無法取得有效資料：" + "；".join(feed_errors))
+
+          normalized = []
+          now = datetime.now(TZ)
+          drill_keywords = ("國家防災日", "國家級警報", "地震速報演練", "海嘯警報演練", "演練", "測試")
+
+          for item in collected:
+              status_lower = item["status"].lower()
+              if status_lower not in ("actual", "test"):
+                  continue
+              if item["msgType"].lower() == "cancel":
+                  continue
+              if item["category"] in EXCLUDED_CATEGORIES:
+                  continue
+
+              blob = " ".join((item["category"], item["title"], item["summary"], item["author"]))
+              is_drill = status_lower == "test" or any(k.lower() in blob.lower() for k in drill_keywords)
+
+              # 巨浪與颱風強風告警優先讀取 CAP 的 <sent>，
+              # 這是告警本身的發布時間，不使用 workflow 的同步時間。
+              blob_lower = blob.lower()
+              is_target = ("巨浪" in blob) or ("颱風" in blob and ("強風" in blob or "風力" in blob))
+              cap = parse_cap_time(item["link"]) if is_target else None
+              if cap:
+                  if cap.get("sent"):
+                      item["updated"] = cap["sent"]
+                      item["publishedAt"] = cap["sent"]
+                  if cap.get("effective"):
+                      item["effective"] = cap["effective"]
+                  if cap.get("expires"):
+                      item["expires"] = cap["expires"]
+                  if cap.get("event") and not item["category"]:
+                      item["category"] = cap["event"]
+                  item["capCategory"] = cap.get("category", "")
+
+              eff_dt = parse_time(item.get("effective")) or parse_time(item.get("updated"))
+              exp_dt = parse_time(item.get("expires"))
+              if eff_dt and eff_dt > now:
+                  continue
+              if exp_dt and exp_dt < now:
+                  continue
+
+              if not item["id"]:
+                  item["id"] = f'{item["category"]}|{item["updated"]}|{item["title"]}|{item["summary"]}'
+
+              normalized.append({
+                  "id": item["id"],
+                  "category": item["category"],
+                  "title": item["title"],
+                  "status": item["status"],
+                  "msgType": item["msgType"],
+                  "author": item["author"],
+                  "updated": item["updated"],
+                  "publishedAt": item.get("publishedAt") or item["updated"],
+                  "effective": item["effective"],
+                  "expires": item["expires"],
+                  "summary": item["summary"],
+                  "link": item["link"],
+                  "feedSource": item.get("feedSource", ""),
+                  "capCategory": item.get("capCategory", ""),
+                  "isDrill": is_drill,
+              })
+
+          # 保留既有 921 演練項目的日期限制。
+          if now.strftime("%Y-%m-%d") == CWA_921_DRILL_DATE:
+              normalized.append({
+                  "id": CWA_921_DRILL_ID,
+                  "category": "地震",
+                  "title": "地震速報演練｜115年國家防災日演習",
+                  "status": "test",
+                  "msgType": "Alert",
+                  "author": "中央氣象署｜災防告警服務 PWS",
+                  "updated": "2026-09-21T09:21:00+08:00",
+                  "publishedAt": "2026-09-21T09:21:00+08:00",
+                  "effective": "2026-09-21T09:21:00+08:00",
+                  "expires": "2026-09-21T10:30:00+08:00",
+                  "summary": "〖115年國家防災日演習〗地震速報演練，臨震應變「趴下、掩護、穩住」｜Earthquake Disaster Drill。演練情境為臺東地區規模 7.3 地震，非實際災害。",
+                  "link": CWA_921_DRILL_LINK,
+                  "feedSource": "CWA PWS",
+                  "capCategory": "",
+                  "isDrill": True,
+              })
+
+          # 同一告警以 ID 去重；若兩個 Feed 都有，保留時間較新的版本。
+          latest = {}
+          for item in normalized:
+              key = item["id"]
+              old = latest.get(key)
+              if old is None or (parse_time(item["updated"]) or datetime.min.replace(tzinfo=TZ)) > (parse_time(old["updated"]) or datetime.min.replace(tzinfo=TZ)):
+                  latest[key] = item
+
+          alerts = sorted(
+              latest.values(),
+              key=lambda x: parse_time(x.get("updated")) or datetime.min.replace(tzinfo=TZ),
+              reverse=True,
+          )
+
+          output = {
+              "updatedAt": datetime.now(TZ).isoformat(),
+              "source": "NCDR 民生示警公開資料平台（JSON Atom + ATOM Feed；目標告警時間以 CAP sent 為準）",
+              "feed": FEED_URLS,
+              "alerts": alerts,
+          }
+
+          out = Path("data/national-alerts.json")
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
+
+          print(f"合併後有效示警：{len(alerts)}")
+          for item in alerts:
+              print(f'- {item["category"]} | {item["title"]} | 發布={item.get("publishedAt", item["updated"])} | {item["effective"]} ~ {item["expires"]} | {item["link"]}')
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/national-alerts.json
+          if git diff --cached --quiet; then
+            echo "沒有新的 NCDR 示警資料變化，不需要提交。"
+            exit 0
+          fi
+          git commit -m "chore: update national alerts"
+          git push
