@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Read the CWA 120-hour typhoon probability map without publishing guessed values."""
+"""Extract CWA 120-hour typhoon strike probabilities from the official map.
+
+The CWA map is a fixed-layout 400x500 image. Rather than pairing OCR text
+across the whole map (which can assign a neighboring city's percentage),
+this script reads a small, city-specific crop around each percentage label.
+Only a value confirmed by multiple OCR passes is published.
+"""
 import json
 import re
 import sys
@@ -8,7 +14,7 @@ from io import BytesIO
 from pathlib import Path
 
 import requests
-from PIL import Image, ImageOps, ImageEnhance, ImageDraw
+from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import pytesseract
 from pytesseract import Output
 
@@ -16,308 +22,219 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "typhoon-probability.json"
 DEBUG = ROOT / "artifacts" / "typhoon-probability-debug"
 IMAGE_URL = "https://www.cwa.gov.tw/Data/typhoon/WSP_CH.png"
-CITIES = [
-    "基隆市", "臺北市", "新北市", "桃園市", "新竹市", "新竹縣", "苗栗縣", "臺中市",
-    "彰化縣", "南投縣", "雲林縣", "嘉義市", "嘉義縣", "臺南市", "高雄市", "屏東縣",
-    "宜蘭縣", "花蓮縣", "臺東縣", "澎湖縣", "金門縣", "連江縣", "綠島", "蘭嶼", "恆春"
-]
 
+# Coordinates are percentage-label regions in the CWA WSP_CH.png reference
+# image (400 x 500). Values are coordinates in the original image:
+# (left, top, right, bottom). They deliberately exclude nearby cities' labels.
+REFERENCE_SIZE = (400, 500)
+PERCENT_ROIS = {
+    "é£æ±ç¸£": (116, 95, 151, 116),
+    "ééç¸£": (97, 159, 126, 180),
+    "æ¾æ¹ç¸£": (84, 247, 116, 270),
+    "æ°åå¸": (230, 101, 271, 124),
+    "åºéå¸": (303, 91, 344, 114),
+    "æ¡åå¸": (214, 119, 254, 142),
+    "èºåå¸": (300, 128, 342, 151),
+    "æ°ç«¹å¸": (169, 149, 211, 173),
+    "æ°ç«¹ç¸£": (238, 164, 278, 187),
+    "èæ ç¸£": (158, 179, 197, 202),
+    "èºä¸­å¸": (216, 207, 256, 232),
+    "å½°åç¸£": (84, 226, 124, 250),
+    "åæç¸£": (226, 239, 266, 264),
+    "é²æç¸£": (113, 271, 153, 295),
+    "åç¾©å¸": (190, 297, 232, 321),
+    "åç¾©ç¸£": (104, 313, 145, 337),
+    "èºåå¸": (108, 347, 148, 371),
+    "é«éå¸": (108, 397, 148, 421),
+    "å±æ±ç¸£": (168, 383, 209, 407),
+    "å®è­ç¸£": (319, 163, 357, 186),
+    "è±è®ç¸£": (298, 238, 340, 261),
+    "èºæ±ç¸£": (241, 344, 281, 368),
+    "ç¶ å³¶": (294, 350, 333, 374),
+    "è­å¶¼": (279, 425, 319, 449),
+    "ææ¥": (167, 452, 205, 476),
+}
+PERCENT_RE = re.compile(r"(?<!\d)(100|[1-9]?\d)\s*[%ï¼]?")
 
-def clean_text(value):
-    text = re.sub(r"[\s·•,，。:：;；]", "", str(value or "")).replace("台", "臺")
-    text = text.replace("速江縣", "連江縣").replace("亳南市", "臺南市").replace("亳南", "臺南")
-    text = re.sub(r"澎湖(?!縣)", "澎湖縣", text)
-    text = re.sub(r"苗栗(?!縣)", "苗栗縣", text)
-    text = re.sub(r"宜蘭(?!縣)", "宜蘭縣", text)
-    text = text.replace("恒春", "恆春")
-    return text
+def utc_now():
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
-
-def box_center(box):
-    xs = [float(p[0]) for p in box]
-    ys = [float(p[1]) for p in box]
-    return (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-
-
-def main():
-    DEBUG.mkdir(parents=True, exist_ok=True)
-    OUT.parent.mkdir(parents=True, exist_ok=True)
+def download_official_map():
     headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; XuanWeather-TyphoonSync/3.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; XuanWeather-TyphoonSync/4.0)",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
         "Accept": "image/png,image/*,*/*;q=0.8",
     }
-    params = {"_": int(datetime.now().timestamp())}
-
     try:
         response = requests.get(
-            IMAGE_URL, timeout=(10, 35), headers=headers, params=params,
-            allow_redirects=True
+            IMAGE_URL, params={"_": int(datetime.now().timestamp())},
+            timeout=(10, 35), headers=headers, allow_redirects=True
         )
         response.raise_for_status()
     except requests.exceptions.SSLError as err:
-        # Fallback is restricted to the official CWA hostname and checked below.
-        # This handles the certificate-chain issue seen in the GitHub Actions log.
-        print(
-            f"警告：CWA 圖片憑證驗證失敗，改用限定官方網址備援：{err}",
-            file=sys.stderr
-        )
+        # Temporary fallback for the certificate-chain failure seen in Actions.
+        # The final URL is checked against the official CWA domain before use.
+        print(f"è­¦åï¼å®æ¹å SSL æè­é©è­å¤±æï¼åè©¦éå®å®æ¹ç¶²ååæ´ï¼{err}", file=sys.stderr)
         import urllib3
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         response = requests.get(
-            IMAGE_URL, timeout=(10, 35), headers=headers, params=params,
-            allow_redirects=True, verify=False
+            IMAGE_URL, params={"_": int(datetime.now().timestamp())},
+            timeout=(10, 35), headers=headers, allow_redirects=True,
+            verify=False
         )
         response.raise_for_status()
 
     host = (requests.utils.urlparse(response.url).hostname or "").lower()
     if host not in ("www.cwa.gov.tw", "cwa.gov.tw"):
-        raise RuntimeError(f"下載重新導向到非氣象署網域，停止：{response.url}")
+        raise RuntimeError(f"ä¸è¼éæ°å°åè³éæ°£è±¡ç½²ç¶²åï¼åæ­¢ï¼{response.url}")
     if not response.headers.get("content-type", "").lower().startswith("image/"):
-        raise RuntimeError(
-            f"氣象署回傳不是圖片：{response.headers.get('content-type')}"
-        )
-
-    image = Image.open(BytesIO(response.content)).convert("RGB")
+        raise RuntimeError(f"æ°£è±¡ç½²åå³ä¸æ¯åçï¼{response.headers.get('content-type')}")
+    try:
+        image = Image.open(BytesIO(response.content)).convert("RGB")
+    except Exception as exc:
+        raise RuntimeError(f"å®æ¹åå³å§å®¹ç¡æ³è§£è®çºåçï¼{exc}") from exc
     if image.width < 200 or image.height < 200:
-        raise RuntimeError(f"官方圖尺寸異常：{image.size}")
+        raise RuntimeError(f"å®æ¹åå°ºå¯¸ç°å¸¸ï¼{image.size}")
+    return response, image
+
+def normalize_roi(roi, size):
+    """Scale reference coordinates if the official image dimensions change slightly."""
+    sx = size[0] / REFERENCE_SIZE[0]
+    sy = size[1] / REFERENCE_SIZE[1]
+    x1, y1, x2, y2 = roi
+    return (
+        max(0, round(x1 * sx)),
+        max(0, round(y1 * sy)),
+        min(size[0], round(x2 * sx)),
+        min(size[1], round(y2 * sy)),
+    )
+
+def prepare_crop(crop, mode):
+    # Percent text is orange on a light background. Several transforms help OCR.
+    enlarged = crop.resize((crop.width * 6, crop.height * 6), Image.Resampling.LANCZOS)
+    gray = ImageOps.grayscale(enlarged)
+    gray = ImageEnhance.Contrast(gray).enhance(2.4)
+    gray = ImageEnhance.Sharpness(gray).enhance(2.0)
+    if mode == "gray":
+        return gray
+    if mode == "threshold":
+        return gray.point(lambda px: 255 if px > 175 else 0)
+    if mode == "invert-threshold":
+        return gray.point(lambda px: 0 if px > 175 else 255)
+    return ImageOps.autocontrast(gray).filter(ImageFilter.MedianFilter(size=3))
+
+def read_percent_from_roi(image, city, roi):
+    crop_box = normalize_roi(roi, image.size)
+    crop = image.crop(crop_box)
+    hits = []
+    # Save each crop for visual debugging.
+    safe_name = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff_-]", "_", city)
+    crop.save(DEBUG / f"roi-{safe_name}.png")
+
+    # Read digits only. Different page segmentation and image transforms provide
+    # independent OCR attempts; publish only a value repeated by >=2 attempts.
+    for mode in ("gray", "threshold", "autocontrast"):
+        processed = prepare_crop(crop, mode)
+        for psm in (7, 8, 13):
+            try:
+                raw = pytesseract.image_to_string(
+                    processed,
+                    lang="eng",
+                    config=f"--oem 1 --psm {psm} -c tessedit_char_whitelist=0123456789",
+                )
+            except Exception as exc:
+                print(f"OCR è­¦å {city}/{mode}/psm{psm}: {exc}", file=sys.stderr)
+                continue
+            digits = re.sub(r"\D", "", raw)
+            if not digits:
+                continue
+            # Crop is restricted to one percentage label. Keep plausible 1â100 values.
+            if len(digits) > 3:
+                continue
+            value = int(digits)
+            if 0 <= value <= 100:
+                hits.append({"percent": value, "mode": mode, "psm": psm, "raw": raw.strip()})
+
+    counts = {}
+    for hit in hits:
+        counts[hit["percent"]] = counts.get(hit["percent"], 0) + 1
+    ranked = sorted(counts.items(), key=lambda item: item[1], reverse=True)
+    if not ranked:
+        return None, {"crop": list(crop_box), "hits": hits, "reason": "no_digits"}
+    best_value, best_count = ranked[0]
+    second_count = ranked[1][1] if len(ranked) > 1 else 0
+    # Require repeatable OCR consensus. If there is a tie, don't guess.
+    if best_count < 2 or best_count == second_count:
+        return None, {
+            "crop": list(crop_box), "hits": hits,
+            "counts": counts, "reason": "low_consensus_or_tie"
+        }
+    return best_value, {
+        "crop": list(crop_box), "hits": hits, "counts": counts,
+        "accepted_count": best_count
+    }
+
+def main():
+    DEBUG.mkdir(parents=True, exist_ok=True)
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+
+    response, image = download_official_map()
     image.save(DEBUG / "cwa-source.png")
 
-    city_pattern = re.compile(
-        "|".join(re.escape(c) for c in sorted(CITIES, key=len, reverse=True))
-    )
-    percent_pattern = re.compile(r"(?<!\d)(100|[1-9]?\d)\s*[%％]")
-    candidates = {city: [] for city in CITIES}
-    ocr_records = []
-
-    def process_hits(city_hits, percent_hits, pass_name):
-        # Pair only nearby city and percentage detections; do not pair distant values.
-        pairs = []
-        for city, cx, cy, city_conf, city_token in city_hits:
-            for percent, px, py, pct_conf, pct_token in percent_hits:
-                dx, dy = abs(cx - px), abs(cy - py)
-                if dx > 50 or dy > 26:
-                    continue
-                same_token = city_token == pct_token
-                dist = (dx * dx + (dy * 1.5) ** 2) ** 0.5
-                score = min(city_conf, pct_conf) + (35 if same_token else 0) - dist
-                pairs.append(
-                    (score, city, int(percent), px, py, pass_name, same_token)
-                )
-        pairs.sort(reverse=True, key=lambda item: item[0])
-        used_city, used_percent = set(), set()
-        for score, city, percent, px, py, pass_name, same_token in pairs:
-            pkey = (round(px / 8), round(py / 8), percent)
-            if city in used_city or pkey in used_percent:
-                continue
-            used_city.add(city)
-            used_percent.add(pkey)
-            candidates[city].append({
-                "percent": percent,
-                "score": score,
-                "x": px,
-                "y": py,
-                "pass": pass_name,
-                "same_token": same_token,
-            })
-
-    # RapidOCR pass for Chinese text.
-    try:
-        import numpy as np
-        from rapidocr_onnxruntime import RapidOCR
-
-        rapid = RapidOCR()
-        result, _ = rapid(np.array(image))
-        city_hits, percent_hits = [], []
-        for index, row in enumerate(result or []):
-            if len(row) < 3:
-                continue
-            box, raw_text, raw_conf = row[0], str(row[1] or ""), row[2]
-            text = clean_text(raw_text)
-            cx, cy = box_center(box)
-            conf = max(0.0, min(100.0, float(raw_conf) * 100))
-            ocr_records.append({
-                "engine": "rapidocr",
-                "text": text,
-                "confidence": conf,
-                "box": [[float(p[0]), float(p[1])] for p in box],
-            })
-            for match in city_pattern.finditer(text):
-                city = clean_text(match.group(0))
-                if city in CITIES:
-                    city_hits.append((city, cx, cy, conf, index))
-            for match in percent_pattern.finditer(text):
-                percent_hits.append((int(match.group(1)), cx, cy, conf, index))
-        process_hits(city_hits, percent_hits, "rapidocr")
-        print(
-            f"RapidOCR：辨識到 {len(city_hits)} 個地點標籤、"
-            f"{len(percent_hits)} 個百分比標籤"
+    # Coordinates are designed for the official map layout; a radically different
+    # aspect ratio may indicate the CWA has changed its image template.
+    aspect = image.width / image.height
+    ref_aspect = REFERENCE_SIZE[0] / REFERENCE_SIZE[1]
+    if abs(aspect - ref_aspect) > 0.12:
+        raise RuntimeError(
+            f"å®æ¹æ©çåçåæ¯ä¾å·²æ¹è®ï¼ç®å {image.width}x{image.height}ï¼ï¼"
+            "åæ­¢ä½¿ç¨èåº§æ¨ï¼é¿åæç¾åæ¯éé¯ç¸£å¸ã"
         )
-    except Exception as err:
-        print(f"RapidOCR 無法執行：{err}", file=sys.stderr)
 
-    # Tesseract fallback: use original-image coordinates after resizing for OCR.
-    scale = 4
-    enlarged = image.resize((image.width * scale, image.height * scale))
-    gray = ImageOps.grayscale(enlarged)
-    gray = ImageEnhance.Contrast(gray).enhance(2.2)
-    gray = ImageEnhance.Sharpness(gray).enhance(2.0)
-    variants = [
-        ("gray", gray),
-        ("threshold", gray.point(lambda value: 255 if value > 155 else 0)),
-        ("autocontrast", ImageOps.autocontrast(gray)),
-    ]
-
-    for variant_name, processed in variants:
-        for psm in (11, 12, 6, 4):
-            data = pytesseract.image_to_data(
-                processed,
-                lang="chi_tra+eng",
-                config=f"--oem 1 --psm {psm}",
-                output_type=Output.DICT,
-            )
-            city_hits, percent_hits = [], []
-            for i, raw in enumerate(data.get("text", [])):
-                raw = (raw or "").strip()
-                if not raw:
-                    continue
-                try:
-                    conf = float(data["conf"][i])
-                except (TypeError, ValueError):
-                    continue
-                if conf < 0:
-                    continue
-
-                left = float(data["left"][i]) / scale
-                top = float(data["top"][i]) / scale
-                width = float(data["width"][i]) / scale
-                height = float(data["height"][i]) / scale
-                x, y = left + width / 2, top + height / 2
-                text = clean_text(raw)
-                token_id = f"tess-{variant_name}-{psm}-{i}"
-                ocr_records.append({
-                    "engine": "tesseract",
-                    "text": text,
-                    "confidence": conf,
-                    "x": x,
-                    "y": y,
-                    "variant": variant_name,
-                    "psm": psm,
-                })
-                for match in city_pattern.finditer(text):
-                    city = clean_text(match.group(0))
-                    if city in CITIES:
-                        city_hits.append((city, x, y, conf, token_id))
-                for match in percent_pattern.finditer(text):
-                    percent_hits.append((int(match.group(1)), x, y, conf, token_id))
-
-            process_hits(
-                city_hits, percent_hits, f"tesseract/{variant_name}/psm{psm}"
-            )
-
-    # Resolve candidates only when the best value is not contradicted by a close score.
     values = {}
-    ambiguities = {}
-    for city, options in candidates.items():
-        if not options:
-            continue
-        options.sort(key=lambda item: item["score"], reverse=True)
-        best = options[0]
-        competing = [
-            option for option in options[1:]
-            if option["percent"] != best["percent"]
-            and best["score"] - option["score"] < 8
-        ]
-        if competing:
-            ambiguities[city] = [
-                {
-                    "percent": option["percent"],
-                    "score": round(option["score"], 2),
-                    "pass": option["pass"],
-                }
-                for option in [best] + competing
-            ]
-            continue
-        values[city] = {
-            "percent": best["percent"],
-            "evidence": {
-                "pass": best["pass"],
-                "same_token": best["same_token"],
-            },
-        }
+    diagnostics = {}
+    for city, roi in PERCENT_ROIS.items():
+        percent, detail = read_percent_from_roi(image, city, roi)
+        diagnostics[city] = detail
+        if percent is not None:
+            values[city] = {"percent": percent}
+            print(f"OCRï¼{city} {percent}%ï¼å¤æ¬¡è¾¨è­ä¸è´ï¼")
+        else:
+            print(f"OCRï¼{city} æªè½å¯é è¾¨è­ï¼ä¿ç --")
 
-    # Always save diagnostics before deciding whether publication can proceed.
-    diagnostic = {
-        "source_url": IMAGE_URL,
-        "downloaded_at": datetime.now(timezone.utc).isoformat(
-            timespec="seconds"
-        ).replace("+00:00", "Z"),
-        "image_size": {"width": image.width, "height": image.height},
-        "recognized_city_percent_pairs": values,
-        "ambiguous_cities": ambiguities,
-        "ocr_records": ocr_records,
-    }
     (DEBUG / "ocr-diagnostics.json").write_text(
-        json.dumps(diagnostic, ensure_ascii=False, indent=2) + "\n",
+        json.dumps({
+            "source_url": IMAGE_URL,
+            "downloaded_at": utc_now(),
+            "image_size": {"width": image.width, "height": image.height},
+            "recognized_count": len(values),
+            "expected_count": len(PERCENT_ROIS),
+            "values": values,
+            "details": diagnostics,
+        }, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
 
-    overlay = image.copy()
-    draw = ImageDraw.Draw(overlay)
-    for record in ocr_records:
-        if record.get("engine") == "rapidocr" and record.get("box"):
-            draw.polygon(
-                [tuple(point) for point in record["box"]],
-                outline="red",
-                width=1,
-            )
-    for city, item in values.items():
-        match = next(
-            (
-                option for option in candidates[city]
-                if option["percent"] == item["percent"]
-            ),
-            None,
-        )
-        if match:
-            x, y = float(match["x"]), float(match["y"])
-            draw.ellipse((x - 3, y - 3, x + 3, y + 3), outline="blue", width=2)
-    overlay.save(DEBUG / "ocr-overlay.png")
-
-    print(
-        f"OCR：辨識到 {len(values)}/{len(CITIES)} 個地點；"
-        f"歧義 {len(ambiguities)} 個"
-    )
-    if ambiguities:
-        print("有歧義的地點（不發布）： " + json.dumps(
-            ambiguities, ensure_ascii=False
-        ))
-
-    # Publish unambiguous official values even if some cities were not recognized.
-    # Missing/ambiguous cities remain absent in JSON and should display as "--".
     if not values:
         raise RuntimeError(
-            "OCR 沒有辨識到任何可安全發布的官方機率；"
-            f"歧義 {len(ambiguities)} 個。"
+            "æ²æä»»ä½æ©çå¼ééå¤æ¬¡ OCR ä¸è´æ§æª¢æ¥ï¼"
+            "å·²è¼¸åºè¨ºæ·åçï¼æªæ´æ°æ­£å¼ JSONã"
         )
 
     payload = {
-        "source": "中央氣象署官方 120 小時颱風暴風侵襲機率圖",
+        "source": "ä¸­å¤®æ°£è±¡ç½²å®æ¹ 120 å°æé¢±é¢¨æ´é¢¨ä¾µè¥²æ©çå",
         "source_url": IMAGE_URL,
-        "generated_at": datetime.now(timezone.utc).isoformat(
-            timespec="seconds"
-        ).replace("+00:00", "Z"),
+        "generated_at": utc_now(),
         "source_last_modified": response.headers.get("Last-Modified"),
         "image_width": image.width,
         "image_height": image.height,
-        "values": {
-            city: {"percent": item["percent"]}
-            for city, item in values.items()
-        },
+        "values": values,
+        "recognized_count": len(values),
+        "expected_count": len(PERCENT_ROIS),
         "ocr_note": (
-            "只發布具無歧義 OCR 證據的官方圖數值；"
-            "缺失或有歧義的地點不發布百分比。"
+            "åªç¼å¸å®æ¹æ©çåä¸­ééå¤æ¬¡ OCR ä¸è´æ§æª¢æ¥çç¾åæ¯ï¼"
+            "æªè½å¯é è¾¨è­çå°é»ä¸ç¼å¸æ¸å¼ã"
         ),
     }
     tmp = OUT.with_suffix(".json.tmp")
@@ -326,8 +243,7 @@ def main():
         encoding="utf-8",
     )
     tmp.replace(OUT)
-    print(f"已更新 {OUT}: {len(values)}/{len(CITIES)} 個地點")
-
+    print(f"å·²æ´æ° {OUT}ï¼å¯é è¾¨è­ {len(values)}/{len(PERCENT_ROIS)} åå°é»")
 
 if __name__ == "__main__":
     try:
