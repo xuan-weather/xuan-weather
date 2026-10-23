@@ -20,9 +20,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
 
       - name: Install OCR dependencies
         run: |
@@ -52,44 +49,13 @@ jobs:
 
       - name: Commit updated JSON if changed
         if: success()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TARGET_BRANCH: ${{ github.ref_name }}
         run: |
-          set -euo pipefail
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           git add data/typhoon-probability.json
-
           if git diff --cached --quiet; then
             echo "No JSON changes to commit."
-            exit 0
+          else
+            git commit -m "chore: sync exact CWA typhoon probability data"
+            git push
           fi
-
-          git commit -m "chore: sync exact CWA typhoon probability data"
-
-          # The branch may have advanced while OCR was running.
-          # Rebase onto the latest remote commit before pushing; never force-push.
-          for attempt in 1 2 3; do
-            echo "Push attempt ${attempt}/3"
-            git fetch origin "${TARGET_BRANCH}"
-
-            if ! git rebase "origin/${TARGET_BRANCH}"; then
-              git rebase --abort || true
-              echo "::error::Rebase conflict detected. No force push was attempted; inspect concurrent changes to data/typhoon-probability.json."
-              exit 1
-            fi
-
-            if git push origin "HEAD:${TARGET_BRANCH}"; then
-              echo "JSON update pushed successfully."
-              exit 0
-            fi
-
-            echo "Push was rejected; will fetch the latest branch and retry."
-            sleep 2
-          done
-
-          echo "::error::Push failed after 3 attempts. The remote branch may still be changing."
-          exit 1
