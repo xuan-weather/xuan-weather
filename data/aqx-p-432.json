@@ -1996,7 +1996,7 @@
         "co_8hr": "",
         "pm2.5_avg": "",
         "pm10_avg": "",
-        "so2_avg": "",
+        "so2_avg": "0",
         "longitude": "120.26964",
         "latitude": "23.85493",
         "siteid": "85"
