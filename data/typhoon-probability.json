@@ -1,34 +1,70 @@
 {
   "source": "中央氣象署官方 120 小時颱風暴風侵襲機率圖",
   "source_url": "https://www.cwa.gov.tw/Data/typhoon/WSP_CH.png",
-  "generated_at": "2026-10-23T04:03:21Z",
+  "generated_at": "2026-10-23T04:22:42Z",
   "source_last_modified": "Fri, 23 Oct 2026 01:52:04 GMT",
   "image_width": 400,
   "image_height": 500,
   "values": {
+    "連江縣": {
+      "percent": 77
+    },
+    "金門縣": {
+      "percent": 17
+    },
+    "澎湖縣": {
+      "percent": 50
+    },
+    "新北市": {
+      "percent": 100
+    },
+    "基隆市": {
+      "percent": 100
+    },
+    "桃園市": {
+      "percent": 100
+    },
     "臺北市": {
-      "percent": 71
+      "percent": 100
+    },
+    "新竹市": {
+      "percent": 100
     },
     "新竹縣": {
       "percent": 100
     },
+    "苗栗縣": {
+      "percent": 100
+    },
     "臺中市": {
-      "percent": 9
+      "percent": 99
     },
     "彰化縣": {
-      "percent": 0
+      "percent": 99
+    },
+    "南投縣": {
+      "percent": 99
     },
     "雲林縣": {
-      "percent": 9
+      "percent": 99
     },
     "嘉義市": {
       "percent": 98
     },
+    "嘉義縣": {
+      "percent": 96
+    },
+    "臺南市": {
+      "percent": 86
+    },
+    "高雄市": {
+      "percent": 79
+    },
+    "屏東縣": {
+      "percent": 95
+    },
     "宜蘭縣": {
       "percent": 100
-    },
-    "花蓮縣": {
-      "percent": 10
     },
     "臺東縣": {
       "percent": 100
@@ -40,10 +76,10 @@
       "percent": 100
     },
     "恆春": {
-      "percent": 1
+      "percent": 19
     }
   },
-  "recognized_count": 12,
+  "recognized_count": 24,
   "expected_count": 25,
-  "ocr_note": "僅發布通過 OCR 一致性檢查的數值；無法可靠辨識的地點不發布機率。"
+  "ocr_note": "只發布通過 OCR 一致性檢查的數值；無法可靠辨識的地點不發布機率。"
 }
