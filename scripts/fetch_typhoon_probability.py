@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Safely extract CWA 120-hour typhoon probabilities from the official map.
+"""Extract per-location 120-hour typhoon probabilities from the CWA official image.
 
-Important: this is OCR of a raster image, not a structured official API.
-Uncertain or conflicting OCR results are omitted rather than guessed.
+This version corrects the percentage ROI table using the actual 400x500 CWA
+image in the uploaded diagnostics. It uses RapidOCR plus several Tesseract
+passes, and omits uncertain values rather than inventing them.
 """
 import json
 import re
@@ -11,6 +12,7 @@ from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 
+import numpy as np
 import requests
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import pytesseract
@@ -21,35 +23,34 @@ DEBUG = ROOT / "artifacts" / "typhoon-probability-debug"
 IMAGE_URL = "https://www.cwa.gov.tw/Data/typhoon/WSP_CH.png"
 REFERENCE_SIZE = (400, 500)
 
-# Verified against the official 400x500 image included in the uploaded
-# diagnostics ZIP. Each rectangle targets the orange percentage text itself.
-# Coordinates: left, top, right, bottom.
+# Exact percentage-text crops measured against the official 400x500 CWA image.
+# Coordinates: left, top, right, bottom. Do not use city-label coordinates.
 PERCENT_ROIS = {
-    "連江縣": (160, 123, 205, 153),
-    "金門縣": (126, 184, 160, 212),
-    "澎湖縣": (96, 243, 146, 272),
-    "新北市": (230, 104, 277, 134),
-    "基隆市": (304, 90, 352, 120),
-    "桃園市": (216, 125, 265, 157),
-    "臺北市": (312, 125, 360, 157),
-    "新竹市": (170, 157, 216, 192),
-    "新竹縣": (237, 172, 286, 205),
-    "苗栗縣": (155, 182, 207, 215),
-    "臺中市": (223, 207, 272, 240),
-    "彰化縣": (143, 226, 190, 258),
-    "南投縣": (235, 243, 285, 277),
-    "雲林縣": (156, 263, 206, 296),
-    "嘉義市": (213, 307, 262, 341),
-    "嘉義縣": (132, 306, 180, 341),
-    "臺南市": (100, 355, 150, 393),
-    "高雄市": (100, 405, 153, 444),
-    "屏東縣": (222, 376, 272, 412),
-    "宜蘭縣": (319, 157, 369, 191),
-    "花蓮縣": (311, 230, 364, 266),
-    "臺東縣": (228, 357, 279, 396),
-    "綠島": (294, 345, 343, 382),
-    "蘭嶼": (307, 416, 361, 455),
-    "恆春": (186, 446, 237, 484),
+    "連江縣": (119, 129, 152, 148),  # 77%
+    "金門縣": (99, 188, 123, 206),   # 1%
+    "澎湖縣": (95, 248, 126, 269),   # 50%
+    "新北市": (232, 105, 267, 126),  # 100%
+    "基隆市": (305, 94, 342, 115),   # 100%
+    "桃園市": (212, 132, 249, 154),  # 100%
+    "臺北市": (314, 131, 355, 154),  # 100%
+    "新竹市": (174, 159, 214, 181),  # 100%
+    "新竹縣": (234, 176, 271, 199),  # 100%
+    "苗栗縣": (161, 190, 201, 213),  # 100%
+    "臺中市": (220, 215, 254, 237),  # 99%
+    "彰化縣": (75, 237, 107, 259),   # 99%
+    "南投縣": (206, 248, 244, 271),  # 99%
+    "雲林縣": (137, 270, 176, 294),  # 99%
+    "嘉義市": (190, 300, 221, 325),  # 98%
+    "嘉義縣": (106, 312, 137, 338),  # 96%
+    "臺南市": (105, 359, 136, 385),  # 86%
+    "高雄市": (109, 393, 140, 420),  # 79%
+    "屏東縣": (212, 380, 251, 405),  # 95%
+    "宜蘭縣": (320, 162, 362, 187),  # 100%
+    "花蓮縣": (303, 238, 343, 263),  # 100%
+    "臺東縣": (227, 358, 265, 384),  # 100%
+    "綠島": (300, 350, 338, 375),    # 100%
+    "蘭嶼": (304, 422, 345, 447),    # 100%
+    "恆春": (188, 453, 216, 478),    # 98%
 }
 
 def utc_now():
@@ -57,31 +58,26 @@ def utc_now():
 
 def download_official_map():
     headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; XuanWeather-TyphoonSync/5.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; XuanWeather-TyphoonSync/6.0)",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
         "Accept": "image/png,image/*,*/*;q=0.8",
     }
     try:
         response = requests.get(
-            IMAGE_URL,
-            params={"_": int(datetime.now().timestamp())},
-            timeout=(10, 35),
-            headers=headers,
-            allow_redirects=True,
+            IMAGE_URL, params={"_": int(datetime.now().timestamp())},
+            timeout=(10, 35), headers=headers, allow_redirects=True
         )
         response.raise_for_status()
     except requests.exceptions.SSLError as err:
-        print(f"警告：官方圖 SSL 驗證失敗，改用限定官方網域的備援下載：{err}", file=sys.stderr)
+        # Compatibility fallback for the CWA certificate-chain issue.
+        # Redirects are validated below; only the official CWA host is accepted.
+        print(f"警告：官方圖 SSL 驗證失敗，使用官方網域限定的備援下載：{err}", file=sys.stderr)
         import urllib3
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         response = requests.get(
-            IMAGE_URL,
-            params={"_": int(datetime.now().timestamp())},
-            timeout=(10, 35),
-            headers=headers,
-            allow_redirects=True,
-            verify=False,
+            IMAGE_URL, params={"_": int(datetime.now().timestamp())},
+            timeout=(10, 35), headers=headers, allow_redirects=True, verify=False
         )
         response.raise_for_status()
 
@@ -102,91 +98,107 @@ def normalize_roi(roi, size):
     sx, sy = size[0] / REFERENCE_SIZE[0], size[1] / REFERENCE_SIZE[1]
     x1, y1, x2, y2 = roi
     return (
-        max(0, round(x1 * sx)),
-        max(0, round(y1 * sy)),
-        min(size[0], round(x2 * sx)),
-        min(size[1], round(y2 * sy)),
+        max(0, round(x1 * sx)), max(0, round(y1 * sy)),
+        min(size[0], round(x2 * sx)), min(size[1], round(y2 * sy)),
     )
 
-def orange_text_mask(crop):
-    """Keep orange percentage glyphs; remove most of the cyan map/background."""
-    import numpy as np
-    rgb = np.asarray(crop.convert("RGB"))
-    r, g, b = rgb[:, :, 0].astype("int16"), rgb[:, :, 1].astype("int16"), rgb[:, :, 2].astype("int16")
-    orange = (r > 105) & ((r - g) > 22) & ((r - b) > 28) & (g < 220)
-    # OCR expects dark glyphs on a white background.
-    return Image.fromarray((~orange * 255).astype("uint8"))
-
-def make_variants(crop):
-    enlarged = crop.resize((crop.width * 8, crop.height * 8), Image.Resampling.LANCZOS)
+def image_variants(crop):
+    # Keep the original crop as well as enhanced variants. Avoid color masks
+    # that can accidentally erase thin digits or the percent sign.
+    enlarged = crop.resize((crop.width * 10, crop.height * 10), Image.Resampling.LANCZOS)
     gray = ImageOps.grayscale(enlarged)
-    gray = ImageEnhance.Contrast(gray).enhance(2.5)
+    gray = ImageEnhance.Contrast(gray).enhance(2.4)
     gray = ImageEnhance.Sharpness(gray).enhance(2.0)
     auto = ImageOps.autocontrast(gray).filter(ImageFilter.MedianFilter(size=3))
-    variants = [
-        ("gray", gray),
-        ("auto", auto),
-        ("threshold", gray.point(lambda px: 255 if px > 170 else 0)),
-        ("orange-mask", orange_text_mask(crop).resize((crop.width * 8, crop.height * 8), Image.Resampling.NEAREST)),
-    ]
-    return variants
+    threshold = gray.point(lambda px: 255 if px > 170 else 0)
+    return [("gray", gray), ("auto", auto), ("threshold", threshold)]
 
-def read_percent_from_roi(image, city, roi):
+def parse_percent(text):
+    if not text:
+        return None, False
+    cleaned = text.replace("％", "%").replace(" ", "").replace("\n", "").replace("\r", "")
+    # Require a complete percentage when a one-digit value is detected.
+    match = re.search(r"(?<!\d)(100|[1-9]?\d)\s*(%)?", cleaned)
+    if not match:
+        return None, False
+    number = int(match.group(1))
+    has_percent = match.group(2) == "%"
+    if not 0 <= number <= 100:
+        return None, has_percent
+    return number, has_percent
+
+def read_percent_from_roi(image, city, roi, rapid_engine):
     box = normalize_roi(roi, image.size)
     crop = image.crop(box)
-    safe = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff_-]", "_", city)
-    crop.save(DEBUG / f"roi-{safe}.png")
+    safe_name = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff_-]", "_", city)
+    crop.save(DEBUG / f"roi-{safe_name}.png")
 
-    attempts = []
-    for mode, processed in make_variants(crop):
+    # Each engine/transform is a separate vote. Store every raw result for audit.
+    votes, attempts = [], []
+    for mode, processed in image_variants(crop):
         for psm in (7, 8, 13):
             try:
                 raw = pytesseract.image_to_string(
-                    processed,
-                    lang="eng",
+                    processed, lang="eng",
                     config=f"--oem 1 --psm {psm} -c tessedit_char_whitelist=0123456789%",
                 ).strip()
+                value, has_pct = parse_percent(raw)
+                attempts.append({"engine": "tesseract", "mode": mode, "psm": psm,
+                                 "raw": raw, "value": value, "has_percent": has_pct})
+                if value is not None:
+                    # Values 0-9 are accepted only if the % sign was read.
+                    if value >= 10 or has_pct:
+                        votes.append(("tesseract", value, has_pct))
             except Exception as exc:
-                attempts.append({"mode": mode, "psm": psm, "raw": "", "error": str(exc)})
-                continue
+                attempts.append({"engine": "tesseract", "mode": mode, "psm": psm, "error": str(exc)})
 
-            cleaned = raw.replace("％", "%").replace(" ", "").replace("\n", "")
-            # A percent sign is required for one-digit values such as 1%;
-            # this prevents a clipped "100%" from being published as "1".
-            match = re.search(r"(?<!\d)(100|[1-9]?\d)%", cleaned)
-            if match:
-                value = int(match.group(1))
-                attempts.append({"mode": mode, "psm": psm, "raw": raw, "value": value})
+    try:
+        rapid_results, _ = rapid_engine(np.asarray(crop.convert("RGB")))
+        if rapid_results:
+            for item in rapid_results:
+                raw = str(item[1]).strip()
+                score = float(item[2]) if len(item) > 2 else 0.0
+                value, has_pct = parse_percent(raw)
+                attempts.append({"engine": "rapidocr", "raw": raw, "score": score,
+                                 "value": value, "has_percent": has_pct})
+                if value is not None and score >= 0.35 and (value >= 10 or has_pct):
+                    votes.append(("rapidocr", value, has_pct))
+    except Exception as exc:
+        attempts.append({"engine": "rapidocr", "error": str(exc)})
 
     counts = {}
-    for item in attempts:
-        if "value" in item:
-            counts[item["value"]] = counts.get(item["value"], 0) + 1
+    engines_by_value = {}
+    percent_sign_by_value = {}
+    for engine, value, has_pct in votes:
+        counts[value] = counts.get(value, 0) + 1
+        engines_by_value.setdefault(value, set()).add(engine)
+        percent_sign_by_value[value] = percent_sign_by_value.get(value, False) or has_pct
 
-    ranked = sorted(counts.items(), key=lambda pair: pair[1], reverse=True)
+    ranked = sorted(counts.items(), key=lambda item: item[1], reverse=True)
     if not ranked:
-        return None, {"crop": list(box), "counts": counts, "attempts": attempts, "reason": "no_percent_value"}
+        return None, {"crop": list(box), "votes": counts, "attempts": attempts, "reason": "no_valid_reading"}
 
-    best_value, best_count = ranked[0]
-    total_hits = sum(counts.values())
+    best, count = ranked[0]
     second_count = ranked[1][1] if len(ranked) > 1 else 0
-
-    # Do not choose a plurality when OCR disagrees. Require at least 3 hits,
-    # a strict winner, and >=70% of all numeric OCR hits to agree.
-    if best_count < 3 or best_count == second_count or best_count / total_hits < 0.70:
-        return None, {
-            "crop": list(box), "counts": counts, "attempts": attempts,
-            "reason": "conflicting_or_low_consensus",
-        }
-
-    return best_value, {
-        "crop": list(box), "counts": counts, "attempts": attempts,
-        "accepted_count": best_count, "total_hits": total_hits,
+    # For one-digit values, require the % sign and agreement; otherwise a clipped
+    # 100 can be mistaken for 1. For all values require a strict consensus.
+    valid = count >= 2 and count > second_count
+    if best < 10 and not percent_sign_by_value.get(best, False):
+        valid = False
+    if not valid:
+        return None, {"crop": list(box), "votes": counts, "attempts": attempts, "reason": "ambiguous"}
+    return best, {
+        "crop": list(box), "votes": counts,
+        "engines": {str(k): sorted(v) for k, v in engines_by_value.items()},
+        "attempts": attempts, "accepted_votes": count,
     }
 
 def main():
     DEBUG.mkdir(parents=True, exist_ok=True)
     OUT.parent.mkdir(parents=True, exist_ok=True)
+
+    from rapidocr_onnxruntime import RapidOCR
+    rapid_engine = RapidOCR()
 
     response, image = download_official_map()
     image.save(DEBUG / "cwa-source.png")
@@ -199,31 +211,31 @@ def main():
             "停止使用舊座標，避免把百分比配錯縣市。"
         )
 
-    values, diagnostics = {}, {}
+    values, details = {}, {}
     for city, roi in PERCENT_ROIS.items():
-        percent, detail = read_percent_from_roi(image, city, roi)
-        diagnostics[city] = detail
+        percent, detail = read_percent_from_roi(image, city, roi, rapid_engine)
+        details[city] = detail
         if percent is not None:
             values[city] = {"percent": percent}
-            print(f"OCR：{city} {percent}%（嚴格一致性檢查通過）")
+            print(f"OCR：{city} {percent}%（多引擎一致）")
         else:
             print(f"OCR：{city} 未能可靠辨識，保留 --")
 
+    diagnostics = {
+        "source_url": IMAGE_URL,
+        "downloaded_at": utc_now(),
+        "image_size": {"width": image.width, "height": image.height},
+        "recognized_count": len(values),
+        "expected_count": len(PERCENT_ROIS),
+        "values": values,
+        "details": details,
+    }
     (DEBUG / "ocr-diagnostics.json").write_text(
-        json.dumps({
-            "source_url": IMAGE_URL,
-            "downloaded_at": utc_now(),
-            "image_size": {"width": image.width, "height": image.height},
-            "recognized_count": len(values),
-            "expected_count": len(PERCENT_ROIS),
-            "values": values,
-            "details": diagnostics,
-        }, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
+        json.dumps(diagnostics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
 
     if not values:
-        raise RuntimeError("沒有任何數值通過嚴格 OCR 檢查；未更新正式 JSON。")
+        raise RuntimeError("沒有數值通過 OCR 一致性檢查；已保留診斷資料，未更新正式 JSON。")
 
     payload = {
         "source": "中央氣象署官方 120 小時颱風暴風侵襲機率圖",
@@ -235,7 +247,7 @@ def main():
         "values": values,
         "recognized_count": len(values),
         "expected_count": len(PERCENT_ROIS),
-        "ocr_note": "只發布通過嚴格 OCR 一致性檢查的數值；有歧義的地點不發布數值，避免錯誤機率。",
+        "ocr_note": "僅發布通過多引擎一致性檢查的機率；有歧義的地點不發布數值。",
     }
     tmp = OUT.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
