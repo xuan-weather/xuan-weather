@@ -1,19 +1,19 @@
 {
   "source": "中央氣象署官方 120 小時颱風暴風侵襲機率圖",
   "source_url": "https://www.cwa.gov.tw/Data/typhoon/WSP_CH.png",
-  "generated_at": "2026-10-23T19:29:56Z",
-  "source_last_modified": "Fri, 23 Oct 2026 13:31:19 GMT",
+  "generated_at": "2026-10-23T23:22:25Z",
+  "source_last_modified": "Fri, 23 Oct 2026 19:51:49 GMT",
   "image_width": 400,
   "image_height": 500,
   "values": {
     "連江縣": {
-      "percent": 89
+      "percent": 100
     },
     "金門縣": {
       "percent": 0
     },
     "澎湖縣": {
-      "percent": 4
+      "percent": 100
     },
     "新北市": {
       "percent": 100
@@ -55,13 +55,13 @@
       "percent": 100
     },
     "臺南市": {
-      "percent": 13
+      "percent": 100
     },
     "高雄市": {
-      "percent": 30
+      "percent": 100
     },
     "屏東縣": {
-      "percent": 6
+      "percent": 100
     },
     "宜蘭縣": {
       "percent": 100
@@ -76,10 +76,10 @@
       "percent": 100
     },
     "蘭嶼": {
-      "percent": 13
+      "percent": 100
     },
     "恆春": {
-      "percent": 1
+      "percent": 100
     }
   },
   "recognized_count": 25,
