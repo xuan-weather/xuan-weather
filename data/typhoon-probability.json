@@ -1,11 +1,17 @@
 {
   "source": "中央氣象署官方 120 小時颱風暴風侵襲機率圖",
   "source_url": "https://www.cwa.gov.tw/Data/typhoon/WSP_CH.png",
-  "generated_at": "2026-10-23T03:23:31Z",
+  "generated_at": "2026-10-23T03:44:35Z",
   "source_last_modified": "Fri, 23 Oct 2026 01:52:04 GMT",
   "image_width": 400,
   "image_height": 500,
   "values": {
+    "連江縣": {
+      "percent": 77
+    },
+    "金門縣": {
+      "percent": 1
+    },
     "澎湖縣": {
       "percent": 50
     },
@@ -13,6 +19,12 @@
       "percent": 100
     },
     "基隆市": {
+      "percent": 100
+    },
+    "桃園市": {
+      "percent": 100
+    },
+    "臺北市": {
       "percent": 100
     },
     "新竹市": {
@@ -27,11 +39,20 @@
     "臺中市": {
       "percent": 99
     },
-    "彰化縣": {
-      "percent": 90
+    "雲林縣": {
+      "percent": 99
+    },
+    "嘉義市": {
+      "percent": 98
+    },
+    "嘉義縣": {
+      "percent": 96
+    },
+    "臺南市": {
+      "percent": 86
     },
     "屏東縣": {
-      "percent": 5
+      "percent": 95
     },
     "宜蘭縣": {
       "percent": 100
@@ -39,14 +60,20 @@
     "花蓮縣": {
       "percent": 100
     },
+    "臺東縣": {
+      "percent": 100
+    },
     "綠島": {
       "percent": 100
     },
     "蘭嶼": {
       "percent": 100
+    },
+    "恆春": {
+      "percent": 8
     }
   },
-  "recognized_count": 13,
+  "recognized_count": 22,
   "expected_count": 25,
-  "ocr_note": "只發布通過嚴格 OCR 一致性檢查的數值；有歧義的地點不發布數值，避免錯誤機率。"
+  "ocr_note": "僅發布通過多引擎一致性檢查的機率；有歧義的地點不發布數值。"
 }
