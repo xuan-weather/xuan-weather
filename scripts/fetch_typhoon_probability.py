@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Extract CWA 120-hour typhoon probabilities from the official WSP_CH.png.
 
-Reads percentage labels from city-specific crops measured against the actual
-400x500 CWA source image. Ambiguous readings are omitted, never guessed.
+The ROI table is calibrated to the 400x500 official source image found in the
+latest uploaded OCR diagnostics. Uncertain readings are omitted, never guessed.
 """
 import json
 import re
@@ -22,34 +22,34 @@ DEBUG = ROOT / "artifacts" / "typhoon-probability-debug"
 IMAGE_URL = "https://www.cwa.gov.tw/Data/typhoon/WSP_CH.png"
 REFERENCE_SIZE = (400, 500)
 
-# Coordinates enclose the percentage text, not the city name.
-# Format: (left, top, right, bottom), based on the actual 400x500 CWA image.
+# Full percentage label boxes measured from the official 400x500 source image.
+# Coordinates: (left, top, right, bottom). They target numbers, not city names.
 PERCENT_ROIS = {
-    "連江縣": (164, 127, 198, 150),
-    "金門縣": (143, 188, 166, 211),
-    "澎湖縣": (135, 257, 167, 279),
-    "新北市": (243, 96, 279, 119),
-    "基隆市": (315, 96, 352, 119),
-    "桃園市": (223, 124, 261, 149),
-    "臺北市": (300, 128, 340, 151),
-    "新竹市": (180, 160, 216, 184),
-    "新竹縣": (239, 176, 281, 201),
-    "苗栗縣": (197, 184, 235, 211),
-    "臺中市": (231, 211, 271, 236),
-    "彰化縣": (166, 234, 202, 258),
-    "南投縣": (243, 246, 281, 271),
-    "雲林縣": (160, 268, 198, 292),
-    "嘉義市": (211, 296, 250, 321),
-    "嘉義縣": (126, 308, 162, 334),
-    "臺南市": (126, 351, 163, 380),
-    "高雄市": (124, 392, 160, 425),
-    "屏東縣": (244, 386, 284, 414),
-    "宜蘭縣": (307, 160, 350, 187),
-    "花蓮縣": (286, 242, 331, 269),
-    "臺東縣": (231, 353, 274, 382),
-    "綠島": (296, 350, 340, 379),
-    "蘭嶼": (297, 422, 348, 450),
-    "恆春": (188, 454, 229, 480),
+    "連江縣": (121, 130, 151, 147),
+    "金門縣": (87, 192, 119, 210),
+    "澎湖縣": (94, 247, 126, 266),
+    "新北市": (234, 102, 269, 124),
+    "基隆市": (308, 95, 344, 113),
+    "桃園市": (215, 132, 253, 155),
+    "臺北市": (314, 132, 354, 155),
+    "新竹市": (168, 160, 211, 184),
+    "新竹縣": (235, 177, 272, 198),
+    "苗栗縣": (164, 192, 200, 213),
+    "臺中市": (223, 216, 253, 235),
+    "彰化縣": (156, 236, 187, 256),
+    "南投縣": (233, 247, 266, 269),
+    "雲林縣": (153, 267, 184, 289),
+    "嘉義市": (207, 301, 240, 324),
+    "嘉義縣": (108, 309, 140, 332),
+    "臺南市": (105, 358, 136, 379),
+    "高雄市": (107, 399, 141, 423),
+    "屏東縣": (207, 381, 243, 405),
+    "宜蘭縣": (315, 164, 355, 188),
+    "花蓮縣": (301, 240, 344, 264),
+    "臺東縣": (229, 359, 267, 382),
+    "綠島": (300, 354, 335, 376),
+    "蘭嶼": (302, 427, 343, 451),
+    "恆春": (178, 454, 219, 477),
 }
 
 def utc_now():
@@ -57,7 +57,7 @@ def utc_now():
 
 def download_official_map():
     headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; XuanWeather-TyphoonSync/7.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; XuanWeather-TyphoonSync/8.0)",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
         "Accept": "image/png,image/*,*/*;q=0.8",
@@ -69,8 +69,6 @@ def download_official_map():
         )
         response.raise_for_status()
     except requests.exceptions.SSLError as err:
-        # Temporary compatibility fallback for the observed CWA certificate issue.
-        # The final host is validated below; no non-CWA host is accepted.
         print(f"警告：官方圖 SSL 驗證失敗，使用官方網域限定備援：{err}", file=sys.stderr)
         import urllib3
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -114,7 +112,6 @@ def parse_percent(raw):
     if not raw:
         return None, False
     cleaned = raw.replace("％", "%").replace(" ", "").replace("\n", "").replace("\r", "")
-    # Only accept a one-digit probability when OCR also reads the percent sign.
     match = re.search(r"(?<!\d)(100|[1-9]?\d)\s*(%)?", cleaned)
     if not match:
         return None, False
@@ -138,10 +135,8 @@ def read_percent_from_roi(image, city, roi, rapid_engine):
                     config=f"--oem 1 --psm {psm} -c tessedit_char_whitelist=0123456789%",
                 ).strip()
                 value, has_pct = parse_percent(raw)
-                attempts.append({
-                    "engine": "tesseract", "mode": mode, "psm": psm,
-                    "raw": raw, "value": value, "has_percent": has_pct,
-                })
+                attempts.append({"engine": "tesseract", "mode": mode, "psm": psm,
+                                 "raw": raw, "value": value, "has_percent": has_pct})
                 if value is not None and (value >= 10 or has_pct):
                     votes.append(("tesseract", value, has_pct))
             except Exception as exc:
@@ -154,10 +149,8 @@ def read_percent_from_roi(image, city, roi, rapid_engine):
                 raw = str(item[1]).strip()
                 score = float(item[2]) if len(item) > 2 else 0.0
                 value, has_pct = parse_percent(raw)
-                attempts.append({
-                    "engine": "rapidocr", "raw": raw, "score": score,
-                    "value": value, "has_percent": has_pct,
-                })
+                attempts.append({"engine": "rapidocr", "raw": raw, "score": score,
+                                 "value": value, "has_percent": has_pct})
                 if value is not None and score >= 0.35 and (value >= 10 or has_pct):
                     votes.append(("rapidocr", value, has_pct))
     except Exception as exc:
@@ -175,32 +168,29 @@ def read_percent_from_roi(image, city, roi, rapid_engine):
 
     best, count = ranked[0]
     second_count = ranked[1][1] if len(ranked) > 1 else 0
-    # Require at least two matching readings and no tie. Single-digit values
-    # must include the % sign, preventing clipped "100%" from becoming "1".
-    if count < 2 or count == second_count or (best < 10 and not percent_sign.get(best, False)):
+    # One-digit readings must include the percent sign so a clipped 100 cannot
+    # become 1. For all values, require a clear majority with no tie.
+    total_votes = sum(counts.values())
+    if count < 2 or count == second_count or count / total_votes < 0.65:
         return None, {"crop": list(box), "votes": counts, "attempts": attempts, "reason": "ambiguous"}
+    if best < 10 and not percent_sign.get(best, False):
+        return None, {"crop": list(box), "votes": counts, "attempts": attempts, "reason": "single_digit_without_percent_sign"}
 
-    return best, {
-        "crop": list(box), "votes": counts,
-        "engines": {str(k): sorted(v) for k, v in engine_votes.items()},
-        "attempts": attempts, "accepted_votes": count,
-    }
+    return best, {"crop": list(box), "votes": counts,
+                  "engines": {str(k): sorted(v) for k, v in engine_votes.items()},
+                  "attempts": attempts, "accepted_votes": count}
 
 def main():
     DEBUG.mkdir(parents=True, exist_ok=True)
     OUT.parent.mkdir(parents=True, exist_ok=True)
-
     from rapidocr_onnxruntime import RapidOCR
     rapid_engine = RapidOCR()
+
     response, image = download_official_map()
     image.save(DEBUG / "cwa-source.png")
-
     aspect = image.width / image.height
     if abs(aspect - REFERENCE_SIZE[0] / REFERENCE_SIZE[1]) > 0.12:
-        raise RuntimeError(
-            f"官方機率圖版型比例已改變（目前 {image.width}x{image.height}），"
-            "停止使用舊座標，避免把百分比配錯縣市。"
-        )
+        raise RuntimeError(f"官方圖版型比例改變（{image.width}x{image.height}），停止使用舊座標。")
 
     values, details = {}, {}
     for city, roi in PERCENT_ROIS.items():
@@ -208,37 +198,28 @@ def main():
         details[city] = detail
         if percent is not None:
             values[city] = {"percent": percent}
-            print(f"OCR：{city} {percent}%（一致性檢查通過）")
+            print(f"OCR：{city} {percent}%")
         else:
             print(f"OCR：{city} 未能可靠辨識，保留 --")
 
-    (DEBUG / "ocr-diagnostics.json").write_text(
-        json.dumps({
-            "source_url": IMAGE_URL,
-            "downloaded_at": utc_now(),
-            "image_size": {"width": image.width, "height": image.height},
-            "recognized_count": len(values),
-            "expected_count": len(PERCENT_ROIS),
-            "values": values,
-            "details": details,
-        }, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    (DEBUG / "ocr-diagnostics.json").write_text(json.dumps({
+        "source_url": IMAGE_URL, "downloaded_at": utc_now(),
+        "image_size": {"width": image.width, "height": image.height},
+        "recognized_count": len(values), "expected_count": len(PERCENT_ROIS),
+        "values": values, "details": details,
+    }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     if not values:
-        raise RuntimeError("沒有數值通過 OCR 一致性檢查；保留診斷資料，未更新正式 JSON。")
+        raise RuntimeError("沒有數值通過 OCR 一致性檢查；未更新正式 JSON。")
 
     payload = {
         "source": "中央氣象署官方 120 小時颱風暴風侵襲機率圖",
-        "source_url": IMAGE_URL,
-        "generated_at": utc_now(),
+        "source_url": IMAGE_URL, "generated_at": utc_now(),
         "source_last_modified": response.headers.get("Last-Modified"),
-        "image_width": image.width,
-        "image_height": image.height,
-        "values": values,
-        "recognized_count": len(values),
+        "image_width": image.width, "image_height": image.height,
+        "values": values, "recognized_count": len(values),
         "expected_count": len(PERCENT_ROIS),
-        "ocr_note": "僅發布通過 OCR 一致性檢查的數值；無法可靠辨識的地點不發布機率。",
+        "ocr_note": "只發布通過 OCR 一致性檢查的數值；無法可靠辨識的地點不發布機率。",
     }
     tmp = OUT.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
