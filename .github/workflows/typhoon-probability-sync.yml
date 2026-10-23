@@ -3,7 +3,7 @@ name: Sync CWA Typhoon Probability Map OCR Diagnostics
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 */6 * * *"
+    - cron: "17 * * * *"
 
 permissions:
   contents: write
