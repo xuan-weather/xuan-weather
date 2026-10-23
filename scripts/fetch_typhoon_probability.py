@@ -28,33 +28,33 @@ IMAGE_URL = "https://www.cwa.gov.tw/Data/typhoon/WSP_CH.png"
 # (left, top, right, bottom). They deliberately exclude nearby cities' labels.
 REFERENCE_SIZE = (400, 500)
 PERCENT_ROIS = {
-    "é£æ±ç¸£": (116, 95, 151, 116),
-    "ééç¸£": (97, 159, 126, 180),
-    "æ¾æ¹ç¸£": (84, 247, 116, 270),
-    "æ°åå¸": (230, 101, 271, 124),
-    "åºéå¸": (303, 91, 344, 114),
-    "æ¡åå¸": (214, 119, 254, 142),
-    "èºåå¸": (300, 128, 342, 151),
-    "æ°ç«¹å¸": (169, 149, 211, 173),
-    "æ°ç«¹ç¸£": (238, 164, 278, 187),
-    "èæ ç¸£": (158, 179, 197, 202),
-    "èºä¸­å¸": (216, 207, 256, 232),
-    "å½°åç¸£": (84, 226, 124, 250),
-    "åæç¸£": (226, 239, 266, 264),
-    "é²æç¸£": (113, 271, 153, 295),
-    "åç¾©å¸": (190, 297, 232, 321),
-    "åç¾©ç¸£": (104, 313, 145, 337),
-    "èºåå¸": (108, 347, 148, 371),
-    "é«éå¸": (108, 397, 148, 421),
-    "å±æ±ç¸£": (168, 383, 209, 407),
-    "å®è­ç¸£": (319, 163, 357, 186),
-    "è±è®ç¸£": (298, 238, 340, 261),
-    "èºæ±ç¸£": (241, 344, 281, 368),
-    "ç¶ å³¶": (294, 350, 333, 374),
-    "è­å¶¼": (279, 425, 319, 449),
-    "ææ¥": (167, 452, 205, 476),
+    "連江縣": (116, 95, 151, 116),
+    "金門縣": (97, 159, 126, 180),
+    "澎湖縣": (84, 247, 116, 270),
+    "新北市": (230, 101, 271, 124),
+    "基隆市": (303, 91, 344, 114),
+    "桃園市": (214, 119, 254, 142),
+    "臺北市": (300, 128, 342, 151),
+    "新竹市": (169, 149, 211, 173),
+    "新竹縣": (238, 164, 278, 187),
+    "苗栗縣": (158, 179, 197, 202),
+    "臺中市": (216, 207, 256, 232),
+    "彰化縣": (84, 226, 124, 250),
+    "南投縣": (226, 239, 266, 264),
+    "雲林縣": (113, 271, 153, 295),
+    "嘉義市": (190, 297, 232, 321),
+    "嘉義縣": (104, 313, 145, 337),
+    "臺南市": (108, 347, 148, 371),
+    "高雄市": (108, 397, 148, 421),
+    "屏東縣": (168, 383, 209, 407),
+    "宜蘭縣": (319, 163, 357, 186),
+    "花蓮縣": (298, 238, 340, 261),
+    "臺東縣": (241, 344, 281, 368),
+    "綠島": (294, 350, 333, 374),
+    "蘭嶼": (279, 425, 319, 449),
+    "恆春": (167, 452, 205, 476),
 }
-PERCENT_RE = re.compile(r"(?<!\d)(100|[1-9]?\d)\s*[%ï¼]?")
+PERCENT_RE = re.compile(r"(?<!\d)(100|[1-9]?\d)\s*[%％]?")
 
 def utc_now():
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
@@ -75,7 +75,7 @@ def download_official_map():
     except requests.exceptions.SSLError as err:
         # Temporary fallback for the certificate-chain failure seen in Actions.
         # The final URL is checked against the official CWA domain before use.
-        print(f"è­¦åï¼å®æ¹å SSL æè­é©è­å¤±æï¼åè©¦éå®å®æ¹ç¶²ååæ´ï¼{err}", file=sys.stderr)
+        print(f"警告：官方圖 SSL 憑證驗證失敗，嘗試限定官方網址備援：{err}", file=sys.stderr)
         import urllib3
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         response = requests.get(
@@ -87,15 +87,15 @@ def download_official_map():
 
     host = (requests.utils.urlparse(response.url).hostname or "").lower()
     if host not in ("www.cwa.gov.tw", "cwa.gov.tw"):
-        raise RuntimeError(f"ä¸è¼éæ°å°åè³éæ°£è±¡ç½²ç¶²åï¼åæ­¢ï¼{response.url}")
+        raise RuntimeError(f"下載重新導向至非氣象署網域，停止：{response.url}")
     if not response.headers.get("content-type", "").lower().startswith("image/"):
-        raise RuntimeError(f"æ°£è±¡ç½²åå³ä¸æ¯åçï¼{response.headers.get('content-type')}")
+        raise RuntimeError(f"氣象署回傳不是圖片：{response.headers.get('content-type')}")
     try:
         image = Image.open(BytesIO(response.content)).convert("RGB")
     except Exception as exc:
-        raise RuntimeError(f"å®æ¹åå³å§å®¹ç¡æ³è§£è®çºåçï¼{exc}") from exc
+        raise RuntimeError(f"官方回傳內容無法解讀為圖片：{exc}") from exc
     if image.width < 200 or image.height < 200:
-        raise RuntimeError(f"å®æ¹åå°ºå¯¸ç°å¸¸ï¼{image.size}")
+        raise RuntimeError(f"官方圖尺寸異常：{image.size}")
     return response, image
 
 def normalize_roi(roi, size):
@@ -144,12 +144,12 @@ def read_percent_from_roi(image, city, roi):
                     config=f"--oem 1 --psm {psm} -c tessedit_char_whitelist=0123456789",
                 )
             except Exception as exc:
-                print(f"OCR è­¦å {city}/{mode}/psm{psm}: {exc}", file=sys.stderr)
+                print(f"OCR 警告 {city}/{mode}/psm{psm}: {exc}", file=sys.stderr)
                 continue
             digits = re.sub(r"\D", "", raw)
             if not digits:
                 continue
-            # Crop is restricted to one percentage label. Keep plausible 1â100 values.
+            # Crop is restricted to one percentage label. Keep plausible 1–100 values.
             if len(digits) > 3:
                 continue
             value = int(digits)
@@ -188,8 +188,8 @@ def main():
     ref_aspect = REFERENCE_SIZE[0] / REFERENCE_SIZE[1]
     if abs(aspect - ref_aspect) > 0.12:
         raise RuntimeError(
-            f"å®æ¹æ©çåçåæ¯ä¾å·²æ¹è®ï¼ç®å {image.width}x{image.height}ï¼ï¼"
-            "åæ­¢ä½¿ç¨èåº§æ¨ï¼é¿åæç¾åæ¯éé¯ç¸£å¸ã"
+            f"官方機率圖版型比例已改變（目前 {image.width}x{image.height}），"
+            "停止使用舊座標，避免把百分比配錯縣市。"
         )
 
     values = {}
@@ -199,9 +199,9 @@ def main():
         diagnostics[city] = detail
         if percent is not None:
             values[city] = {"percent": percent}
-            print(f"OCRï¼{city} {percent}%ï¼å¤æ¬¡è¾¨è­ä¸è´ï¼")
+            print(f"OCR：{city} {percent}%（多次辨識一致）")
         else:
-            print(f"OCRï¼{city} æªè½å¯é è¾¨è­ï¼ä¿ç --")
+            print(f"OCR：{city} 未能可靠辨識，保留 --")
 
     (DEBUG / "ocr-diagnostics.json").write_text(
         json.dumps({
@@ -218,12 +218,12 @@ def main():
 
     if not values:
         raise RuntimeError(
-            "æ²æä»»ä½æ©çå¼ééå¤æ¬¡ OCR ä¸è´æ§æª¢æ¥ï¼"
-            "å·²è¼¸åºè¨ºæ·åçï¼æªæ´æ°æ­£å¼ JSONã"
+            "沒有任何機率值通過多次 OCR 一致性檢查；"
+            "已輸出診斷圖片，未更新正式 JSON。"
         )
 
     payload = {
-        "source": "ä¸­å¤®æ°£è±¡ç½²å®æ¹ 120 å°æé¢±é¢¨æ´é¢¨ä¾µè¥²æ©çå",
+        "source": "中央氣象署官方 120 小時颱風暴風侵襲機率圖",
         "source_url": IMAGE_URL,
         "generated_at": utc_now(),
         "source_last_modified": response.headers.get("Last-Modified"),
@@ -233,8 +233,8 @@ def main():
         "recognized_count": len(values),
         "expected_count": len(PERCENT_ROIS),
         "ocr_note": (
-            "åªç¼å¸å®æ¹æ©çåä¸­ééå¤æ¬¡ OCR ä¸è´æ§æª¢æ¥çç¾åæ¯ï¼"
-            "æªè½å¯é è¾¨è­çå°é»ä¸ç¼å¸æ¸å¼ã"
+            "只發布官方機率圖中通過多次 OCR 一致性檢查的百分比；"
+            "未能可靠辨識的地點不發布數值。"
         ),
     }
     tmp = OUT.with_suffix(".json.tmp")
@@ -243,7 +243,7 @@ def main():
         encoding="utf-8",
     )
     tmp.replace(OUT)
-    print(f"å·²æ´æ° {OUT}ï¼å¯é è¾¨è­ {len(values)}/{len(PERCENT_ROIS)} åå°é»")
+    print(f"已更新 {OUT}：可靠辨識 {len(values)}/{len(PERCENT_ROIS)} 個地點")
 
 if __name__ == "__main__":
     try:
