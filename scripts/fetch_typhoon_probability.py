@@ -229,11 +229,14 @@ def main():
     print(f"OCR：辨識到 {len(values)}/{len(CITIES)} 個地點；歧義 {len(ambiguities)} 個")
     if ambiguities:
         print("有歧義的地點：" + json.dumps(ambiguities, ensure_ascii=False))
-    if len(values) != len(CITIES) or ambiguities:
-        raise RuntimeError(
-            f"OCR 未能無歧義地辨識全部地點：有效 {len(values)}/{len(CITIES)}，"
-            f"歧義 {len(ambiguities)}；不發布不完整或推測資料。"
-        )
+    
+# 只發布有明確辨識證據的官方數值。
+# 未辨識或有歧義的地點不發布，不猜測機率。
+if not values:
+    raise RuntimeError(
+        f"OCR 沒有辨識到任何可安全發布的官方機率；"
+        f"歧義 {len(ambiguities)} 個。"
+    )
 
     payload = {
         "source": "中央氣象署官方 120 小時颱風暴風侵襲機率圖",
