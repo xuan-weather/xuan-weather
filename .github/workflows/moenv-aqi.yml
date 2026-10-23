@@ -1,9 +1,9 @@
 name: MOENV AQI Data
 
 on:
-  # GitHub Actions 使用 UTC；每小時第 5 分鐘執行，台灣時間也會是每小時 xx:05。
+  # GitHub Actions 使用 UTC；每小時第 3 分鐘執行，台灣時間也會是每小時 xx:03。
   schedule:
-    - cron: '5 * * * *'
+    - cron: '3 * * * *'
   workflow_dispatch:
 
 permissions:
