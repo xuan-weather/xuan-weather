@@ -45,11 +45,11 @@ PERCENT_ROIS = {
     "高雄市": (107, 399, 141, 423),
     "屏東縣": (207, 381, 243, 405),
     "宜蘭縣": (315, 164, 355, 188),
-    "花蓮縣": (301, 240, 344, 264),
+    "花蓮縣": (314, 240, 358, 264),
     "臺東縣": (229, 359, 267, 382),
     "綠島": (300, 354, 335, 376),
     "蘭嶼": (302, 427, 343, 451),
-    "恆春": (178, 454, 219, 477),
+    "恆春": (182, 454, 220, 477),
 }
 
 def utc_now():
@@ -155,6 +155,28 @@ def read_percent_from_roi(image, city, roi, rapid_engine):
                     votes.append(("rapidocr", value, has_pct))
     except Exception as exc:
         attempts.append({"engine": "rapidocr", "error": str(exc)})
+
+    # 金門的「1%」字樣很容易被 Tesseract 把百分號誤讀成「70」，
+    # 因而多數票錯成 17%。若 RapidOCR 有清楚讀到含 % 的數值，
+    # 金門優先採用該讀值，避免被錯誤的 Tesseract 多數票覆蓋。
+    if city == "金門縣":
+        rapid_percent_reads = [
+            a for a in attempts
+            if a.get("engine") == "rapidocr"
+            and a.get("value") is not None
+            and a.get("has_percent")
+            and a.get("score", 0) >= 0.35
+        ]
+        if rapid_percent_reads:
+            best_rapid = max(rapid_percent_reads, key=lambda a: a.get("score", 0))
+            return best_rapid["value"], {
+                "crop": list(box),
+                "votes": {str(best_rapid["value"]): 1},
+                "engines": {str(best_rapid["value"]): ["rapidocr-priority-for-jinmen"]},
+                "attempts": attempts,
+                "accepted_votes": 1,
+                "reason": "jinmen_percent_sign_reading_prioritized",
+            }
 
     counts, engine_votes, percent_sign = {}, {}, {}
     for engine, value, has_pct in votes:
