@@ -1,9 +1,56 @@
 {
-  "source": "https://www.cwa.gov.tw/Data/typhoon/WSP_CH.png",
-  "generated_at": null,
-  "source_last_modified": null,
-  "image_dimensions": null,
-  "values": {},
-  "recognized_count": 0,
-  "note": "尚未執行 GitHub Actions 同步；此檔不包含推測百分比。"
+  "source": "中央氣象署官方 120 小時颱風暴風侵襲機率圖",
+  "source_url": "https://www.cwa.gov.tw/Data/typhoon/WSP_CH.png",
+  "generated_at": "2026-10-23T02:04:48Z",
+  "source_last_modified": "Fri, 23 Oct 2026 01:52:04 GMT",
+  "image_width": 400,
+  "image_height": 500,
+  "values": {
+    "基隆市": {
+      "percent": 100
+    },
+    "新北市": {
+      "percent": 100
+    },
+    "新竹市": {
+      "percent": 100
+    },
+    "新竹縣": {
+      "percent": 100
+    },
+    "苗栗縣": {
+      "percent": 100
+    },
+    "臺中市": {
+      "percent": 99
+    },
+    "南投縣": {
+      "percent": 99
+    },
+    "嘉義市": {
+      "percent": 98
+    },
+    "臺南市": {
+      "percent": 86
+    },
+    "高雄市": {
+      "percent": 79
+    },
+    "宜蘭縣": {
+      "percent": 100
+    },
+    "花蓮縣": {
+      "percent": 100
+    },
+    "澎湖縣": {
+      "percent": 50
+    },
+    "連江縣": {
+      "percent": 77
+    },
+    "恆春": {
+      "percent": 98
+    }
+  },
+  "ocr_note": "只發布具無歧義 OCR 證據的官方圖數值；缺失或有歧義的地點不發布百分比。"
 }
