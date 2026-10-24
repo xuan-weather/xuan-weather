@@ -1,7 +1,7 @@
 {
   "sourceName": "行政院人事行政總處",
   "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31",
-  "updatedAt": "2026-10-24T05:53:37.733462+00:00",
+  "updatedAt": "2026-10-24T10:21:52.128949+00:00",
   "announcements": [
     {
       "county": "臺北市",
@@ -63,7 +63,7 @@
       "school": "unknown",
       "date": "—",
       "publishedAt": "",
-      "summary": "北部地區；基隆市；今天已達停止上班及上課標準。",
+      "summary": "基隆市；今天已達停止上班及上課標準。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
@@ -81,7 +81,7 @@
       "school": "unknown",
       "date": "—",
       "publishedAt": "",
-      "summary": "南部地區；嘉義市；今天未達停止上班及上課標準。",
+      "summary": "嘉義市；今天未達停止上班及上課標準。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
@@ -99,7 +99,7 @@
       "school": "unknown",
       "date": "—",
       "publishedAt": "",
-      "summary": "中部地區；苗栗縣；今天已達停止上班及上課標準。",
+      "summary": "苗栗縣；今天已達停止上班及上課標準。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
@@ -153,7 +153,7 @@
       "school": "unknown",
       "date": "—",
       "publishedAt": "",
-      "summary": "東部地區；宜蘭縣；今天已達停止上班及上課標準。",
+      "summary": "宜蘭縣；今天已達停止上班及上課標準。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
@@ -180,7 +180,7 @@
       "school": "unknown",
       "date": "—",
       "publishedAt": "",
-      "summary": "外島地區；澎湖縣；今天未達停止上班及上課標準。",
+      "summary": "澎湖縣；今天未達停止上班及上課標準。",
       "sourceUrl": "https://www.dgpa.gov.tw/typh/daily/nds.html?uid=31"
     },
     {
