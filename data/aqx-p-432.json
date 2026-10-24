@@ -1034,7 +1034,7 @@
         "co_8hr": "",
         "pm2.5_avg": "",
         "pm10_avg": "",
-        "so2_avg": "",
+        "so2_avg": "0",
         "longitude": "120.19933",
         "latitude": "23.702175",
         "siteid": "41"
