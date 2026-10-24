@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>颱風警報發布以來｜測站極值互動地圖 | Xuan Weather</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{color-scheme:dark;--bg:#080f1d;--panel:#101a2d;--line:#25334b;--muted:#a8b5ca;--text:#f4f7fb;--blue:#22b8f0;--cyan:#62d8ed;--gold:#ffb547}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0a1424,#070c16);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif}
+main{max-width:1440px;margin:auto;padding:18px;display:grid;gap:14px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.brand{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#168dd2,#43c5ed);display:grid;place-items:center;font-size:25px}.eyebrow{font-size:12px;color:var(--cyan);letter-spacing:.08em}.title{font-size:clamp(22px,4vw,32px);font-weight:850;margin:2px 0}.sub{color:var(--muted);font-size:13px}.top-actions{display:flex;gap:8px;flex-wrap:wrap}.btn,.select,input{background:#142139;color:var(--text);border:1px solid #334561;border-radius:12px;padding:10px 12px;font-size:14px}.btn{cursor:pointer;text-decoration:none;display:inline-block}.btn:hover{border-color:var(--cyan)}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.stat,.panel{background:linear-gradient(145deg,rgba(20,32,54,.97),rgba(12,20,36,.97));border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px #0002}.stat{padding:14px 16px}.stat .label{font-size:12px;color:var(--muted)}.stat .value{font-size:25px;font-weight:850;margin-top:5px;color:var(--cyan)}.stat .hint{font-size:11px;color:var(--muted);margin-top:4px}.controls{padding:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.controls label{display:flex;align-items:center;gap:7px;color:#d9e4f2;font-size:13px}.controls .select{min-width:130px}.check{accent-color:#13aee5;width:17px;height:17px}.notice{padding:12px 14px;border-radius:12px;background:#19253a;border:1px solid #34435d;color:#c8d5e7;font-size:13px;line-height:1.55}.notice.warn{border-color:#916b2b;background:#2a2115;color:#ffdfaa}.map-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px}.map-panel{overflow:hidden}.map-head{padding:13px 15px;display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid var(--line);flex-wrap:wrap}.map-head strong{font-size:16px}.map-head span{font-size:12px;color:var(--muted)}#map{height:min(72vh,760px);min-height:480px;background:#12293b}.legend{display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}.legend span{display:flex;align-items:center;gap:5px}.dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid #ffffffa0}.side{padding:12px;min-width:0}.side h2{font-size:15px;margin:2px 0 10px}.rank-list{display:grid;gap:7px}.rank{border:1px solid #2b3b55;background:#111e33;border-radius:12px;padding:9px 10px;display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:8px;align-items:center;cursor:pointer}.rank:hover{border-color:var(--cyan)}.rank .n{color:var(--gold);font-weight:800}.rank .name{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rank .place{font-size:11px;color:var(--muted);margin-top:3px}.rank .num{font-weight:850;color:var(--cyan);white-space:nowrap}.empty{color:var(--muted);font-size:13px;padding:14px 4px;line-height:1.6}.foot{color:#8fa0b8;font-size:11px;line-height:1.6;padding:0 3px}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#101a2d;color:#f4f7fb}.leaflet-popup-content{margin:12px 14px;min-width:190px}.pop-title{font-weight:800;font-size:15px;margin-bottom:4px}.pop-meta{color:#9fb0c9;font-size:11px;margin-bottom:8px}.pop-row{display:flex;justify-content:space-between;gap:12px;border-top:1px solid #2a3a54;padding:6px 0;font-size:12px}.pop-row b{color:#65d8f3}.value-label{background:#07111ee8;border:1px solid #ffffff90;color:#fff;border-radius:5px;padding:1px 4px;font-size:10px;font-weight:800;box-shadow:0 1px 4px #0009}.value-label:before{display:none}.loading{display:flex;gap:8px;align-items:center;color:var(--muted);padding:20px}.pulse{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 5px #22b8f022}
+@media(max-width:900px){main{padding:12px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.map-layout{grid-template-columns:1fr}.side{order:2}#map{height:62vh;min-height:420px}.rank-list{grid-template-columns:repeat(2,minmax(0,1fr))}.rank{grid-template-columns:22px minmax(0,1fr)}.rank .num{grid-column:2}.title{font-size:23px}}
+@media(max-width:480px){main{padding:9px;gap:10px}.logo{width:40px;height:40px}.controls{gap:8px}.controls label{width:100%;justify-content:space-between}.controls .select{flex:1;min-width:0}.grid{gap:7px}.stat{padding:11px}.stat .value{font-size:22px}.map-head{align-items:flex-start}#map{min-height:440px;height:64vh}.rank-list{grid-template-columns:1fr}.top-actions .btn{padding:8px 10px;font-size:12px}}
+</style>
+</head>
+<body>
+<main>
+<header class="top">
+ <div class="brand"><div class="logo">🌀</div><div><div class="eyebrow">XUAN WEATHER · STATION EXTREMES</div><h1 class="title">颱風警報發布以來｜測站極值地圖</h1><div class="sub">獨立自繪互動圖台・中央氣象署測站觀測資料</div></div></div>
+ <div class="top-actions"><a class="btn" href="./index.html">← 返回 Xuan Weather</a><button class="btn" id="refresh">↻ 更新資料</button></div>
+</header>
+<div class="notice" id="status"><span class="pulse" style="display:inline-block;margin-right:8px"></span>正在載入測站極值資料…</div>
+<section class="grid">
+ <div class="stat"><div class="label">納入測站</div><div class="value" id="stationCount">—</div><div class="hint">具座標且有有效觀測資料</div></div>
+ <div class="stat"><div class="label">全台最大陣風</div><div class="value" id="topGust">—</div><div class="hint" id="topGustStation">等待資料</div></div>
+ <div class="stat"><div class="label">最大 10 分鐘平均風速</div><div class="value" id="topMean">—</div><div class="hint" id="topMeanStation">等待資料</div></div>
+ <div class="stat"><div class="label">資料最後更新</div><div class="value" id="lastUpdate" style="font-size:17px">—</div><div class="hint" id="sampleCount">累積觀測快照</div></div>
+</section>
+<section class="panel controls">
+ <label>顯示指標 <select class="select" id="metric"><option value="gust">🌪️ 最大陣風（m/s）</option><option value="mean">💨 最大 10 分鐘平均風速（m/s）</option><option value="temp">🌡️ 最高氣溫（°C）</option><option value="wind">🌬️ 最高觀測風速（m/s）</option></select></label>
+ <label>縣市 <select class="select" id="county"><option value="">全台</option></select></label>
+ <label>測站搜尋 <input id="search" type="search" placeholder="測站名稱／代碼" style="width:170px;max-width:100%"></label>
+ <label><input class="check" id="showValues" type="checkbox" checked> 地圖顯示數值</label>
+</section>
+<div class="map-layout">
+ <section class="panel map-panel"><div class="map-head"><div><strong id="mapTitle">全台測站最大陣風</strong><br><span id="mapSubtitle">點擊測站查看極值與發生時間</span></div><span id="mapTime">資料載入中</span></div><div id="map"><div class="loading"><span class="pulse"></span>正在建立互動地圖…</div></div><div class="legend" id="legend"></div></section>
+ <aside class="panel side"><h2>🏆 測站極值 TOP 10</h2><div class="sub" id="rankSub" style="margin-bottom:10px">依目前選取指標排序</div><div id="rankList" class="rank-list"><div class="empty">等待資料載入。</div></div></aside>
+</div>
+<div class="foot">資料來源：中央氣象署 O-A0003-001（10 分鐘綜觀氣象資料）及 Xuan Weather 保留的資料快照。測站標記與極值圖層由本頁自行繪製。<br>統計範圍以網站保留的官方觀測快照回溯；若原始歷史快照不完整，極值可能低於實際全期間極值。缺值不會以 0 代替。</div>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+'use strict';
+var DATA_URL='./data/typhoon-station-extremes.json',archive=null,map=null,markerLayer=null,markersById={};
+var METRICS={
+ gust:{label:'最大陣風',unit:'m/s',title:'全台測站最大陣風',ranges:[10,17.2,24.5,32.7,41.5],colors:['#38bdf8','#22c55e','#facc15','#fb923c','#ef4444','#a855f7']},
+ mean:{label:'最大 10 分鐘平均風速',unit:'m/s',title:'全台測站最大 10 分鐘平均風速',ranges:[5,10,15,20],colors:['#38bdf8','#22c55e','#facc15','#fb923c','#ef4444']},
+ temp:{label:'最高氣溫',unit:'°C',title:'全台測站最高氣溫',ranges:[20,25,30,35],colors:['#2563eb','#38bdf8','#22c55e','#fb923c','#ef4444']},
+ wind:{label:'最高觀測風速',unit:'m/s',title:'全台測站最高觀測風速',ranges:[5,10,15,20],colors:['#38bdf8','#22c55e','#facc15','#fb923c','#ef4444']}
+};
+function el(id){return document.getElementById(id)}
+function n(v){var x=Number(v);return v!==null&&v!==''&&Number.isFinite(x)?x:null}
+function fmt(v){return v===null||v===undefined?'—':Number(v).toFixed(1)}
+function tm(v){if(!v)return'—';var d=new Date(v);return isNaN(d)?v:d.toLocaleString('zh-TW',{timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})}
+function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])})}
+function val(s,m){return s[m]&&n(s[m].value)!==null?Number(s[m].value):null}
+function color(v,m){var c=METRICS[m];if(v===null)return'#64748b';var i=0;while(i<c.ranges.length&&v>=c.ranges[i])i++;return c.colors[i]}
+function allStations(){return archive&&Array.isArray(archive.stations)?archive.stations:[]}
+function filtered(){var m=el('metric').value,c=el('county').value,q=el('search').value.trim().toLowerCase();return allStations().filter(function(s){return Number.isFinite(Number(s.lat))&&Number.isFinite(Number(s.lon))&&(!c||s.county===c)&&(!q||(String(s.name||'').toLowerCase().includes(q)||String(s.id||'').toLowerCase().includes(q)))&&val(s,m)!==null})}
+function initMap(){if(map)return;map=L.map('map',{zoomControl:false,preferCanvas:true}).setView([23.75,120.95],7);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);L.control.zoom({position:'bottomright'}).addTo(map);markerLayer=L.layerGroup().addTo(map);map.on('zoomend',function(){renderMarkersOnly()});setTimeout(function(){map.invalidateSize()},150)}
+function popup(s){var rows=[['最大陣風',s.gust,'m/s'],['最大 10 分鐘平均風速',s.mean,'m/s'],['最高氣溫',s.temp,'°C'],['最高觀測風速',s.wind,'m/s']],out='<div class="pop-title">'+esc(s.name)+'（'+esc(s.id)+'）</div><div class="pop-meta">'+esc(s.county||'')+esc(s.town?' · '+s.town:'')+'<br>統計起點：'+esc(tm(archive.warningStartAt||archive.coverageStartAt))+'</div>';rows.forEach(function(r){var o=r[1]||{};out+='<div class="pop-row"><span>'+r[0]+'</span><b>'+fmt(o.value)+' '+r[2]+'</b></div>';if(o.time)out+='<div class="pop-meta">發生時間：'+esc(tm(o.time))+'</div>'});out+='<div class="pop-meta">最後觀測：'+esc(tm(s.lastObservedAt))+'</div>';return out}
+function renderMarkersOnly(){if(!map||!markerLayer||!archive)return;var m=el('metric').value;markerLayer.clearLayers();markersById={};filtered().forEach(function(s){var v=val(s,m),mk=L.circleMarker([Number(s.lat),Number(s.lon)],{radius:Math.max(5,Math.min(10,5+(v||0)/12)),color:'#f8fafc',weight:1.5,fillColor:color(v,m),fillOpacity:.95});mk.bindPopup(popup(s));if(el('showValues').checked&&map.getZoom()>=7)mk.bindTooltip(fmt(v),{permanent:true,direction:'top',offset:[0,-4],className:'value-label'});mk.addTo(markerLayer);markersById[String(s.id)]=mk})}
+function render(){
+ if(!archive)return;initMap();var m=el('metric').value,cfg=METRICS[m],stations=filtered(),all=allStations();
+ el('mapTitle').textContent=cfg.title;el('mapSubtitle').textContent='點擊測站查看各項極值及發生時間';el('mapTime').textContent='最後更新 '+tm(archive.lastUpdated);renderMarkersOnly();
+ el('stationCount').textContent=stations.length;
+ var g=all.filter(function(s){return val(s,'gust')!==null}).sort(function(a,b){return val(b,'gust')-val(a,'gust')})[0],w=all.filter(function(s){return val(s,'mean')!==null}).sort(function(a,b){return val(b,'mean')-val(a,'mean')})[0];
+ el('topGust').textContent=g?fmt(val(g,'gust'))+' m/s':'—';el('topGustStation').textContent=g?g.name+' · '+tm(g.gust.time):'目前無資料';el('topMean').textContent=w?fmt(val(w,'mean'))+' m/s':'—';el('topMeanStation').textContent=w?w.name+' · '+tm(w.mean.time):'目前無資料';
+ el('lastUpdate').textContent=tm(archive.lastUpdated);el('sampleCount').textContent='已納入 '+(archive.snapshotCount||0)+' 個觀測快照';
+ var sorted=stations.slice().sort(function(a,b){return val(b,m)-val(a,m)});el('rankSub').textContent='依'+cfg.label+'排序 · '+stations.length+' 個測站';var rank=el('rankList');rank.innerHTML='';
+ if(!sorted.length)rank.innerHTML='<div class="empty">目前沒有符合篩選條件的歷史極值。請確認資料收集工作流程已成功執行。</div>';
+ else sorted.slice(0,10).forEach(function(s,i){var row=document.createElement('div');row.className='rank';row.innerHTML='<div class="n">#'+(i+1)+'</div><div><div class="name">'+esc(s.name)+'</div><div class="place">'+esc(s.county||'')+' '+esc(s.town||'')+'</div></div><div class="num">'+fmt(val(s,m))+' '+cfg.unit+'</div>';row.addEventListener('click',function(){var mk=markersById[String(s.id)];if(mk){map.setView(mk.getLatLng(),Math.max(map.getZoom(),9));mk.openPopup()}});rank.appendChild(row)});
+ var labels=m==='gust'?['< 10','10–17.1','17.2–24.4','24.5–32.6','32.7–41.4','≥ 41.5']:m==='temp'?['< 20','20–24.9','25–29.9','30–34.9','≥ 35']:['< 5','5–9.9','10–14.9','15–19.9','≥ 20'];var leg=el('legend');leg.innerHTML='';cfg.colors.forEach(function(col,i){var sp=document.createElement('span');sp.innerHTML='<i class="dot" style="background:'+col+'"></i>'+labels[i]+' '+cfg.unit;leg.appendChild(sp)});
+ if(archive.warningStartAt){el('status').className=archive.warningStartExplicit?'notice':'notice warn';el('status').textContent=(archive.warningStartExplicit?'官方警報起始時間：':'依保存紀錄推估警報起始時間：')+tm(archive.warningStartAt)+'；觀測資料涵蓋至 '+tm(archive.lastSampleTime||archive.lastUpdated)+'。'+(archive.backfillComplete?'已回溯網站保留的官方觀測快照。':'資料正在累積。')}
+ else{el('status').className='notice warn';el('status').textContent='尚無法從保存的警報紀錄確認首次海上警報時間。資料會從可取得的第一筆觀測開始累積，無法補造未保存的歷史陣風。'}
+ setTimeout(function(){map.invalidateSize()},100)
+}
+function load(){el('refresh').disabled=true;fetch(DATA_URL+'?v='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('資料檔尚未建立');return r.json()}).then(function(d){archive=d;var counties=Array.from(new Set(allStations().map(function(s){return s.county}).filter(Boolean))).sort(),sel=el('county'),old=sel.value;sel.innerHTML='<option value="">全台</option>';counties.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)});sel.value=counties.includes(old)?old:'';render()}).catch(function(err){el('status').className='notice warn';el('status').textContent='無法載入測站極值資料：'+err.message+'。請確認資料收集工作流程已成功執行。';el('rankList').innerHTML='<div class="empty">尚未有可用資料。</div>';initMap()}).finally(function(){el('refresh').disabled=false})}
+['metric','county'].forEach(function(id){el(id).addEventListener('change',render)});el('search').addEventListener('input',render);el('showValues').addEventListener('change',render);el('refresh').addEventListener('click',load);document.addEventListener('visibilitychange',function(){if(!document.hidden)load()});load();
+})();
+</script>
+</body></html>
