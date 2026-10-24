@@ -1,0 +1,38 @@
+name: Typhoon Station Extremes Map
+on:
+  workflow_dispatch:
+  schedule:
+    # Reuse committed CWA observations; this workflow does not make an extra CWA API request.
+    - cron: "*/10 * * * *"
+permissions:
+  contents: write
+concurrency:
+  group: typhoon-station-extremes
+  cancel-in-progress: false
+jobs:
+  build-extremes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout full history for backfill
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build station extremes from retained official observations
+        run: python scripts/build_typhoon_station_extremes.py
+      - name: Commit updated map data
+        run: |
+          git add data/typhoon-station-extremes.json
+          if git diff --cached --quiet; then
+            echo "No station-extreme changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update typhoon station extremes"
+          git push
