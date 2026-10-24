@@ -1,38 +1,67 @@
 name: Typhoon Station Extremes Map
+
 on:
   workflow_dispatch:
   schedule:
-    # Reuse committed CWA observations; this workflow does not make an extra CWA API request.
     - cron: "*/10 * * * *"
+
 permissions:
   contents: write
+
 concurrency:
   group: typhoon-station-extremes
   cancel-in-progress: false
+
 jobs:
   build-extremes:
     runs-on: ubuntu-latest
     timeout-minutes: 12
+
     steps:
       - name: Checkout full history for backfill
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - name: Build station extremes from retained official observations
         run: python scripts/build_typhoon_station_extremes.py
-      - name: Commit updated map data
+
+      - name: Commit and push updated map data safely
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add data/typhoon-station-extremes.json
+
           if git diff --cached --quiet; then
             echo "No station-extreme changes."
             exit 0
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git commit -m "chore: update typhoon station extremes"
-          git push
+
+          for attempt in 1 2 3; do
+            git fetch origin main
+
+            if ! git rebase origin/main; then
+              echo "Rebase conflict; refusing to overwrite remote changes."
+              git rebase --abort || true
+              exit 1
+            fi
+
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+
+            echo "Push attempt ${attempt} failed."
+            sleep 2
+          done
+
+          echo "Could not push after 3 attempts."
+          exit 1
