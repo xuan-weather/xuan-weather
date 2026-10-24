@@ -1,45 +1,11 @@
 {
-  "updatedAt": "2026-10-25T03:23:23.345761+08:00",
+  "updatedAt": "2026-10-25T05:43:44.137006+08:00",
   "source": "NCDR 民生示警公開資料平台（JSON Atom + ATOM Feed；目標告警時間以 CAP sent 為準）",
   "feed": [
     "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
     "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx"
   ],
   "alerts": [
-    {
-      "id": "WRA_floodSensor_20261025015700_0000",
-      "category": "",
-      "title": "淹水感測",
-      "status": "Actual",
-      "msgType": "Alert",
-      "author": "水利署",
-      "updated": "2026-10-25T01:57:00+08:00",
-      "publishedAt": "2026-10-25T01:57:00+08:00",
-      "effective": "2026/10/25 上午 01:57:00",
-      "expires": "2026/10/25 上午 04:57:00",
-      "summary": "",
-      "link": "",
-      "feedSource": "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
-      "capCategory": "",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_extremely-rain_202610242220001",
-      "category": "",
-      "title": "降雨",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-10-24T22:20:12+08:00",
-      "publishedAt": "2026-10-24T22:20:12+08:00",
-      "effective": "2026/10/24 下午 10:15:00",
-      "expires": "2026/10/25 上午 11:00:00",
-      "summary": "",
-      "link": "",
-      "feedSource": "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
-      "capCategory": "",
-      "isDrill": false
-    },
     {
       "id": "THB-Bobe_633_23836_42769_20261024094133",
       "category": "",
