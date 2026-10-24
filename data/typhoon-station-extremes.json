@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "source": "中央氣象署 O-A0003-001；使用 Xuan Weather Git 歷史快照回溯",
+  "warningStartAt": null,
+  "warningId": null,
+  "warningActive": false,
+  "warningStartExplicit": false,
+  "coverageStartAt": null,
+  "lastSampleTime": null,
+  "lastUpdated": null,
+  "snapshotCount": 0,
+  "recordCount": 0,
+  "backfillComplete": false,
+  "notes": [
+    "尚未執行首次歷史回溯。"
+  ],
+  "stations": []
+}
