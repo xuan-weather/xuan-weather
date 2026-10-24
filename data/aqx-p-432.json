@@ -1034,7 +1034,7 @@
         "co_8hr": "",
         "pm2.5_avg": "",
         "pm10_avg": "",
-        "so2_avg": "",
+        "so2_avg": "0",
         "longitude": "120.19933",
         "latitude": "23.702175",
         "siteid": "41"
@@ -1627,7 +1627,7 @@
         "nox": "2",
         "no": "0.1",
         "wind_speed": "4.2",
-        "wind_direc": "",
+        "wind_direc": "303",
         "publishtime": "2026\/10\/24 13:00:00",
         "co_8hr": "0.1",
         "pm2.5_avg": "3.3",
