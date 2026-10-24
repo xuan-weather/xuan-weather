@@ -1,19 +1,19 @@
 {
   "source": "中央氣象署官方 120 小時颱風暴風侵襲機率圖",
   "source_url": "https://www.cwa.gov.tw/Data/typhoon/WSP_CH.png",
-  "generated_at": "2026-10-23T23:22:25Z",
-  "source_last_modified": "Fri, 23 Oct 2026 19:51:49 GMT",
+  "generated_at": "2026-10-24T01:50:24Z",
+  "source_last_modified": "Sat, 24 Oct 2026 01:14:15 GMT",
   "image_width": 400,
   "image_height": 500,
   "values": {
     "連江縣": {
-      "percent": 100
+      "percent": 1
     },
     "金門縣": {
       "percent": 0
     },
     "澎湖縣": {
-      "percent": 100
+      "percent": 0
     },
     "新北市": {
       "percent": 100
@@ -28,40 +28,37 @@
       "percent": 100
     },
     "新竹市": {
-      "percent": 100
+      "percent": 30
     },
     "新竹縣": {
       "percent": 100
     },
     "苗栗縣": {
-      "percent": 100
+      "percent": 37
     },
     "臺中市": {
-      "percent": 100
+      "percent": 1
     },
     "彰化縣": {
-      "percent": 100
+      "percent": 0
     },
     "南投縣": {
-      "percent": 100
+      "percent": 0
     },
     "雲林縣": {
-      "percent": 100
+      "percent": 0
     },
     "嘉義市": {
-      "percent": 100
+      "percent": 0
     },
     "嘉義縣": {
-      "percent": 100
+      "percent": 0
     },
     "臺南市": {
-      "percent": 100
-    },
-    "高雄市": {
-      "percent": 100
+      "percent": 0
     },
     "屏東縣": {
-      "percent": 100
+      "percent": 0
     },
     "宜蘭縣": {
       "percent": 100
@@ -70,19 +67,16 @@
       "percent": 100
     },
     "臺東縣": {
-      "percent": 100
+      "percent": 0
     },
     "綠島": {
-      "percent": 100
-    },
-    "蘭嶼": {
-      "percent": 100
+      "percent": 0
     },
     "恆春": {
-      "percent": 100
+      "percent": 0
     }
   },
-  "recognized_count": 25,
+  "recognized_count": 23,
   "expected_count": 25,
   "ocr_note": "只發布通過 OCR 一致性檢查的數值；無法可靠辨識的地點不發布機率。"
 }
