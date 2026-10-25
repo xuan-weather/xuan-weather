@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-25T09:46:39.218405+08:00",
+  "updatedAt": "2026-10-25T14:59:10.356318+08:00",
   "source": "NCDR 民生示警公開資料平台（JSON Atom + ATOM Feed；目標告警時間以 CAP sent 為準）",
   "feed": [
     "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
@@ -7,16 +7,16 @@
   ],
   "alerts": [
     {
-      "id": "THB-Bobe_633_23836_42769_20261024094133",
+      "id": "CWA-Weather_strong-wind_202610251047001",
       "category": "",
-      "title": "道路封閉",
+      "title": "強風",
       "status": "Actual",
       "msgType": "Alert",
-      "author": "交通部公路局",
-      "updated": "2026-10-24T09:41:33+08:00",
-      "publishedAt": "2026-10-24T09:41:33+08:00",
-      "effective": "2026/10/24 上午 09:38:56",
-      "expires": "2026/10/25 下午 12:39:00",
+      "author": "中央氣象署",
+      "updated": "2026-10-25T10:47:40+08:00",
+      "publishedAt": "2026-10-25T10:47:40+08:00",
+      "effective": "2026/10/25 上午 10:42:00",
+      "expires": "2026/10/26 下午 11:00:00",
       "summary": "",
       "link": "",
       "feedSource": "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
