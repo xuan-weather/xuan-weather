@@ -170,7 +170,7 @@
         "no2": "10",
         "nox": "10.5",
         "no": "0.5",
-        "wind_speed": "",
+        "wind_speed": "3",
         "wind_direc": "94",
         "publishtime": "2026\/10\/31 20:00:00",
         "co_8hr": "0.3",
