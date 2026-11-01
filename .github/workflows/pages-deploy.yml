@@ -50,18 +50,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          status=$(curl -sS -o /tmp/pages-cancel-response.txt -w "%{http_code}" -X POST \\
-            -H "Accept: application/vnd.github+json" \\
-            -H "Authorization: Bearer ${GH_TOKEN}" \\
-            -H "X-GitHub-Api-Version: 2022-11-28" \\
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages/deployments/0006eec2c575247f54986a63f69455d50df4ba4f/cancel")
-
-          if [ "$status" = "204" ]; then
+          status=$(curl -sS -o /tmp/pages-cancel-response.txt -w "%{http_code}" -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages/deployments/0006eec2c575247f54986a63f69455d50df4ba4f/cancel")
+          echo "Cancel API HTTP status: ${status}"
+          if [ "${status}" = "204" ]; then
             echo "Stuck Pages deployment cancelled."
-          elif [ "$status" = "404" ]; then
-            echo "Stuck Pages deployment is already cleared or no longer exists."
+          elif [ "${status}" = "404" ]; then
+            echo "The specified Pages deployment no longer exists; continuing."
           else
-            echo "Could not cancel Pages deployment. HTTP status: $status"
             cat /tmp/pages-cancel-response.txt
             exit 1
           fi
