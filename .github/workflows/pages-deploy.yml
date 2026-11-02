@@ -5,6 +5,26 @@ on:
   push:
     branches:
       - main
+  workflow_run:
+    workflows:
+      - "CWA Earthquake Reports - Fast Sync"
+      - "CWA 長浪即時訊息"
+      - "CWA Rainfall Data"
+      - "CWA 10-Minute Temperature + Rainfall + Wind/Gust History"
+      - "CWA History Legacy (Manual Only)"
+      - "CWA Today Temperature Extremes"
+      - "CWA Township 7-Day Forecast Refresh"
+      - "CWA Township 2-Day Forecast"
+      - "CWA Township 3-Day Forecast"
+      - "CWA Weather Data"
+      - "Update GoatCounter visitor statistics"
+      - "MOENV AQI Data"
+      - "更新國家級警報"
+      - "氣溫分布每小時紀錄"
+      - "Sync CWA Typhoon Probability Map OCR Diagnostics"
+      - "Sync official work-school suspension notices"
+    types:
+      - completed
 
 permissions:
   contents: read
@@ -16,22 +36,71 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  detect-changes:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+    steps:
+      - name: Checkout latest main with history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Check whether website data changed
+        id: check
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          HEAD_SHA="$(git rev-parse origin/main)"
+          if [ -z "${BASE_SHA:-}" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$BASE_SHA" = "$HEAD_SHA" ]; then
+            echo "資料工作成功，但 main 沒有新增提交；略過部署。"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            echo "::warning::找不到上游工作起始 SHA，為避免漏掉資料更新，採保守部署。"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! git merge-base --is-ancestor "$BASE_SHA" "$HEAD_SHA"; then
+            echo "::warning::上游 SHA 不是 main 的祖先，採保守部署。"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+          printf '%s\n' "$CHANGED_FILES"
+          if printf '%s\n' "$CHANGED_FILES" | grep -Eq '^(data/|temperature-map-history/)'; then
+            echo "偵測到網站資料檔案更新。"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "沒有網站資料目錄異動，略過部署。"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
     runs-on: ubuntu-latest
-
+    needs: detect-changes
+    if: always() && (github.event_name != 'workflow_run' || (needs.detect-changes.result == 'success' && needs.detect-changes.outputs.changed == 'true'))
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        with:
+          ref: main
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
           source: ./
           destination: ./_site
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -41,10 +110,9 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     runs-on: ubuntu-latest
     needs: build
-
+    if: needs.build.result == 'success'
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
