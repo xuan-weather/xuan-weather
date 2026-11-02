@@ -42,11 +42,11 @@ jobs:
     outputs:
       changed: ${{ steps.check.outputs.changed }}
     steps:
-      - name: Checkout latest main with history
+      - name: Checkout latest main (shallow)
         uses: actions/checkout@v4
         with:
           ref: main
-          fetch-depth: 0
+          fetch-depth: 1
       - name: Check whether website data changed
         id: check
         shell: bash
@@ -54,27 +54,35 @@ jobs:
           BASE_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-          git fetch origin main
-          HEAD_SHA="$(git rev-parse origin/main)"
           if [ -z "${BASE_SHA:-}" ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
+          # 僅抓取上游工作提交與目前 main，不下載整份 Git 歷史。
+          if ! git fetch --no-tags --depth=1 origin "$BASE_SHA"; then
+            echo "::warning::無法取得上游提交 SHA，為避免漏掉資料更新，採保守部署。"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main; then
+            echo "::error::無法取得最新 main，停止部署判斷。"
+            exit 1
+          fi
+
+          HEAD_SHA="$(git rev-parse origin/main)"
           if [ "$BASE_SHA" = "$HEAD_SHA" ]; then
             echo "資料工作成功，但 main 沒有新增提交；略過部署。"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
           if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
             echo "::warning::找不到上游工作起始 SHA，為避免漏掉資料更新，採保守部署。"
             echo "changed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if ! git merge-base --is-ancestor "$BASE_SHA" "$HEAD_SHA"; then
-            echo "::warning::上游 SHA 不是 main 的祖先，採保守部署。"
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+
           CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
           printf '%s\n' "$CHANGED_FILES"
           if printf '%s\n' "$CHANGED_FILES" | grep -Eq '^(data/|temperature-map-history/)'; then
@@ -94,6 +102,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
+          fetch-depth: 1
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build with Jekyll
