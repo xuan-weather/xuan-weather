@@ -15,7 +15,6 @@ concurrency:
 jobs:
   fetch-earthquake:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
@@ -28,125 +27,81 @@ jobs:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -euo pipefail
-          set +x
           mkdir -p data
-          TMP_FILE="data/cwa-E-A0015-001.json.tmp"
-          FINAL_FILE="data/cwa-E-A0015-001.json"
-          rm -f "$TMP_FILE"
 
-          if [ -z "${CWA_API_KEY:-}" ]; then
-            echo "::warning::未設定 CWA_API_KEY，保留既有 E-A0015-001 資料"
-            exit 0
-          fi
-
-          echo "開始抓取 E-A0015-001（連線逾時 15 秒、單次總逾時 45 秒）"
-          if ! curl --silent --show-error --fail --location \
-            --connect-timeout 15 --max-time 45 \
-            --retry 3 --retry-delay 3 --retry-all-errors --retry-max-time 180 \
-            --get \
-            --data-urlencode "Authorization=${CWA_API_KEY}" \
-            --data-urlencode "format=JSON" \
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0015-001" \
-            -o "$TMP_FILE"; then
-            echo "::warning::E-A0015-001 抓取失敗，保留上一份有效資料，繼續執行下一個資料集"
-            rm -f "$TMP_FILE"
-            exit 0
-          fi
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0015-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o data/cwa-E-A0015-001.json
 
-          if python - "$TMP_FILE" <<'PY'
-          import json, sys
-          path = sys.argv[1]
-          try:
-              with open(path, "r", encoding="utf-8") as f:
-                  payload = json.load(f)
-              records = payload.get("records") or (payload.get("result") or {}).get("records")
-              if not isinstance(records, dict) or not isinstance(records.get("Earthquake"), list):
-                  raise ValueError("找不到 records.Earthquake 陣列")
-              print("E-A0015-001 地震報告數：", len(records["Earthquake"]))
-          except Exception as exc:
-              print(f"E-A0015-001 JSON 驗證失敗：{exc}", file=sys.stderr)
-              sys.exit(1)
+          python - <<'PY'
+          import json
+
+          path = "data/cwa-E-A0015-001.json"
+
+          with open(path, "r", encoding="utf-8") as f:
+              payload = json.load(f)
+
+          records = payload.get("records") or payload.get("result", {}).get("records")
+
+          if not isinstance(records, dict) or not isinstance(records.get("Earthquake"), list):
+              raise SystemExit(
+                  "E-A0015-001 回傳格式錯誤：找不到 records.Earthquake"
+              )
+
+          print(
+              "E-A0015-001 地震報告數：",
+              len(records["Earthquake"])
+          )
           PY
-          then
-            mv "$TMP_FILE" "$FINAL_FILE"
-            echo "E-A0015-001 已通過驗證並更新"
-          else
-            echo "::warning::E-A0015-001 回傳內容無效，保留上一份有效資料"
-            rm -f "$TMP_FILE"
-          fi
 
       - name: Fetch CWA local felt earthquake reports
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -euo pipefail
-          set +x
-          mkdir -p data
-          TMP_FILE="data/cwa-E-A0016-001.json.tmp"
-          FINAL_FILE="data/cwa-E-A0016-001.json"
-          rm -f "$TMP_FILE"
 
-          if [ -z "${CWA_API_KEY:-}" ]; then
-            echo "::warning::未設定 CWA_API_KEY，保留既有 E-A0016-001 資料"
-            exit 0
-          fi
-
-          echo "開始抓取 E-A0016-001（連線逾時 15 秒、單次總逾時 45 秒）"
-          if ! curl --silent --show-error --fail --location \
-            --connect-timeout 15 --max-time 45 \
-            --retry 3 --retry-delay 3 --retry-all-errors --retry-max-time 180 \
-            --get \
-            --data-urlencode "Authorization=${CWA_API_KEY}" \
-            --data-urlencode "format=JSON" \
+          curl --silent --show-error --fail --retry 3 --retry-delay 2 \
             -H "Accept: application/json" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0016-001" \
-            -o "$TMP_FILE"; then
-            echo "::warning::E-A0016-001 抓取失敗，保留上一份有效資料，繼續執行提交步驟"
-            rm -f "$TMP_FILE"
-            exit 0
-          fi
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0016-001?Authorization=${CWA_API_KEY}&format=JSON" \
+            -o data/cwa-E-A0016-001.json
 
-          if python - "$TMP_FILE" <<'PY'
-          import json, sys
-          path = sys.argv[1]
-          try:
-              with open(path, "r", encoding="utf-8") as f:
-                  payload = json.load(f)
-              records = payload.get("records") or (payload.get("result") or {}).get("records")
-              if not isinstance(records, dict) or not isinstance(records.get("Earthquake"), list):
-                  raise ValueError("找不到 records.Earthquake 陣列")
-              print("E-A0016-001 地震報告數：", len(records["Earthquake"]))
-          except Exception as exc:
-              print(f"E-A0016-001 JSON 驗證失敗：{exc}", file=sys.stderr)
-              sys.exit(1)
+          python - <<'PY'
+          import json
+
+          path = "data/cwa-E-A0016-001.json"
+
+          with open(path, "r", encoding="utf-8") as f:
+              payload = json.load(f)
+
+          records = payload.get("records") or payload.get("result", {}).get("records")
+
+          if not isinstance(records, dict) or not isinstance(records.get("Earthquake"), list):
+              raise SystemExit(
+                  "E-A0016-001 回傳格式錯誤：找不到 records.Earthquake"
+              )
+
+          print(
+              "E-A0016-001 地震報告數：",
+              len(records["Earthquake"])
+          )
           PY
-          then
-            mv "$TMP_FILE" "$FINAL_FILE"
-            echo "E-A0016-001 已通過驗證並更新"
-          else
-            echo "::warning::E-A0016-001 回傳內容無效，保留上一份有效資料"
-            rm -f "$TMP_FILE"
-          fi
 
       - name: Commit earthquake data
-        if: always()
         run: |
           set -euo pipefail
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          for file in data/cwa-E-A0015-001.json data/cwa-E-A0016-001.json; do
-            if [ -f "$file" ]; then
-              git add -f "$file"
-            fi
-          done
+          git add data/cwa-E-A0015-001.json data/cwa-E-A0016-001.json
 
           if git diff --cached --quiet; then
-            echo "沒有新的有效地震資料需要提交"
+            echo "地震資料沒有變化，不需要提交"
             exit 0
           fi
 
           git commit -m "Update CWA earthquake reports"
+
           git pull --rebase origin main
           git push origin main
