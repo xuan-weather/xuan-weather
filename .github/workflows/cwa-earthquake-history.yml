@@ -1,0 +1,125 @@
+name: CWA Earthquake History Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      archive_url:
+        description: '官方歷史地震年度 ZIP 下載網址（選填）'
+        required: false
+        type: string
+
+  schedule:
+    - cron: '30 3 5 * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cwa-earthquake-history-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare folders
+        run: |
+          mkdir -p data scripts .cache/earthquake-history
+
+      - name: Download current-year earthquake catalog
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${CWA_API_KEY:-}" ]; then
+            echo "缺少 CWA_API_KEY"
+            exit 1
+          fi
+
+          curl --silent --show-error --fail \
+            --retry 3 --retry-delay 3 \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0073-001?Authorization=${CWA_API_KEY}&format=XML" \
+            -o .cache/earthquake-history/current-year.xml
+
+          test -s .cache/earthquake-history/current-year.xml
+
+      - name: Import historical ZIP if provided
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.archive_url != '' }}
+        env:
+          ARCHIVE_URL: ${{ inputs.archive_url }}
+        run: |
+          set -euo pipefail
+
+          case "$ARCHIVE_URL" in
+            https://opendata.cwa.gov.tw/*|https://data.gov.tw/*|https://*.cwa.gov.tw/*) ;;
+            *)
+              echo "只接受中央氣象署或政府資料平台網址"
+              exit 1
+              ;;
+          esac
+
+          curl --silent --show-error --fail --location \
+            --retry 3 --retry-delay 3 \
+            "$ARCHIVE_URL" \
+            -o .cache/earthquake-history/historical.zip
+
+          python - <<'PY'
+          import zipfile
+
+          p = ".cache/earthquake-history/historical.zip"
+
+          if not zipfile.is_zipfile(p):
+              raise SystemExit("下載檔案不是有效 ZIP")
+
+          with zipfile.ZipFile(p) as z:
+              files = [
+                  n for n in z.namelist()
+                  if n.lower().endswith(".xml")
+                  and not n.startswith("/")
+                  and ".." not in n.split("/")
+              ]
+
+              if not files:
+                  raise SystemExit("ZIP 中沒有 XML 檔案")
+
+              for name in files:
+                  z.extract(name, ".cache/earthquake-history/archive")
+
+              print("匯入 XML 數量：", len(files))
+          PY
+
+      - name: Normalize and merge earthquake history
+        run: |
+          set -euo pipefail
+
+          python scripts/sync-earthquake-history.py \
+            --current .cache/earthquake-history/current-year.xml \
+            --archive-dir .cache/earthquake-history/archive \
+            --output data/earthquake-history.json
+
+      - name: Commit updated history
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/earthquake-history.json
+
+          if git diff --cached --quiet; then
+            echo "地震資料沒有變化"
+            exit 0
+          fi
+
+          git commit -m "Update CWA earthquake history"
+
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
