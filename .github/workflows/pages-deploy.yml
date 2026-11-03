@@ -65,7 +65,7 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if ! git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main; then
+          if ! git fetch --no-tags --depth=1 origin +refs/heads/main:refs/remotes/origin/main; then
             echo "::error::無法取得最新 main，停止部署判斷。"
             exit 1
           fi
