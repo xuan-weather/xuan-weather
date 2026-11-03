@@ -44,12 +44,61 @@ jobs:
             exit 1
           fi
 
-          curl --silent --show-error --fail \
-            --retry 3 --retry-delay 3 \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0073-001?Authorization=${CWA_API_KEY}&format=XML" \
-            -o .cache/earthquake-history/current-year.xml
+          URL="https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0073-001"
+          TMP_FILE=".cache/earthquake-history/current-year.xml.tmp"
+          OUTPUT_FILE=".cache/earthquake-history/current-year.xml"
+          MAX_ATTEMPTS=6
 
-          test -s .cache/earthquake-history/current-year.xml
+          # CWA 偶爾會回傳 HTTP 500；採逐步延長等待時間重試。
+          # 只有確認收到有效 XML 後，才取代正式下載檔。
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            echo "下載當年度地震目錄：第 ${attempt}/${MAX_ATTEMPTS} 次"
+
+            set +e
+            HTTP_CODE=$(curl --silent --show-error --location \
+              --connect-timeout 20 --max-time 120 \
+              --get "$URL" \
+              --data-urlencode "Authorization=${CWA_API_KEY}" \
+              --data-urlencode "format=XML" \
+              --output "$TMP_FILE" \
+              --write-out "%{http_code}")
+            CURL_EXIT=$?
+            set -e
+
+            if [ "$CURL_EXIT" -eq 0 ] && [ "$HTTP_CODE" = "200" ] && [ -s "$TMP_FILE" ]; then
+              if python - "$TMP_FILE" <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          path = sys.argv[1]
+          try:
+              ET.parse(path)
+          except ET.ParseError as exc:
+              print(f"下載內容不是有效 XML：{exc}")
+              raise SystemExit(1)
+          print("已確認下載內容為有效 XML")
+          PY
+              then
+                mv "$TMP_FILE" "$OUTPUT_FILE"
+                break
+              fi
+            fi
+
+            echo "::warning::下載失敗（HTTP ${HTTP_CODE:-unknown}，curl exit ${CURL_EXIT}）"
+
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              WAIT_SECONDS=$((attempt * 10))
+              echo "等待 ${WAIT_SECONDS} 秒後重試"
+              sleep "$WAIT_SECONDS"
+            else
+              echo "::error::已重試 ${MAX_ATTEMPTS} 次，仍無法取得有效的當年度地震目錄。"
+              echo "本次同步中止，不會執行資料合併或提交，既有歷史資料會保留。"
+              rm -f "$TMP_FILE"
+              exit 1
+            fi
+          done
+
+          test -s "$OUTPUT_FILE"
 
       - name: Import historical ZIP if provided
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.archive_url != '' }}
