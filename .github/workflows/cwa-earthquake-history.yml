@@ -1,0 +1,136 @@
+name: CWA Earthquake History Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 每月 5 日 03:30 UTC（台灣時間 11:30）
+    - cron: '30 3 5 * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cwa-earthquake-history-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Prepare folders
+        run: mkdir -p .cache/earthquake-history
+
+      - name: Download and validate CWA annual earthquake catalog
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CWA_API_KEY:-}" ]; then
+            echo "::error::缺少 GitHub Secret：CWA_API_KEY"
+            exit 1
+          fi
+          TMP=".cache/earthquake-history/current-year.xml.tmp"
+          OUT=".cache/earthquake-history/current-year.xml"
+          DOWNLOADED=0
+          for API_VERSION in v1 v2; do
+            URL="https://opendata.cwa.gov.tw/fileapi/${API_VERSION}/opendataapi/E-A0073-001"
+            for ATTEMPT in 1 2; do
+              echo "CWA fileapi ${API_VERSION}，第 ${ATTEMPT}/2 次"
+              rm -f "$TMP"
+              set +e
+              META=$(curl --silent --show-error --location --fail \
+                --connect-timeout 15 --max-time 55 --retry 1 --retry-delay 2 \
+                --retry-all-errors --get "$URL" \
+                --data-urlencode "Authorization=${CWA_API_KEY}" \
+                --data-urlencode "format=XML" --output "$TMP" \
+                --write-out "%{http_code}|%{size_download}")
+              RC=$?
+              set -e
+              CODE="${META%%|*}"
+              SIZE="${META##*|}"
+              if [ "$RC" -eq 0 ] && [ "$CODE" = "200" ] && [ -s "$TMP" ]; then
+                if python - "$TMP" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          root = ET.parse(sys.argv[1]).getroot()
+          if root.tag.rsplit("}", 1)[-1].lower() != "cwaopendata":
+              raise SystemExit("XML 根節點不符")
+          n = sum(1 for x in root.iter() if x.tag.rsplit("}", 1)[-1] == "EarthquakeInfo")
+          if n < 1: raise SystemExit("XML 沒有 EarthquakeInfo")
+          print(f"XML 驗證通過：{n} 筆")
+          PY
+                then
+                  mv "$TMP" "$OUT"
+                  echo "下載成功：HTTP $CODE，$SIZE bytes"
+                  DOWNLOADED=1
+                  break 2
+                fi
+              fi
+              echo "::warning::下載失敗：v${API_VERSION} HTTP ${CODE:-unknown} curl exit ${RC} bytes ${SIZE:-0}"
+              sleep 5
+            done
+          done
+          if [ "$DOWNLOADED" -ne 1 ]; then
+            echo "::error::CWA v1/v2 皆失敗；停止更新並保留舊 JSON。"
+            exit 1
+          fi
+
+      - name: Merge catalog without losing existing history
+        run: |
+          python scripts/sync-earthquake-history.py \
+            --current .cache/earthquake-history/current-year.xml \
+            --output data/earthquake-history.json
+
+      - name: Validate output JSON
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d = json.loads(Path("data/earthquake-history.json").read_text(encoding="utf-8"))
+          rows = d.get("earthquakes")
+          if not isinstance(rows, list) or not rows:
+              raise SystemExit("歷史資料為空，拒絕提交")
+          if d.get("recordCount") != len(rows):
+              raise SystemExit("recordCount 不一致")
+          print(f"驗證通過：{len(rows)} 筆")
+          PY
+
+      - name: Commit and push with rebase retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/earthquake-history.json
+          if git diff --cached --quiet; then
+            echo "資料沒有變化，不需提交。"
+            exit 0
+          fi
+          git commit -m "Update CWA earthquake history"
+          for attempt in 1 2 3 4 5; do
+            echo "推送嘗試 ${attempt}/5"
+            git fetch origin main
+            if ! git rebase origin/main; then
+              git rebase --abort || true
+              echo "::error::rebase 衝突，停止以保護遠端資料。"
+              exit 1
+            fi
+            if git push origin HEAD:main; then
+              echo "歷史地震資料已成功推送。"
+              exit 0
+            fi
+            sleep $((attempt * 5))
+          done
+          echo "::error::重試 5 次仍無法推送，不強制覆蓋遠端。"
+          exit 1
