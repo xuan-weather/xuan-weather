@@ -27,7 +27,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          # 只抓取目前分支最新提交，避免 fetch-depth: 0 把整個 Git 歷史與 tags 全部抓下來。
+          # 本工作流程只更新地震歷史 JSON，不需要完整 Git 歷史。
+          fetch-depth: 1
+          fetch-tags: false
 
       - name: Prepare folders
         run: |
