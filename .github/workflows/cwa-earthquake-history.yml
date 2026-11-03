@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # 每月 5 日 03:30 UTC（台灣時間 11:30）
-    - cron: '30 3 5 * *'
+    - cron: '30 3 * * *'  # 每日 11:30 台灣時間同步，補齊最新月份
 
 permissions:
   contents: write
