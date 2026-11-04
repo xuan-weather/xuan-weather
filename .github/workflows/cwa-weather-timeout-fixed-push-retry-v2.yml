@@ -80,9 +80,9 @@ jobs:
               --retry 1 \
               --retry-all-errors \
               --retry-delay 2 \
-              --retry-max-time 45 \
-              --connect-timeout 10 \
-              --max-time 20 \
+              --retry-max-time 100 \
+              --connect-timeout 15 \
+              --max-time 45 \
               --http1.1 \
               --ipv4 \
               --location \
