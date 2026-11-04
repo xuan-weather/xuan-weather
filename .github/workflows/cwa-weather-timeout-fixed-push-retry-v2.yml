@@ -74,18 +74,21 @@ jobs:
             tmp_file="data/cwa-${dataset}.json.tmp"
             rm -f "$tmp_file"
 
+            # 不強制 HTTP/1.1 或 IPv4，讓 runner 與 CWA 協商可用的連線方式。
+            # 每次最多 25 秒，最多重試 2 次；避免單一資料集長時間卡住。
             if curl --fail-with-body \
               --silent \
               --show-error \
-              --retry 1 \
-              --retry-all-errors \
-              --retry-delay 2 \
-              --retry-max-time 100 \
-              --connect-timeout 15 \
-              --max-time 45 \
-              --http1.1 \
-              --ipv4 \
               --location \
+              --retry 2 \
+              --retry-all-errors \
+              --retry-connrefused \
+              --retry-delay 3 \
+              --retry-max-time 75 \
+              --connect-timeout 10 \
+              --max-time 25 \
+              --max-redirs 5 \
+              --write-out "\\nHTTP_STATUS=%{http_code} DNS=%{time_namelookup}s CONNECT=%{time_connect}s TOTAL=%{time_total}s SIZE=%{size_download}bytes\\n" \
               -H "Accept: application/json" \
               -H "Authorization: ${CWA_API_KEY}" \
               -H "Cache-Control: no-cache, no-store, max-age=0" \
