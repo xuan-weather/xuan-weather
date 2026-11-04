@@ -65,13 +65,35 @@ jobs:
 
           if [[ -z "${CWA_API_KEY:-}" ]]; then
             echo
-            echo "4. OpenData API（帶 API Key）：略過，找不到 CWA_API_KEY。"
+            echo "4. OpenData API 授權比較：略過，找不到 CWA_API_KEY。"
           else
-            probe "4. OpenData API（帶 API Key）" \
-              --get \
-              --data-urlencode "Authorization=${CWA_API_KEY}" \
-              --data-urlencode "_=$(date +%s%N)" \
-              "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001"
+            # API Key 只做去除首尾空白與換行；絕不輸出金鑰本身。
+            raw_key_length="${#CWA_API_KEY}"
+            clean_key="$(printf '%s' "$CWA_API_KEY" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+            clean_key_length="${#clean_key}"
+            echo
+            echo "API_KEY_RAW_LENGTH=${raw_key_length}"
+            echo "API_KEY_CLEAN_LENGTH=${clean_key_length}"
+
+            if [[ -z "$clean_key" ]]; then
+              echo "::warning::CWA_API_KEY 去除空白後為空，略過授權比較。"
+            else
+              test_url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/E-A0015-001"
+
+              probe "4A. E-A0015-001（URL Query Authorization）" \
+                --get \
+                --data-urlencode "Authorization=${clean_key}" \
+                --data-urlencode "limit=1" \
+                --data-urlencode "_=$(date +%s%N)" \
+                "$test_url"
+
+              probe "4B. E-A0015-001（HTTP Header Authorization）" \
+                --get \
+                --data-urlencode "limit=1" \
+                --data-urlencode "_=$(date +%s%N)" \
+                -H "Authorization: ${clean_key}" \
+                "$test_url"
+            fi
           fi
 
           echo
