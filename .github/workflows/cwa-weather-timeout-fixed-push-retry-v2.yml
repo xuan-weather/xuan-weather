@@ -26,6 +26,57 @@ jobs:
         with:
           fetch-depth: 1
 
+      # 先獨立測試各連線層級；診斷失敗不會中止後續正式資料下載。
+      - name: Diagnose CWA website and OpenData connectivity
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set +e
+
+          echo "========================================"
+          echo "CWA 連線診斷開始"
+          echo "========================================"
+
+          probe() {
+            label="$1"
+            shift
+            echo
+            echo "----- ${label} -----"
+            curl --silent --show-error --location \
+              --ipv4 --http1.1 --tlsv1.2 \
+              --connect-timeout 8 --max-time 15 \
+              --output /dev/null \
+              --write-out "HTTP_STATUS=%{http_code} IP=%{remote_ip} DNS=%{time_namelookup}s CONNECT=%{time_connect}s TLS=%{time_appconnect}s FIRST_BYTE=%{time_starttransfer}s TOTAL=%{time_total}s SSL_VERIFY=%{ssl_verify_result}\n" \
+              "$@"
+            curl_rc=$?
+            echo "CURL_EXIT=${curl_rc}"
+          }
+
+          probe "1. CWA 官方網站首頁" \
+            "https://www.cwa.gov.tw/"
+
+          probe "2. OpenData 主機首頁" \
+            "https://opendata.cwa.gov.tw/"
+
+          probe "3. OpenData API（不帶 API Key）" \
+            --get \
+            --data-urlencode "_=$(date +%s%N)" \
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001"
+
+          if [[ -z "${CWA_API_KEY:-}" ]]; then
+            echo
+            echo "4. OpenData API（帶 API Key）：略過，找不到 CWA_API_KEY。"
+          else
+            probe "4. OpenData API（帶 API Key）" \
+              --get \
+              --data-urlencode "Authorization=${CWA_API_KEY}" \
+              --data-urlencode "_=$(date +%s%N)" \
+              "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001"
+          fi
+
+          echo
+          echo "CWA 連線診斷結束；以上測試不影響正式下載流程。"
+
       - name: Fetch all CWA datasets
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
