@@ -76,24 +76,27 @@ jobs:
             tmp_file="data/cwa-${dataset}.json.tmp"
             rm -f "$tmp_file"
 
-            # 使用 CWA OpenData 文件常見的 Authorization query 參數方式。
-            # HTTP_STATUS=000 代表連 TCP 連線後仍未收到 HTTP 回應，不是 JSON 驗證錯誤。
+            # CWA 官方支援 Authorization query 參數；強制 IPv4 + HTTP/1.1，
+            # 並記錄 TLS/首位元組耗時，定位 HTTP_STATUS=000 卡在哪個階段。
             if curl --fail-with-body \
               --silent \
               --show-error \
               --location \
-              --retry 2 \
+              --ipv4 \
+              --http1.1 \
+              --tlsv1.2 \
+              --retry 1 \
               --retry-all-errors \
               --retry-connrefused \
-              --retry-delay 3 \
-              --retry-max-time 75 \
+              --retry-delay 2 \
+              --retry-max-time 60 \
               --connect-timeout 10 \
-              --max-time 25 \
+              --max-time 45 \
               --max-redirs 5 \
               --get \
               --data-urlencode "Authorization=${CWA_API_KEY}" \
               --data-urlencode "_=${cache_buster}" \
-              --write-out "\\nHTTP_STATUS=%{http_code} DNS=%{time_namelookup}s CONNECT=%{time_connect}s TOTAL=%{time_total}s SIZE=%{size_download}bytes\\n" \
+              --write-out "\\nHTTP_STATUS=%{http_code} IP=%{remote_ip} DNS=%{time_namelookup}s CONNECT=%{time_connect}s TLS=%{time_appconnect}s PRETRANSFER=%{time_pretransfer}s FIRST_BYTE=%{time_starttransfer}s TOTAL=%{time_total}s SIZE=%{size_download}bytes SSL_VERIFY=%{ssl_verify_result}\\n" \
               -H "Accept: application/json" \
               -H "Cache-Control: no-cache, no-store, max-age=0" \
               -H "Pragma: no-cache" \
