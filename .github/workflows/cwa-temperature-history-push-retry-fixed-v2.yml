@@ -24,64 +24,183 @@ jobs:
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
-          set -e
+          set -euo pipefail
+          : "${CWA_API_KEY:?找不到 CWA_API_KEY，請確認 GitHub Actions Secrets。}"
           mkdir -p data/history
-          curl --silent --show-error --fail \
-            --connect-timeout 20 --max-time 45 --http1.1 --ipv4 \
-            --retry 2 --retry-delay 3 --retry-all-errors \
-            -H "Accept: application/json" \
-            -H "Authorization: ${CWA_API_KEY}" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?format=JSON" \
-            -o /tmp/cwa-o-a0003-001.json
+          tmp_file="/tmp/cwa-o-a0003-001.json.tmp"
+          rm -f "$tmp_file"
+          if curl --silent --show-error --fail \\
+            --connect-timeout 10 --max-time 40 --http1.1 --ipv4 \\
+            --retry 1 --retry-delay 2 --retry-all-errors --retry-max-time 85 \\
+            -H "Accept: application/json" \\
+            -H "Authorization: ${CWA_API_KEY}" \\
+            -H "Cache-Control: no-cache, no-store, max-age=0" \\
+            -H "Pragma: no-cache" \\
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?format=JSON&_=$(date +%s%N)" \\
+            -o "$tmp_file"; then
+            if python -m json.tool "$tmp_file" >/dev/null 2>&1; then
+              mv "$tmp_file" "/tmp/cwa-o-a0003-001.json"
+              echo "O-A0003-001 下載成功且 JSON 驗證通過"
+            else
+              rm -f "$tmp_file"
+              echo "::warning::O-A0003-001 回傳內容不是有效 JSON。"
+            fi
+          else
+            rm -f "$tmp_file"
+            echo "::warning::O-A0003-001 下載逾時或失敗，保留舊資料。"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0003-001.json" && -s "data/cwa-O-A0003-001.json" ]]; then
+            echo "::warning::O-A0003-001 本次下載失敗，改用上一版成功資料。"
+            cp "data/cwa-O-A0003-001.json" "/tmp/cwa-o-a0003-001.json"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0003-001.json" ]]; then
+            echo "::error::O-A0003-001 沒有可用的有效資料或備援資料。"
+            exit 1
+          fi
 
           # 七堵等 C0 自動站若沒有出現在全測站回傳中，
           # 再以 stationId 明確補抓，仍使用同一個 CWA 10 分鐘資料集。
-          curl --silent --show-error --fail \
-            --connect-timeout 20 --max-time 45 --http1.1 --ipv4 \
-            --retry 2 --retry-delay 3 --retry-all-errors \
-            -H "Accept: application/json" \
-            -H "Authorization: ${CWA_API_KEY}" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?format=JSON&stationId=C0B010" \
-            -o /tmp/cwa-o-a0003-001-c0b010.json
+          tmp_file="/tmp/cwa-o-a0003-001-c0b010.json.tmp"
+          rm -f "$tmp_file"
+          if curl --silent --show-error --fail \\
+            --connect-timeout 10 --max-time 40 --http1.1 --ipv4 \\
+            --retry 1 --retry-delay 2 --retry-all-errors --retry-max-time 85 \\
+            -H "Accept: application/json" \\
+            -H "Authorization: ${CWA_API_KEY}" \\
+            -H "Cache-Control: no-cache, no-store, max-age=0" \\
+            -H "Pragma: no-cache" \\
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?format=JSON&stationId=C0B010&_=$(date +%s%N)" \\
+            -o "$tmp_file"; then
+            if python -m json.tool "$tmp_file" >/dev/null 2>&1; then
+              mv "$tmp_file" "/tmp/cwa-o-a0003-001-c0b010.json"
+              echo "O-A0003-001 下載成功且 JSON 驗證通過"
+            else
+              rm -f "$tmp_file"
+              echo "::warning::O-A0003-001 回傳內容不是有效 JSON。"
+            fi
+          else
+            rm -f "$tmp_file"
+            echo "::warning::O-A0003-001 下載逾時或失敗，保留舊資料。"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0003-001-c0b010.json" ]]; then
+            echo '{"records":{"Station":[]}}' > "/tmp/cwa-o-a0003-001-c0b010.json"
+            echo "::warning::O-A0003-001 本次下載失敗，建立空測站備援資料；不影響其他資料集流程。"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0003-001-c0b010.json" ]]; then
+            echo "::error::O-A0003-001 沒有可用的有效資料或備援資料。"
+            exit 1
+          fi
 
       - name: Fetch CWA O-A0001-001 hourly fallback for C0 stations
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
-          set -e
-          curl --silent --show-error --fail \
-            --connect-timeout 20 --max-time 45 --http1.1 --ipv4 \
-            --retry 2 --retry-delay 3 --retry-all-errors \
-            -H "Accept: application/json" \
-            -H "Authorization: ${CWA_API_KEY}" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?format=JSON" \
-            -o /tmp/cwa-o-a0001-001.json
+          set -euo pipefail
+          : "${CWA_API_KEY:?找不到 CWA_API_KEY，請確認 GitHub Actions Secrets。}"
+          tmp_file="/tmp/cwa-o-a0001-001.json.tmp"
+          rm -f "$tmp_file"
+          if curl --silent --show-error --fail \\
+            --connect-timeout 10 --max-time 40 --http1.1 --ipv4 \\
+            --retry 1 --retry-delay 2 --retry-all-errors --retry-max-time 85 \\
+            -H "Accept: application/json" \\
+            -H "Authorization: ${CWA_API_KEY}" \\
+            -H "Cache-Control: no-cache, no-store, max-age=0" \\
+            -H "Pragma: no-cache" \\
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?format=JSON&_=$(date +%s%N)" \\
+            -o "$tmp_file"; then
+            if python -m json.tool "$tmp_file" >/dev/null 2>&1; then
+              mv "$tmp_file" "/tmp/cwa-o-a0001-001.json"
+              echo "O-A0001-001 下載成功且 JSON 驗證通過"
+            else
+              rm -f "$tmp_file"
+              echo "::warning::O-A0001-001 回傳內容不是有效 JSON。"
+            fi
+          else
+            rm -f "$tmp_file"
+            echo "::warning::O-A0001-001 下載逾時或失敗，保留舊資料。"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0001-001.json" && -s "data/cwa-O-A0001-001.json" ]]; then
+            echo "::warning::O-A0001-001 本次下載失敗，改用上一版成功資料。"
+            cp "data/cwa-O-A0001-001.json" "/tmp/cwa-o-a0001-001.json"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0001-001.json" ]]; then
+            echo "::error::O-A0001-001 沒有可用的有效資料或備援資料。"
+            exit 1
+          fi
 
       - name: Fetch CWA official weather alert content W-C0033-002
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
-          set -e
-          curl --silent --show-error --fail \
-            --connect-timeout 20 --max-time 45 --http1.1 --ipv4 \
-            --retry 2 --retry-delay 3 --retry-all-errors \
-            -H "Accept: application/json" \
-            -H "Authorization: ${CWA_API_KEY}" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-002?format=JSON" \
-            -o /tmp/cwa-w-c0033-002.json
+          set -euo pipefail
+          : "${CWA_API_KEY:?找不到 CWA_API_KEY，請確認 GitHub Actions Secrets。}"
+          tmp_file="/tmp/cwa-w-c0033-002.json.tmp"
+          rm -f "$tmp_file"
+          if curl --silent --show-error --fail \\
+            --connect-timeout 10 --max-time 40 --http1.1 --ipv4 \\
+            --retry 1 --retry-delay 2 --retry-all-errors --retry-max-time 85 \\
+            -H "Accept: application/json" \\
+            -H "Authorization: ${CWA_API_KEY}" \\
+            -H "Cache-Control: no-cache, no-store, max-age=0" \\
+            -H "Pragma: no-cache" \\
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-002?format=JSON&_=$(date +%s%N)" \\
+            -o "$tmp_file"; then
+            if python -m json.tool "$tmp_file" >/dev/null 2>&1; then
+              mv "$tmp_file" "/tmp/cwa-w-c0033-002.json"
+              echo "W-C0033-002 下載成功且 JSON 驗證通過"
+            else
+              rm -f "$tmp_file"
+              echo "::warning::W-C0033-002 回傳內容不是有效 JSON。"
+            fi
+          else
+            rm -f "$tmp_file"
+            echo "::warning::W-C0033-002 下載逾時或失敗，保留舊資料。"
+          fi
+          if [[ ! -s "/tmp/cwa-w-c0033-002.json" && -s "data/cwa-W-C0033-002.json" ]]; then
+            echo "::warning::W-C0033-002 本次下載失敗，改用上一版成功資料。"
+            cp "data/cwa-W-C0033-002.json" "/tmp/cwa-w-c0033-002.json"
+          fi
+          if [[ ! -s "/tmp/cwa-w-c0033-002.json" ]]; then
+            echo "::error::W-C0033-002 沒有可用的有效資料或備援資料。"
+            exit 1
+          fi
 
       - name: Fetch CWA O-A0002-001 rainfall
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
-          set -e
-          curl --silent --show-error --fail \
-            --connect-timeout 20 --max-time 45 --http1.1 --ipv4 \
-            --retry 2 --retry-delay 3 --retry-all-errors \
-            -H "Accept: application/json" \
-            -H "Authorization: ${CWA_API_KEY}" \
-            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?format=JSON" \
-            -o /tmp/cwa-o-a0002-001.json
+          set -euo pipefail
+          : "${CWA_API_KEY:?找不到 CWA_API_KEY，請確認 GitHub Actions Secrets。}"
+          tmp_file="/tmp/cwa-o-a0002-001.json.tmp"
+          rm -f "$tmp_file"
+          if curl --silent --show-error --fail \\
+            --connect-timeout 10 --max-time 40 --http1.1 --ipv4 \\
+            --retry 1 --retry-delay 2 --retry-all-errors --retry-max-time 85 \\
+            -H "Accept: application/json" \\
+            -H "Authorization: ${CWA_API_KEY}" \\
+            -H "Cache-Control: no-cache, no-store, max-age=0" \\
+            -H "Pragma: no-cache" \\
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?format=JSON&_=$(date +%s%N)" \\
+            -o "$tmp_file"; then
+            if python -m json.tool "$tmp_file" >/dev/null 2>&1; then
+              mv "$tmp_file" "/tmp/cwa-o-a0002-001.json"
+              echo "O-A0002-001 下載成功且 JSON 驗證通過"
+            else
+              rm -f "$tmp_file"
+              echo "::warning::O-A0002-001 回傳內容不是有效 JSON。"
+            fi
+          else
+            rm -f "$tmp_file"
+            echo "::warning::O-A0002-001 下載逾時或失敗，保留舊資料。"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0002-001.json" && -s "data/cwa-O-A0002-001.json" ]]; then
+            echo "::warning::O-A0002-001 本次下載失敗，改用上一版成功資料。"
+            cp "data/cwa-O-A0002-001.json" "/tmp/cwa-o-a0002-001.json"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0002-001.json" ]]; then
+            echo "::error::O-A0002-001 沒有可用的有效資料或備援資料。"
+            exit 1
+          fi
 
       - name: Validate downloaded CWA JSON before publishing
         run: |
