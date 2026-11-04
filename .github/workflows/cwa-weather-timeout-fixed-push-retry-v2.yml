@@ -67,15 +67,17 @@ jobs:
 
             # 每次請求加入唯一 cache-buster，避免上游快取舊資料。
             cache_buster="$(date +%s%N)"
-            url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}?_=${cache_buster}"
+            # CWA OpenData 常見授權方式為 URL query parameter。
+            # 不把金鑰直接寫入 URL 字串或 echo，交由 curl 編碼參數。
+            url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}"
 
             echo "開始下載 ${dataset}..."
             # 先下載到暫存檔；成功且 JSON 有效才覆蓋正式檔案。
             tmp_file="data/cwa-${dataset}.json.tmp"
             rm -f "$tmp_file"
 
-            # 不強制 HTTP/1.1 或 IPv4，讓 runner 與 CWA 協商可用的連線方式。
-            # 每次最多 25 秒，最多重試 2 次；避免單一資料集長時間卡住。
+            # 使用 CWA OpenData 文件常見的 Authorization query 參數方式。
+            # HTTP_STATUS=000 代表連 TCP 連線後仍未收到 HTTP 回應，不是 JSON 驗證錯誤。
             if curl --fail-with-body \
               --silent \
               --show-error \
@@ -88,11 +90,14 @@ jobs:
               --connect-timeout 10 \
               --max-time 25 \
               --max-redirs 5 \
+              --get \
+              --data-urlencode "Authorization=${CWA_API_KEY}" \
+              --data-urlencode "_=${cache_buster}" \
               --write-out "\\nHTTP_STATUS=%{http_code} DNS=%{time_namelookup}s CONNECT=%{time_connect}s TOTAL=%{time_total}s SIZE=%{size_download}bytes\\n" \
               -H "Accept: application/json" \
-              -H "Authorization: ${CWA_API_KEY}" \
               -H "Cache-Control: no-cache, no-store, max-age=0" \
               -H "Pragma: no-cache" \
+              -H "User-Agent: XuanWeather-CWA-Data/1.0" \
               "${url}" \
               -o "$tmp_file"; then
 
@@ -122,6 +127,9 @@ jobs:
             fi
 
             wc -c "data/cwa-${dataset}.json"
+
+            # 降低連續呼叫 CWA API 的頻率，避免短時間大量請求。
+            sleep 2
 
             python - "${dataset}" <<'PY'
           import json
