@@ -17,7 +17,7 @@ concurrency:
 jobs:
   fetch-cwa-data:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -26,6 +26,7 @@ jobs:
           fetch-depth: 1
 
       - name: Fetch all CWA datasets
+        timeout-minutes: 11
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
@@ -67,6 +68,7 @@ jobs:
             url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}?_=${cache_buster}"
 
             echo "開始下載 ${dataset}..."
+            # 每個資料集只請求一次，最多等待 20 秒；失敗保留舊檔並繼續下一筆。
             # 先下載到暫存檔；只有成功才覆蓋正式 JSON，避免逾時留下半截檔案。
             tmp_file="data/cwa-${dataset}.json.tmp"
             rm -f "$tmp_file"
@@ -74,11 +76,8 @@ jobs:
             if curl --fail-with-body \
               --silent \
               --show-error \
-              --retry 2 \
-              --retry-all-errors \
-              --retry-delay 3 \
-              --connect-timeout 20 \
-              --max-time 45 \
+              --connect-timeout 8 \
+              --max-time 20 \
               --http1.1 \
               --ipv4 \
               --location \
