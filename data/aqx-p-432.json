@@ -1392,7 +1392,7 @@
         "no2": "6",
         "nox": "6.9",
         "no": "0.6",
-        "wind_speed": "",
+        "wind_speed": "2",
         "wind_direc": "323",
         "publishtime": "2026\/11\/04 19:00:00",
         "co_8hr": "0.2",
