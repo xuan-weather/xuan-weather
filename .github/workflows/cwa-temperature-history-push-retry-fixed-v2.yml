@@ -1,7 +1,6 @@
-name: CWA Weather Data
+name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 
 on:
-  # 使用既有外部計時器觸發；保留手動執行，不再和外部計時器重複排程。
   workflow_dispatch:
   repository_dispatch:
     types: [cwa-external-timer]
@@ -9,405 +8,946 @@ on:
 permissions:
   contents: write
 
-# 避免同一工作流程重疊執行；不主動取消正在執行的舊工作。
 concurrency:
-  group: cwa-weather-data
+  group: cwa-history-sync-5min-static
   cancel-in-progress: false
 
 jobs:
-  fetch-cwa-data:
+  fetch-temperature-history:
     runs-on: ubuntu-latest
-    # 保留 30 分鐘整體上限，避免因縮短 job timeout 而更容易被取消。
     timeout-minutes: 30
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
-      - name: Fetch all CWA datasets
+      - name: Fetch CWA O-A0003-001
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -euo pipefail
-
-          if [[ -z "${CWA_API_KEY:-}" ]]; then
-            echo "::error::找不到 CWA_API_KEY，請確認 GitHub Actions Secrets 設定。"
+          : "${CWA_API_KEY:?找不到 CWA_API_KEY，請確認 GitHub Actions Secrets。}"
+          mkdir -p data/history
+          tmp_file="/tmp/cwa-o-a0003-001.json.tmp"
+          rm -f "$tmp_file"
+          if curl --silent --show-error --fail \\
+            --connect-timeout 10 --max-time 40 --http1.1 --ipv4 \\
+            --retry 1 --retry-delay 2 --retry-all-errors --retry-max-time 85 \\
+            -H "Accept: application/json" \\
+            -H "Authorization: ${CWA_API_KEY}" \\
+            -H "Cache-Control: no-cache, no-store, max-age=0" \\
+            -H "Pragma: no-cache" \\
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?format=JSON&_=$(date +%s%N)" \\
+            -o "$tmp_file"; then
+            if python -m json.tool "$tmp_file" >/dev/null 2>&1; then
+              mv "$tmp_file" "/tmp/cwa-o-a0003-001.json"
+              echo "O-A0003-001 下載成功且 JSON 驗證通過"
+            else
+              rm -f "$tmp_file"
+              echo "::warning::O-A0003-001 回傳內容不是有效 JSON。"
+            fi
+          else
+            rm -f "$tmp_file"
+            echo "::warning::O-A0003-001 下載逾時或失敗，保留舊資料。"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0003-001.json" && -s "data/cwa-O-A0003-001.json" ]]; then
+            echo "::warning::O-A0003-001 本次下載失敗，改用上一版成功資料。"
+            cp "data/cwa-O-A0003-001.json" "/tmp/cwa-o-a0003-001.json"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0003-001.json" ]]; then
+            echo "::error::O-A0003-001 沒有可用的有效資料或備援資料。"
             exit 1
           fi
 
-          mkdir -p data
-
-          datasets=(
-            O-A0001-001
-            O-A0002-001
-            O-A0003-001
-            F-C0032-001
-            F-D0047-089
-            F-D0047-091
-            W-C0033-001
-            W-C0033-002
-            W-C0033-003
-            W-C0033-004
-            W-C0033-005
-            W-C0033-006
-            W-C0034-001
-            W-C0034-005
-            E-A0015-001
-            E-A0016-001
-          )
-
-          failed_datasets=()
-
-          for dataset in "${datasets[@]}"; do
-            echo "========================================"
-            echo "正在取得 CWA：${dataset}"
-            echo "========================================"
-
-            # 每次請求加入唯一 cache-buster，避免上游快取舊資料。
-            cache_buster="$(date +%s%N)"
-            url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}?_=${cache_buster}"
-
-            echo "開始下載 ${dataset}..."
-            # 先下載到暫存檔；成功且 JSON 有效才覆蓋正式檔案。
-            tmp_file="data/cwa-${dataset}.json.tmp"
-            rm -f "$tmp_file"
-
-            if curl --fail-with-body \
-              --silent \
-              --show-error \
-              --retry 1 \
-              --retry-all-errors \
-              --retry-delay 2 \
-              --retry-max-time 100 \
-              --connect-timeout 15 \
-              --max-time 45 \
-              --http1.1 \
-              --ipv4 \
-              --location \
-              -H "Accept: application/json" \
-              -H "Authorization: ${CWA_API_KEY}" \
-              -H "Cache-Control: no-cache, no-store, max-age=0" \
-              -H "Pragma: no-cache" \
-              "${url}" \
-              -o "$tmp_file"; then
-
-              # 驗證 JSON，避免 HTML 錯誤頁或空檔覆蓋正式資料。
-              if python -m json.tool "$tmp_file" >/dev/null 2>&1; then
-                mv "$tmp_file" "data/cwa-${dataset}.json"
-                echo "${dataset} 下載完成且 JSON 驗證通過"
-              else
-                rm -f "$tmp_file"
-                echo "::warning::${dataset} 回傳內容不是有效 JSON。"
-                failed_datasets+=("$dataset")
-                if [[ -s "data/cwa-${dataset}.json" ]]; then
-                  echo "保留上次成功的 ${dataset} 資料。"
-                fi
-                continue
-              fi
+          # 七堵等 C0 自動站若沒有出現在全測站回傳中，
+          # 再以 stationId 明確補抓，仍使用同一個 CWA 10 分鐘資料集。
+          tmp_file="/tmp/cwa-o-a0003-001-c0b010.json.tmp"
+          rm -f "$tmp_file"
+          if curl --silent --show-error --fail \\
+            --connect-timeout 10 --max-time 40 --http1.1 --ipv4 \\
+            --retry 1 --retry-delay 2 --retry-all-errors --retry-max-time 85 \\
+            -H "Accept: application/json" \\
+            -H "Authorization: ${CWA_API_KEY}" \\
+            -H "Cache-Control: no-cache, no-store, max-age=0" \\
+            -H "Pragma: no-cache" \\
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?format=JSON&stationId=C0B010&_=$(date +%s%N)" \\
+            -o "$tmp_file"; then
+            if python -m json.tool "$tmp_file" >/dev/null 2>&1; then
+              mv "$tmp_file" "/tmp/cwa-o-a0003-001-c0b010.json"
+              echo "O-A0003-001 下載成功且 JSON 驗證通過"
             else
               rm -f "$tmp_file"
-              echo "::warning::${dataset} 本次下載失敗或逾時。"
-              failed_datasets+=("$dataset")
-              if [[ -s "data/cwa-${dataset}.json" ]]; then
-                echo "保留上次成功的 ${dataset} 資料，不以空檔或不完整檔案覆蓋。"
-              else
-                echo "::warning::${dataset} 沒有可用的舊資料。"
-              fi
-              continue
+              echo "::warning::O-A0003-001 回傳內容不是有效 JSON。"
             fi
-
-            wc -c "data/cwa-${dataset}.json"
-
-            python - "${dataset}" <<'PY'
-          import json
-          import sys
-          from datetime import datetime, timezone, timedelta
-
-          dataset = sys.argv[1]
-          path = f"data/cwa-{dataset}.json"
-
-          with open(path, "r", encoding="utf-8") as f:
-              data = json.load(f)
-
-          print(f"{dataset}：JSON 格式正常")
-
-          if not isinstance(data, dict):
-              raise SystemExit(f"{dataset}：錯誤，回傳資料不是 JSON 物件")
-
-          if dataset == "W-C0033-005":
-              print(f"{dataset}：CAP 高溫資訊 JSON 保留原始結構")
-              time_keys = {
-                  "sent", "Sent", "issueTime", "IssueTime",
-                  "publishTime", "PublishTime", "publishedAt",
-                  "PublishedAt", "publishDate", "PublishDate",
-                  "published", "Published", "updateTime",
-                  "UpdateTime", "updatedAt", "UpdatedAt",
-                  "modifiedAt", "ModifiedAt",
-              }
-              latest = None
-              seen = set()
-
-              def walk(node):
-                  global latest
-                  if not isinstance(node, (dict, list)):
-                      return
-                  ident = id(node)
-                  if ident in seen:
-                      return
-                  seen.add(ident)
-                  if isinstance(node, list):
-                      for item in node:
-                          walk(item)
-                      return
-                  for key, value in node.items():
-                      if key in time_keys:
-                          raw = value
-                          if isinstance(value, dict):
-                              raw = (
-                                  value.get("value")
-                                  or value.get("datetime")
-                                  or value.get("DateTime")
-                                  or value.get("time")
-                                  or ""
-                              )
-                          if raw:
-                              try:
-                                  dt = datetime.fromisoformat(
-                                      str(raw).replace("Z", "+00:00")
-                                  )
-                                  if dt.tzinfo is None:
-                                      dt = dt.replace(tzinfo=timezone.utc)
-                                  if latest is None or dt > latest:
-                                      latest = dt
-                              except Exception:
-                                  pass
-                      if isinstance(value, (dict, list)):
-                          walk(value)
-
-              walk(data)
-              if latest:
-                  taipei = latest.astimezone(timezone(timedelta(hours=8)))
-                  print(
-                      f"{dataset}：本次抓到的最新官方發布／更新時間 = "
-                      f"{taipei.isoformat()}"
-                  )
-              else:
-                  print(f"{dataset}：找不到可解析的官方發布／更新時間")
-          else:
-              if "records" not in data:
-                  raise SystemExit(f"{dataset}：錯誤，找不到 records")
-              print(f"{dataset}：records 存在")
-              latest_time = None
-              records = data.get("records", {})
-              stations = records.get("Station", []) if isinstance(records, dict) else []
-              if isinstance(stations, list):
-                  for station in stations:
-                      if not isinstance(station, dict):
-                          continue
-                      obs = station.get("ObsTime", {})
-                      dt = obs.get("DateTime") if isinstance(obs, dict) else None
-                      if dt:
-                          try:
-                              parsed = datetime.fromisoformat(
-                                  dt.replace("Z", "+00:00")
-                              )
-                              if latest_time is None or parsed > latest_time:
-                                  latest_time = parsed
-                          except Exception:
-                              pass
-              if latest_time:
-                  print(
-                      f"{dataset}：本次抓到的最新 ObsTime = "
-                      f"{latest_time.isoformat()}"
-                  )
-              else:
-                  print(f"{dataset}：找不到可解析的 ObsTime")
-          PY
-
-          done
-
-          if (( ${#failed_datasets[@]} > 0 )); then
-            echo "::warning::本次有 ${#failed_datasets[@]} 個資料集下載失敗：${failed_datasets[*]}"
-            echo "已保留可用的上次成功資料；繼續進行後續資料驗證。"
           else
-            echo "所有 CWA 資料集均下載成功。"
+            rm -f "$tmp_file"
+            echo "::warning::O-A0003-001 下載逾時或失敗，保留舊資料。"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0003-001-c0b010.json" ]]; then
+            echo '{"records":{"Station":[]}}' > "/tmp/cwa-o-a0003-001-c0b010.json"
+            echo "::warning::O-A0003-001 本次下載失敗，建立空測站備援資料；不影響其他資料集流程。"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0003-001-c0b010.json" ]]; then
+            echo "::error::O-A0003-001 沒有可用的有效資料或備援資料。"
+            exit 1
           fi
 
-      - name: Verify 7-day county forecast dataset
+      - name: Fetch CWA O-A0001-001 hourly fallback for C0 stations
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -euo pipefail
+          : "${CWA_API_KEY:?找不到 CWA_API_KEY，請確認 GitHub Actions Secrets。}"
+          tmp_file="/tmp/cwa-o-a0001-001.json.tmp"
+          rm -f "$tmp_file"
+          if curl --silent --show-error --fail \\
+            --connect-timeout 10 --max-time 40 --http1.1 --ipv4 \\
+            --retry 1 --retry-delay 2 --retry-all-errors --retry-max-time 85 \\
+            -H "Accept: application/json" \\
+            -H "Authorization: ${CWA_API_KEY}" \\
+            -H "Cache-Control: no-cache, no-store, max-age=0" \\
+            -H "Pragma: no-cache" \\
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?format=JSON&_=$(date +%s%N)" \\
+            -o "$tmp_file"; then
+            if python -m json.tool "$tmp_file" >/dev/null 2>&1; then
+              mv "$tmp_file" "/tmp/cwa-o-a0001-001.json"
+              echo "O-A0001-001 下載成功且 JSON 驗證通過"
+            else
+              rm -f "$tmp_file"
+              echo "::warning::O-A0001-001 回傳內容不是有效 JSON。"
+            fi
+          else
+            rm -f "$tmp_file"
+            echo "::warning::O-A0001-001 下載逾時或失敗，保留舊資料。"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0001-001.json" && -s "data/cwa-O-A0001-001.json" ]]; then
+            echo "::warning::O-A0001-001 本次下載失敗，改用上一版成功資料。"
+            cp "data/cwa-O-A0001-001.json" "/tmp/cwa-o-a0001-001.json"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0001-001.json" ]]; then
+            echo "::error::O-A0001-001 沒有可用的有效資料或備援資料。"
+            exit 1
+          fi
 
-          python <<'PY'
-          import json
-
-          path = "data/cwa-F-D0047-091.json"
-
-          with open(path, "r", encoding="utf-8") as f:
-              data = json.load(f)
-
-          if not isinstance(data, dict):
-              raise SystemExit("F-D0047-091：回傳資料不是 JSON 物件")
-
-          records = data.get("records")
-          if not isinstance(records, dict) or not records:
-              raise SystemExit(
-                  "F-D0047-091：找不到有效的 records，停止提交。"
-              )
-
-          print("F-D0047-091：JSON 正常")
-          print("F-D0047-091：records 欄位已取得，資料驗證通過")
-          PY
-
-      - name: Verify high-temperature CAP is not an old cached version
+      - name: Fetch CWA official weather alert content W-C0033-002
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           set -euo pipefail
+          : "${CWA_API_KEY:?找不到 CWA_API_KEY，請確認 GitHub Actions Secrets。}"
+          tmp_file="/tmp/cwa-w-c0033-002.json.tmp"
+          rm -f "$tmp_file"
+          if curl --silent --show-error --fail \\
+            --connect-timeout 10 --max-time 40 --http1.1 --ipv4 \\
+            --retry 1 --retry-delay 2 --retry-all-errors --retry-max-time 85 \\
+            -H "Accept: application/json" \\
+            -H "Authorization: ${CWA_API_KEY}" \\
+            -H "Cache-Control: no-cache, no-store, max-age=0" \\
+            -H "Pragma: no-cache" \\
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-002?format=JSON&_=$(date +%s%N)" \\
+            -o "$tmp_file"; then
+            if python -m json.tool "$tmp_file" >/dev/null 2>&1; then
+              mv "$tmp_file" "/tmp/cwa-w-c0033-002.json"
+              echo "W-C0033-002 下載成功且 JSON 驗證通過"
+            else
+              rm -f "$tmp_file"
+              echo "::warning::W-C0033-002 回傳內容不是有效 JSON。"
+            fi
+          else
+            rm -f "$tmp_file"
+            echo "::warning::W-C0033-002 下載逾時或失敗，保留舊資料。"
+          fi
+          if [[ ! -s "/tmp/cwa-w-c0033-002.json" && -s "data/cwa-W-C0033-002.json" ]]; then
+            echo "::warning::W-C0033-002 本次下載失敗，改用上一版成功資料。"
+            cp "data/cwa-W-C0033-002.json" "/tmp/cwa-w-c0033-002.json"
+          fi
+          if [[ ! -s "/tmp/cwa-w-c0033-002.json" ]]; then
+            echo "::error::W-C0033-002 沒有可用的有效資料或備援資料。"
+            exit 1
+          fi
 
-          python <<'PY'
+      - name: Fetch CWA O-A0002-001 rainfall
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+        run: |
+          set -euo pipefail
+          : "${CWA_API_KEY:?找不到 CWA_API_KEY，請確認 GitHub Actions Secrets。}"
+          tmp_file="/tmp/cwa-o-a0002-001.json.tmp"
+          rm -f "$tmp_file"
+          if curl --silent --show-error --fail \\
+            --connect-timeout 10 --max-time 40 --http1.1 --ipv4 \\
+            --retry 1 --retry-delay 2 --retry-all-errors --retry-max-time 85 \\
+            -H "Accept: application/json" \\
+            -H "Authorization: ${CWA_API_KEY}" \\
+            -H "Cache-Control: no-cache, no-store, max-age=0" \\
+            -H "Pragma: no-cache" \\
+            "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?format=JSON&_=$(date +%s%N)" \\
+            -o "$tmp_file"; then
+            if python -m json.tool "$tmp_file" >/dev/null 2>&1; then
+              mv "$tmp_file" "/tmp/cwa-o-a0002-001.json"
+              echo "O-A0002-001 下載成功且 JSON 驗證通過"
+            else
+              rm -f "$tmp_file"
+              echo "::warning::O-A0002-001 回傳內容不是有效 JSON。"
+            fi
+          else
+            rm -f "$tmp_file"
+            echo "::warning::O-A0002-001 下載逾時或失敗，保留舊資料。"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0002-001.json" && -s "data/cwa-O-A0002-001.json" ]]; then
+            echo "::warning::O-A0002-001 本次下載失敗，改用上一版成功資料。"
+            cp "data/cwa-O-A0002-001.json" "/tmp/cwa-o-a0002-001.json"
+          fi
+          if [[ ! -s "/tmp/cwa-o-a0002-001.json" ]]; then
+            echo "::error::O-A0002-001 沒有可用的有效資料或備援資料。"
+            exit 1
+          fi
+
+      - name: Validate downloaded CWA JSON before publishing
+        run: |
+          set -e
+          python - <<'PY'
           import json
-          from datetime import datetime, timezone, timedelta
+          from pathlib import Path
 
-          path = "data/cwa-W-C0033-005.json"
-          with open(path, "r", encoding="utf-8") as f:
-              data = json.load(f)
-
-          keys = {
-              "sent", "Sent", "issueTime", "IssueTime",
-              "publishTime", "PublishTime", "publishedAt",
-              "PublishedAt", "publishDate", "PublishDate",
-              "published", "Published", "updateTime", "UpdateTime",
-              "updatedAt", "UpdatedAt", "modifiedAt", "ModifiedAt",
+          files = {
+              "/tmp/cwa-o-a0003-001.json": True,
+              "/tmp/cwa-o-a0003-001-c0b010.json": False,
+              "/tmp/cwa-o-a0001-001.json": False,
+              "/tmp/cwa-w-c0033-002.json": False,
+              "/tmp/cwa-o-a0002-001.json": True,
           }
 
-          latest = None
-          seen = set()
+          for filename, require_stations in files.items():
+              path = Path(filename)
+              if not path.is_file() or path.stat().st_size == 0:
+                  raise SystemExit(f"CWA 回傳檔案不存在或為空：{filename}")
 
-          def walk(node):
-              global latest
-              if not isinstance(node, (dict, list)):
-                  return
-              ident = id(node)
-              if ident in seen:
-                  return
-              seen.add(ident)
-              if isinstance(node, list):
-                  for item in node:
-                      walk(item)
-                  return
-              for key, value in node.items():
-                  if key in keys:
-                      raw = value
-                      if isinstance(value, dict):
-                          raw = (
-                              value.get("value")
-                              or value.get("datetime")
-                              or value.get("DateTime")
-                              or value.get("time")
-                              or ""
-                          )
-                      if raw:
-                          try:
-                              dt = datetime.fromisoformat(
-                                  str(raw).replace("Z", "+00:00")
-                              )
-                              if dt.tzinfo is None:
-                                  dt = dt.replace(tzinfo=timezone.utc)
-                              if latest is None or dt > latest:
-                                  latest = dt
-                          except Exception:
-                              pass
-                  if isinstance(value, (dict, list)):
-                      walk(value)
+              try:
+                  payload = json.loads(path.read_text(encoding="utf-8"))
+              except Exception as exc:
+                  raise SystemExit(f"CWA 回傳不是有效 JSON：{filename}: {exc}")
 
-          walk(data)
+              if not isinstance(payload, dict):
+                  raise SystemExit(f"CWA JSON 根節點不是物件：{filename}")
 
-          if latest:
-              taipei = latest.astimezone(timezone(timedelta(hours=8)))
-              print(f"W-C0033-005 最後發布／更新：{taipei.isoformat()}")
+              if require_stations:
+                  records = payload.get("records") or payload.get("result", {}).get("records") or {}
+                  stations = records.get("Station") if isinstance(records, dict) else None
+                  if not isinstance(stations, list) or not stations:
+                      raise SystemExit(f"CWA JSON 缺少有效測站資料：{filename}")
 
-              now = datetime.now(timezone(timedelta(hours=8)))
-              today_0730 = now.replace(
-                  hour=7, minute=30, second=0, microsecond=0
-              )
-
-              if now >= today_0730 and taipei.date() < now.date():
-                  raise SystemExit(
-                      "W-C0033-005 仍是前一天版本，停止提交，"
-                      "避免網站繼續發布舊高溫資訊。"
-                  )
-          else:
-              print("W-C0033-005 無法解析發布時間，保留原資料流程。")
+              print(f"Validated {filename} ({path.stat().st_size} bytes)")
           PY
 
-      - name: Show downloaded files
+      - name: Publish latest CWA JSON for GitHub Pages
         run: |
-          echo "========================================"
-          echo "CWA 資料檔案"
-          echo "========================================"
-          ls -lh data/cwa-*.json
+          set -e
+          mkdir -p data
+          cp /tmp/cwa-o-a0001-001.json data/cwa-O-A0001-001.json
+          cp /tmp/cwa-o-a0002-001.json data/cwa-O-A0002-001.json
+          cp /tmp/cwa-o-a0003-001.json data/cwa-O-A0003-001.json
+          cp /tmp/cwa-w-c0033-002.json data/cwa-W-C0033-002.json
 
-      - name: Commit CWA data
+          # 七堵等 C0 測站若只在明確 stationId 回傳中出現，
+          # 將它合併回主 O-A0003-001 JSON，避免網站因單站缺資料而消失。
+          python - <<'PY2'
+          import json
+          from pathlib import Path
+
+          main_path = Path("data/cwa-O-A0003-001.json")
+          explicit_path = Path("/tmp/cwa-o-a0003-001-c0b010.json")
+
+          main = json.loads(main_path.read_text(encoding="utf-8"))
+          explicit = json.loads(explicit_path.read_text(encoding="utf-8"))
+
+          def stations(payload):
+              return (payload.get("records", {}).get("Station")
+                      or payload.get("result", {}).get("records", {}).get("Station")
+                      or [])
+
+          merged = stations(main)
+          explicit_stations = stations(explicit)
+          by_id = {str(x.get("StationId")): x for x in merged if x.get("StationId")}
+
+          for st in explicit_stations:
+              sid = str(st.get("StationId") or "")
+              if sid == "C0B010":
+                  by_id[sid] = st
+
+          merged = list(by_id.values())
+          if main.get("records") is not None:
+              main.setdefault("records", {})["Station"] = merged
+          elif main.get("result", {}).get("records") is not None:
+              main["result"]["records"]["Station"] = merged
+
+          main_path.write_text(
+              json.dumps(main, ensure_ascii=False, separators=(",", ":")),
+              encoding="utf-8"
+          )
+          print("Published O-A0003-001 stations:", len(merged))
+          PY2
+
+      - name: Update rolling 7-day history
         run: |
-          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timedelta, timezone
+
+          source = "/tmp/cwa-o-a0003-001.json"
+          explicit_source = "/tmp/cwa-o-a0003-001-c0b010.json"
+          hourly_source = "/tmp/cwa-o-a0001-001.json"
+          rainfall_source = "/tmp/cwa-o-a0002-001.json"
+          output = "data/history/cwa-o-a0003-001-history.json"
+
+          def extract_stations(payload):
+              stations = (
+                  payload.get("records", {}).get("Station")
+                  or payload.get("result", {}).get("records", {}).get("Station")
+                  or []
+              )
+              return stations if isinstance(stations, list) else []
+
+          with open(source, "r", encoding="utf-8") as f:
+              payload = json.load(f)
+          stations = extract_stations(payload)
+          if not stations:
+              raise SystemExit("CWA O-A0003-001 找不到 records.Station")
+
+          with open(explicit_source, "r", encoding="utf-8") as f:
+              explicit_payload = json.load(f)
+          explicit_stations = extract_stations(explicit_payload)
+
+          with open(hourly_source, "r", encoding="utf-8") as f:
+              hourly_payload = json.load(f)
+          hourly_stations = extract_stations(hourly_payload)
+
+          with open(rainfall_source, "r", encoding="utf-8") as f:
+              rainfall_payload = json.load(f)
+          rainfall_stations = extract_stations(rainfall_payload)
+          if not rainfall_stations:
+              raise SystemExit("CWA O-A0002-001 找不到 records.Station")
+
+          history = {"generatedAt": None, "stations": {}}
+          if os.path.exists(output):
+              try:
+                  with open(output, "r", encoding="utf-8") as f:
+                      old = json.load(f)
+                  if isinstance(old, dict) and isinstance(old.get("stations"), dict):
+                      history = old
+              except Exception:
+                  pass
+
+          cutoff_ms = int(
+              (datetime.now(timezone.utc) - timedelta(days=7)).timestamp() * 1000
+          )
+
+          def parse_ts(station):
+              obs = station.get("ObsTime")
+              if isinstance(obs, dict):
+                  obs = obs.get("DateTime") or obs.get("dateTime")
+              if not obs:
+                  return None
+              try:
+                  dt = datetime.fromisoformat(
+                      str(obs).replace("Z", "+00:00")
+                  )
+                  if dt.tzinfo is None:
+                      dt = dt.replace(tzinfo=timezone.utc)
+                  return int(dt.timestamp() * 1000)
+              except Exception:
+                  return None
+
+          def append_station(station, only_c0=False, hourly_source=False):
+              if not isinstance(station, dict):
+                  return
+
+              station_id = str(
+                  station.get("StationId") or ""
+              ).strip()
+
+              if not station_id or (
+                  only_c0 and not station_id.startswith("C0")
+              ):
+                  return
+
+              ts_ms = parse_ts(station)
+              if ts_ms is None:
+                  return
+
+              weather = station.get("WeatherElement") or {}
+
+              # 溫度
+              temp = None
+              try:
+                  raw_temp = weather.get(
+                      "AirTemperature",
+                      weather.get("TEMP")
+                  )
+                  if raw_temp not in (None, "", "X", "T"):
+                      temp = float(raw_temp)
+              except (TypeError, ValueError):
+                  temp = None
+
+              if temp is not None and (
+                  temp == 0 or temp < -50 or temp > 60
+              ):
+                  temp = None
+
+              # O-A0001-001：整點前10分鐘平均風速，
+              # 對應氣象署「平均風」排行。
+              hourly_wind = None
+              raw_hourly_wind = weather.get(
+                  "WindSpeed",
+                  weather.get("WDSD")
+              )
+
+              if raw_hourly_wind not in (None, "", "X", "T"):
+                  try:
+                      hourly_wind = float(raw_hourly_wind)
+                  except (TypeError, ValueError):
+                      hourly_wind = None
+
+              # 最大10分鐘平均風：Max10MinAverage.WindSpeed
+              max10min_wind = None
+              max10 = weather.get("Max10MinAverage") or {}
+
+              if isinstance(max10, dict):
+                  raw_wind = max10.get("WindSpeed")
+                  if raw_wind not in (None, "", "X", "T"):
+                      try:
+                          max10min_wind = float(raw_wind)
+                      except (TypeError, ValueError):
+                          max10min_wind = None
+
+              # 最大瞬間風速：GustInfo.PeakGustSpeed
+              gust = None
+              gust_info = weather.get("GustInfo") or {}
+
+              if isinstance(gust_info, dict):
+                  raw_gust = gust_info.get("PeakGustSpeed")
+                  if raw_gust not in (None, "", "X", "T"):
+                      try:
+                          gust = float(raw_gust)
+                      except (TypeError, ValueError):
+                          gust = None
+
+              # 防止異常值污染今日排行。
+              if hourly_wind is not None and not (
+                  0 <= hourly_wind <= 60
+              ):
+                  hourly_wind = None
+
+              if max10min_wind is not None and not (
+                  0 <= max10min_wind <= 60
+              ):
+                  max10min_wind = None
+
+              if gust is not None and not (
+                  0 <= gust <= 80
+              ):
+                  gust = None
+
+              if (
+                  temp is None
+                  and hourly_wind is None
+                  and max10min_wind is None
+                  and gust is None
+              ):
+                  return
+
+              point = {"ts": ts_ms}
+
+              station_name = str(
+                  station.get("StationName") or ""
+              ).strip()
+
+              if station_name:
+                  point["stationName"] = station_name
+
+              if temp is not None:
+                  point["temp"] = round(temp, 1)
+
+              if hourly_wind is not None and hourly_source:
+                  point["hourlyWind"] = round(hourly_wind, 1)
+
+              if max10min_wind is not None:
+                  point["max10MinWind"] = round(
+                      max10min_wind,
+                      1
+                  )
+
+              if gust is not None:
+                  if hourly_source:
+                      # O-A0001-001：
+                      # 整點「小時最大陣風」獨立保存。
+                      point["hourlyGust"] = round(gust, 1)
+                  else:
+                      point["windGust"] = round(gust, 1)
+
+              history["stations"].setdefault(
+                  station_id,
+                  []
+              ).append(point)
+
+          def append_rainfall_station(station):
+              if not isinstance(station, dict):
+                  return
+
+              station_id = str(
+                  station.get("StationId") or ""
+              ).strip()
+
+              if not station_id:
+                  return
+
+              ts_ms = parse_ts(station)
+              if ts_ms is None:
+                  return
+
+              rainfall = station.get("RainfallElement") or {}
+
+              past24 = (
+                  rainfall.get("Past24hr")
+                  or rainfall.get("Past24HR")
+                  or rainfall.get("Past24Hour")
+                  or {}
+              )
+
+              raw = (
+                  past24.get("Precipitation")
+                  if isinstance(past24, dict)
+                  else None
+              )
+
+              if raw in (None, "", "X", "T"):
+                  return
+
+              try:
+                  rain24h = float(raw)
+              except (TypeError, ValueError):
+                  return
+
+              if rain24h < 0:
+                  return
+
+              history["stations"].setdefault(
+                  station_id,
+                  []
+              ).append({
+                  "ts": ts_ms,
+                  "rain24h": round(rain24h, 1)
+              })
+
+          # O-A0001-001：
+          # 保留全站整點「小時最大陣風」歷史。
+          for station in hourly_stations:
+              append_station(
+                  station,
+                  hourly_source=True
+              )
+
+          # 依測站名稱／縣市＋鄉鎮進行資料對齊。
+          def norm_key(value):
+              return (
+                  str(value or "")
+                  .replace("台", "臺")
+                  .replace(" ", "")
+                  .replace("　", "")
+                  .strip()
+              )
+
+          hourly_by_name = {}
+          hourly_by_area = {}
+
+          for station in hourly_stations:
+              name = norm_key(
+                  station.get("StationName")
+              )
+
+              ts_ms = parse_ts(station)
+              weather = station.get("WeatherElement") or {}
+              gust_info = weather.get("GustInfo") or {}
+              raw_gust = gust_info.get("PeakGustSpeed")
+
+              try:
+                  gust = float(raw_gust)
+              except (TypeError, ValueError):
+                  gust = None
+
+              raw_wind = weather.get(
+                  "WindSpeed",
+                  weather.get("WDSD")
+              )
+
+              try:
+                  hourly_wind = float(raw_wind)
+              except (TypeError, ValueError):
+                  hourly_wind = None
+
+              if ts_ms is None or (
+                  gust is None and hourly_wind is None
+              ):
+                  continue
+
+              if gust is not None and not (
+                  0 <= gust <= 80
+              ):
+                  gust = None
+
+              if hourly_wind is not None and not (
+                  0 <= hourly_wind <= 60
+              ):
+                  hourly_wind = None
+
+              if gust is None and hourly_wind is None:
+                  continue
+
+              item = {
+                  "ts": ts_ms,
+                  "gust": (
+                      round(gust, 1)
+                      if gust is not None
+                      else None
+                  ),
+                  "wind": (
+                      round(hourly_wind, 1)
+                      if hourly_wind is not None
+                      else None
+                  ),
+                  "stationName": str(
+                      station.get("StationName") or ""
+                  ).strip()
+              }
+
+              if name:
+                  hourly_by_name[name] = item
+
+              geo = station.get("GeoInfo") or {}
+
+              area_key = (
+                  norm_key(geo.get("CountyName"))
+                  + "|"
+                  + norm_key(geo.get("TownName"))
+              )
+
+              if area_key != "|":
+                  hourly_by_area[area_key] = item
+
+          for station in stations:
+              station_id = str(
+                  station.get("StationId") or ""
+              ).strip()
+
+              if not station_id:
+                  continue
+
+              name = norm_key(
+                  station.get("StationName")
+              )
+
+              geo = station.get("GeoInfo") or {}
+
+              area_key = (
+                  norm_key(geo.get("CountyName"))
+                  + "|"
+                  + norm_key(geo.get("TownName"))
+              )
+
+              hourly = (
+                  hourly_by_name.get(name)
+                  or hourly_by_area.get(area_key)
+              )
+
+              if not hourly:
+                  continue
+
+              mapped_point = {
+                  "ts": hourly["ts"],
+                  "stationName": str(
+                      station.get("StationName")
+                      or hourly.get("stationName")
+                      or ""
+                  ).strip()
+              }
+
+              if hourly.get("wind") is not None:
+                  mapped_point["hourlyWind"] = hourly["wind"]
+
+              if hourly.get("gust") is not None:
+                  mapped_point["hourlyGust"] = hourly["gust"]
+
+              history["stations"].setdefault(
+                  station_id,
+                  []
+              ).append(mapped_point)
+
+          # 加入 O-A0003 全站 10 分鐘資料。
+          for station in stations:
+              append_station(station)
+
+          # 加入明確指定 C0B010 的 O-A0003 回傳。
+          for station in explicit_stations:
+              if (
+                  str(
+                      station.get("StationId") or ""
+                  ).strip()
+                  == "C0B010"
+              ):
+                  append_station(station)
+
+          # O-A0002-001：
+          # 獨立保存雨量站自己的 24 小時累積雨量。
+          for station in rainfall_stations:
+              append_rainfall_station(station)
+
+          for station_id, arr in list(
+              history["stations"].items()
+          ):
+              unique = {}
+
+              for point in arr:
+                  try:
+                      ts = int(point["ts"])
+                  except (
+                      KeyError,
+                      TypeError,
+                      ValueError
+                  ):
+                      continue
+
+                  if ts < cutoff_ms:
+                      continue
+
+                  item = {"ts": ts}
+
+                  if point.get("stationName"):
+                      item["stationName"] = str(
+                          point.get("stationName")
+                      ).strip()
+
+                  has_value = False
+
+                  try:
+                      temp = float(point.get("temp"))
+                      if temp != 0 and -50 <= temp <= 60:
+                          item["temp"] = round(temp, 1)
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  try:
+                      rain24h = float(
+                          point.get("rain24h")
+                      )
+                      if rain24h >= 0:
+                          item["rain24h"] = round(
+                              rain24h,
+                              1
+                          )
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  try:
+                      max10min_wind = float(
+                          point.get("max10MinWind")
+                      )
+                      if 0 <= max10min_wind <= 60:
+                          item["max10MinWind"] = round(
+                              max10min_wind,
+                              1
+                          )
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  try:
+                      gust = float(
+                          point.get("windGust")
+                      )
+                      if 0 <= gust <= 80:
+                          item["windGust"] = round(
+                              gust,
+                              1
+                          )
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  try:
+                      hourly_wind = float(
+                          point.get("hourlyWind")
+                      )
+                      if 0 <= hourly_wind <= 60:
+                          item["hourlyWind"] = round(
+                              hourly_wind,
+                              1
+                          )
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  try:
+                      hourly_gust = float(
+                          point.get("hourlyGust")
+                      )
+                      if 0 <= hourly_gust <= 80:
+                          item["hourlyGust"] = round(
+                              hourly_gust,
+                              1
+                          )
+                          has_value = True
+                  except (TypeError, ValueError):
+                      pass
+
+                  if has_value:
+                      # 同一時間戳若同時有溫度與雨量，
+                      # 合併保留兩個欄位。
+                      if ts in unique:
+                          unique[ts].update(item)
+                      else:
+                          unique[ts] = item
+
+              cleaned = [
+                  unique[k]
+                  for k in sorted(unique)
+              ]
+
+              if cleaned:
+                  history["stations"][station_id] = cleaned
+              else:
+                  del history["stations"][station_id]
+
+          history["generatedAt"] = (
+              datetime.now(timezone.utc).isoformat()
+          )
+
+          with open(
+              output,
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  history,
+                  f,
+                  ensure_ascii=False,
+                  separators=(",", ":")
+              )
+
+          print(
+              "CWA 歷史測站數：",
+              len(history["stations"])
+          )
+
+          print(
+              "C0B010 七堵歷史筆數：",
+              len(
+                  history["stations"].get(
+                      "C0B010",
+                      []
+                  )
+              )
+          )
+
+          rain_count = sum(
+              1
+              for arr in history["stations"].values()
+              if any(
+                  "rain24h" in p
+                  for p in arr
+              )
+          )
+
+          wind_count = sum(
+              1
+              for arr in history["stations"].values()
+              if any(
+                  "max10MinWind" in p
+                  for p in arr
+              )
+          )
+
+          gust_count = sum(
+              1
+              for arr in history["stations"].values()
+              if any(
+                  "windGust" in p
+                  or "hourlyGust" in p
+                  for p in arr
+              )
+          )
+
+          hourly_gust_count = sum(
+              1
+              for arr in history["stations"].values()
+              if any(
+                  "hourlyGust" in p
+                  for p in arr
+              )
+          )
+
+          print(
+              "含 24 小時雨量歷史的測站數：",
+              rain_count
+          )
+
+          print(
+              "含 10 分鐘平均風歷史的測站數：",
+              wind_count
+          )
+
+          print(
+              "含陣風歷史的測站數：",
+              gust_count
+          )
+
+          print(
+              "含整點官方小時最大陣風歷史的測站數：",
+              hourly_gust_count
+          )
+          PY
+
+      - name: Commit history
+        run: |
+          set -e
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add data/cwa-*.json
+          # 本工作流只提交歷史資料；即時 CWA JSON 由 CWA Weather Data 工作流發布。
+          git restore -- data/cwa-O-A0001-001.json data/cwa-O-A0002-001.json data/cwa-O-A0003-001.json data/cwa-W-C0033-002.json
+
+          git add data/history/cwa-o-a0003-001-history.json
 
           if git diff --cached --quiet; then
-            echo "資料沒有變化，不需要提交"
+            echo "歷史資料沒有變化，不需要提交"
             exit 0
           fi
 
-          git commit -m "Update CWA weather data"
+          git commit -m "Update CWA weather history"
 
-          # 多個工作流程可能同時更新相同的 CWA JSON。
-          # 同步遠端時若同一資料檔衝突，保留本次成功下載的版本；不使用 force push。
-          max_attempts=5
-          for attempt in $(seq 1 "$max_attempts"); do
-            echo "推送嘗試 ${attempt}/${max_attempts}"
+          # 其他工作流程可能同時更新 main。推送前重新同步，
+          # 若遠端剛好又前進，最多重試 5 次，不使用 force push。
+          for attempt in 1 2 3 4 5; do
+            echo "推送嘗試 ${attempt}/5"
             git fetch origin main
 
-            if git rebase origin/main; then
-              if git push origin HEAD:main; then
-                echo "CWA 資料推送成功"
-                exit 0
-              fi
-              echo "推送被拒絕，稍後重新同步遠端再試。"
-            else
-              conflicts="$(git diff --name-only --diff-filter=U)"
-              if [[ -z "$conflicts" ]]; then
-                git rebase --abort || true
-                echo "Rebase 失敗，但沒有可辨識的檔案衝突。"
-                exit 1
-              fi
-
-              while IFS= read -r file; do
-                [[ -n "$file" ]] || continue
-                case "$file" in
-                  data/cwa-*.json)
-                    git checkout --theirs -- "$file"
-                    git add -- "$file"
-                    ;;
-                  *)
-                    git rebase --abort || true
-                    echo "非 CWA JSON 檔案發生衝突：$file；停止以避免覆蓋其他內容。"
-                    exit 1
-                    ;;
-                esac
-              done <<< "$conflicts"
-
-              GIT_EDITOR=true git rebase --continue
-              if git push origin HEAD:main; then
-                echo "解決 CWA JSON 衝突後推送成功"
-                exit 0
-              fi
-              echo "解決檔案衝突後推送仍被拒絕，稍後重新同步再試。"
+            if ! git rebase origin/main; then
+              git rebase --abort || true
+              echo "::error::遠端 main 同時修改了相同歷史檔，發生 rebase 衝突；為避免覆蓋資料，停止推送。"
+              exit 1
             fi
 
-            sleep 2
+            if git push origin HEAD:main; then
+              echo "歷史資料已成功推送"
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 5 ]; then
+              echo "main 在推送期間再次更新，稍後重新同步並重試"
+              sleep 3
+            fi
           done
 
-          echo "重試 ${max_attempts} 次後仍無法推送，請檢查最新 GitHub Actions 日誌。"
+          echo "::error::重試 5 次仍無法推送，請檢查是否有其他工作流程持續更新 main。"
           exit 1
