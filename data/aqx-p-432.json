@@ -2019,10 +2019,10 @@
         "wind_speed": "",
         "wind_direc": "",
         "publishtime": "2026\/11\/06 17:00:00",
-        "co_8hr": "",
+        "co_8hr": "0.7",
         "pm2.5_avg": "",
         "pm10_avg": "",
-        "so2_avg": "",
+        "so2_avg": "1",
         "longitude": "120.65671",
         "latitude": "24.1589",
         "siteid": "88"
