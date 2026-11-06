@@ -2022,7 +2022,7 @@
         "co_8hr": "",
         "pm2.5_avg": "",
         "pm10_avg": "",
-        "so2_avg": "",
+        "so2_avg": "1",
         "longitude": "120.65671",
         "latitude": "24.1589",
         "siteid": "88"
