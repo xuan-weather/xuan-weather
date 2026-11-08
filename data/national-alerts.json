@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-08T06:03:02.865701+08:00",
+  "updatedAt": "2026-11-08T09:21:34.298858+08:00",
   "source": "NCDR 民生示警公開資料平台（JSON Atom + ATOM Feed；目標告警時間以 CAP sent 為準）",
   "feed": [
     "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
@@ -7,16 +7,16 @@
   ],
   "alerts": [
     {
-      "id": "WRA_ReservoirWarn_20261108052840_0000",
+      "id": "WRA_ReservoirWarn_20261108090840_0001",
       "category": "",
       "title": "水庫放流",
       "status": "Actual",
-      "msgType": "Alert",
+      "msgType": "Update",
       "author": "水利署",
-      "updated": "2026-11-08T05:28:40+08:00",
-      "publishedAt": "2026-11-08T05:28:40+08:00",
-      "effective": "2026/11/8 上午 05:28:40",
-      "expires": "2026/11/8 上午 08:29:00",
+      "updated": "2026-11-08T09:08:40+08:00",
+      "publishedAt": "2026-11-08T09:08:40+08:00",
+      "effective": "2026/11/8 上午 09:08:40",
+      "expires": "2026/11/8 下午 12:09:00",
       "summary": "",
       "link": "",
       "feedSource": "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
