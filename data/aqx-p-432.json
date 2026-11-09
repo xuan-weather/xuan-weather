@@ -1458,7 +1458,7 @@
     {
         "sitename": "屏東",
         "county": "屏東縣",
-        "aqi": "0",
+        "aqi": "71",
         "pollutant": "懸浮微粒",
         "status": "普通",
         "so2": "3.4",
@@ -1510,7 +1510,7 @@
     {
         "sitename": "恆春",
         "county": "屏東縣",
-        "aqi": "0",
+        "aqi": "40",
         "pollutant": "",
         "status": "良好",
         "so2": "",
@@ -2134,7 +2134,7 @@
     {
         "sitename": "新北（樹林）",
         "county": "新北市",
-        "aqi": "0",
+        "aqi": "51",
         "pollutant": "二氧化氮",
         "status": "普通",
         "so2": "",
