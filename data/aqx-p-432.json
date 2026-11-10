@@ -693,7 +693,7 @@
         "wind_speed": "2.3",
         "wind_direc": "6",
         "publishtime": "2026\/11\/10 13:00:00",
-        "co_8hr": "",
+        "co_8hr": "0.2",
         "pm2.5_avg": "8.8",
         "pm10_avg": "25",
         "so2_avg": "0",
