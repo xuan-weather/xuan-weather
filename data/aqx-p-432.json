@@ -834,7 +834,7 @@
     {
         "sitename": "線西",
         "county": "彰化縣",
-        "aqi": "0",
+        "aqi": "58",
         "pollutant": "細懸浮微粒",
         "status": "普通",
         "so2": "1.4",
@@ -2069,7 +2069,7 @@
         "nox": "11",
         "no": "0.5",
         "wind_speed": "0.9",
-        "wind_direc": "",
+        "wind_direc": "67",
         "publishtime": "2026\/11\/13 00:00:00",
         "co_8hr": "0.4",
         "pm2.5_avg": "16.8",
