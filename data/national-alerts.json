@@ -1,11 +1,28 @@
 {
-  "updatedAt": "2026-11-15T22:34:11.815856+08:00",
+  "updatedAt": "2026-11-16T03:56:10.355604+08:00",
   "source": "NCDR 民生示警公開資料平台（JSON Atom + ATOM Feed；目標告警時間以 CAP sent 為準）",
   "feed": [
     "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
     "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx"
   ],
   "alerts": [
+    {
+      "id": "WRA_ReservoirWarn_20261116033840_0000",
+      "category": "",
+      "title": "水庫放流",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "水利署",
+      "updated": "2026-11-16T03:38:40+08:00",
+      "publishedAt": "2026-11-16T03:38:40+08:00",
+      "effective": "2026/11/16 上午 03:38:40",
+      "expires": "2026/11/16 上午 06:39:00",
+      "summary": "",
+      "link": "",
+      "feedSource": "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
+      "capCategory": "",
+      "isDrill": false
+    },
     {
       "id": "CWA-Weather_strong-wind_202611152224001",
       "category": "",
@@ -17,23 +34,6 @@
       "publishedAt": "2026-11-15T22:24:42+08:00",
       "effective": "2026/11/15 下午 10:22:00",
       "expires": "2026/11/16 上午 04:00:00",
-      "summary": "",
-      "link": "",
-      "feedSource": "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
-      "capCategory": "",
-      "isDrill": false
-    },
-    {
-      "id": "WRA_ReservoirWarn_20261115211840_0001",
-      "category": "",
-      "title": "水庫放流",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "水利署",
-      "updated": "2026-11-15T21:18:40+08:00",
-      "publishedAt": "2026-11-15T21:18:40+08:00",
-      "effective": "2026/11/15 下午 09:18:40",
-      "expires": "2026/11/16 上午 12:19:00",
       "summary": "",
       "link": "",
       "feedSource": "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
