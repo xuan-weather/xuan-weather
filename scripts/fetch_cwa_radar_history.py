@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fetch CWA O-A0059-001 historyAPI for the latest 24h and render georeferenced PNG frames."""
 from __future__ import annotations
-import os, json, re, sys, time, math
+import os, json, re, sys, time
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse, parse_qs
@@ -149,59 +149,14 @@ def parse_grid(xml_bytes):
     res = float(xml_parameter(root, "GridResolution") or xml_text(root, "GridResolution") or 0.0125)
     return dt, vals, nx, ny, lon0, lat0, res
 
-def grid_cell_bounds(nx, ny, lon0, lat0, res):
-    """
-    StartPointLongitude/Latitude are the first grid-node centre.
-    Expand half a grid interval on each side to obtain the raster cell edges.
-    """
-    west = lon0 - res / 2
-    east = lon0 + (nx - 1) * res + res / 2
-    south = lat0 - res / 2
-    north = lat0 + (ny - 1) * res + res / 2
-    return [[south, west], [north, east]]
-
-
-def mercator_y(lat_deg):
-    lat = max(-85.05112878, min(85.05112878, lat_deg))
-    rad = math.radians(lat)
-    return math.log(math.tan(math.pi / 4 + rad / 2))
-
-
-def inverse_mercator_lat(y):
-    return math.degrees(2 * math.atan(math.exp(y)) - math.pi / 2)
-
-
-def render_mercator_png(vals, nx, ny, lon0, lat0, res, out_path):
-    """
-    Reproject a regular lon/lat QPESUMS grid to a north-up Web Mercator raster.
-    Nearest-neighbour sampling preserves the original dBZ grid-cell appearance.
-    """
-    bounds = grid_cell_bounds(nx, ny, lon0, lat0, res)
-    south, west = bounds[0]
-    north, east = bounds[1]
-
-    x_span = math.radians(east - west)
-    y_top = mercator_y(north)
-    y_bottom = mercator_y(south)
-    y_span = y_top - y_bottom
-    out_h = max(1, int(round(nx * y_span / x_span)))
-    rgba = bytearray(nx * out_h * 4)
-
-    # Output rows are evenly spaced in Mercator Y. Convert each row centre
-    # back to geographic latitude, then sample the nearest source grid row.
-    for out_row in range(out_h):
-        frac = (out_row + 0.5) / out_h
-        merc_y = y_top - frac * y_span
-        lat = inverse_mercator_lat(merc_y)
-        src_row_south_to_north = int(round((lat - lat0) / res))
-        if src_row_south_to_north < 0 or src_row_south_to_north >= ny:
-            continue
-        src_row = ny - 1 - src_row_south_to_north
-        row_base = out_row * nx * 4
-        src_base = src_row * nx
-
+def render_png(vals, nx, ny, out_path):
+    # QPESUMS grid rows are south-to-north; PNG rows are north-to-south.
+    rgba = bytearray(nx * ny * 4)
+    for row in range(ny):
+        src_row = ny - 1 - row
         for col in range(nx):
-            v = vals[src_base + col]
+            v = vals[src_row * nx + col]
+            p = (row * nx + col) * 4
             if v <= -90:
                 continue
             idx = 0
@@ -210,12 +165,10 @@ def render_mercator_png(vals, nx, ny, lon0, lat0, res, out_path):
                     idx = i
                 else:
                     break
-            rgba[row_base + col * 4:row_base + col * 4 + 4] = bytes(PALETTE[idx])
-
-    Image.frombytes("RGBA", (nx, out_h), bytes(rgba)).save(
-        out_path, format="PNG", optimize=True
-    )
-    return bounds, out_h
+            color = PALETTE[idx]
+            rgba[p:p+4] = bytes(color)
+    im = Image.frombytes("RGBA", (nx, ny), bytes(rgba))
+    im.save(out_path, format="PNG", optimize=True)
 
 def main():
     if not API_KEY:
@@ -258,22 +211,9 @@ def main():
         if dt < start or dt > now + timedelta(minutes=10):
             continue
         stamp = dt.strftime("%Y%m%d%H%M")
-
-        # Versioned filename forces a one-time rebuild of older non-Mercator
-        # PNGs. Subsequent 10-minute runs reuse the correctly projected frame.
-        filename = f"radar_{stamp}_mercator.png"
+        filename = f"radar_{stamp}.png"
         target = OUT / filename
-        meta_path = OUT / f"radar_{stamp}_mercator.json"
-
-        frame_bounds = None
-        if target.exists() and meta_path.exists():
-            try:
-                meta = json.loads(meta_path.read_text(encoding="utf-8"))
-                frame_bounds = meta.get("bounds")
-            except Exception:
-                frame_bounds = None
-
-        if not frame_bounds:
+        if not target.exists():
             download_url = url
             parsed_url = urlparse(download_url)
             query = parse_qs(parsed_url.query)
@@ -283,40 +223,21 @@ def main():
                 download_url = urlunparse(parsed_url._replace(query=urlencode(query, doseq=True)))
             r = SESSION.get(download_url, timeout=120)
             r.raise_for_status()
-            actual_dt, vals, nx, ny, lon0, lat0, res = parse_grid(r.content)
-            frame_bounds, out_h = render_mercator_png(
-                vals, nx, ny, lon0, lat0, res, target
-            )
+            raw = r.content
+            actual_dt, vals, nx, ny, lon0, lat0, res = parse_grid(raw)
+            render_png(vals, nx, ny, target)
             dt = actual_dt
-            meta_path.write_text(json.dumps({
-                "time": dt.isoformat(),
-                "nx": nx,
-                "ny": ny,
-                "start_longitude": lon0,
-                "start_latitude": lat0,
-                "grid_resolution_degrees": res,
-                "rendered_width": nx,
-                "rendered_height": out_h,
-                "projection": "EPSG:3857",
-                "resampling": "nearest",
-                "bounds": frame_bounds
-            }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-
+        # O-A0059-001 documented grid: origin 115.0E/18.0N, 0.0125 degree,
+        # 921 columns × 881 rows. PNG is north-up; Leaflet bounds use south-west/north-east.
         frames.append({
             "time": dt.isoformat(),
             "url": f"./{filename}",
-            "bounds": frame_bounds
+            "bounds": [[18.0, 115.0], [29.0, 126.5]]
         })
-
-    # Keep only this run's Mercator frames and their sidecar metadata.
+    # Keep only files in the requested 24h window; don't delete anything outside this directory.
     keep = {Path(f["url"]).name for f in frames}
-    keep_meta = {f"radar_{dt.strftime('%Y%m%d%H%M')}_mercator.json"
-                 for dt, _ in records if start <= dt <= now + timedelta(minutes=10)}
     for p in OUT.glob("radar_*.png"):
         if p.name not in keep:
-            p.unlink()
-    for p in OUT.glob("radar_*_mercator.json"):
-        if p.name not in keep_meta:
             p.unlink()
     frames.sort(key=lambda f: f["time"])
     manifest = {
@@ -328,7 +249,7 @@ def main():
         "frames": frames
     }
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"Published {len(frames)} official Web Mercator radar frames from {start.isoformat()} to {now.isoformat()}")
+    print(f"Published {len(frames)} official radar frames from {start.isoformat()} to {now.isoformat()}")
 
 if __name__ == "__main__":
     main()
