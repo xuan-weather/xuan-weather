@@ -89,8 +89,8 @@ def get_metadata_records(payload):
 
     return sorted(found.values(), key=lambda x: x[0])
 
-def fetch_history_metadata(start, end):
-    url = f"{BASE}/historyapi/v1/getMetadata/{DATA_ID}"
+def fetch_history_metadata(start, end, data_id=DATA_ID):
+    url = f"{BASE}/historyapi/v1/getMetadata/{data_id}"
     params = {
         "Authorization": API_KEY,
         "format": "JSON",
@@ -185,6 +185,27 @@ def main():
         except Exception:
             pass
     records = fetch_history_metadata(start, now)
+
+    # O-A0058-005 is the live composite PNG displayed by the website.
+    # When CWA exposes its history metadata, publish the official observation
+    # DateTime separately so the frontend does not infer it from S3 Last-Modified.
+    live_time_file = OUT / "latest-image-time.json"
+    try:
+        live_records = fetch_history_metadata(start, now, data_id="O-A0058-005")
+        live_dt, live_product_url = max(live_records, key=lambda item: item[0])
+        live_time_file.write_text(json.dumps({
+            "source": "Central Weather Administration O-A0058-005",
+            "data_id": "O-A0058-005",
+            "time": live_dt.isoformat(),
+            "fetched_at": datetime.now(TZ).isoformat(),
+            "product_url": live_product_url
+        }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        print(f"Official O-A0058-005 observation time: {live_dt.isoformat()}")
+    except Exception as exc:
+        # Do not fail the existing O-A0059-001 history pipeline if this product
+        # does not support historyAPI or CWA temporarily returns an error.
+        print(f"WARNING: unable to fetch O-A0058-005 DateTime; frontend will use fallback: {exc}")
+
     frames = []
     for dt, url in records:
         if dt < start or dt > now + timedelta(minutes=10):
