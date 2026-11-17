@@ -146,16 +146,38 @@ def parse_grid(xml_bytes):
         raise ValueError(f"格點數量不符：取得 {len(vals)}，預期 {nx}×{ny}")
     lon0 = float(xml_parameter(root, "StartPointLongitude") or xml_text(root, "StartPointLongitude") or 115.0)
     lat0 = float(xml_parameter(root, "StartPointLatitude") or xml_text(root, "StartPointLatitude") or 18.0)
-    res = float(xml_parameter(root, "GridResolution") or xml_text(root, "GridResolution") or 0.0125)
-    return dt, vals, nx, ny, lon0, lat0, res
+    res_text = xml_parameter(root, "GridResolution") or xml_text(root, "GridResolution") or "0.0125"
+    # O-A0059-001 uses a degree-based grid. Reject unexpected units rather than
+    # silently applying a wrong geographic extent.
+    res_match = re.search(r"[-+]?\\d+(?:\\.\\d+)?", str(res_text))
+    if not res_match:
+        raise ValueError(f"無法解析 GridResolution：{res_text}")
+    res = float(res_match.group(0))
+    direction = xml_parameter(root, "DataDirection") or xml_text(root, "DataDirection") or ""
+    return dt, vals, nx, ny, lon0, lat0, res, direction
 
-def render_png(vals, nx, ny, out_path):
-    # QPESUMS grid rows are south-to-north; PNG rows are north-to-south.
+def grid_bounds(nx, ny, lon0, lat0, res):
+    # StartPointLongitude/Latitude identify the FIRST grid point (cell centre),
+    # not the outer image edge. Leaflet imageOverlay needs outer pixel edges,
+    # hence the half-cell expansion on all four sides.
+    west = lon0 - res / 2
+    east = lon0 + (nx - 0.5) * res
+    south = lat0 - res / 2
+    north = lat0 + (ny - 0.5) * res
+    return [[south, west], [north, east]]
+
+def render_png(vals, nx, ny, out_path, direction=""):
+    # Honour CWA DataDirection instead of assuming row/column order.
+    # Image rows must be north-to-south; columns west-to-east.
+    text = str(direction).replace(" ", "")
+    lat_south_to_north = ("南到北" in text) or ("由南至北" in text) or not text
+    lon_west_to_east = ("西到東" in text) or ("由西至東" in text) or not text
     rgba = bytearray(nx * ny * 4)
     for row in range(ny):
-        src_row = ny - 1 - row
+        src_row = ny - 1 - row if lat_south_to_north else row
         for col in range(nx):
-            v = vals[src_row * nx + col]
+            src_col = col if lon_west_to_east else nx - 1 - col
+            v = vals[src_row * nx + src_col]
             p = (row * nx + col) * 4
             if v <= -90:
                 continue
@@ -177,13 +199,17 @@ def main():
     now = datetime.now(TZ).replace(second=0, microsecond=0)
     start = now - timedelta(hours=24)
     existing = {}
+    old_manifest = {}
     if MANIFEST.exists():
         try:
-            old = json.loads(MANIFEST.read_text(encoding="utf-8"))
-            for f in old.get("frames", []):
+            old_manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+            for f in old_manifest.get("frames", []):
                 existing[f.get("time")] = f
         except Exception:
             pass
+    # One-time rebuild: older versions ignored XML grid origin/resolution/direction
+    # and used a hard-coded extent, which can shift historical echoes on the map.
+    rebuild_legacy_frames = old_manifest.get("grid_version") != 2
     records = fetch_history_metadata(start, now)
 
     # O-A0058-005 is the live composite PNG displayed by the website.
@@ -213,7 +239,8 @@ def main():
         stamp = dt.strftime("%Y%m%d%H%M")
         filename = f"radar_{stamp}.png"
         target = OUT / filename
-        if not target.exists():
+        old_frame = existing.get(dt.isoformat()) or existing.get(dt.strftime("%Y-%m-%dT%H:%M:%S%z"))
+        if rebuild_legacy_frames or not target.exists():
             download_url = url
             parsed_url = urlparse(download_url)
             query = parse_qs(parsed_url.query)
@@ -224,15 +251,21 @@ def main():
             r = SESSION.get(download_url, timeout=120)
             r.raise_for_status()
             raw = r.content
-            actual_dt, vals, nx, ny, lon0, lat0, res = parse_grid(raw)
-            render_png(vals, nx, ny, target)
+            actual_dt, vals, nx, ny, lon0, lat0, res, direction = parse_grid(raw)
+            render_png(vals, nx, ny, target, direction)
             dt = actual_dt
-        # O-A0059-001 documented grid: origin 115.0E/18.0N, 0.0125 degree,
-        # 921 columns × 881 rows. PNG is north-up; Leaflet bounds use south-west/north-east.
+            bounds = grid_bounds(nx, ny, lon0, lat0, res)
+            print(
+                f"Rendered {filename}: {nx}x{ny}, first=({lon0:.5f},{lat0:.5f}), "
+                f"resolution={res}, direction={direction!r}, bounds={bounds}"
+            )
+        else:
+            # Keep the already-correct georeferencing for frames that do not need rebuilding.
+            bounds = (old_frame or {}).get("bounds") or [[18.0, 115.0], [29.0, 126.5]]
         frames.append({
             "time": dt.isoformat(),
             "url": f"./{filename}",
-            "bounds": [[18.0, 115.0], [29.0, 126.5]]
+            "bounds": bounds
         })
     # Keep only files in the requested 24h window; don't delete anything outside this directory.
     keep = {Path(f["url"]).name for f in frames}
@@ -246,6 +279,8 @@ def main():
         "updated_at": now.isoformat(),
         "window_hours": 24,
         "cadence_minutes": 10,
+        "grid_version": 2,
+        "grid_reference": "CWA XML StartPoint is first grid-point centre; bounds expanded by half a grid cell",
         "frames": frames
     }
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
