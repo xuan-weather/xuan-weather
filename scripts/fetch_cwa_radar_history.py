@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fetch CWA O-A0059-001 historyAPI for the latest 24h and render georeferenced PNG frames."""
 from __future__ import annotations
-import os, json, re, sys, time
+import os, json, re, sys, time, unicodedata
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse, parse_qs
@@ -147,12 +147,28 @@ def parse_grid(xml_bytes):
     lon0 = float(xml_parameter(root, "StartPointLongitude") or xml_text(root, "StartPointLongitude") or 115.0)
     lat0 = float(xml_parameter(root, "StartPointLatitude") or xml_text(root, "StartPointLatitude") or 18.0)
     res_text = xml_parameter(root, "GridResolution") or xml_text(root, "GridResolution") or "0.0125"
-    # O-A0059-001 uses a degree-based grid. Reject unexpected units rather than
-    # silently applying a wrong geographic extent.
-    res_match = re.search(r"[-+]?\\d+(?:\\.\\d+)?", str(res_text))
-    if not res_match:
-        raise ValueError(f"無法解析 GridResolution：{res_text}")
-    res = float(res_match.group(0))
+    # CWA metadata may return a bare number, a number with units, or text with
+    # invisible/full-width Unicode characters. Prefer float() for plain values,
+    # then normalize and extract the first decimal number as a safe fallback.
+    raw_res_text = str(res_text)
+    normalized_res_text = unicodedata.normalize("NFKC", raw_res_text)
+    normalized_res_text = normalized_res_text.replace("\\ufeff", "").replace("\\u200b", "").strip()
+    try:
+        res = float(normalized_res_text)
+    except (TypeError, ValueError):
+        res_match = re.search(r"[-+]?\\d+(?:\\.\\d+)?(?:[eE][-+]?\\d+)?", normalized_res_text)
+        if not res_match:
+            raise ValueError(
+                f"無法解析 GridResolution：{raw_res_text!r} "
+                f"(normalized={normalized_res_text!r})"
+            )
+        res = float(res_match.group(0))
+
+    if not (0 < res < 1):
+        raise ValueError(
+            f"GridResolution 數值超出合理範圍：{res!r} "
+            f"(raw={raw_res_text!r})"
+        )
     direction = xml_parameter(root, "DataDirection") or xml_text(root, "DataDirection") or ""
     return dt, vals, nx, ny, lon0, lat0, res, direction
 
