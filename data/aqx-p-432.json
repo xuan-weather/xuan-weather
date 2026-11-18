@@ -1964,7 +1964,7 @@
         "no2": "3",
         "nox": "4.1",
         "no": "0.4",
-        "wind_speed": "",
+        "wind_speed": "2.1",
         "wind_direc": "245",
         "publishtime": "2026\/11\/18 08:00:00",
         "co_8hr": "0.1",
@@ -2022,7 +2022,7 @@
         "co_8hr": "",
         "pm2.5_avg": "",
         "pm10_avg": "",
-        "so2_avg": "",
+        "so2_avg": "0",
         "longitude": "120.65671",
         "latitude": "24.1589",
         "siteid": "88"
