@@ -977,7 +977,7 @@
         "nox": "12.4",
         "no": "0.7",
         "wind_speed": "3.5",
-        "wind_direc": "",
+        "wind_direc": "7",
         "publishtime": "2026\/11\/19 22:00:00",
         "co_8hr": "0.4",
         "pm2.5_avg": "23.9",
