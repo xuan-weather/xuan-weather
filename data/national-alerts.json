@@ -1,11 +1,28 @@
 {
-  "updatedAt": "2026-11-19T18:09:39.117027+08:00",
+  "updatedAt": "2026-11-20T02:58:54.153418+08:00",
   "source": "NCDR 民生示警公開資料平台（JSON Atom + ATOM Feed；目標告警時間以 CAP sent 為準）",
   "feed": [
     "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
     "https://alerts.ncdr.nat.gov.tw/RssAtomFeeds.ashx"
   ],
   "alerts": [
+    {
+      "id": "CWA-Weather_strong-wind_202611192240001",
+      "category": "",
+      "title": "強風",
+      "status": "Actual",
+      "msgType": "Update",
+      "author": "中央氣象署",
+      "updated": "2026-11-19T22:40:05+08:00",
+      "publishedAt": "2026-11-19T22:40:05+08:00",
+      "effective": "2026/11/19 下午 10:38:00",
+      "expires": "2026/11/20 下午 11:00:00",
+      "summary": "",
+      "link": "",
+      "feedSource": "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
+      "capCategory": "",
+      "isDrill": false
+    },
     {
       "id": "THB-Bobe_631_24018_43167_20261119180359",
       "category": "",
@@ -17,23 +34,6 @@
       "publishedAt": "2026-11-19T18:03:59+08:00",
       "effective": "2026/11/19 下午 06:00:00",
       "expires": "2026/11/20 上午 11:00:00",
-      "summary": "",
-      "link": "",
-      "feedSource": "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
-      "capCategory": "",
-      "isDrill": false
-    },
-    {
-      "id": "CWA-Weather_strong-wind_202611191626001",
-      "category": "",
-      "title": "強風",
-      "status": "Actual",
-      "msgType": "Update",
-      "author": "中央氣象署",
-      "updated": "2026-11-19T16:26:05+08:00",
-      "publishedAt": "2026-11-19T16:26:05+08:00",
-      "effective": "2026/11/19 下午 04:24:00",
-      "expires": "2026/11/20 下午 11:00:00",
       "summary": "",
       "link": "",
       "feedSource": "https://alerts.ncdr.nat.gov.tw/JSONAtomFeeds.ashx",
