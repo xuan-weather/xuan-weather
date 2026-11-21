@@ -1057,10 +1057,10 @@
         "wind_speed": "",
         "wind_direc": "",
         "publishtime": "2026\/11\/21 12:00:00",
-        "co_8hr": "",
+        "co_8hr": "0.2",
         "pm2.5_avg": "",
         "pm10_avg": "",
-        "so2_avg": "",
+        "so2_avg": "2",
         "longitude": "120.44125",
         "latitude": "23.464779",
         "siteid": "42"
