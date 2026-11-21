@@ -14,7 +14,7 @@
         "no2": "4",
         "nox": "5.2",
         "no": "0.6",
-        "wind_speed": "",
+        "wind_speed": "2.4",
         "wind_direc": "97",
         "publishtime": "2026\/11\/21 13:00:00",
         "co_8hr": "0.2",
@@ -1060,7 +1060,7 @@
         "co_8hr": "",
         "pm2.5_avg": "",
         "pm10_avg": "",
-        "so2_avg": "",
+        "so2_avg": "2",
         "longitude": "120.44125",
         "latitude": "23.464779",
         "siteid": "42"
