@@ -4,8 +4,8 @@
 if(window.__xuanStationPopupTabsLoaded)return;
 window.__xuanStationPopupTabsLoaded=true;
 const css='.xuan-popup-tabbed{padding:9px!important;min-width:0}\n'+
-'.xuan-popup-tab-pages{position:relative;min-height:240px;touch-action:pan-y}\n'+
-'.xuan-popup-tab-page{display:none;min-height:230px}\n'+
+'.xuan-popup-tab-pages{position:relative;min-height:350px;touch-action:pan-y}\n'+
+'.xuan-popup-tab-page{display:none;min-height:340px}\n'+
 '.xuan-popup-tab-page.is-active{display:block;animation:xuanPopupTabFade .16s ease-out}\n'+
 '@keyframes xuanPopupTabFade{from{opacity:.55;transform:translateX(4px)}to{opacity:1;transform:translateX(0)}}\n'+
 '.xuan-popup-tab-title{font-size:13px;font-weight:900;color:var(--popup-text,#0f172a);margin:2px 0 10px;padding-bottom:8px;border-bottom:1px solid rgba(148,163,184,.24)}\n'+
@@ -21,7 +21,7 @@ const css='.xuan-popup-tabbed{padding:9px!important;min-width:0}\n'+
 '.xuan-popup-tab-count{font-size:10px;font-weight:800;color:var(--text-muted,#64748b);white-space:nowrap}\n'+
 '.xuan-popup-tab-arrow{width:22px;height:22px;border:0;border-radius:7px;background:rgba(148,163,184,.14);color:var(--popup-text,#0f172a);font-size:18px;line-height:1;cursor:pointer}\n'+
 '.xuan-popup-tabbed .station-popup-history{margin-top:8px!important}\n'+
-'@media(max-width:600px){.xuan-popup-tab-pages{min-height:236px}.xuan-popup-tab-page{min-height:226px}.xuan-popup-extra-card{min-height:50px;padding:7px}.xuan-popup-extra-card strong{font-size:12px}.xuan-popup-tab-dots{gap:5px}}';
+'@media(max-width:600px){.xuan-popup-tab-pages{min-height:340px}.xuan-popup-tab-page{min-height:330px}.xuan-popup-extra-card{min-height:50px;padding:7px}.xuan-popup-extra-card strong{font-size:12px}.xuan-popup-tab-dots{gap:5px}}';
 const style=document.createElement('style');style.id='xuan-station-popup-tabbed-v1';style.textContent=css;document.head.appendChild(style);
 function esc(v){const t=v==null?'--':String(v);return typeof window.escapeQuickRankingText==='function'?window.escapeQuickRankingText(t):t.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmt(v,d){const n=Number(v);return Number.isFinite(n)?n.toFixed(d==null?1:d):'--';}
