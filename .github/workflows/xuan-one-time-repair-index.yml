@@ -7,7 +7,6 @@ permissions:
   contents: write
 jobs:
   repair-index:
-    if: github.event.head_commit.message == 'chore: add one-time index repair workflow'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
