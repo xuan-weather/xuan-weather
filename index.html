@@ -16437,7 +16437,20 @@ function japanAmedasMapTempColor(v){
             } else {
                 humidity = Math.round(humidity);
             }
-            let elevation = parseFloat(station.Elevation || station.GeoInfo?.Elevation || 0);
+        // 統一讀取 CWA 測站海拔；缺少欄位時回傳 NaN，絕不把未知海拔預設成 0 公尺。
+        function getStationElevation(station) {
+            const rawElevation =
+                station?.Elevation ??
+                station?.StationAltitude ??
+                station?.GeoInfo?.Elevation ??
+                station?.GeoInfo?.StationAltitude ??
+                station?.GeoInfo?.Altitude;
+            if (rawElevation == null || String(rawElevation).trim() === '') return NaN;
+            const elevation = Number(rawElevation);
+            return Number.isFinite(elevation) ? elevation : NaN;
+        }
+
+            let elevation = getStationElevation(station);
             return { temp, rain, windSpeed, windGust, max10MinWind, windDir, humidity, uvIndex, elevation, obsTime: rawObsTime };
         }
                   
@@ -19693,7 +19706,7 @@ async function fetchAllStationData(isManualRefresh = false, callback = null, pre
                         rain24h: currentRankingTab === 'rain24h' ? parseCwaPastRainfallStation(station, 24) : NaN,
                         rain2d: currentRankingTab === 'rain2d' ? parseCwaAccumulatedDaysStation(station, 2) : NaN,
                         rain3d: currentRankingTab === 'rain3d' ? parseCwaAccumulatedDaysStation(station, 3) : NaN,
-                        elevation: 0, windSpeed: NaN, windGust: NaN
+                        elevation: getStationElevation(station), windSpeed: NaN, windGust: NaN
                     }
                     : parseStationElement(station);
                 const county = (station.GeoInfo?.CountyName || '').replace('台', '臺');
