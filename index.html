@@ -2221,6 +2221,11 @@
         }
         .leaflet-control-attribution { display: none !important; }
         .leaflet-top.leaflet-left { z-index: 1000; }
+        /* 主地圖右上角懸浮圖例，確保顯示在地圖標記與底圖上方 */
+        #map .leaflet-top.leaflet-right { z-index: 1002; }
+        @media(max-width:600px){
+            #map .custom-vertical-legend { min-width:108px; max-width:126px; padding:8px 9px; margin:8px; }
+        }
         .custom-vertical-legend {
             background: var(--legend-bg);
             backdrop-filter: blur(8px);
@@ -28137,7 +28142,8 @@ const popVal = getPopForStation(county, town);
             });
             
             const LegendControl = L.Control.extend({
-                options: { position: 'topleft' },
+                // 圖例固定懸浮於地圖右上角，避開左上角縮放控制。
+                options: { position: 'topright' },
                 onAdd: function() {
                     const div = L.DomUtil.create('div', 'custom-vertical-legend');
                     div.innerHTML = `
