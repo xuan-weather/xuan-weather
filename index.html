@@ -7897,6 +7897,9 @@ html[data-theme="light"] .xuan-social-card-art .xuan-social-brand-copy span {
         .xuan-popup-v2 .station-popup-update-time{font-size:9px;}
     }
 </style>
+<style id="xuan-station-popup-tabbed-v1">
+.xuan-popup-tabbed{padding:9px!important}.xuan-popup-tab-pages{min-height:238px;touch-action:pan-y}.xuan-popup-tab-page{display:none;min-height:228px}.xuan-popup-tab-page.is-active{display:block}.xuan-popup-tab-title{font-size:13px;font-weight:900;color:var(--popup-text,#0f172a);margin:2px 0 10px;padding-bottom:8px;border-bottom:1px solid rgba(148,163,184,.24)}.xuan-popup-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.xuan-popup-extra-card{display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;min-height:52px;padding:8px;border:1px solid rgba(148,163,184,.2);border-radius:9px;background:rgba(148,163,184,.075);overflow-wrap:anywhere}.xuan-popup-extra-card span{font-size:10px;color:var(--popup-sub,#475569)}.xuan-popup-extra-card strong{font-size:13px;line-height:1.3;color:var(--popup-text,#0f172a)}.xuan-popup-tab-note{margin-top:9px;font-size:9px;line-height:1.45;color:var(--text-muted,#64748b)}.xuan-popup-tab-nav{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(148,163,184,.2)}.xuan-popup-tab-dots{display:flex;gap:6px}.xuan-popup-tab-dot{width:7px;height:7px;min-width:7px;padding:0;border:0;border-radius:50%;background:#94a3b8;cursor:pointer}.xuan-popup-tab-dot.active{width:18px;border-radius:6px;background:#0ea5e9}.xuan-popup-tab-count{font-size:10px;font-weight:800;color:var(--text-muted,#64748b)}.xuan-popup-tab-arrow{width:22px;height:22px;border:0;border-radius:7px;background:rgba(148,163,184,.14);color:var(--popup-text,#0f172a);font-size:18px;line-height:1}@media(max-width:600px){.xuan-popup-extra-card{min-height:49px;padding:7px}.xuan-popup-extra-card strong{font-size:12px}}
+</style>
 </head>
 <body>
 
@@ -16364,6 +16367,34 @@ function japanAmedasMapTempColor(v){
             return `${hours}:${minutes}`;
         }
         
+
+function buildXuanStationPopupTabs(station,data,county,town,wxInfo,popForStation,mapRain,mapRain2d,mapRain3d){
+ const esc=v=>escapeQuickRankingText(v==null||v===''?'--':String(v)),fmt=(v,d=1)=>Number.isFinite(Number(v))?Number(v).toFixed(d):'--';
+ const id=getStationHistoryId(station),hist=Array.isArray(stationHistoryCache?.[id])?stationHistoryCache[id]:[],recent=hist.filter(p=>Number(p?.ts)>=Date.now()-86400000);
+ const vals=k=>recent.map(p=>Number(p?.[k])).filter(Number.isFinite),mx=a=>a.length?Math.max(...a):NaN,mn=a=>a.length?Math.min(...a):NaN,av=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN;
+ const c=getStationLatLon(station);let air=null,airKm=Infinity;
+ if(Number.isFinite(c.lat)&&Number.isFinite(c.lon))(Array.isArray(airQualityData)?airQualityData:[]).map(normalizeAirQualityRecord).forEach(r=>{const la=Number(r.Latitude),lo=Number(r.Longitude),aq=Number(r.AQI);if(!Number.isFinite(la)||!Number.isFinite(lo)||!Number.isFinite(aq))return;const km=calculateDistance(c.lat,c.lon,la,lo);if(km<airKm){airKm=km;air=r;}});
+ if(airKm>30)air=null;
+ const wx=forecastWxData[county]||null,tf=getTownshipPopRecord(county,town),pop=tf&&Number.isFinite(Number(tf.pop))?Number(tf.pop):NaN,minT=forecastMinTData[county],maxT=forecastMaxTData[county];
+ const item=(l,v)=>'<div class="xuan-popup-extra-card"><span>'+l+'</span><strong>'+v+'</strong></div>';
+ const page=(t,items,n)=>'<section class="xuan-popup-tab-page"><div class="xuan-popup-tab-title">'+t+'</div><div class="xuan-popup-extra-grid">'+items+'</div><div class="xuan-popup-tab-note">'+n+'</div></section>';
+ const current='<div class="station-popup-head"><div class="station-popup-pin">📍</div><div class="station-popup-title"><div class="station-popup-name-row"><h4>'+esc(station.StationName||'氣象測站')+'</h4><span class="station-popup-update-status normal"><i class="station-popup-update-dot"></i>'+esc(data.obsTime&&data.obsTime!=='--'?new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(data.obsTime)):'--:--')+'</span></div><div class="station-popup-area">'+esc(county+town||'臺灣')+' · CWA 即時觀測</div></div></div>'+
+ '<div class="station-popup-hero"><div><div class="station-popup-hero-label">🌡️ 目前氣溫</div><div class="station-popup-temp">'+(Number.isFinite(data.temp)?data.temp.toFixed(1):'--')+'<small> °C</small></div></div><div class="station-popup-weather"><strong>'+esc(wxInfo?.text||'--')+'</strong><span>目前天氣</span></div></div>'+
+ '<div class="station-popup-metrics"><p><b>🌧️ 降雨機率</b><strong>'+esc(popForStation)+' %</strong></p><p><b>💧 相對濕度</b><strong>'+(data.humidity!=='--'?esc(data.humidity)+' %':'--')+'</strong></p><p><b>🌡️ 體感溫度（估算）</b><strong>'+(Number.isFinite(calculateObservedApparentTemperature(station,data))?calculateObservedApparentTemperature(station,data).toFixed(1)+' °C':'--')+'</strong></p><p><b>☔ 日雨量</b><strong>'+(Number.isFinite(mapRain)?fmt(mapRain)+' mm':'--')+'</strong></p><p><b>🗓️ 2 日雨量</b><strong>'+(Number.isFinite(mapRain2d)?fmt(mapRain2d)+' mm':'--')+'</strong></p><p><b>🗓️ 3 日雨量</b><strong>'+(Number.isFinite(mapRain3d)?fmt(mapRain3d)+' mm':'--')+'</strong></p><p><b>💨 風向風速</b><strong>'+esc(getWindDirectionText(data.windDir))+' '+(Number.isFinite(data.windSpeed)?fmt(data.windSpeed)+' m/s':'--')+'</strong></p><p><b>🌬️ 最大陣風</b><strong>'+(Number.isFinite(data.windGust)?fmt(data.windGust)+' m/s':'--')+'</strong></p></div><button class="station-popup-history" onclick="openStationHistory(weatherStationData.find(s=>String(s.StationId)===\''+String(station.StationId||'').replace(/'/g,"\\'")+'\'))"><i class="fas fa-chart-line"></i> 查看最近 24 小時歷史趨勢</button>';
+ const a=air?item('AQI 空氣品質指數',esc(air.AQI))+item('空品等級',esc(air.Status||getAqiInfo(air.AQI).text))+item('PM2.5',esc(air['PM2.5'])+' μg/m³')+item('PM10',esc(air.PM10)+' μg/m³')+item('主要污染物',esc(air.Pollutant))+item('最近空品測站',esc(air.SiteName)):item('附近空品測站','暫無有效資料')+item('配對範圍','30 公里內');
+ const p=vals('temp').filter(v=>v!==0),h=vals('humidity'),w=vals('wind'),g=vals('windGust');
+ const pages=['<section class="xuan-popup-tab-page is-active">'+current+'</section>',
+ page('😷 空氣品質',a,air?'最近環境部空品站 '+esc(air.SiteName)+'，距離 '+airKm.toFixed(1)+' 公里；發布 '+esc(air.publishtime)+'。':'附近 30 公里內無有效 AQI 測站；不以其他地區數值代填。'),
+ page('🌡️ 氣壓監測',item('目前氣壓',Number.isFinite(data.pressure)?fmt(data.pressure)+' hPa':'來源未提供')+item('觀測時間',esc(data.obsTime)),'只讀取測站原始氣壓欄位，沒有提供時不自行推算。'),
+ page('🌫️ 能見度監測',item('目前能見度',Number.isFinite(data.visibility)?fmt(data.visibility)+' km':'來源未提供')+item('觀測時間',esc(data.obsTime)),'只讀取測站原始能見度欄位，沒有提供時不自行推算。'),
+ page('🏆 測站歷史極值',item('過去 24 小時最高溫',fmt(mx(p))+(p.length?' °C':''))+item('過去 24 小時最低溫',fmt(mn(p))+(p.length?' °C':''))+item('過去 24 小時最大陣風',fmt(mx(g))+(g.length?' m/s':''))+item('過去 24 小時最高風速',fmt(mx(w))+(w.length?' m/s':''))+item('有效歷史樣本',recent.length+' 筆'),recent.length?'依本站已保存的最近 24 小時觀測樣本計算。':'歷史樣本尚在累積。'),
+ page('🕒 未來天氣預報',item('預報天氣',esc(wx?.text||'暫無資料'))+item('預報最低溫',minT!=null?fmt(minT)+' °C':'暫無資料')+item('預報最高溫',maxT!=null?fmt(maxT)+' °C':'暫無資料')+item('預報降雨機率',Number.isFinite(pop)?Math.round(pop)+' %':'暫無資料')+item('預報地區',esc(county+town)),'沿用本站已載入的氣象署鄉鎮／縣市預報。'),
+ page('📅 天氣統計',item('24 小時平均氣溫',fmt(av(p))+(p.length?' °C':''))+item('24 小時溫差',p.length?fmt(mx(p)-mn(p))+' °C':'暫無資料')+item('24 小時平均濕度',fmt(av(h),0)+(h.length?' %':''))+item('24 小時平均風速',fmt(av(w))+(w.length?' m/s':''))+item('今日累積雨量',Number.isFinite(mapRain)?fmt(mapRain)+' mm':'暫無資料')+item('歷史樣本',recent.length+' 筆'),'統計使用本站已保存的最近 24 小時樣本；不重複累加累積雨量。')];
+ return '<div class="popup-card xuan-station-popup xuan-popup-v2 xuan-popup-tabbed"><div class="xuan-popup-tab-pages">'+pages.join('')+'</div><div class="xuan-popup-tab-nav"><button type="button" class="xuan-popup-tab-arrow" onclick="xuanSetStationPopupTab(this,-1)" aria-label="上一頁">‹</button><div class="xuan-popup-tab-dots">'+pages.map((v,i)=>'<button type="button" class="xuan-popup-tab-dot '+(!i?'active':'')+'" onclick="xuanSetStationPopupTab(this,'+i+')" aria-label="第 '+(i+1)+' 頁"></button>').join('')+'</div><span class="xuan-popup-tab-count">1 / 7</span><button type="button" class="xuan-popup-tab-arrow" onclick="xuanSetStationPopupTab(this,1)" aria-label="下一頁">›</button></div></div>';
+}
+window.xuanSetStationPopupTab=function(button,step){const root=button?.closest('.xuan-popup-tabbed')||button?.closest('.leaflet-popup-content')?.querySelector('.xuan-popup-tabbed');if(!root)return;const pages=[...root.querySelectorAll('.xuan-popup-tab-page')],dots=[...root.querySelectorAll('.xuan-popup-tab-dot')];if(!pages.length)return;const cur=Math.max(0,pages.findIndex(p=>p.classList.contains('is-active'))),next=step===-1||step===1?Math.max(0,Math.min(pages.length-1,cur+step)):Math.max(0,Math.min(pages.length-1,Number(step)||0));pages.forEach((p,i)=>p.classList.toggle('is-active',i===next));dots.forEach((d,i)=>d.classList.toggle('active',i===next));const count=root.querySelector('.xuan-popup-tab-count');if(count)count.textContent=(next+1)+' / '+pages.length;};
+(function(){if(window.__xuanPopupSwipeBound)return;window.__xuanPopupSwipeBound=true;let x=0,y=0,root=null;document.addEventListener('touchstart',e=>{const p=e.target?.closest?.('.xuan-popup-tab-page');if(!p)return;root=p.closest('.xuan-popup-tabbed');x=e.touches[0].clientX;y=e.touches[0].clientY;},{passive:true});document.addEventListener('touchend',e=>{if(!root)return;const dx=e.changedTouches[0].clientX-x,dy=e.changedTouches[0].clientY-y;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.2)window.xuanSetStationPopupTab(root,dx<0?1:-1);root=null;},{passive:true});})();
+
         function parseStationElement(station) {
             const we = station.WeatherElement || {};
             let rawObsTime = station.ObsTime?.DateTime || station.ObsTime || '--';
@@ -16414,7 +16445,7 @@ function japanAmedasMapTempColor(v){
                 humidity = Math.round(humidity);
             }
             let elevation = parseFloat(station.Elevation || station.GeoInfo?.Elevation || 0);
-            return { temp, rain, windSpeed, windGust, max10MinWind, windDir, humidity, uvIndex, elevation, obsTime: rawObsTime };
+            let pressure=parseFloat(we.AirPressure??we.AtmosphericPressure??we.Pressure??we.PRES??station.AirPressure);if(!Number.isFinite(pressure)||pressure<800||pressure>1100)pressure=NaN;let visibility=parseFloat(we.Visibility??we.VisibilityDistance??we.VIS??station.Visibility);if(!Number.isFinite(visibility)||visibility<0)visibility=NaN;return { temp, rain, windSpeed, windGust, max10MinWind, windDir, humidity, uvIndex, pressure, visibility, elevation, obsTime: rawObsTime };
         }
                   
         function isFreewayStation(stationName) {
@@ -30466,62 +30497,8 @@ const popVal = getPopForStation(county, town);
                         unit = '°C';
                     } else if (currentMapMode === 'temp') {
                         val = data.temp;
-                        color = getTempColor(val);
-                        unit = '°C';
-                    } else if (currentMapMode === 'pop') {
-                        val = popVal;
-                        color = getPopColor(val);
-                        unit = '%';
-                    } else if (currentMapMode === 'humidity') {
-                        val = data.humidity === '--' ? NaN : data.humidity;
-                        color = getHumidityColor(val);
-                        unit = '%';
-                    } else if (currentMapMode === 'rain' || currentMapMode === 'rain2d' || currentMapMode === 'rain3d') {
-                        val = selectedRainValue;
-                        color = currentMapMode === 'rain' ? getRainColor(val) : getRainAccumulatedColor(val);
-                        unit = 'mm';
-                    } else if (currentMapMode === 'wind') {
-                        val = data.windSpeed;
-                        color = getWindSpeedColor(val);
-                        unit = 'm/s';
-                    } else if (currentMapMode === 'windGust') {
-                        val = data.windGust;
-                        color = getWindSpeedColor(val);
-                        unit = 'm/s';
-                    } else if (currentMapMode === 'windFlow') {
-                        val = data.windSpeed;
-                        color = getWindSpeedColor(val);
-                        unit = 'm/s';
-                    }
-
-                    // 全台地圖快速篩選：風場流向沿用陣風門檻，依陣風值篩選；
-                    // 其餘圖層維持以目前圖層的 val 判斷，風場箭頭顏色仍依風速顯示。
-                    const filterValue = currentMapMode === 'windFlow' ? data.windGust : val;
-                    if (!mapFilterPass(filterValue)) return;
-
-                    const currentZoom = map.getZoom();
-                    // 初始地圖層級為 8，放大 2 次即 zoom >= 10
-                    const showLabel = mapValueLabelsEnabled && currentZoom >= 10;
-                    const displayVal = !isNaN(val)
-                        ? (currentMapMode === 'aqi' || currentMapMode === 'pop' || currentMapMode === 'humidity'
-                            ? String(Math.round(Number(val)))
-                            : ['rain', 'rain2d', 'rain3d'].includes(currentMapMode)
-                                ? (Number(val) === 0 ? '0' : Number(val).toFixed(1))
-                                : (typeof val === 'number' && currentMapMode !== 'wind' && currentMapMode !== 'windGust' ? val.toFixed(1) : val))
-                        : '--';
-                    
-                    // 恢復氣溫分布圖原本較清楚的測站圓點；與其他圖層一致使用 14px。
-                    // 只調整測站圓點外觀，不更動資料、測站座標或其他圖層邏輯。
-                    const markerSize = 14;
-                    const markerBorder = 2;
-                    const markerShadow = '0 0 6px rgba(0,0,0,0.4)';
-                    let iconHtml = `<div style="background-color: ${color}; width: ${markerSize}px; height: ${markerSize}px; border-radius: 50%; border: ${markerBorder}px solid white; box-shadow: ${markerShadow}; display: flex; align-items: center; justify-content: center; position: relative; box-sizing: border-box;">`;
-                    if (showLabel) {
-                        iconHtml += `<div style="position: absolute; top: ${markerSize + 2}px; white-space: nowrap; font-size: 11px; font-weight: 700; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); background: transparent; border: none; padding: 0;">${displayVal}</div>`;
-                    }
-                    iconHtml += `</div>`;
-
-                    // 陣風警示門檻提高至 28.5 m/s；只在「陣風」圖層啟動紅色呼吸燈。
+        
+                        ${buildXuanStationPopupTabs(station,data,county,town,wxInfo,popForStation,mapRain,mapRain2d,mapRain3d)}             // 陣風警示門檻提高至 28.5 m/s；只在「陣風」圖層啟動紅色呼吸燈。
                     // 風場流向圖不套用整個標記的呼吸動畫，避免箭頭與陰影一起閃爍。
                     const hotBreathing =
                         (currentMapMode === 'temp' && !isNaN(data.temp) && data.temp >= 35) ||
