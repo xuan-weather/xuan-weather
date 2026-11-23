@@ -30456,7 +30456,7 @@ const popVal = getPopForStation(county, town);
                 <div class="station-popup-metrics">
                   ${metric('🌧️ 降雨機率',`${esc(popForStation)} %`)}
                   ${metric('💧 相對濕度',data.humidity!=='--'?`${esc(data.humidity)} %`:'--')}
-                  ${metric('🌡️ 體感溫度（估算）',Number.isFinite(calculateObservedApparentTemperature(station,data))?`${calculateObservedApparentTemperature(station,data).toFixed(1)} °C`:'--')}
+
                   ${metric('☔ 日雨量',Number.isFinite(mapRain)?`${val(mapRain)} mm`:'--')}
                   ${metric('🗓️ 2 日雨量',Number.isFinite(mapRain2d)?`${val(mapRain2d)} mm`:'--')}
                   ${metric('🗓️ 3 日雨量',Number.isFinite(mapRain3d)?`${val(mapRain3d)} mm`:'--')}
