@@ -907,6 +907,74 @@ jobs:
           )
           PY
 
+      - name: Build compact station temperature extremes summary
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from datetime import datetime, timedelta, timezone
+          from pathlib import Path
+
+          source = Path("data/history/cwa-o-a0003-001-history.json")
+          output = Path("data/history/station-temperature-extremes.json")
+          if not source.exists():
+              raise SystemExit("找不到七日氣溫歷史資料，停止產生極值摘要。")
+
+          payload = json.loads(source.read_text(encoding="utf-8"))
+          stations = payload.get("stations")
+          if not isinstance(stations, dict):
+              raise SystemExit("歷史資料格式錯誤：找不到 stations。")
+
+          now = datetime.now(timezone.utc)
+          cutoff_ms = int((now - timedelta(days=7)).timestamp() * 1000)
+          result = {
+              "generatedAt": now.isoformat(),
+              "periodDays": 7,
+              "periodStart": cutoff_ms,
+              "periodEnd": int(now.timestamp() * 1000),
+              "stations": {}
+          }
+
+          for station_id, points in stations.items():
+              if not isinstance(points, list):
+                  continue
+              valid = []
+              station_name = ""
+              for point in points:
+                  if not isinstance(point, dict):
+                      continue
+                  try:
+                      ts = int(point.get("ts"))
+                      temp = float(point.get("temp"))
+                  except (TypeError, ValueError):
+                      continue
+                  if ts < cutoff_ms or temp == 0 or temp < -50 or temp > 60:
+                      continue
+                  station_name = station_name or str(point.get("stationName") or "").strip()
+                  valid.append({"value": round(temp, 1), "ts": ts})
+
+              if not valid:
+                  continue
+              highest = max(valid, key=lambda item: item["value"])
+              lowest = min(valid, key=lambda item: item["value"])
+              result["stations"][str(station_id)] = {
+                  "stationName": station_name or str(station_id),
+                  "samples": len(valid),
+                  "max": highest,
+                  "min": lowest
+              }
+
+          if not result["stations"]:
+              raise SystemExit("七日歷史資料中沒有可用氣溫，拒絕發布空摘要。")
+
+          output.parent.mkdir(parents=True, exist_ok=True)
+          output.write_text(
+              json.dumps(result, ensure_ascii=False, separators=(",", ":")),
+              encoding="utf-8"
+          )
+          print("七日測站氣溫極值摘要：", len(result["stations"]), "站")
+          PY
+
       - name: Commit history
         run: |
           set -e
@@ -917,7 +985,7 @@ jobs:
           # 本工作流只提交歷史資料；即時 CWA JSON 由 CWA Weather Data 工作流發布。
           git restore -- data/cwa-O-A0001-001.json data/cwa-O-A0002-001.json data/cwa-O-A0003-001.json data/cwa-W-C0033-002.json
 
-          git add data/history/cwa-o-a0003-001-history.json
+          git add data/history/cwa-o-a0003-001-history.json data/history/station-temperature-extremes.json
 
           if git diff --cached --quiet; then
             echo "歷史資料沒有變化，不需要提交"
