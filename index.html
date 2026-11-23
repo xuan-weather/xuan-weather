@@ -16371,7 +16371,7 @@ function japanAmedasMapTempColor(v){
 function buildXuanStationPopupTabs(station,data,county,town,wxInfo,popForStation,mapRain,mapRain2d,mapRain3d){
  const esc=v=>escapeQuickRankingText(v==null||v===''?'--':String(v)),fmt=(v,d=1)=>Number.isFinite(Number(v))?Number(v).toFixed(d):'--';
  const id=getStationHistoryId(station),hist=Array.isArray(stationHistoryCache?.[id])?stationHistoryCache[id]:[],recent=hist.filter(p=>Number(p?.ts)>=Date.now()-86400000);
- const vals=k=>recent.map(p=>Number(p?.[k])).filter(Number.isFinite),mx=a=>a.length?Math.max(...a):NaN,mn=a=>a.length?Math.min(...a):NaN,av=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN;
+ const vals=k=>recent.filter(p=>p?.[k]!==null&&p?.[k]!==undefined&&p?.[k]!=='').map(p=>Number(p[k])).filter(Number.isFinite),mx=a=>a.length?Math.max(...a):NaN,mn=a=>a.length?Math.min(...a):NaN,av=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN;
  const c=getStationLatLon(station);let air=null,airKm=Infinity;
  if(Number.isFinite(c.lat)&&Number.isFinite(c.lon))(Array.isArray(airQualityData)?airQualityData:[]).map(normalizeAirQualityRecord).forEach(r=>{const la=Number(r.Latitude),lo=Number(r.Longitude),aq=Number(r.AQI);if(!Number.isFinite(la)||!Number.isFinite(lo)||!Number.isFinite(aq))return;const km=calculateDistance(c.lat,c.lon,la,lo);if(km<airKm){airKm=km;air=r;}});
  if(airKm>30)air=null;
