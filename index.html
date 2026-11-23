@@ -16502,6 +16502,7 @@ window.xuanSetStationPopupTab=function(button,step){const root=button?.closest('
                   
 
         // ===== Xuan Weather：氣壓／能見度／歷史極值／天氣統計 =====
+        // GitHub Actions 每次更新近 7 日測站歷史後，會同步發布這份精簡摘要，前端不必下載 75MB 原始歷史檔。
         const XUAN_STATION_EXTREMES_URL = new URL('data/history/station-temperature-extremes.json', document.baseURI).href;
         let xuanStationExtremesPayload = null;
         let xuanStationExtremesPromise = null;
