@@ -30447,10 +30447,7 @@ const popVal = getPopForStation(county, town);
                 ['🌫️ 空氣品質',''],
                 ['🧭 氣壓監測',''],
                 ['🏆 歷史極值',''],
-                ['🌤️ 未來預報',''],
-                ['⚡ 雷電監測',''],
-                ['📊 氣候統計',''],
-                ['🥵 體感環境','']
+                ['🌤️ 未來預報','']
             ];
             const nav=tabs.map((t,i)=>`<button type="button" class="station-popup-tab-btn${i===0?' active':''}" data-popup-tab="${i}" onclick="xuanSetStationPopupTab(this,${i})">${t[0]}</button>`).join('');
             const pages=`
@@ -30508,36 +30505,7 @@ const popVal = getPopForStation(county, town);
                 </div>
                 <div class="station-popup-slide-note">預報時段：${esc(forecastPeriod)}。採用本站已載入的氣象署鄉鎮預報資料。</div>
               </section>
-              <section class="station-popup-slide">
-                <div class="station-popup-slide-title">本站附近雷電定位（30 公里／近 3 小時）</div>
-                <div class="station-popup-metrics">
-                  ${metric('⚡ 附近閃電筆數',lightningSource.length?`${lightningNearby.length} 筆`:'尚無官方定位資料')}
-                  ${metric('📍 最近閃電距離',Number.isFinite(lightningNearest)?`${val(lightningNearest,1)} km`:(lightningSource.length?'附近無紀錄':'--'))}
-                  ${metric('🕒 最近發生時間',esc(lightningTimeText))}
-                  ${metric('⚡ 對地／雲間',lightningSource.length?`${lightningGround}／${lightningCloud} 筆`:'--')}
-                </div>
-              </section>
-              <section class="station-popup-slide">
-                <div class="station-popup-slide-title">本站今日氣候統計</div>
-                <div class="station-popup-metrics">
-                  ${metric('🔥 今日最高溫',Number.isFinite(high)?`${val(high)} °C`:'尚無資料')}
-                  ${metric('❄️ 今日最低溫',Number.isFinite(low)?`${val(low)} °C`:'尚無資料')}
-                  ${metric('🌡️ 今日溫差',Number.isFinite(dailyTempRange)?`${val(dailyTempRange)} °C`:'尚無資料')}
-                  ${metric('🌧️ 今日累積雨量',Number.isFinite(mapRain)?`${val(mapRain)} mm`:'尚無資料')}
-                  ${metric('🌬️ 目前最大陣風',Number.isFinite(data.windGust)?`${val(data.windGust)} m/s`:'尚無資料')}
-                </div>
-              </section>
-              <section class="station-popup-slide">
-                <div class="station-popup-slide-title">本站體感環境</div>
-                <div class="station-popup-metrics">
-                  ${metric('🥵 體感溫度（估算）',Number.isFinite(apparentTemperature)?`${val(apparentTemperature)} °C`:'尚無完整觀測資料')}
-                  ${metric('🌡️ 實際氣溫',Number.isFinite(data.temp)?`${val(data.temp)} °C`:'--')}
-                  ${metric('↕️ 體感與氣溫差',Number.isFinite(apparentDiff)?`${apparentDiff>0?'+':''}${val(apparentDiff)} °C`:'--')}
-                  ${metric('💧 相對濕度',data.humidity!=='--'?`${esc(data.humidity)} %`:'--')}
-                  ${metric('💨 平均風速',Number.isFinite(data.windSpeed)?`${val(data.windSpeed)} m/s`:'--')}
-                  ${metric('🧍 舒適度參考',comfortLabel)}
-                </div>
-              </section>`;
+`;
             return `<div class="station-popup-tabs"><div class="station-popup-tab-nav" role="tablist" aria-label="測站資訊分頁">${nav}</div><div class="station-popup-slide-hint"><span>左右滑動切換測站資訊</span><span class="station-popup-slide-count">1 / ${tabs.length}</span></div><div class="station-popup-slide-track" onscroll="xuanUpdateStationPopupTab(this)">${pages}</div></div>`;
         }
         window.xuanSetStationPopupTab=function(button,index){
