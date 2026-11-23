@@ -30454,7 +30454,7 @@ const popVal = getPopForStation(county, town);
                 <div class="station-popup-metrics">
                   ${metric('🧭 測站氣壓',Number.isFinite(pressure)?`${val(pressure,1)} hPa`:'尚無觀測資料')}
                   ${metric('測站海拔',Number.isFinite(Number(data.elevation))?`${val(Number(data.elevation),0)} m`:'--')}
-                  ${metric('觀測時間',esc(data.obsTime||'--'))}
+                  ${metric('觀測時間',esc(String(data.obsTime||'--').replace('T',' ').replace(/(?:Z|[+-]\d{2}:?\d{2})$/,'')))}
                 </div>
               </section>
               <section class="station-popup-slide">
