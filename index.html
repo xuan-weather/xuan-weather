@@ -30557,38 +30557,7 @@ const popVal = getPopForStation(county, town);
                             : { text: '資料正常', cls: 'normal' };
 
                     marker.bindPopup(`
-                        <div class="popup-card xuan-station-popup xuan-popup-v2">
-                            <div class="station-popup-head">
-                                <div class="station-popup-pin">📍</div>
-                                <div class="station-popup-title">
-                                    <div class="station-popup-name-row">
-                                        <h4>${escapeQuickRankingText(station.StationName || '氣象測站')}</h4>
-                                        <div class="station-popup-update-status ${popupObsStatus.cls}" title="依此測站官方觀測時間判斷">
-                                            <span class="station-popup-update-dot"></span>
-                                            <span class="station-popup-update-time">${popupObsTimeText}</span>
-                                        </div>
-                                    </div>
-                                    <div class="station-popup-area">${escapeQuickRankingText(county + town || '臺灣')} · CWA 即時觀測</div>
-                                </div>
-                            </div>
-                            <div class="station-popup-hero">
-                                <div><div class="station-popup-hero-label">🌡️ 目前氣溫</div><div class="station-popup-temp">${!isNaN(data.temp) ? data.temp.toFixed(1) : '--'}<small> °C</small></div></div>
-                                <div class="station-popup-weather"><strong>${escapeQuickRankingText(wxInfo.text || '--')}</strong><span>目前天氣</span></div>
-                            </div>
-                            <div class="station-popup-metrics">
-                                <p><b>🌧️ 降雨機率</b><strong>${escapeQuickRankingText(popForStation)} %</strong></p>
-                                <p><b>💧 相對濕度</b><strong>${data.humidity !== '--' ? escapeQuickRankingText(data.humidity) + ' %' : '--'}</strong></p>
-                                <p><b>🌡️ 體感溫度（估算）</b><strong>${Number.isFinite(calculateObservedApparentTemperature(station, data)) ? calculateObservedApparentTemperature(station, data).toFixed(1) + ' °C' : '--'}</strong></p>
-                                <p><b>☔ 日雨量</b><strong>${Number.isFinite(mapRain) ? (Number(mapRain) === 0 ? '0' : mapRain.toFixed(1)) + ' mm' : '--'}</strong></p>
-                                <p><b>🗓️ 2 日雨量</b><strong>${Number.isFinite(mapRain2d) ? (mapRain2d === 0 ? '0' : mapRain2d.toFixed(1)) + ' mm' : '--'}</strong></p>
-                                <p><b>🗓️ 3 日雨量</b><strong>${Number.isFinite(mapRain3d) ? (mapRain3d === 0 ? '0' : mapRain3d.toFixed(1)) + ' mm' : '--'}</strong></p>
-                                <p><b>💨 風向風速</b><strong>${escapeQuickRankingText(getWindDirectionText(data.windDir))} ${Number.isFinite(data.windSpeed) ? data.windSpeed.toFixed(1) + ' m/s（' + escapeQuickRankingText(getWindLevel(data.windSpeed)) + '）' : '--'}</strong></p>
-                                <p><b>🌬️ 最大陣風</b><strong>${Number.isFinite(data.windGust) ? data.windGust.toFixed(1) + ' m/s（' + escapeQuickRankingText(getWindLevel(data.windGust)) + '）' : '--'}</strong></p>
-                            </div>
-                            <button class="station-popup-history" onclick="openStationHistory(weatherStationData.find(s => String(s.StationId) === '${String(station.StationId || '').replace(/'/g, "\'")}'))">
-                                <i class="fas fa-chart-line"></i> 查看最近 24 小時歷史趨勢
-                            </button>
-                        </div>
+                        ${window.buildXuanStationPopupTabs(station, data, county, town, wxInfo, popForStation, mapRain, mapRain2d, mapRain3d)}
                     `, { className: 'xuan-station-leaflet-popup', maxWidth: 350, autoPan: true });
                     currentMarkersLayer.addLayer(marker);
                     bindNearbyStationCompareLongPress(marker, station, lat, lon);
@@ -42345,6 +42314,8 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
 }
 </style>
 
+
+<script src="./station-popup-tabs.js?v=1"></script>
 </body>
 </html>
 
