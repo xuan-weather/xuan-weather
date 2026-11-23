@@ -13072,8 +13072,18 @@ const longWave = longWaveResult.status === 'fulfilled'
                                 const p=feature.properties||{};
                                 const code=String(p.TOWNCODE||p.TownCode||p.TOWNCODE_103||p.ntown103||p.TOWN_ID||p.TOWNID||'').trim();
                                 const name=String(p.TOWNNAME||p.TownName||p.T_NAME103||p.T_NAME_103||p.TOWN_NAM||p.TOWN||p.name||'').trim();
-                                if(code) index.set(code,{feature,name,code});
-                                if(name) index.set(`name:${name}`,{feature,name,code});
+                                const countyCode=String(p.COUNTYCODE||p.CountyCode||p.COUNTY_CODE||'').trim();
+                                const item={feature,name,code,countyCode};
+                                if(code){
+                                    const digits=code.replace(/\D/g,'');
+                                    index.set(digits,item);
+                                    // 內政部 TopoJSON 的 TOWNCODE 為 8 碼；氣象署 CAP
+                                    // Taiwan_Geocode_103 常見為 7 碼（例如 6502100）。
+                                    // 建立兩種格式的對照，避免代碼版本差一碼時整個鄉鎮漏畫。
+                                    if(digits.length===8) index.set(digits.slice(0,7),item);
+                                    else if(digits.length===7) index.set(digits+'0',item);
+                                }
+                                if(name) index.set(`name:${name}`,item);
                             });
                         }
                     }catch(err){ console.warn('一般鄉鎮 TopoJSON 載入失敗：',err); }
@@ -31832,21 +31842,29 @@ const popVal = getPopForStation(county, town);
                         }
                         townName=townName.replace(/(平地|山區)$/,'');
                         const code=String(entry?.geocode||'').replace(/\D/g,'');
+                        const codeCounty=code.length>=5?code.slice(0,5):'';
                         let match=code ? (townIndex?.get(code)||townIndex?.get(`ncdr:${code}`)) : null;
                         if(!match && townIndex){
                             const candidates=[];
                             for(const [key,value] of townIndex){
                                 if(!key.startsWith('name:') && !key.startsWith('ncdr-name:')) continue;
                                 if(normalize(value?.name)!==townName) continue;
+                                const props=value.feature?.properties||{};
+                                const parentValues=Object.entries(props)
+                                    .filter(([propKey])=>/county|countyname|縣市|縣市名稱|縣市名/i.test(propKey))
+                                    .map(([,propValue])=>normalize(propValue))
+                                    .filter(Boolean);
+                                const featureCountyCode=String(value?.countyCode||props.COUNTYCODE||props.CountyCode||'').replace(/\D/g,'');
                                 if(parentCounty){
-                                    const props=value.feature?.properties||{};
-                                    const parentValues=Object.entries(props)
-                                        .filter(([propKey])=>/county|countyname|縣市|縣市名稱|縣市名/i.test(propKey))
-                                        .map(([,propValue])=>normalize(propValue))
-                                        .filter(Boolean);
-                                    // 有縣市欄位時必須吻合；若邊界資料未提供縣市欄位，
-                                    // 不可把同名鄉鎮誤畫到其他縣市。
-                                    if(!parentValues.length || !parentValues.includes(normalize(parentCounty))) continue;
+                                    // CAP areaDesc 若有完整縣市名稱，必須同時吻合，避免同名區誤配。
+                                    if(!parentValues.includes(normalize(parentCounty))) continue;
+                                }else if(codeCounty){
+                                    // CAP 有鄉鎮代碼但 areaDesc 只寫「北區」等簡稱時，
+                                    // 以代碼前 5 碼的縣市碼鎖定正確縣市。
+                                    if(!featureCountyCode || featureCountyCode!==codeCounty) continue;
+                                }else{
+                                    // 沒有縣市名稱也沒有可用縣市碼時，不猜測同名行政區。
+                                    continue;
                                 }
                                 candidates.push(value);
                             }
