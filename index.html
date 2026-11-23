@@ -30656,7 +30656,7 @@ const popVal = getPopForStation(county, town);
             const labelsListEl = document.getElementById('legendLabelsList');
             if (titleEl && colorBarEl && labelsListEl) {
                 if (currentMapMode === 'apparent') {
-                    titleEl.innerText = '體感溫度（估算 °C）';
+                    titleEl.innerText = '體感溫度（°C）';
                     colorBarEl.style.background = 'linear-gradient(to top, #1e3a8a 0%, #2563eb 12%, #38bdf8 25%, #14b8a6 38%, #84cc16 50%, #eab308 63%, #f97316 76%, #dc2626 88%, #7f1d1d 100%)';
                     labelsListEl.innerHTML = '<span>40+</span><span>35</span><span>32</span><span>28</span><span>24</span><span>20</span><span>16</span><span>10</span><span>&lt;10</span>';
                 } else if (currentMapMode === 'temp') {
