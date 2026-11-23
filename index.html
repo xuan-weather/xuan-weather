@@ -30488,7 +30488,7 @@ const popVal = getPopForStation(county, town);
                     } else if (currentMapMode === 'temp') {
                         val = data.temp;
         
-                        ${buildXuanStationPopupTabs(station,data,county,town,wxInfo,popForStation,mapRain,mapRain2d,mapRain3d)}             // 陣風警示門檻提高至 28.5 m/s；只在「陣風」圖層啟動紅色呼吸燈。
+                                     // 陣風警示門檻提高至 28.5 m/s；只在「陣風」圖層啟動紅色呼吸燈。
                     // 風場流向圖不套用整個標記的呼吸動畫，避免箭頭與陰影一起閃爍。
                     const hotBreathing =
                         (currentMapMode === 'temp' && !isNaN(data.temp) && data.temp >= 35) ||
