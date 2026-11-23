@@ -8007,7 +8007,7 @@ html[data-theme="light"] .xuan-social-card-art .xuan-social-brand-copy span {
                 <i class="fas fa-map-marked-alt"></i> 全台地圖
             </button>
             <button id="tabCountyForecast" class="tab-btn nav-county" onclick="switchMainPage('countyForecast')">
-                <i class="fas fa-temperature-high"></i> 縣市預報
+                <i class="fas fa-cloud-sun"></i> 未來天氣預報
             </button>
             <button id="tabQuake" class="tab-btn nav-quake" onclick="switchMainPage('quake')">
                 <i class="fas fa-house-chimney-crack"></i> 地震資訊
@@ -8021,6 +8021,12 @@ html[data-theme="light"] .xuan-social-card-art .xuan-social-brand-copy span {
             <button id="tabAirQuality" class="tab-btn nav-air" onclick="switchMainPage('airQuality')">
                 😷 空氣品質
             </button>
+            <button id="tabPressure" class="tab-btn nav-pressure" type="button" onclick="switchMainPage('pressure')"><i class="fas fa-gauge-high"></i> 氣壓監測</button>
+            <button id="tabVisibility" class="tab-btn nav-visibility" type="button" onclick="switchMainPage('visibility')"><i class="fas fa-eye"></i> 能見度監測</button>
+            <button id="tabStationRecords" class="tab-btn nav-station-records" type="button" onclick="switchMainPage('stationRecords')"><i class="fas fa-trophy"></i> 測站歷史極值</button>
+            <button id="tabWeatherStats" class="tab-btn nav-weather-stats" type="button" onclick="switchMainPage('weatherStats')"><i class="fas fa-chart-column"></i> 天氣統計</button>
+        </div>
+        <div class="page-tabs-more-row">
             <details id="moreOptionsWrap" class="nav-more">
                 <summary id="moreOptionsBtn" class="tab-btn more-options-btn" title="更多選項">
                     <i class="fas fa-bars"></i><span>更多</span>
@@ -9592,6 +9598,32 @@ html[data-theme="light"] .xuan-social-card-art .xuan-social-brand-copy span {
                 顯示測站名稱、縣市、AQI、主要污染物、PM2.5、PM10、O₃ 等資料。
             </div>
         </div>
+
+<section id="pressurePanel" class="content-panel modern-dashboard xuan-observation-panel">
+  <div class="xuan-feature-head"><div><h2>🧭 全台氣壓監測</h2><p>中央氣象署 O-A0003-001｜10 分鐘觀測資料</p></div><button class="action-btn" type="button" onclick="renderXuanPressurePanel()"><i class="fas fa-sync-alt"></i> 更新</button></div>
+  <div class="xuan-feature-filter"><label for="pressureCountyFilter">縣市篩選</label><select id="pressureCountyFilter" class="select-box" onchange="renderXuanPressurePanel()"><option value="">全台縣市</option></select></div>
+  <div id="pressureSummary" class="xuan-feature-summary"></div><div id="pressureStatus" class="xuan-feature-status">等待載入氣象測站資料…</div><div id="pressureGrid" class="xuan-feature-grid"></div>
+  <div class="xuan-feature-source">資料欄位：WeatherElement.AirPressure，單位 hPa。無效值及非正常氣壓範圍不列入統計。</div>
+</section>
+<section id="visibilityPanel" class="content-panel modern-dashboard xuan-observation-panel">
+  <div class="xuan-feature-head"><div><h2>👁️ 全台能見度監測</h2><p>中央氣象署 O-A0003-001｜10 分鐘觀測資料</p></div><button class="action-btn" type="button" onclick="renderXuanVisibilityPanel()"><i class="fas fa-sync-alt"></i> 更新</button></div>
+  <div class="xuan-feature-filter"><label for="visibilityCountyFilter">縣市篩選</label><select id="visibilityCountyFilter" class="select-box" onchange="renderXuanVisibilityPanel()"><option value="">全台縣市</option></select></div>
+  <div id="visibilitySummary" class="xuan-feature-summary"></div><div id="visibilityStatus" class="xuan-feature-status">等待載入氣象測站資料…</div><div id="visibilityGrid" class="xuan-feature-grid"></div>
+  <div class="xuan-feature-source">資料欄位：WeatherElement.VisibilityDescription，單位 km。保留氣象署「＞30」等原始描述，不將其誤當成精確數值。</div>
+</section>
+<section id="stationRecordsPanel" class="content-panel modern-dashboard xuan-observation-panel">
+  <div class="xuan-feature-head"><div><h2>🏆 測站歷史極值</h2><p>本站保存的近 7 日氣溫觀測資料｜依測站分別統計</p></div><button class="action-btn" type="button" onclick="loadXuanStationExtremes(true)"><i class="fas fa-sync-alt"></i> 更新</button></div>
+  <div class="xuan-feature-filter"><label for="stationRecordsCountyFilter">縣市篩選</label><select id="stationRecordsCountyFilter" class="select-box" onchange="renderXuanStationExtremes()"><option value="">全台縣市</option></select></div>
+  <div id="stationRecordsStatus" class="xuan-feature-status">首次開啟時載入近 7 日精簡歷史摘要…</div>
+  <div class="xuan-records-columns"><section><h3>🔥 近 7 日最高溫</h3><div id="stationRecordsHigh" class="xuan-records-list"></div></section><section><h3>❄️ 近 7 日最低溫</h3><div id="stationRecordsLow" class="xuan-records-list"></div></section></div>
+  <div class="xuan-feature-source">這是本站歷史資料庫收錄期間的測站極值，不代表氣象署自建站以來的歷年絕對紀錄；各測站有效筆數不同。</div>
+</section>
+<section id="weatherStatsPanel" class="content-panel modern-dashboard xuan-observation-panel">
+  <div class="xuan-feature-head"><div><h2>📊 全台天氣統計</h2><p>依目前有效的 CWA 即時測站資料即時計算</p></div><button class="action-btn" type="button" onclick="renderXuanWeatherStats()"><i class="fas fa-sync-alt"></i> 更新</button></div>
+  <div id="weatherStatsStatus" class="xuan-feature-status">等待載入氣象測站資料…</div><div id="weatherStatsCards" class="xuan-stats-grid"></div>
+  <h3 class="xuan-stats-subtitle">各縣市測站氣溫統計</h3><div id="weatherStatsCountyTable" class="xuan-stats-table-wrap"></div>
+  <div class="xuan-feature-source">統計僅納入有有效觀測值的測站；平均值依當次資料計算，並非縣市面積加權平均。</div>
+</section>
 
 <div id="localWeatherReportPanel" class="content-panel modern-dashboard">
 <div class="local-weather-report-widget" id="localWeatherReportWidget" style="margin-top:0;">
@@ -15185,7 +15217,7 @@ const longWave = longWaveResult.status === 'fulfilled'
             tabCwaOfficialAlert:'<i class="fas fa-cloud-showers-heavy"></i> 官方警特報',
             tabNationalAlert:'⚠️ 即時示警',
             tabMap:'<i class="fas fa-map-marked-alt"></i> 全台地圖',
-            tabCountyForecast:'<i class="fas fa-temperature-high"></i> 縣市預報',
+            tabCountyForecast:'<i class="fas fa-cloud-sun"></i> 未來天氣預報',
             tabQuake:'<i class="fas fa-house-chimney-crack"></i> 地震資訊',
             tabTyphoon:'<i class="fas fa-hurricane"></i> 🌀 颱風資訊',
             tabRadar:'<i class="fas fa-satellite-dish"></i> 雷達回波',
@@ -16070,6 +16102,7 @@ function japanAmedasMapTempColor(v){
             currentCountryMode=mode==='japan'?'japan':'taiwan';const isJapan=currentCountryMode==='japan';
             document.body.classList.toggle('japan-mode',isJapan);document.getElementById('countryTaiwanBtn').classList.toggle('active',!isJapan);document.getElementById('countryJapanBtn').classList.toggle('active',isJapan);applyCountryTabLabels();
             const localTab=document.getElementById('tabLocalWeatherReport');if(localTab)localTab.style.display=isJapan?'none':''; const cwaOfficialTab=document.getElementById('tabCwaOfficialAlert'); if(cwaOfficialTab)cwaOfficialTab.style.display=isJapan?'none':''; const taiwanExtremesTab=document.getElementById('tabTaiwanExtremes'); if(taiwanExtremesTab)taiwanExtremesTab.style.display=isJapan?'none':''; const stationQueryTab=document.getElementById('tabStationQuery'); if(stationQueryTab)stationQueryTab.style.display=isJapan?'none':'';
+            ['tabPressure','tabVisibility','tabStationRecords','tabWeatherStats'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=isJapan?'none':'';});
             const jp=document.getElementById('japanWeatherPanel'),feature=document.getElementById('japanFeaturePanel');if(jp)jp.classList.toggle('active',isJapan);if(feature)feature.classList.remove('active');
             if(isJapan){currentJapanPage='dashboard';if(jp)jp.classList.add('active');document.querySelectorAll('.content-panel').forEach(p=>{if(p.id!=='japanWeatherPanel')p.classList.remove('active');});updateJapanLinks();loadJapanDashboardWeather();window.scrollTo({top:0,behavior:'smooth'});}
             else{if(jp)jp.classList.remove('active');if(feature)feature.classList.remove('active');switchMainPage('dashboard');window.scrollTo({top:0,behavior:'smooth'});}
@@ -16166,6 +16199,10 @@ function japanAmedasMapTempColor(v){
             document.getElementById('tabQuake').classList.toggle('active', pageId === 'quake');
             document.getElementById('tabTyphoon').classList.toggle('active', pageId === 'typhoon');
             document.getElementById('tabAirQuality').classList.toggle('active', pageId === 'airQuality');
+            document.getElementById('tabPressure').classList.toggle('active', pageId === 'pressure');
+            document.getElementById('tabVisibility').classList.toggle('active', pageId === 'visibility');
+            document.getElementById('tabStationRecords').classList.toggle('active', pageId === 'stationRecords');
+            document.getElementById('tabWeatherStats').classList.toggle('active', pageId === 'weatherStats');
             document.getElementById('tabLocalWeatherReport').classList.toggle('active', pageId === 'localWeatherReport');
                                       
             document.getElementById('stationQueryPanel').classList.toggle('active', pageId === 'stationQuery');
@@ -16179,6 +16216,10 @@ function japanAmedasMapTempColor(v){
             document.getElementById('quakePanel').classList.toggle('active', pageId === 'quake');
             document.getElementById('typhoonPanel').classList.toggle('active', pageId === 'typhoon');
             document.getElementById('airQualityPanel').classList.toggle('active', pageId === 'airQuality');
+            document.getElementById('pressurePanel').classList.toggle('active', pageId === 'pressure');
+            document.getElementById('visibilityPanel').classList.toggle('active', pageId === 'visibility');
+            document.getElementById('stationRecordsPanel').classList.toggle('active', pageId === 'stationRecords');
+            document.getElementById('weatherStatsPanel').classList.toggle('active', pageId === 'weatherStats');
             document.getElementById('localWeatherReportPanel').classList.toggle('active', pageId === 'localWeatherReport');
             document.getElementById('temperatureImagesPanel').classList.toggle('active', pageId === 'temperatureImages');
             document.getElementById('rainMonitoringPanel').classList.toggle('active', pageId === 'rainMonitoring');
@@ -16190,6 +16231,10 @@ function japanAmedasMapTempColor(v){
             if (pageId === 'airQuality') {
                 setTimeout(() => loadAirQuality(false), 50);
             }
+            if (pageId === 'pressure') setTimeout(renderXuanPressurePanel, 60);
+            if (pageId === 'visibility') setTimeout(renderXuanVisibilityPanel, 60);
+            if (pageId === 'stationRecords') setTimeout(loadXuanStationExtremes, 60);
+            if (pageId === 'weatherStats') setTimeout(renderXuanWeatherStats, 60);
             if (pageId === 'taiwanExtremes') {
                 setTimeout(() => {
                     if (typeof renderQuickRankingCards === 'function') renderQuickRankingCards();
@@ -16445,9 +16490,115 @@ window.xuanSetStationPopupTab=function(button,step){const root=button?.closest('
                 humidity = Math.round(humidity);
             }
             let elevation = parseFloat(station.Elevation || station.GeoInfo?.Elevation || 0);
-            let pressure=parseFloat(we.AirPressure??we.AtmosphericPressure??we.Pressure??we.PRES??station.AirPressure);if(!Number.isFinite(pressure)||pressure<800||pressure>1100)pressure=NaN;let visibility=parseFloat(we.Visibility??we.VisibilityDistance??we.VIS??station.Visibility);if(!Number.isFinite(visibility)||visibility<0)visibility=NaN;return { temp, rain, windSpeed, windGust, max10MinWind, windDir, humidity, uvIndex, pressure, visibility, elevation, obsTime: rawObsTime };
+            const pressureRaw = we.AirPressure ?? we.AtmosphericPressure ?? we.Pressure ?? we.PRES ?? station.AirPressure;
+            let pressure = parseFloat(pressureRaw);
+            if (!Number.isFinite(pressure) || pressure < 800 || pressure > 1100) pressure = NaN;
+            const visibilityRaw = we.VisibilityDescription ?? we.Visibility ?? we.VisibilityDistance ?? we.VIS ?? station.Visibility;
+            const visibilityText = String(visibilityRaw ?? '').trim();
+            let visibility = parseFloat(visibilityText.replace(/[<>＜＞＝=]/g, ''));
+            if (!Number.isFinite(visibility) || visibility < 0 || /^(?:-99|X|T|)$/i.test(visibilityText)) visibility = NaN;
+            return { temp, rain, windSpeed, windGust, max10MinWind, windDir, humidity, uvIndex, pressure, visibility, visibilityText, elevation, obsTime: rawObsTime };
         }
                   
+
+        // ===== Xuan Weather：氣壓／能見度／歷史極值／天氣統計 =====
+        const XUAN_STATION_EXTREMES_URL = new URL('data/history/station-temperature-extremes.json', document.baseURI).href;
+        let xuanStationExtremesPayload = null;
+        let xuanStationExtremesPromise = null;
+        function xuanFeatureEscape(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        function xuanObservationRows() {
+            const base = Array.isArray(weatherStationData) ? weatherStationData : [];
+            const realtime = Array.isArray(latestRealtimeStationData) ? latestRealtimeStationData : [];
+            const byId = new Map();
+            base.forEach(st => { const id=String(st?.StationId||'').trim(); if(id)byId.set(id,st); });
+            realtime.forEach(st => {
+                const id=String(st?.StationId||'').trim(); if(!id)return;
+                const old=byId.get(id)||{};
+                byId.set(id,{...old,...st,GeoInfo:st.GeoInfo||old.GeoInfo,WeatherElement:{...(old.WeatherElement||{}),...(st.WeatherElement||{})}});
+            });
+            return Array.from(byId.values()).filter(st=>!isFreewayStation(st.StationName||'')).map(st=>{
+                const v=parseStationElement(st),g=st.GeoInfo||{},id=String(st.StationId||'');
+                return {id,name:String(st.StationName||id),county:String(g.CountyName||'').replace(/台/g,'臺'),town:String(g.TownName||''),obsTime:v.obsTime,temp:v.temp,humidity:Number(v.humidity),pressure:v.pressure,visibility:v.visibility,visibilityText:v.visibilityText,wind:v.windSpeed,rain:v.rain};
+            });
+        }
+        function xuanFeatureFillCountySelect(id,rows) {
+            const el=document.getElementById(id);if(!el)return '';
+            const current=el.value, counties=Array.from(new Set(rows.map(x=>x.county).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+            const signature=counties.join('|');
+            if(el.dataset.counties!==signature){el.innerHTML='<option value="">全台縣市</option>'+counties.map(c=>'<option value="'+xuanFeatureEscape(c)+'">'+xuanFeatureEscape(c)+'</option>').join('');el.dataset.counties=signature;if(counties.includes(current))el.value=current;}
+            return el.value||'';
+        }
+        function xuanFeatureLatestTime(rows) {
+            const times=rows.map(x=>Date.parse(x.obsTime||'')).filter(Number.isFinite);
+            return times.length?new Date(Math.max(...times)).toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'時間待確認';
+        }
+        function xuanFeatureMetricCard(label,value,unit) {
+            return '<div class="xuan-feature-metric"><span>'+label+'</span><strong>'+value+'<small>'+unit+'</small></strong></div>';
+        }
+        function renderXuanPressurePanel() {
+            const rows=xuanObservationRows(),county=xuanFeatureFillCountySelect('pressureCountyFilter',rows);
+            const valid=rows.filter(x=>Number.isFinite(x.pressure)&&x.pressure>=800&&x.pressure<=1100&&(!county||x.county===county)).sort((a,b)=>b.pressure-a.pressure);
+            const summary=document.getElementById('pressureSummary'),status=document.getElementById('pressureStatus'),grid=document.getElementById('pressureGrid');if(!summary||!status||!grid)return;
+            const avg=valid.length?valid.reduce((n,x)=>n+x.pressure,0)/valid.length:NaN;
+            summary.innerHTML=xuanFeatureMetricCard('最高氣壓',valid.length?valid[0].pressure.toFixed(1):'--','hPa')+xuanFeatureMetricCard('平均氣壓',Number.isFinite(avg)?avg.toFixed(1):'--','hPa')+xuanFeatureMetricCard('最低氣壓',valid.length?valid[valid.length-1].pressure.toFixed(1):'--','hPa');
+            status.textContent=valid.length?'有效氣壓測站 '+valid.length+' 站｜觀測時間：'+xuanFeatureLatestTime(valid):'目前沒有可用的氣壓觀測資料。';
+            grid.innerHTML=valid.slice(0,60).map(x=>'<article class="xuan-observation-card"><div><strong>'+xuanFeatureEscape(x.name)+'</strong><small>'+xuanFeatureEscape(x.county)+' '+xuanFeatureEscape(x.town)+'</small></div><b>'+x.pressure.toFixed(1)+' <small>hPa</small></b><time>'+xuanFeatureEscape(x.obsTime||'--')+'</time></article>').join('')||'<div class="xuan-feature-empty">目前沒有符合條件的氣壓測站。</div>';
+        }
+        function renderXuanVisibilityPanel() {
+            const rows=xuanObservationRows(),county=xuanFeatureFillCountySelect('visibilityCountyFilter',rows);
+            const valid=rows.filter(x=>Number.isFinite(x.visibility)&&x.visibility>=0&&(!county||x.county===county)).sort((a,b)=>a.visibility-b.visibility);
+            const summary=document.getElementById('visibilitySummary'),status=document.getElementById('visibilityStatus'),grid=document.getElementById('visibilityGrid');if(!summary||!status||!grid)return;
+            const avg=valid.length?valid.reduce((n,x)=>n+x.visibility,0)/valid.length:NaN;
+            summary.innerHTML=xuanFeatureMetricCard('最低能見度',valid.length?valid[0].visibilityText||valid[0].visibility.toFixed(1):'--','km')+xuanFeatureMetricCard('平均能見度',Number.isFinite(avg)?avg.toFixed(1):'--','km')+xuanFeatureMetricCard('有效測站',String(valid.length),'站');
+            status.textContent=valid.length?'有效能見度測站 '+valid.length+' 站｜觀測時間：'+xuanFeatureLatestTime(valid):'目前沒有可用的能見度觀測資料。';
+            grid.innerHTML=valid.slice(0,60).map(x=>'<article class="xuan-observation-card"><div><strong>'+xuanFeatureEscape(x.name)+'</strong><small>'+xuanFeatureEscape(x.county)+' '+xuanFeatureEscape(x.town)+'</small></div><b>'+xuanFeatureEscape(x.visibilityText||x.visibility.toFixed(1))+' <small>km</small></b><time>'+xuanFeatureEscape(x.obsTime||'--')+'</time></article>').join('')||'<div class="xuan-feature-empty">目前沒有符合條件的能見度測站。</div>';
+        }
+        async function loadXuanStationExtremes(force=false) {
+            const status=document.getElementById('stationRecordsStatus');
+            if(xuanStationExtremesPayload&&!force){renderXuanStationExtremes();return xuanStationExtremesPayload;}
+            if(xuanStationExtremesPromise&&!force)return xuanStationExtremesPromise;
+            if(status)status.textContent='正在讀取 GitHub Actions 產生的近 7 日測站歷史摘要…';
+            xuanStationExtremesPromise=(async()=>{
+                try{
+                    const response=await fetch(XUAN_STATION_EXTREMES_URL+(force?'?t='+Date.now():''),{cache:'no-store',headers:{'Accept':'application/json'}});
+                    if(!response.ok)throw new Error('HTTP '+response.status);
+                    const payload=await response.json();if(!payload||!payload.stations||typeof payload.stations!=='object')throw new Error('歷史摘要格式不正確');
+                    xuanStationExtremesPayload=payload;renderXuanStationExtremes();return payload;
+                }catch(error){if(status)status.textContent='歷史摘要尚未產生或暫時無法取得（'+String(error.message||error)+'）。請稍後再試；不會以今日極值冒充歷史紀錄。';return null;}
+                finally{xuanStationExtremesPromise=null;}
+            })();
+            return xuanStationExtremesPromise;
+        }
+        function renderXuanStationExtremes() {
+            const payload=xuanStationExtremesPayload,status=document.getElementById('stationRecordsStatus'),highBox=document.getElementById('stationRecordsHigh'),lowBox=document.getElementById('stationRecordsLow');
+            if(!payload||!highBox||!lowBox)return;
+            const current=xuanObservationRows(),county=xuanFeatureFillCountySelect('stationRecordsCountyFilter',current),countyById=new Map(current.map(x=>[x.id,x.county]));
+            const records=Object.entries(payload.stations||{}).map(([id,x])=>({id,...x,county:countyById.get(id)||''})).filter(x=>!county||x.county===county);
+            const high=records.filter(x=>Number.isFinite(Number(x.max?.value))).sort((a,b)=>Number(b.max.value)-Number(a.max.value)).slice(0,30);
+            const low=records.filter(x=>Number.isFinite(Number(x.min?.value))).sort((a,b)=>Number(a.min.value)-Number(b.min.value)).slice(0,30);
+            const dateText=ts=>{const d=new Date(Number(ts));return Number.isFinite(d.getTime())?d.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'時間未提供';};
+            const item=(x,k)=>'<article class="xuan-record-item"><div><strong>'+xuanFeatureEscape(x.stationName||x.id)+'</strong><small>'+xuanFeatureEscape(x.county||'縣市資料未提供')+'｜有效 '+Number(x.samples||0)+' 筆</small></div><b>'+Number(x[k].value).toFixed(1)+'°C</b><time>'+dateText(x[k].ts)+'</time></article>';
+            highBox.innerHTML=high.map(x=>item(x,'max')).join('')||'<div class="xuan-feature-empty">目前沒有可用的最高溫歷史資料。</div>';
+            lowBox.innerHTML=low.map(x=>item(x,'min')).join('')||'<div class="xuan-feature-empty">目前沒有可用的最低溫歷史資料。</div>';
+            if(status)status.textContent='資料更新：'+(payload.generatedAt?new Date(payload.generatedAt).toLocaleString('zh-TW'):'時間未提供')+'｜收錄測站 '+records.length+' 站｜近 7 日';
+        }
+        function renderXuanWeatherStats() {
+            const rows=xuanObservationRows(),temps=rows.map(x=>x.temp).filter(Number.isFinite),hum=rows.map(x=>x.humidity).filter(x=>Number.isFinite(x)&&x>=0&&x<=100),press=rows.map(x=>x.pressure).filter(Number.isFinite);
+            const high=temps.length?Math.max(...temps):NaN,low=temps.length?Math.min(...temps):NaN,avg=temps.length?temps.reduce((a,b)=>a+b,0)/temps.length:NaN;
+            const rainCount=rows.filter(x=>Number.isFinite(x.rain)&&x.rain>0).length,avgHum=hum.length?hum.reduce((a,b)=>a+b,0)/hum.length:NaN,avgPress=press.length?press.reduce((a,b)=>a+b,0)/press.length:NaN;
+            const cards=document.getElementById('weatherStatsCards'),status=document.getElementById('weatherStatsStatus'),table=document.getElementById('weatherStatsCountyTable');if(!cards||!status||!table)return;
+            cards.innerHTML=xuanFeatureMetricCard('氣溫有效測站',String(temps.length),'站')+xuanFeatureMetricCard('最高氣溫',Number.isFinite(high)?high.toFixed(1):'--','°C')+xuanFeatureMetricCard('最低氣溫',Number.isFinite(low)?low.toFixed(1):'--','°C')+xuanFeatureMetricCard('平均氣溫',Number.isFinite(avg)?avg.toFixed(1):'--','°C')+xuanFeatureMetricCard('平均濕度',Number.isFinite(avgHum)?avgHum.toFixed(0):'--','%')+xuanFeatureMetricCard('平均氣壓',Number.isFinite(avgPress)?avgPress.toFixed(1):'--','hPa')+xuanFeatureMetricCard('有降雨測站',String(rainCount),'站');
+            status.textContent='統計時間：'+xuanFeatureLatestTime(rows)+'｜氣溫有效 '+temps.length+' 站、濕度有效 '+hum.length+' 站、氣壓有效 '+press.length+' 站';
+            const groups=new Map();rows.forEach(x=>{if(!x.county||!Number.isFinite(x.temp))return;const g=groups.get(x.county)||[];g.push(x.temp);groups.set(x.county,g);});
+            const countyRows=Array.from(groups.entries()).map(([county,v])=>({county,count:v.length,avg:v.reduce((a,b)=>a+b,0)/v.length,max:Math.max(...v),min:Math.min(...v)})).sort((a,b)=>a.county.localeCompare(b.county,'zh-Hant'));
+            table.innerHTML='<table class="xuan-stats-table"><thead><tr><th>縣市</th><th>測站數</th><th>平均</th><th>最高</th><th>最低</th></tr></thead><tbody>'+countyRows.map(x=>'<tr><td>'+xuanFeatureEscape(x.county)+'</td><td>'+x.count+'</td><td>'+x.avg.toFixed(1)+'°</td><td>'+x.max.toFixed(1)+'°</td><td>'+x.min.toFixed(1)+'°</td></tr>').join('')+'</tbody></table>';
+        }
+        setInterval(()=>{
+            if(document.getElementById('pressurePanel')?.classList.contains('active'))renderXuanPressurePanel();
+            if(document.getElementById('visibilityPanel')?.classList.contains('active'))renderXuanVisibilityPanel();
+            if(document.getElementById('weatherStatsPanel')?.classList.contains('active'))renderXuanWeatherStats();
+        },60000);
+
         function isFreewayStation(stationName) {
             if (!stationName) return false;
             return stationName.includes('國道') || 
@@ -42317,6 +42468,51 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
 
 
 <script src="./station-popup-tabs.js?v=20261123-2"></script>
+
+<style id="xuan-swipe-tabs-and-observation-pages">
+.page-tabs{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:7px!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none!important;overscroll-behavior-x:contain!important;white-space:nowrap!important;padding:7px!important;min-height:0!important;max-height:none!important;}
+.page-tabs::-webkit-scrollbar{display:none!important;}
+.page-tabs>.tab-btn{display:inline-flex!important;flex:0 0 auto!important;width:auto!important;min-width:max-content!important;max-width:none!important;padding:11px 14px!important;font-size:13px!important;line-height:1.25!important;white-space:nowrap!important;overflow:visible!important;border-radius:13px!important;gap:6px!important;}
+.page-tabs>.tab-btn i{font-size:14px!important;}
+.page-tabs-more-row{display:flex;justify-content:flex-end;position:relative;z-index:100000;margin:-8px 0 14px;}
+.page-tabs-more-row .nav-more{position:relative!important;overflow:visible!important;z-index:100000!important;}
+.page-tabs-more-row .more-options-menu{position:absolute!important;top:calc(100% + 8px)!important;right:0!important;left:auto!important;width:min(240px,calc(100vw - 24px))!important;max-height:65vh!important;overflow-y:auto!important;z-index:2147483647!important;}
+.xuan-observation-panel{padding:18px!important;}
+.xuan-feature-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+.xuan-feature-head h2{font-size:21px;font-weight:900;margin:0 0 5px;}
+.xuan-feature-head p{font-size:11px;color:var(--text-muted);line-height:1.5;}
+.xuan-feature-filter{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.xuan-feature-filter label{font-size:12px;font-weight:800;white-space:nowrap;color:var(--text-muted);}
+.xuan-feature-filter select{max-width:220px;min-width:0;}
+.xuan-feature-summary,.xuan-stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0;}
+.xuan-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+.xuan-feature-metric{min-width:0;padding:13px;border:1px solid var(--card-border);border-radius:15px;background:var(--card-bg);}
+.xuan-feature-metric span{display:block;font-size:11px;color:var(--text-muted);font-weight:700;}
+.xuan-feature-metric strong{display:block;margin-top:5px;font-size:21px;font-weight:900;color:#38bdf8;white-space:nowrap;}
+.xuan-feature-metric strong small{font-size:11px;margin-left:4px;color:var(--text-muted);}
+.xuan-feature-status{font-size:11px;color:var(--text-muted);margin:8px 0 12px;line-height:1.5;}
+.xuan-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.xuan-observation-card,.xuan-record-item{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;padding:12px;border:1px solid var(--card-border);border-radius:14px;background:var(--card-bg);}
+.xuan-observation-card>div,.xuan-record-item>div{min-width:0;}
+.xuan-observation-card strong,.xuan-record-item strong{display:block;font-size:13px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.xuan-observation-card small,.xuan-record-item small{display:block;margin-top:3px;font-size:10px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.xuan-observation-card>b,.xuan-record-item>b{font-size:17px;color:#0ea5e9;font-weight:900;white-space:nowrap;align-self:center;}
+.xuan-observation-card>b small{display:inline;font-size:10px;}
+.xuan-observation-card time,.xuan-record-item time{grid-column:1/-1;font-size:9px;color:var(--text-muted);overflow-wrap:anywhere;}
+.xuan-feature-source{margin-top:13px;font-size:10px;color:var(--text-muted);line-height:1.55;}
+.xuan-feature-empty{grid-column:1/-1;padding:18px;text-align:center;color:var(--text-muted);font-size:12px;border:1px dashed var(--panel-border);border-radius:14px;}
+.xuan-records-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.xuan-records-columns h3,.xuan-stats-subtitle{font-size:15px;font-weight:900;margin:10px 0;}
+.xuan-records-list{display:grid;gap:7px;}
+.xuan-record-item{padding:10px;}
+.xuan-record-item>b{font-size:16px;}
+.xuan-stats-table-wrap{overflow-x:auto;border:1px solid var(--card-border);border-radius:14px;}
+.xuan-stats-table{width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap;}
+.xuan-stats-table th,.xuan-stats-table td{padding:10px 8px;text-align:right;border-bottom:1px solid var(--card-border);}
+.xuan-stats-table th:first-child,.xuan-stats-table td:first-child{text-align:left;}
+.xuan-stats-table th{color:var(--text-muted);font-weight:800;background:var(--tab-bg);}
+@media(max-width:520px){.page-tabs>.tab-btn{padding:10px 12px!important;font-size:12px!important;}.xuan-observation-panel{padding:14px!important;}.xuan-feature-head h2{font-size:18px;}.xuan-feature-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}.xuan-feature-metric{padding:10px 8px;}.xuan-feature-metric strong{font-size:17px;}.xuan-feature-grid{grid-template-columns:1fr;}.xuan-records-columns{grid-template-columns:1fr;}.xuan-feature-filter select{max-width:none;flex:1;}}
+</style>
 </body>
 </html>
 
