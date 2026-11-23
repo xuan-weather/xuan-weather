@@ -30401,7 +30401,6 @@ const popVal = getPopForStation(county, town);
             const val=(n,d=1)=>Number.isFinite(n)?n.toFixed(d):'--';
             const aqi=xuanPopupFindAqi(county,town,lat,lon);
             const pressure=xuanPopupMetric(station,['StationPressure','AirPressure','AtmosphericPressure','Pressure','PRES','STP']);
-            const visibility=xuanPopupMetric(station,['Visibility','VisibilityDistance','VIS','視程']);
             const hourly=Array.isArray(latestHourlyStationData)?latestHourlyStationData.find(s=>String(s?.StationId||'')===String(station?.StationId||'')):null;
             const extremeSource=hourly||station;
             const high=typeof getCwaDailyExtremeTemperature==='function'
@@ -30418,10 +30417,8 @@ const popVal = getPopForStation(county, town);
                 ['🌡️ 即時觀測',''],
                 ['🌫️ 空氣品質',''],
                 ['🧭 氣壓監測',''],
-                ['👁️ 能見度',''],
                 ['🏆 歷史極值',''],
-                ['🌤️ 未來預報',''],
-                ['📊 天氣統計','']
+                ['🌤️ 未來預報','']
             ];
             const nav=tabs.map((t,i)=>`<button type="button" class="station-popup-tab-btn${i===0?' active':''}" data-popup-tab="${i}" onclick="xuanSetStationPopupTab(this,${i})">${t[0]}</button>`).join('');
             const pages=`
@@ -30451,7 +30448,6 @@ const popVal = getPopForStation(county, town);
                   ${metric('空品狀態',aqi?esc(aqi.Status||'未提供'):'--')}
                   ${metric('發布時間',aqi?esc(aqi.publishtime):'--')}
                 </div>
-                <div class="station-popup-slide-note">資料來源：環境部 AQX_P_432（沿用本站 GitHub Actions 更新檔）；顯示同縣市或鄰近空品測站資料，並標示實際測站名稱。</div>
               </section>
               <section class="station-popup-slide">
                 <div class="station-popup-slide-title">氣壓觀測</div>
@@ -30460,15 +30456,6 @@ const popVal = getPopForStation(county, town);
                   ${metric('測站海拔',Number.isFinite(Number(data.elevation))?`${val(Number(data.elevation),0)} m`:'--')}
                   ${metric('觀測時間',esc(data.obsTime||'--'))}
                 </div>
-                <div class="station-popup-slide-note">僅顯示該測站原始觀測資料內的氣壓欄位；若 CWA 該站未提供氣壓，將維持缺值。</div>
-              </section>
-              <section class="station-popup-slide">
-                <div class="station-popup-slide-title">能見度觀測</div>
-                <div class="station-popup-metrics">
-                  ${metric('👁️ 能見度',Number.isFinite(visibility)?`${val(visibility,1)} km`:'尚無觀測資料')}
-                  ${metric('觀測時間',esc(data.obsTime||'--'))}
-                </div>
-                <div class="station-popup-slide-note">能見度僅在測站原始資料有提供有效欄位時顯示，不以天氣現象推算能見度。</div>
               </section>
               <section class="station-popup-slide">
                 <div class="station-popup-slide-title">測站歷史極值／今日極值</div>
@@ -30488,20 +30475,8 @@ const popVal = getPopForStation(county, town);
                   ${metric('🌧️ 降雨機率',`${esc(popForStation)} %`)}
                 </div>
                 <div class="station-popup-slide-note">預報時段：${esc(forecastPeriod)}。採用本站已載入的氣象署鄉鎮預報資料。</div>
-              </section>
-              <section class="station-popup-slide">
-                <div class="station-popup-slide-title">天氣統計摘要</div>
-                <div class="station-popup-metrics">
-                  ${metric('🌡️ 目前氣溫',Number.isFinite(data.temp)?`${val(data.temp)} °C`:'--')}
-                  ${metric('💧 相對濕度',data.humidity!=='--'?`${esc(data.humidity)} %`:'--')}
-                  ${metric('💨 平均風速',Number.isFinite(data.windSpeed)?`${val(data.windSpeed)} m/s`:'--')}
-                  ${metric('🌬️ 最大陣風',Number.isFinite(data.windGust)?`${val(data.windGust)} m/s`:'--')}
-                  ${metric('☔ 今日累積雨量',Number.isFinite(mapRain)?`${val(mapRain)} mm`:'--')}
-                  ${metric('🌧️ 預報降雨機率',`${esc(popForStation)} %`)}
-                </div>
-                <div class="station-popup-slide-note">本頁為目前已取得觀測資料的摘要統計，不代表完整日統計或歷年氣候統計。</div>
               </section>`;
-            return `<div class="station-popup-tabs"><div class="station-popup-tab-nav" role="tablist" aria-label="測站資訊分頁">${nav}</div><div class="station-popup-slide-hint"><span>左右滑動切換測站資訊</span><span class="station-popup-slide-count">1 / 7</span></div><div class="station-popup-slide-track" onscroll="xuanUpdateStationPopupTab(this)">${pages}</div></div>`;
+            return `<div class="station-popup-tabs"><div class="station-popup-tab-nav" role="tablist" aria-label="測站資訊分頁">${nav}</div><div class="station-popup-slide-hint"><span>左右滑動切換測站資訊</span><span class="station-popup-slide-count">1 / 5</span></div><div class="station-popup-slide-track" onscroll="xuanUpdateStationPopupTab(this)">${pages}</div></div>`;
         }
         window.xuanSetStationPopupTab=function(button,index){
             const root=button?.closest('.station-popup-tabs'); if(!root)return;
@@ -30509,13 +30484,13 @@ const popVal = getPopForStation(county, town);
             const page=track?.children?.[index]; if(!track||!page)return;
             track.scrollTo({left:page.offsetLeft,behavior:'smooth'});
             root.querySelectorAll('.station-popup-tab-btn').forEach((b,i)=>b.classList.toggle('active',i===index));
-            const count=root.querySelector('.station-popup-slide-count'); if(count)count.textContent=`${index+1} / 7`;
+            const count=root.querySelector('.station-popup-slide-count'); if(count)count.textContent=`${index+1} / 5`;
         };
         window.xuanUpdateStationPopupTab=function(track){
             const root=track?.closest('.station-popup-tabs'); if(!root)return;
-            const index=Math.max(0,Math.min(6,Math.round(track.scrollLeft/Math.max(1,track.clientWidth))));
+            const index=Math.max(0,Math.min(4,Math.round(track.scrollLeft/Math.max(1,track.clientWidth))));
             root.querySelectorAll('.station-popup-tab-btn').forEach((b,i)=>b.classList.toggle('active',i===index));
-            const count=root.querySelector('.station-popup-slide-count'); if(count)count.textContent=`${index+1} / 7`;
+            const count=root.querySelector('.station-popup-slide-count'); if(count)count.textContent=`${index+1} / 5`;
         };
 
         function renderMapMarkers() {
@@ -43063,4 +43038,3 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
   };
 })();
 </script>
-
