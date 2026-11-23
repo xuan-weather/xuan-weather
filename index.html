@@ -16439,7 +16439,24 @@ function japanAmedasMapTempColor(v){
             } else {
                 humidity = Math.round(humidity);
             }
-            let elevation = parseFloat(station.Elevation || station.GeoInfo?.Elevation || 0);
+            // 測站海拔優先讀取 CWA 測站資料的海拔欄位；不可用 || 及預設 0，
+            // 因為欄位缺漏時會錯誤顯示「0 m」。
+            const elevationRaw =
+                station?.Elevation ??
+                station?.StationAltitude ??
+                station?.GeoInfo?.Elevation ??
+                station?.GeoInfo?.StationAltitude ??
+                station?.GeoInfo?.Altitude ??
+                station?.GeoInfo?.Coordinates?.find?.(item =>
+                    item?.StationAltitude != null || item?.Elevation != null || item?.Altitude != null
+                )?.StationAltitude ??
+                station?.GeoInfo?.Coordinates?.find?.(item =>
+                    item?.StationAltitude != null || item?.Elevation != null || item?.Altitude != null
+                )?.Elevation ??
+                station?.GeoInfo?.Coordinates?.find?.(item => item?.Altitude != null)?.Altitude;
+            const elevationNumber = elevationRaw === '' || elevationRaw == null ? NaN : Number(elevationRaw);
+            const elevation = Number.isFinite(elevationNumber) && elevationNumber >= 0 && elevationNumber <= 5000
+                ? elevationNumber : NaN;
             return { temp, rain, windSpeed, windGust, max10MinWind, windDir, humidity, uvIndex, elevation, obsTime: rawObsTime };
         }
                   
