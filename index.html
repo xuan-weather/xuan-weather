@@ -30526,7 +30526,7 @@ const popVal = getPopForStation(county, town);
                 <div class="station-popup-slide-title">目前觀測資料</div>
                 <div class="station-popup-metrics">
                   ${metric('🌧️ 降雨機率',`${esc(popForStation)} %`)}
-                  ${metric('🌡️ 體感溫度',Number.isFinite(apparentTemperature)?`${val(apparentTemperature)} °C（${comfortLabel}）`:'尚無完整觀測資料')}
+                  ${metric('🌡️ 體感溫度',Number.isFinite(apparentTemperature)?`${val(apparentTemperature)} °C`:'尚無完整觀測資料')}
                   ${metric('💧 相對濕度',data.humidity!=='--'?`${esc(data.humidity)} %`:'--')}
 
                   ${metric('☔ 日雨量',Number.isFinite(mapRain)?`${val(mapRain)} mm`:'--')}
