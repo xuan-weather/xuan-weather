@@ -2,10 +2,6 @@ name: CWA 10-Minute Temperature + Rainfall + Wind/Gust History
 
 on:
   workflow_dispatch:
-  # Workflow 檔案本身更新時自動重建一次摘要；資料檔提交不會觸發，避免循環。
-  push:
-    paths:
-      - .github/workflows/cwa-temperature-history-push-retry-fixed-v2.yml
   repository_dispatch:
     types: [cwa-external-timer]
 
