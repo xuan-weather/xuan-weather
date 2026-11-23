@@ -5683,17 +5683,7 @@ body.japan-mode .tab-btn.active{background:linear-gradient(135deg,#06b6d4,#3b82f
 #temperatureImagesPanel:not(.active){display:block!important;position:fixed!important;left:-10000px!important;top:0!important;width:min(650px,100vw)!important;max-width:650px!important;z-index:-1!important;opacity:1!important;pointer-events:none!important}
 @media(max-width:600px){.temperature-images-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.temperature-images-summary b{font-size:17px}#temperatureImagesMap{height:68vh;min-height:480px}.temperature-images-legend{left:8px;top:8px;width:105px;padding:9px}.temperature-images-legend-bar{height:195px;width:15px}.temperature-images-legend-ticks{font-size:10px}.temperature-images-layer-label{right:8px;top:8px;padding:10px;font-size:12px}.temperature-images-actions{display:grid;grid-template-columns:1fr}.temperature-images-record-item{align-items:flex-start;flex-direction:column}.temperature-images-record-buttons{width:100%}.temperature-images-record-buttons button{flex:1}}
 </style>
-<!-- Prevent the default dashboard panel flashing briefly before the entry portal initializes on refresh. -->
-<style id="xuan-entry-boot-guard-style">
-  /* 首次繪製時先遮住主內容容器，避免預設 dashboard／導覽按鈕閃現；入口建好後會移除 boot class。 */
-  html.xuan-entry-booting .container { visibility: hidden !important; }
-  html.xuan-entry-booting .content-panel,
-  html.xuan-entry-booting .page-tabs,
-  html.xuan-entry-booting #countrySwitcher { visibility: hidden !important; }
-</style>
-<script id="xuan-entry-boot-guard-script">
-  document.documentElement.classList.add('xuan-entry-booting');
-</script>
+<!-- 已停用入口資訊頁的啟動遮罩，讓原本天氣儀表板直接顯示。 -->
 
 <style id="xuanTyphoonDesktopMapMode">
 /* Xuan Weather desktop-style typhoon GIS layout; scoped to the existing typhoon panel */
@@ -39346,9 +39336,8 @@ html[data-theme="dark"] #xuanEntryList .xuan-typhoon-warning-badge{
   }
   window.xuanShowEntryHome=showHome;
   window.xuanOpenEntryContent=openContent;
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(buildPortal,0),{once:true});
-  else setTimeout(buildPortal,0);
-  window.addEventListener('load',()=>setTimeout(()=>{if(!document.getElementById('xuanEntryPortal'))document.documentElement.classList.remove('xuan-entry-booting');},1500),{once:true});
+  // 保留入口頁相關函式供日後使用，但不再於載入首頁時自動建立入口頁。
+  document.documentElement.classList.remove('xuan-entry-booting');
 })();
 </script>
 
