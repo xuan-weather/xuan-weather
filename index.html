@@ -7953,6 +7953,58 @@ html[data-theme="dark"] .xuan-popup-v2 .station-popup-slide-hint .station-popup-
   -webkit-text-fill-color:#f1f5f9 !important;
 }
 </style>
+
+<style id="xuan-main-map-location-dot-v2">
+/* 全台即時監測：使用藍色定位圓點取代圖釘，並以呼吸波紋呈現定位精度。 */
+.xuan-main-location-marker-wrap{
+  background:transparent !important;
+  border:0 !important;
+}
+.xuan-main-location-marker{
+  position:relative;
+  width:32px;
+  height:32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+.xuan-main-location-dot{
+  position:relative;
+  z-index:2;
+  width:15px;
+  height:15px;
+  border:3px solid #fff;
+  border-radius:50%;
+  background:#2878f0;
+  box-shadow:0 1px 5px rgba(0,0,0,.48),0 0 0 1px rgba(40,120,240,.18);
+}
+.xuan-main-location-pulse{
+  position:absolute;
+  z-index:1;
+  width:22px;
+  height:22px;
+  border:2px solid rgba(40,120,240,.72);
+  border-radius:50%;
+  background:rgba(40,120,240,.16);
+  animation:xuanMainLocationPulse 1.9s ease-out infinite;
+}
+@keyframes xuanMainLocationPulse{
+  0%{transform:scale(.45);opacity:.9;}
+  75%{transform:scale(1.55);opacity:.2;}
+  100%{transform:scale(1.85);opacity:0;}
+}
+.xuan-main-location-accuracy{
+  animation:xuanMainAccuracyBreath 2.4s ease-in-out infinite;
+}
+@keyframes xuanMainAccuracyBreath{
+  0%,100%{stroke-opacity:.55;fill-opacity:.07;stroke-width:2;}
+  50%{stroke-opacity:1;fill-opacity:.16;stroke-width:3;}
+}
+@media(prefers-reduced-motion:reduce){
+  .xuan-main-location-pulse,.xuan-main-location-accuracy{animation:none !important;}
+}
+</style>
 </head>
 <body>
 
@@ -27527,30 +27579,33 @@ const popVal = getPopForStation(county, town);
                 if(mainMapUserLocationMarker) map.removeLayer(mainMapUserLocationMarker);
                 if(mainMapUserLocationCircle) map.removeLayer(mainMapUserLocationCircle);
 
+                // 以實際 GPS 精度繪製定位範圍，並讓範圍環呈現柔和呼吸效果。
                 mainMapUserLocationCircle=L.circle(latlng,{
                     radius:accuracy,
+                    className:'xuan-main-location-accuracy',
                     color:'#4285f4',
                     weight:2,
                     fillColor:'#4285f4',
-                    fillOpacity:0.14,
+                    fillOpacity:0.12,
                     interactive:false
                 }).addTo(map);
 
-                /* 全台地圖定位點改成與雷達回波圖完全相同的 DPIP 風格：
-                   藍色小圓點＋白色外框＋淡藍色定位範圍 */
+                // 使用專屬 DivIcon，完全不使用 Leaflet 預設藍色圖釘；
+                // 中心只顯示藍色定位圓點，外圍為定位精度呼吸波紋。
                 mainMapUserLocationMarker=L.marker(latlng,{
                     icon:L.divIcon({
-                        className:'dpip-location-marker-wrap',
-                        html:'<div class="dpip-location-marker"><span class="dpip-location-pulse"></span><span class="dpip-location-dot"></span></div>',
-                        iconSize:[28,28],
-                        iconAnchor:[14,14]
+                        className:'xuan-main-location-marker-wrap',
+                        html:'<div class="xuan-main-location-marker"><span class="xuan-main-location-pulse"></span><span class="xuan-main-location-dot"></span></div>',
+                        iconSize:[32,32],
+                        iconAnchor:[16,16]
                     }),
-                    zIndexOffset:10000
+                    zIndexOffset:10000,
+                    keyboard:false
                 }).addTo(map);
 
                 mainMapUserLocationMarker.bindPopup(
                     `<b>📍 我的位置</b><br>定位精度：約 ${Math.round(accuracy)} 公尺`
-                ).openPopup();
+                );
 
                 map.setView(latlng,Math.max(map.getZoom(),12),{animate:true});
                 button.classList.remove('locating');
