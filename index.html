@@ -997,8 +997,7 @@
         .cwa-official-alert-brand-sub{font-size:12px;color:var(--text-muted);font-weight:700;line-height:1.2;}
         .cwa-official-alert-brand-title{font-size:19px;font-weight:900;color:var(--text-color);line-height:1.25;margin-top:3px;}
         .cwa-official-alert-sync{font-size:10px;color:var(--text-muted);white-space:nowrap;}
-        /* 官方警特報：切換顯示，避免多張卡片一直往下滑 */
-        .cwa-official-alert-switch{
+        /* 官方警特報：切換顯示，避免多張卡片一直往下滑 */        .cwa-official-alert-switch{
             display:flex;
             gap:6px;
             margin:0 0 10px;
@@ -1997,8 +1996,7 @@
         .map-layer-switcher.open .map-layer-switcher-toggle .map-layer-chevron{transform:rotate(180deg);}
         .map-layer-switcher-menu{
             position:absolute;top:44px;right:0;min-width:160px;padding:5px;
-            border:1px solid rgba(255,255,255,.45);border-radius:11px;
-            background:rgba(255,255,255,.96);box-shadow:0 10px 28px rgba(0,0,0,.22);
+            border:1px solid rgba(255,255,255,.45);border-radius:11px;            background:rgba(255,255,255,.96);box-shadow:0 10px 28px rgba(0,0,0,.22);
             backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;
             pointer-events:auto;
         }
@@ -2997,8 +2995,7 @@
         .air-quality-detail-section{margin-top:14px;padding:14px;border-radius:16px;background:var(--card-bg);border:1px solid var(--card-border);}
         .air-quality-detail-section-title{font-size:14px;font-weight:900;color:var(--text-color);margin-bottom:10px;}
         .air-quality-detail-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
-        .air-quality-detail-action{border:1px solid var(--action-border);border-radius:12px;padding:10px 8px;background:var(--action-bg);color:#38bdf8;font-weight:800;font-size:12px;cursor:pointer;}
-        .air-quality-detail-action:hover{background:rgba(56,189,248,.12);}
+        .air-quality-detail-action{border:1px solid var(--action-border);border-radius:12px;padding:10px 8px;background:var(--action-bg);color:#38bdf8;font-weight:800;font-size:12px;cursor:pointer;}        .air-quality-detail-action:hover{background:rgba(56,189,248,.12);}
         .air-quality-health{font-size:12px;line-height:1.65;color:var(--text-muted);}
         .air-quality-health strong{color:var(--text-color);}
         .air-quality-trend-wrap{height:230px;position:relative;}
@@ -3997,8 +3994,7 @@
         @media(max-width:700px){
             .radar-page-time-actions{width:100%;justify-content:space-between;gap:6px;flex-wrap:wrap}
             .radar-page-time{font-size:12px;padding-top:0;text-align:left;white-space:normal;flex:1 1 100%}
-            .radar-lightning-toggle,.radar-heavy-rain-toggle{min-height:32px;padding:6px 8px;font-size:10px;flex:0 0 auto}
-            /* 強風開關移至雷達時間列，採較精簡尺寸，盡量與大雨／閃電按鈕並排 */
+            .radar-lightning-toggle,.radar-heavy-rain-toggle{min-height:32px;padding:6px 8px;font-size:10px;flex:0 0 auto}            /* 強風開關移至雷達時間列，採較精簡尺寸，盡量與大雨／閃電按鈕並排 */
             .radar-page-time-actions .radar-strong-wind-toggle{min-height:32px;padding:5px 6px;font-size:9px;gap:4px;flex:0 0 auto}
         }
 
@@ -4997,8 +4993,7 @@ body.japan-mode .tab-btn.active{background:linear-gradient(135deg,#06b6d4,#3b82f
     position:relative;
     width:100%;
     height:300px;
-    min-width:0;
-}
+    min-width:0;}
 .weekly-forecast-trend-canvas canvas{
     display:block;
     width:100%!important;
@@ -5997,8 +5992,7 @@ html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .simple-typhoon-legend {
   color:#183247 !important;
   box-shadow:0 5px 18px rgba(28,62,85,.12) !important;
 }
-html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .simple-typhoon-legend *,
-html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .xuan-map-bottom button,
+html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .simple-typhoon-legend *,html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .xuan-map-bottom button,
 html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .xuan-map-toolbar button {
   text-shadow:none !important;
 }
@@ -6997,8 +6991,7 @@ html[data-theme="light"] .xuan-intensity-leaflet-popup .leaflet-popup-close-butt
 }
 [data-theme="light"] .quick-ranking-section .quick-ranking-card{
   background:linear-gradient(135deg,var(--extreme-tint),rgba(255,255,255,.96) 78%);
-  box-shadow:0 5px 16px rgba(30,41,59,.055);
-}
+  box-shadow:0 5px 16px rgba(30,41,59,.055);}
 [data-theme="dark"] .quick-ranking-section .quick-ranking-card{
   background:linear-gradient(135deg,var(--extreme-tint),rgba(15,23,42,.92) 78%);
 }
@@ -7921,6 +7914,90 @@ html[data-theme="light"] .xuan-social-card-art .xuan-social-brand-copy span {
 }
 </style>
 
+
+<style id="xuan-premium-visual-refresh">
+:root{
+ --xw-accent:#38bdf8;--xw-accent-2:#818cf8;--xw-glass:rgba(15,23,42,.76);
+ --xw-shadow:0 18px 48px rgba(2,8,23,.22);
+}
+html{scroll-behavior:smooth;scroll-padding-top:18px}
+body{
+ background:
+ radial-gradient(ellipse at 12% 0%,rgba(14,165,233,.15),transparent 34%),
+ radial-gradient(ellipse at 92% 12%,rgba(99,102,241,.13),transparent 32%),
+ var(--bg-color)!important;
+}
+[data-theme="light"] body{
+ background:
+ radial-gradient(ellipse at 12% 0%,rgba(14,165,233,.10),transparent 34%),
+ radial-gradient(ellipse at 92% 12%,rgba(99,102,241,.08),transparent 32%),
+ var(--bg-color)!important;
+}
+.container{width:min(1180px,100%);max-width:1180px;margin:0 auto;padding:clamp(8px,1.8vw,20px)}
+#countrySwitcher{
+ position:relative;isolation:isolate;overflow:hidden;
+ padding:18px 20px!important;margin-bottom:16px!important;
+ border:1px solid var(--panel-border)!important;border-radius:22px!important;
+ background:linear-gradient(115deg,rgba(14,165,233,.12),rgba(99,102,241,.09)),var(--panel-bg)!important;
+ box-shadow:var(--xw-shadow);backdrop-filter:blur(18px);
+}
+#countrySwitcher:after{
+ content:"";position:absolute;width:210px;height:210px;right:-95px;top:-130px;
+ border-radius:50%;background:rgba(56,189,248,.12);filter:blur(5px);pointer-events:none;z-index:-1;
+}
+.site-brand-title{font-size:clamp(17px,2.2vw,23px)!important;letter-spacing:.2px}
+.site-brand-subtitle{letter-spacing:.8px!important}
+.site-brand-icon{filter:drop-shadow(0 5px 12px rgba(56,189,248,.25))}
+.page-tabs{
+ position:sticky;top:8px;z-index:900;flex-wrap:nowrap!important;overflow-x:auto;
+ scrollbar-width:none;-webkit-overflow-scrolling:touch;
+ padding:7px!important;gap:6px!important;margin-bottom:18px!important;
+ border:1px solid var(--panel-border)!important;border-radius:18px!important;
+ background:color-mix(in srgb,var(--panel-bg) 88%,transparent)!important;
+ box-shadow:0 10px 30px rgba(2,8,23,.14);backdrop-filter:blur(18px);
+}
+.page-tabs::-webkit-scrollbar{display:none}
+.tab-btn{flex:0 0 auto!important;min-height:42px;padding:10px 14px!important;font-size:12px!important;border-radius:12px!important}
+.tab-btn:not(.active):hover{background:rgba(56,189,248,.09);color:var(--text-color)}
+.content-panel.active{animation:xw-panel-in .28s ease both}
+@keyframes xw-panel-in{from{opacity:.65;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.modern-dashboard{
+ border:1px solid var(--panel-border)!important;border-radius:26px!important;
+ padding:clamp(15px,2.4vw,28px)!important;
+ background:linear-gradient(145deg,color-mix(in srgb,var(--panel-bg) 96%,#38bdf8 4%),var(--panel-bg))!important;
+ box-shadow:var(--xw-shadow)!important;backdrop-filter:blur(18px);
+}
+.header{gap:12px}
+.header-title{letter-spacing:0!important}
+.header-title h2{letter-spacing:-.35px}
+.info-card-item,.ranking-section-box,.my-location-widget{
+ border-radius:18px!important;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.info-card-item{border:1px solid var(--panel-border)!important;box-shadow:0 8px 22px rgba(2,8,23,.08)}
+.info-card-item:hover{transform:translateY(-2px);border-color:rgba(56,189,248,.3)!important;box-shadow:0 12px 26px rgba(2,8,23,.13)}
+.segment-control,.controls-grid,.weather-status-banner{border-radius:16px}
+button,select,input{accent-color:#0ea5e9}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #38bdf8!important;outline-offset:2px}
+.leaflet-container{border-radius:16px}
+@media(min-width:900px){
+ .realtime-info-box{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .modern-dashboard{margin-bottom:20px}
+}
+@media(max-width:700px){
+ .container{padding:7px}
+ #countrySwitcher{padding:14px!important;border-radius:18px!important}
+ .page-tabs{top:4px;margin-left:-1px;margin-right:-1px}
+ .tab-btn{padding:9px 11px!important;min-height:40px}
+ .modern-dashboard{border-radius:21px!important;padding:14px!important}
+ .header{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ .content-panel.active{animation:none}
+ *,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+</style>
+
 </head>
 <body>
 
@@ -7997,8 +8074,7 @@ html[data-theme="light"] .xuan-social-card-art .xuan-social-brand-copy span {
                 <div class="site-brand-text">
                     <div class="site-brand-title">Xuan 即時氣象監測網</div>
                     <div class="site-brand-subtitle">即時天氣•防災資訊•全台觀測</div>
-                </div>
-            </div>
+                </div>            </div>
             <div class="weather-mode-wrap">
                 <span class="country-switcher-label">天氣模式</span>
                 <div class="country-switcher-buttons">
@@ -8997,8 +9073,7 @@ html[data-theme="light"] .xuan-social-card-art .xuan-social-brand-copy span {
                     <div class="today-ranking-title-main">
                         <i class="fas fa-trophy today-ranking-trophy" style="color: #f59e0b;" aria-hidden="true"></i>
                         <span class="today-ranking-heading-text">今日即時極值 TOP 10</span>
-                        <span class="today-ranking-title-actions">
-                            <span id="todayHighTempCount" class="today-high-temp-count" aria-live="polite" role="button" tabindex="0" title="查看各縣市 ≥35°C 測站數" onclick="openTodayHighTempCountyModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTodayHighTempCountyModal();}">≥35°C：--站</span>
+                        <span class="today-ranking-title-actions">                            <span id="todayHighTempCount" class="today-high-temp-count" aria-live="polite" role="button" tabindex="0" title="查看各縣市 ≥35°C 測站數" onclick="openTodayHighTempCountyModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTodayHighTempCountyModal();}">≥35°C：--站</span>
                             <button type="button" id="todayRankingViewToggle" class="ranking-view-toggle today-ranking-view-toggle" onclick="toggleTodayRankingDisplayMode()" aria-pressed="false" title="切換為列表顯示">
                                 <i class="fas fa-th-large"></i><span id="todayRankingViewToggleLabel">卡片顯示</span>
                             </button>
@@ -9997,8 +10072,7 @@ html[data-theme="light"] .xuan-social-card-art .xuan-social-brand-copy span {
                 if (result.status !== 'fulfilled' || !result.value?.ok) continue;
                 try {
                     const payload = await result.value.json();
-                    const normalized = normalizeCwaPayload(payload, dataset);
-                    candidates.push({ source, data: normalized });
+                    const normalized = normalizeCwaPayload(payload, dataset);                    candidates.push({ source, data: normalized });
                 } catch (e) {
                     console.warn(`CWA ${dataset} ${source} 資料來源解析失敗：`, e);
                 }
@@ -10997,8 +11071,7 @@ const longWave = longWaveResult.status === 'fulfilled'
         // ==================== 空氣品質 AQI ====================
         let airQualityData = [];
         let airQualityLoading = false;
-        let airQualityDetailChart = null;
-        let currentAirQualityDetailKey = null;
+        let airQualityDetailChart = null;        let currentAirQualityDetailKey = null;
         const AIR_QUALITY_HISTORY_STORAGE_KEY = 'moenv_aqi_history_v1';
         const AIR_QUALITY_HISTORY_MAX_MS = 24 * 60 * 60 * 1000;
         let airQualityHistoryCache = {};
@@ -11997,8 +12070,7 @@ const longWave = longWaveResult.status === 'fulfilled'
                         // 保留 W-C0033-001 官方「現象（大雨／豪雨）」與縣市／平地／山區的對應，
                         // 讓豪大雨卡片可以像氣象署一樣分級顯示，而不是把所有鄉鎮名稱塞在同一行。
                         rainAreaLevels:[],
-                        details:new Set(),
-                        alertColor:item.alertColor || (/紅色|紅燈/.test(`${item.significance||''} ${item.detail||''}`)?'紅色':/橙色|橙燈/.test(`${item.significance||''} ${item.detail||''}`)?'橙色':/黃色|黃燈/.test(`${item.significance||''} ${item.detail||''}`)?'黃色':''),
+                        details:new Set(),                        alertColor:item.alertColor || (/紅色|紅燈/.test(`${item.significance||''} ${item.detail||''}`)?'紅色':/橙色|橙燈/.test(`${item.significance||''} ${item.detail||''}`)?'橙色':/黃色|黃燈/.test(`${item.significance||''} ${item.detail||''}`)?'黃色':''),
                         syncTime:''
                     });
                 }
@@ -12997,8 +13069,7 @@ const longWave = longWaveResult.status === 'fulfilled'
                             resolve(window.topojson);
                             return;
                         }
-                        if(sourceIndex>=sources.length){
-                            reject(new Error('TopoJSON 程式庫的 CDN 備援來源皆載入失敗'));
+                        if(sourceIndex>=sources.length){                            reject(new Error('TopoJSON 程式庫的 CDN 備援來源皆載入失敗'));
                             return;
                         }
                         const script=document.createElement('script');
@@ -13997,8 +14068,7 @@ const longWave = longWaveResult.status === 'fulfilled'
                     const published = getCwaLongWavePublishedValue(data);
                     const ageMs = published ? Date.now() - Date.parse(published) : NaN;
                     return Number.isFinite(ageMs) && ageMs >= 0 && ageMs <= 24 * 60 * 60 * 1000;
-                };
-                const longWaveInfo = longWaveRaw && typeof longWaveRaw.active === 'boolean'
+                };                const longWaveInfo = longWaveRaw && typeof longWaveRaw.active === 'boolean'
                     ? (longWaveRaw.active === false || isRecentLongWaveMessage(longWaveRaw) ? longWaveRaw : null)
                     : (isRecentLongWaveMessage(latestLongWaveFallback) ? latestLongWaveFallback : null);
                 window.__cwaLatestLongWaveInfo = longWaveInfo;
@@ -14997,8 +15067,7 @@ const longWave = longWaveResult.status === 'fulfilled'
                             if (!source || typeof source !== 'object') continue;
                             for (const field of fields) {
                                 const parsed = normalizeAlertTime(source[field]);
-                                if (parsed) return parsed;
-                            }
+                                if (parsed) return parsed;                            }
                         }
                         // 只有資料確實未提供發布時間時才退回官方生效時間；不使用本站抓取時間冒充發布時間。
                         for (const source of sources) {
@@ -15997,8 +16066,7 @@ function japanAmedasMapTempColor(v){
                 japanAmedasMapRenderMarkers();
                 japanAmedasMapUpdateLegend();
                 syncJapanAmedasLayerSwitcherVisibility();
-                japanAmedasMapUpdateLegend();
-                const timeTag=document.getElementById('japanAmedasMapObsTimeTag');
+                japanAmedasMapUpdateLegend();                const timeTag=document.getElementById('japanAmedasMapObsTimeTag');
                 if(timeTag)timeTag.textContent=`JMA 觀測時間： ${japanAmedasObservedText(timestamp)}`;
                 const status=document.getElementById('japanAmedasMapStatus');
                 if(status)status.textContent='JMA AMeDAS 即時測站資料';
@@ -16997,8 +17065,7 @@ const cwaTemperatureHistoryRemoteNameCache = new Map();
                 afterDraw(chart) {
                     const element = chart.getDatasetMeta(0)?.data?.[selectedIndex];
                     const area = chart.chartArea;
-                    if (!element || !area || !Number.isFinite(element.x) || !Number.isFinite(element.y)) return;
-                    const ctx = chart.ctx;
+                    if (!element || !area || !Number.isFinite(element.x) || !Number.isFinite(element.y)) return;                    const ctx = chart.ctx;
                     ctx.save();
 
                     // 與 24 小時趨勢圖一致：紅色垂直虛線、紅點及白底紅框數值提示。
@@ -17997,8 +18064,7 @@ async function fetchAllStationData(isManualRefresh = false, callback = null, pre
             else if(type==='quake'){switchMainPage('quake');}
             else if(type==='gust'){switchMainPage('dashboard');if(typeof switchRankingTab==='function')setTimeout(()=>switchRankingTab('windGust'),120);}
         }
-        document.addEventListener('click',function(event){
-            const item=event.target.closest('.weather-news-item'); if(item)openWeatherNewsDetail(item.dataset.newsType);
+        document.addEventListener('click',function(event){            const item=event.target.closest('.weather-news-item'); if(item)openWeatherNewsDetail(item.dataset.newsType);
         });
         document.addEventListener('DOMContentLoaded',function(){
             updateWeatherNewsTicker();
@@ -18997,8 +19063,7 @@ async function fetchAllStationData(isManualRefresh = false, callback = null, pre
                     const old = byKey.get(String(key));
                     if (!old || aqi > old.aqi) {
                         byKey.set(String(key), {
-                            key: String(key),
-                            aqi,
+                            key: String(key),                            aqi,
                             siteName: '',
                             county: '',
                             pollutant: '',
@@ -19997,8 +20062,7 @@ async function fetchAllStationData(isManualRefresh = false, callback = null, pre
         // 從所有即時資料來源尋找測站，避免排行榜測站因資料集不同而無法跳轉。
         function getStationForDetailById(stationId) {
             const id = String(stationId ?? '');
-            const sources = [
-                weatherStationData,
+            const sources = [                weatherStationData,
                 realtimeRankingStationData,
                 cwaRainfallRankingData
             ];
@@ -20997,8 +21061,7 @@ let currentQuakeFilter = 'all';
         let quakeMagnitudeChartInstance = null;
         let earthquakeHistoryData = [];
         let earthquakeHistoryLoaded = false;
-        let earthquakeHistoryChecked = false;
-        let earthquakeHistorySourceLabel = '歷史資料庫尚未載入';
+        let earthquakeHistoryChecked = false;        let earthquakeHistorySourceLabel = '歷史資料庫尚未載入';
 
         // 統一讀取中央氣象署巢狀報告與歷史 JSON 扁平紀錄。
         // 所有統計、圖表與歷史查詢共用這組標準化欄位。
@@ -21997,8 +22060,7 @@ let currentQuakeFilter = 'all';
                         fill:false,
                         opacity:.95,
                         interactive:false
-                    }).addTo(map);
-                    simpleTyphoonLayers.push(forecastStorm10Layer);
+                    }).addTo(map);                    simpleTyphoonLayers.push(forecastStorm10Layer);
                     window.simpleTyphoonMapLayers.storm.push(forecastStorm10Layer);
                 }
 
@@ -22997,8 +23059,7 @@ let currentQuakeFilter = 'all';
                 quakeIntensityOverlayControl.addTo(quakeMonitorMap);
 
                 // 各地震度分布地圖內：可摺疊的縣市／鄉鎮／測站詳細震度面板。
-                // 僅新增地圖控制項，不更動原本官方資料解析與震度標記。
-                if (window._xuanQuakeStationDetailControl && quakeMonitorMap) {
+                // 僅新增地圖控制項，不更動原本官方資料解析與震度標記。                if (window._xuanQuakeStationDetailControl && quakeMonitorMap) {
                     try { quakeMonitorMap.removeControl(window._xuanQuakeStationDetailControl); } catch (_) {}
                     window._xuanQuakeStationDetailControl = null;
                 }
@@ -23997,8 +24058,7 @@ const popVal = getPopForStation(county, town);
                 const midpoint = (area.left + area.right) / 2;
                 // true 表示提示框放在選取點左側；false 表示放在選取點右側。
                 chartInstance.$xuanHumidityCalloutOnLeft = element.x >= midpoint;
-            };
-            // 上方逐時資料列與曲線選取點共用同一個索引，滑動曲線時同步更新紅色卡片並將其帶入可視範圍。
+            };            // 上方逐時資料列與曲線選取點共用同一個索引，滑動曲線時同步更新紅色卡片並將其帶入可視範圍。
             const syncHumidityPointList = index => {
                 if (!list) return;
                 // 只同步真正對應資料點的按鈕；17:00 的 --% 起始佔位卡沒有資料索引，
@@ -24997,8 +25057,7 @@ const popVal = getPopForStation(county, town);
                     ctx.setLineDash([7, 7]);
                     ctx.lineWidth = 2;
                     ctx.strokeStyle = 'rgba(220,38,38,.48)';
-                    ctx.moveTo(element.x, area.top);
-                    ctx.lineTo(element.x, area.bottom);
+                    ctx.moveTo(element.x, area.top);                    ctx.lineTo(element.x, area.bottom);
                     ctx.stroke();
                     ctx.setLineDash([]);
                     ctx.beginPath();
@@ -25997,8 +26056,7 @@ const popVal = getPopForStation(county, town);
                         return;
                     }
 
-                    officialExtremePoints.push({
-                        ts,
+                    officialExtremePoints.push({                        ts,
                         temp: Number(value.toFixed(1)),
                         officialExtreme: kind
                     });
@@ -26997,8 +27055,7 @@ const popVal = getPopForStation(county, town);
                 });
             };
             if (stationPointList) {
-                const realPoints = chartPoints
-                    .map((point, index) => ({point, index}))
+                const realPoints = chartPoints                    .map((point, index) => ({point, index}))
                     .filter(item => !item.point?.displayOnly && Number.isFinite(Number(item.point?.x)) && Number.isFinite(Number(item.point?.y)));
                 stationPointList.innerHTML = realPoints.map(({point,index}) => {
                     const time = formatStationPointTime(point.x);
@@ -27997,8 +28054,7 @@ const popVal = getPopForStation(county, town);
             const mainMapLocationControl = L.control({ position: 'bottomright' });
             mainMapLocationControl.onAdd = function(){
                 const container = L.DomUtil.create('div','leaflet-control main-map-location-control');
-                const button = L.DomUtil.create('button','main-map-location-button',container);
-                button.type='button';
+                const button = L.DomUtil.create('button','main-map-location-button',container);                button.type='button';
                 button.title='定位所在地';
                 button.setAttribute('aria-label','定位所在地');
                 button.innerHTML='<i class="fas fa-location-crosshairs"></i>';
@@ -28997,8 +29053,7 @@ const popVal = getPopForStation(county, town);
                 </div>`;
                 L.marker([item.lat,item.lon], {
                     pane: 'markerPane', interactive: false, keyboard: false,
-                    zIndexOffset: 10000-index,
-                    icon: L.divIcon({className:'rain-top10-callout-icon',html,iconSize:[1,1],iconAnchor:[0,0]})
+                    zIndexOffset: 10000-index,                    icon: L.divIcon({className:'rain-top10-callout-icon',html,iconSize:[1,1],iconAnchor:[0,0]})
                 }).addTo(rainfallTop10CalloutLayer);
             });
         }
@@ -29997,8 +30052,7 @@ const popVal = getPopForStation(county, town);
             let modal = document.getElementById('xuanTemperatureRainfallExtremesModal');
             if (modal) return modal;
             modal = document.createElement('div');
-            modal.id = 'xuanTemperatureRainfallExtremesModal';
-            modal.className = 'xuan-temp-social-modal';
+            modal.id = 'xuanTemperatureRainfallExtremesModal';            modal.className = 'xuan-temp-social-modal';
             modal.innerHTML = `
                 <button type="button" class="xuan-temp-social-close" aria-label="關閉圖卡"><i class="fas fa-times"></i></button>
                 <div class="xuan-temp-social-stage">
@@ -30997,8 +31051,7 @@ const popVal = getPopForStation(county, town);
                     const town = String(rainStation?.GeoInfo?.TownName || '');
                     const name = String(rainStation?.StationName || rainStation?.StationId || '雨量測站');
                     const currentZoom = map.getZoom();
-                    const showLabel = mapValueLabelsEnabled && currentZoom >= 10;
-                    const displayVal = rainValue === 0 ? '0' : rainValue.toFixed(1);
+                    const showLabel = mapValueLabelsEnabled && currentZoom >= 10;                    const displayVal = rainValue === 0 ? '0' : rainValue.toFixed(1);
                     const rainColor = currentMapMode === 'rain' ? getRainColor(rainValue) : getRainAccumulatedColor(rainValue);
 
                     let rainOnlyIconHtml = `<div style="background-color:${rainColor};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;position:relative;">`;
@@ -31997,8 +32050,7 @@ const popVal = getPopForStation(county, town);
                     locateRadarUser(button);
                 });
                 return container;
-            };
-            radarLocationControl.addTo(radarMap);
+            };            radarLocationControl.addTo(radarMap);
 
             if(L.control.fullscreen){
                 const radarFullscreenControl = L.control.fullscreen({position:'bottomright',forceSeparateButton:true}).addTo(radarMap);
@@ -32997,8 +33049,7 @@ async function loadLocalWeatherReports(){
 }
 .cwa-rain-lamp-row strong{
     grid-column:2;
-    grid-row:1;
-    white-space:nowrap;
+    grid-row:1;    white-space:nowrap;
     font-weight:800;
 }
 .cwa-rain-lamp-row .cwa-rain-lamp-areas{
@@ -33997,8 +34048,7 @@ function passAqiMapFilter(value, filterValue){
                 borderColor:'#ef4444',
                 backgroundColor:'rgba(239,68,68,.08)',
                 pointBackgroundColor:'#ef4444',
-                pointBorderColor:isLight?'#fff':'#0f172a',
-                pointRadius:3,
+                pointBorderColor:isLight?'#fff':'#0f172a',                pointRadius:3,
                 pointHoverRadius:5,
                 borderWidth:2.5,
                 tension:.38,
@@ -34997,8 +35047,7 @@ function passAqiMapFilter(value, filterValue){
         const countySelect =
             document.getElementById('weeklyForecastCounty');
 
-        const townSelect =
-            document.getElementById('weeklyForecastTown');
+        const townSelect =            document.getElementById('weeklyForecastTown');
 
         if(!countySelect || !townSelect) return;
 
@@ -35997,8 +36046,7 @@ function passAqiMapFilter(value, filterValue){
           tooltip:{
             backgroundColor:isLight?'rgba(255,255,255,.97)':'rgba(15,23,42,.97)',
             titleColor:isLight?'#0f172a':'#f8fafc',
-            bodyColor:isLight?'#334155':'#e2e8f0',
-            borderColor:isLight?'rgba(100,116,139,.25)':'rgba(148,163,184,.22)',
+            bodyColor:isLight?'#334155':'#e2e8f0',            borderColor:isLight?'rgba(100,116,139,.25)':'rgba(148,163,184,.22)',
             borderWidth:1,
             padding:10,
             callbacks:{
@@ -36997,8 +37045,7 @@ function passAqiMapFilter(value, filterValue){
         const titleSource = document.getElementById(titleSourceId);
         const subtitleSource = document.getElementById(subtitleSourceId);
         const title = document.getElementById(titleId);
-        const subtitle = document.getElementById(subtitleId);
-        if (title && titleSource) title.textContent = titleSource.textContent;
+        const subtitle = document.getElementById(subtitleId);        if (title && titleSource) title.textContent = titleSource.textContent;
         if (subtitle && subtitleSource) subtitle.textContent = subtitleSource.textContent;
 
         if (current) { try { current.destroy(); } catch (e) {} }
@@ -37997,8 +38044,7 @@ function passAqiMapFilter(value, filterValue){
         lastValidStats={count:temps.length,avg:avg.toFixed(1),max:max.toFixed(1),min:min.toFixed(1),obsTime:getObservationTime(stations)};
         $('temperatureImagesStationCount').textContent=String(temps.length);
         $('temperatureImagesAverage').textContent=avg.toFixed(1)+'°C';
-        $('temperatureImagesRange').textContent=max.toFixed(1)+'° / '+min.toFixed(1)+'°';
-        $('temperatureImagesObsTime').textContent=lastValidStats.obsTime;
+        $('temperatureImagesRange').textContent=max.toFixed(1)+'° / '+min.toFixed(1)+'°';        $('temperatureImagesObsTime').textContent=lastValidStats.obsTime;
         setStatus('使用氣象署實際觀測資料');
     }
     function ensureMap(){
@@ -38997,8 +39043,7 @@ html[data-theme="dark"] #xuanEntryList .xuan-typhoon-warning-badge{
         if(!grid||!ph||!tm||!st)return;
         if(btn)btn.disabled=true;
         grid.innerHTML='';grid.style.display='block';grid.style.width='100%';grid.style.lineHeight='0';ph.style.display='flex';ph.textContent='正在載入中央氣象署真實色影像…';st.textContent='正在連線至中央氣象署公開圖檔';
-        const cfg={
-          global:{label:'全球',url:'https://www.cwa.gov.tw/Data/satellite/FDK_TRGB_2750/FDK_TRGB_2750.jpg'},
+        const cfg={          global:{label:'全球',url:'https://www.cwa.gov.tw/Data/satellite/FDK_TRGB_2750/FDK_TRGB_2750.jpg'},
           eastasia:{label:'東亞',url:'https://www.cwa.gov.tw/Data/satellite/LCC_TRGB_2750/LCC_TRGB_2750.jpg'},
           taiwan:{label:'台灣周邊',url:'https://www.cwa.gov.tw/Data/satellite/TWI_TRGB_1350/TWI_TRGB_1350.jpg'}
         }[xuanTrueView]||{label:'全球',url:'https://www.cwa.gov.tw/Data/satellite/FDK_TRGB_2750/FDK_TRGB_2750.jpg'};
@@ -39997,8 +40042,7 @@ html[data-theme="dark"] #xuanThemeToggleFloat:hover{background:#29465f;border-co
     setTimeout(()=>window.dispatchEvent(new Event('resize')),350);
     if(window.L&&map._leaflet_id){setTimeout(()=>{try{const inst=window.typhoonMap||window.simpleTyphoonMapInstance;if(inst&&inst.invalidateSize)inst.invalidateSize()}catch(e){}},500)}
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initXuanTyphoonGIS);else initXuanTyphoonGIS();
-  // The panel can be inserted/revealed by the site's existing navigation after page startup.
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initXuanTyphoonGIS);else initXuanTyphoonGIS();  // The panel can be inserted/revealed by the site's existing navigation after page startup.
   setTimeout(initXuanTyphoonGIS,900);
   document.addEventListener('click',function(e){if(e.target.closest('[data-target="typhoonPanel"],[data-panel="typhoonPanel"],#typhoonNavBtn'))setTimeout(initXuanTyphoonGIS,150)});
 })();
@@ -40997,8 +41041,7 @@ html, body {
 .xuan-suspension-table a{color:#38bdf8;text-decoration:none;font-weight:800;white-space:nowrap}
 .xuan-suspension-table a:hover{text-decoration:underline}
 .xuan-suspension-empty{padding:28px 12px;text-align:center;color:var(--text-muted);font-size:12px}
-.xuan-suspension-empty[hidden]{display:none}
-.xuan-suspension-empty i{display:block;font-size:25px;margin-bottom:7px}
+.xuan-suspension-empty[hidden]{display:none}.xuan-suspension-empty i{display:block;font-size:25px;margin-bottom:7px}
 .xuan-suspension-empty strong,.xuan-suspension-empty span{display:block}
 .xuan-suspension-empty strong{color:var(--text-color);margin-bottom:4px}
 .xuan-suspension-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:7px;padding:12px 16px;background:var(--tab-bg);border-top:1px solid var(--panel-border);font-size:10px;color:var(--text-muted)}
@@ -41997,8 +42040,7 @@ html[data-theme="light"] .xuan-popup-v2 .station-popup-weather strong { color: #
       const end=g.endTime?new Date(g.endTime).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'--';
       const severe=/豪雨|大豪雨|超大豪雨/.test(String(g.significance||''))||type==='typhoon';
       return `<div class="xuan-local-alert-item${severe?' is-severe':''}"><div class="xuan-local-alert-icon">${icon[type]||'⚠️'}</div><div class="xuan-local-alert-copy"><strong>${title[type]||'氣象特報'}｜${String(g.significance||'官方警特報')}</strong><span>影響區域：${areas||'依官方資料'}<br>有效時間：${start} 至 ${end}</span></div><span class="xuan-local-alert-status">生效中</span></div>`;
-    }).join('');
-    box.innerHTML=html;
+    }).join('');    box.innerHTML=html;
   }
   function acceptObservation(obs){
     if(!obs||typeof obs!=='object')return;
@@ -42997,8 +43039,7 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
   #localForecastPanel .local-hourly-title-inline .local-hourly-main-title,
   #localHourlyTempTrendTitle .local-hourly-trend-main-title {
     font-size: 15px;
-  }
-  #localForecastPanel .local-hourly-title-inline #localHourlyLocation,
+  }  #localForecastPanel .local-hourly-title-inline #localHourlyLocation,
   #localHourlyTempTrendTitle .local-hourly-trend-station {
     font-size: 10px !important;
   }
