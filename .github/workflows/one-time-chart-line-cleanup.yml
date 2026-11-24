@@ -1,0 +1,129 @@
+name: One-time chart line cleanup and Pages deploy
+
+on:
+  push:
+    paths:
+      - ".github/workflows/one-time-chart-line-cleanup.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: chart-line-cleanup-pages
+  cancel-in-progress: false
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Replace overlapping filled ranges with clean temperature lines
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path("index.html")
+          html = p.read_text(encoding="utf-8")
+          start_marker = "        // 曲線模式沿用柱狀圖完全相同的每日最低／最高溫資料，"
+          start = html.find(start_marker)
+          if start < 0:
+              raise SystemExit("找不到曲線圖資料區塊起點，停止修改，避免誤改其他程式。")
+          end_marker = "        const config={"
+          end = html.find(end_marker, start)
+          if end < 0:
+              raise SystemExit("找不到圖表 config 區塊，停止修改。")
+          replacement = """        // 曲線模式沿用柱狀圖完全相同的每日最低／最高溫資料。
+          // 不使用範圍填色，避免四個城市的高低溫區域重疊後混色。
+          // 實線代表最高溫、虛線代表最低溫；同一城市兩條線使用相同顏色。
+          const chartDatasets=countyRegionalTemperatureChartMode==='line'
+              ? datasets.flatMap((dataset,di)=>{
+                  const region=regions[di];
+                  const lows=dataset.data.map(range=>Array.isArray(range)?range[0]:null);
+                  const highs=dataset.data.map(range=>Array.isArray(range)?range[1]:null);
+                  return [
+                      {
+                          label:`${region.representative}最低溫`,data:lows,
+                          borderColor:region.color,backgroundColor:region.color,
+                          borderWidth:1.8,borderDash:[5,4],tension:.25,spanGaps:false,
+                          pointRadius:2.5,pointHoverRadius:5,pointBackgroundColor:region.color,
+                          pointBorderColor:isLight?'#fff':'#0f172a',pointBorderWidth:1,fill:false,
+                          order:di*2
+                      },
+                      {
+                          label:`${region.representative}最高溫`,data:highs,
+                          borderColor:region.color,backgroundColor:region.color,
+                          borderWidth:2.5,borderDash:[],tension:.25,spanGaps:false,
+                          pointRadius:2.5,pointHoverRadius:5,pointBackgroundColor:region.color,
+                          pointBorderColor:isLight?'#fff':'#0f172a',pointBorderWidth:1,fill:false,
+                          order:di*2+1
+                      }
+                  ];
+              })
+              : datasets;
+
+          """
+          html = html[:start] + replacement + html[end:]
+          p.write_text(html, encoding="utf-8")
+          print("Updated chart line rendering; no area fill remains in this block.")
+          PY
+
+      - name: Validate all inline JavaScript
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess, tempfile
+          html = Path("index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script\\b[^>]*>([\\s\\S]*?)</script\\s*>", html, re.I)
+          checked = 0
+          for i, script in enumerate(scripts, 1):
+              if not script.strip():
+                  continue
+              result = subprocess.run(["node", "--check"], input=script, text=True, capture_output=True)
+              if result.returncode:
+                  raise SystemExit(f"Inline script {i} failed syntax check:\\n{result.stderr}")
+              checked += 1
+          print(f"JavaScript syntax passed: {checked} inline script blocks.")
+          PY
+
+      - name: Commit chart correction to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "No source change detected; stopping rather than creating an empty commit."
+            exit 1
+          fi
+          git commit -m "Fix weekly city temperature line chart clarity"
+          git push origin HEAD:main
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build site with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
