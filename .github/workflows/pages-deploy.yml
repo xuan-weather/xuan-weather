@@ -126,3 +126,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+# Keep the Pages workflow commit in sync with the latest site source.
