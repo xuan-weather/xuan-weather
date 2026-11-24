@@ -16400,6 +16400,47 @@ function japanAmedasMapTempColor(v){
             return `${hours}:${minutes}`;
         }
         
+        // 氣溫測站有效性檢查：排除缺值、儀器故障及儀器調校狀態。
+        // CWA 常見缺值代碼 X、-99、-98 不可視為有效氣溫；
+        // 同時檢查可能出現於測站／氣象要素狀態欄位的故障與調校文字。
+        function hasInvalidTemperatureObservation(station, parsedData) {
+            if (!Number.isFinite(Number(parsedData?.temp))) return true;
+
+            const we = station?.WeatherElement || {};
+            const rawTemperature = we.AirTemperature ?? we.TEMP;
+            const rawText = rawTemperature == null ? '' : String(rawTemperature).trim();
+
+            if (/^(?:x|-99(?:\\.0+)?|-98(?:\\.0+)?|--|無資料|缺測|儀器故障|儀器調校)$/i.test(rawText)) {
+                return true;
+            }
+
+            const statusValues = [
+                we.AirTemperatureStatus,
+                we.TemperatureStatus,
+                we.TempStatus,
+                we.AirTemperatureQuality,
+                we.TemperatureQuality,
+                we.QualityControl,
+                station?.AirTemperatureStatus,
+                station?.TemperatureStatus,
+                station?.TempStatus,
+                station?.InstrumentStatus,
+                station?.StationStatus,
+                station?.StationStatusDescription,
+                we.Weather,
+                we.WeatherDescription,
+                we.Status
+            ];
+
+            return statusValues.some(value => {
+                if (value === undefined || value === null) return false;
+                const text = String(value).trim();
+                if (!text) return false;
+                return /^(?:x|-99(?:\\.0+)?|-98(?:\\.0+)?)$/i.test(text) ||
+                    /儀器.{0,6}(?:故障|調校|校正)|故障|調校|校正中|維護中|資料異常|無效|fault|calibrat|invalid/i.test(text);
+            });
+        }
+
         function parseStationElement(station) {
             const we = station.WeatherElement || {};
             let rawObsTime = station.ObsTime?.DateTime || station.ObsTime || '--';
@@ -30743,9 +30784,9 @@ const popVal = getPopForStation(county, town);
                         ? getCwaTodayTemperatureRange(dailyExtremeStation) : NaN;
                     if (currentMapMode === 'tempRange' && !Number.isFinite(dailyTemperatureRange)) return;
 
-                    // 氣溫地圖只顯示「有實際氣溫資料」的測站。
-                    // 沒有 CWA 氣溫資料的站，不在氣溫圖層畫出圓點，避免出現空值測站。
-                    if (currentMapMode === 'temp' && !Number.isFinite(data.temp)) return;
+                    // 氣溫地圖只顯示有有效氣溫、且儀器狀態正常的測站。
+                    // 缺值、儀器故障及儀器調校站不繪製灰色圓點；其他圖層不受影響。
+                    if (currentMapMode === 'temp' && hasInvalidTemperatureObservation(station, data)) return;
                     const apparentTemperature = currentMapMode === 'apparent'
                         ? calculateObservedApparentTemperature(station, data) : NaN;
                     if (currentMapMode === 'apparent' && !Number.isFinite(apparentTemperature)) return;
