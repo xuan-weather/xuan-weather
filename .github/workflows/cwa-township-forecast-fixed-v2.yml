@@ -17,13 +17,13 @@ concurrency:
 jobs:
   fetch-township-forecast:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Check CWA API secret
         env:
@@ -36,7 +36,7 @@ jobs:
             exit 1
           }
 
-      - name: Fetch county-specific 2-day township forecast datasets
+      - name: Fetch county-specific 2-day township forecast datasets (parallel)
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         shell: bash
@@ -44,63 +44,103 @@ jobs:
           set -euo pipefail
           mkdir -p data
 
-          # 各縣市「鄉鎮市區」未來 2 天預報；臺南市使用 F-D0047-077。
-          datasets=(
-            F-D0047-001 F-D0047-005 F-D0047-009 F-D0047-013
-            F-D0047-017 F-D0047-021 F-D0047-025 F-D0047-029
-            F-D0047-033 F-D0047-037 F-D0047-041 F-D0047-045
-            F-D0047-049 F-D0047-053 F-D0047-057 F-D0047-061
-            F-D0047-065 F-D0047-069 F-D0047-073 F-D0047-077
-            F-D0047-081 F-D0047-085
-          )
+          # 保留原本 22 個縣市資料集；最多 6 個並行請求，縮短逐一等待時間。
+          python <<'PY'
+          import concurrent.futures
+          import json
+          import os
+          import random
+          import tempfile
+          import time
+          import urllib.error
+          import urllib.request
 
-          for dataset in "${datasets[@]}"; do
-            echo "========================================"
-            echo "正在取得 ${dataset}"
-            cache_buster="$(date +%s%N)"
-            url="https://opendata.cwa.gov.tw/api/v1/rest/datastore/${dataset}?_=${cache_buster}"
-            tmp_file="$(mktemp)"
+          api_key = os.environ.get("CWA_API_KEY", "")
+          if not api_key:
+              raise SystemExit("缺少 Repository Secret：CWA_API_KEY")
 
-            # 先下載到暫存檔並驗證；失敗時不覆蓋 repo 中既有的有效 JSON。
-            curl --fail-with-body --silent --show-error \
-              --retry 5 --retry-all-errors --retry-delay 4 \
-              --connect-timeout 30 --max-time 180 --location \
-              -H "Accept: application/json" \
-              -H "Authorization: ${CWA_API_KEY}" \
-              -H "Cache-Control: no-cache, no-store, max-age=0" \
-              -H "Pragma: no-cache" \
-              "${url}" -o "${tmp_file}"
+          datasets = [
+              "F-D0047-001", "F-D0047-005", "F-D0047-009", "F-D0047-013",
+              "F-D0047-017", "F-D0047-021", "F-D0047-025", "F-D0047-029",
+              "F-D0047-033", "F-D0047-037", "F-D0047-041", "F-D0047-045",
+              "F-D0047-049", "F-D0047-053", "F-D0047-057", "F-D0047-061",
+              "F-D0047-065", "F-D0047-069", "F-D0047-073", "F-D0047-077",
+              "F-D0047-081", "F-D0047-085",
+          ]
 
-            python - "${dataset}" "${tmp_file}" <<'PY'
-          import json, sys
-          dataset, path = sys.argv[1], sys.argv[2]
-          with open(path, encoding="utf-8") as f:
-              data = json.load(f)
-          if not isinstance(data, dict):
-              raise SystemExit(f"{dataset}: 回傳不是 JSON 物件")
-          records = data.get("records") or data.get("Records") or {}
-          groups = records.get("Locations") or records.get("locations") or []
-          if isinstance(groups, dict):
-              groups = [groups]
-          if not isinstance(groups, list) or not groups:
-              raise SystemExit(f"{dataset}: 找不到 records.Locations，拒絕覆蓋有效資料")
-          locations = []
-          for group in groups:
-              if not isinstance(group, dict):
-                  continue
-              rows = group.get("Location") or group.get("location") or []
-              if isinstance(rows, dict):
-                  rows = [rows]
-              if isinstance(rows, list):
-                  locations.extend(rows)
-          if not locations:
-              raise SystemExit(f"{dataset}: 沒有鄉鎮 Location 資料")
-          print(f"{dataset}: JSON 正常；取得 {len(locations)} 個鄉鎮／地區")
+          def fetch(dataset):
+              url = (
+                  "https://opendata.cwa.gov.tw/api/v1/rest/datastore/"
+                  f"{dataset}?_={time.time_ns()}"
+              )
+              request = urllib.request.Request(url, headers={
+                  "Accept": "application/json",
+                  "Authorization": api_key,
+                  "Cache-Control": "no-cache, no-store, max-age=0",
+                  "Pragma": "no-cache",
+                  "User-Agent": "XuanWeather-GitHubActions/1.0",
+              })
+
+              last_error = None
+              for attempt in range(1, 4):
+                  try:
+                      with urllib.request.urlopen(request, timeout=90) as response:
+                          raw = response.read()
+                      data = json.loads(raw.decode("utf-8"))
+                      if not isinstance(data, dict):
+                          raise ValueError("回傳不是 JSON 物件")
+                      records = data.get("records") or data.get("Records") or {}
+                      groups = records.get("Locations") or records.get("locations") or []
+                      if isinstance(groups, dict):
+                          groups = [groups]
+                      if not isinstance(groups, list) or not groups:
+                          raise ValueError("找不到 records.Locations")
+                      locations = []
+                      for group in groups:
+                          if not isinstance(group, dict):
+                              continue
+                          rows = group.get("Location") or group.get("location") or []
+                          if isinstance(rows, dict):
+                              rows = [rows]
+                          if isinstance(rows, list):
+                              locations.extend(rows)
+                      if not locations:
+                          raise ValueError("沒有鄉鎮 Location 資料")
+
+                      # 驗證成功後才以原子方式替換舊檔，避免失敗資料覆蓋有效資料。
+                      fd, temp_path = tempfile.mkstemp(prefix=f".{dataset}.", dir="data")
+                      try:
+                          with os.fdopen(fd, "wb") as output:
+                              output.write(raw)
+                          os.replace(temp_path, f"data/cwa-{dataset}.json")
+                      finally:
+                          if os.path.exists(temp_path):
+                              os.unlink(temp_path)
+
+                      return f"✓ {dataset}：{len(locations)} 個地點"
+                  except Exception as exc:
+                      last_error = exc
+                      if attempt < 3:
+                          delay = attempt * 3 + random.random()
+                          print(f"⚠ {dataset} 第 {attempt} 次失敗，{delay:.1f} 秒後重試：{exc}", flush=True)
+                          time.sleep(delay)
+              raise RuntimeError(f"{dataset} 下載失敗（已重試 3 次）：{last_error}")
+
+          failures = []
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+              futures = {executor.submit(fetch, dataset): dataset for dataset in datasets}
+              for future in concurrent.futures.as_completed(futures):
+                  dataset = futures[future]
+                  try:
+                      print(future.result(), flush=True)
+                  except Exception as exc:
+                      failures.append(str(exc))
+                      print(f"::error::{exc}", flush=True)
+
+          if failures:
+              raise SystemExit(f"{len(failures)} 個資料集下載失敗；既有有效檔案已保留。")
+          print("✓ 22 個縣市鄉鎮 2 天預報資料集下載及初步驗證完成")
           PY
-
-            mv "${tmp_file}" "data/cwa-${dataset}.json"
-          done
-
       - name: Validate downloaded 2-day township datasets only
         shell: bash
         run: |
