@@ -1,0 +1,135 @@
+name: Fix nationwide wind gust ranking
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/patch-wind-gust-ranking.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch ranking source and sorting
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("index.html")
+          source = path.read_text(encoding="utf-8")
+
+          anchor = "        function renderRankings() {"
+          helper = """        // 陣風排行榜資料整併：以 CWA O-A0001 完整測站清單為底，
+        // 再用 O-A0003 同站較新的即時觀測覆蓋；不受 O-A0003 單批回傳站數限制。
+        // 若即時批次缺少某站，保留該站 O-A0001 最近一筆官方陣風觀測。
+        function buildWindGustRankingSource() {
+            const hourly = Array.isArray(latestHourlyStationData) ? latestHourlyStationData : [];
+            const realtime = Array.isArray(latestRealtimeStationData) ? latestRealtimeStationData : [];
+            const byId = new Map();
+
+            hourly.forEach(station => {
+                const id = String(station?.StationId || '').trim();
+                if (id) byId.set(id, station);
+            });
+
+            realtime.forEach(station => {
+                const id = String(station?.StationId || '').trim();
+                if (!id) return;
+                const base = byId.get(id) || {};
+                const baseWeather = base.WeatherElement || base.weatherElement || {};
+                const liveWeather = station.WeatherElement || station.weatherElement || {};
+                const mergedWeather = { ...baseWeather, ...liveWeather };
+                const baseGust = baseWeather.GustInfo || baseWeather.gustInfo || {};
+                const liveGust = liveWeather.GustInfo || liveWeather.gustInfo || {};
+                mergedWeather.GustInfo = { ...baseGust, ...liveGust };
+                byId.set(id, {
+                    ...base,
+                    ...station,
+                    GeoInfo: station.GeoInfo || base.GeoInfo,
+                    ObsTime: station.ObsTime || base.ObsTime,
+                    WeatherElement: mergedWeather
+                });
+            });
+
+            return Array.from(byId.values());
+        }
+
+        // 相容 CWA 欄位大小寫及不同資料包裝位置；排除 -99、-98、X 等缺值。
+        function getRankingWindGust(station) {
+            const weather = station?.WeatherElement || station?.weatherElement || {};
+            const gust = weather.GustInfo || weather.gustInfo || station?.GustInfo || station?.gustInfo || {};
+            const candidates = [
+                gust.PeakGustSpeed, gust.peakGustSpeed,
+                weather.PeakGustSpeed, weather.peakGustSpeed,
+                weather.GUST, weather.WindGust, weather.GustSpeed,
+                station?.PeakGustSpeed, station?.peakGustSpeed
+            ];
+            for (const raw of candidates) {
+                if (raw === null || raw === undefined || String(raw).trim() === '') continue;
+                const value = Number.parseFloat(String(raw).trim());
+                if (Number.isFinite(value) && value >= 0 && value <= 100) return value;
+            }
+            return NaN;
+        }
+
+"""
+          if source.count(anchor) != 1:
+              raise SystemExit(f"renderRankings anchor count mismatch: {source.count(anchor)}")
+          source = source.replace(anchor, helper + anchor, 1)
+
+          old_source = """            const rankingSource = isRainPeriod
+                ? ((Array.isArray(cwaRainfallRankingData) && cwaRainfallRankingData.length > 0) ? cwaRainfallRankingData : [])
+                : ((Array.isArray(latestRealtimeStationData) && latestRealtimeStationData.length > 0)
+                    ? latestRealtimeStationData
+                    : weatherStationData);"""
+          new_source = """            const rankingSource = isRainPeriod
+                ? ((Array.isArray(cwaRainfallRankingData) && cwaRainfallRankingData.length > 0) ? cwaRainfallRankingData : [])
+                : (currentRankingTab === 'windGust'
+                    ? buildWindGustRankingSource()
+                    : ((Array.isArray(latestRealtimeStationData) && latestRealtimeStationData.length > 0)
+                        ? latestRealtimeStationData
+                        : weatherStationData));"""
+          if source.count(old_source) != 1:
+              raise SystemExit(f"ranking source anchor count mismatch: {source.count(old_source)}")
+          source = source.replace(old_source, new_source, 1)
+
+          old_value = "                    windGust: data.windGust"
+          new_value = "                    windGust: currentRankingTab === 'windGust' ? getRankingWindGust(station) : data.windGust"
+          if source.count(old_value) != 1:
+              raise SystemExit(f"windGust mapping anchor count mismatch: {source.count(old_value)}")
+          source = source.replace(old_value, new_value, 1)
+
+          old_sort = """                let validList = parsedList.filter(item => !isNaN(item.windGust) && item.windGust >= 0);
+                validList.sort((a, b) => b.windGust - a.windGust);"""
+          new_sort = """                // 先以測站 ID 去重，再依實際陣風數值由大到小排序；同值時以測站名稱穩定排序。
+                const gustByStation = new Map();
+                parsedList.forEach(item => {
+                    const id = String(item.stationId || '').trim();
+                    if (!id || !Number.isFinite(item.windGust) || item.windGust < 0) return;
+                    const previous = gustByStation.get(id);
+                    if (!previous || item.windGust > previous.windGust) gustByStation.set(id, item);
+                });
+                let validList = Array.from(gustByStation.values());
+                validList.sort((a, b) => (b.windGust - a.windGust) ||
+                    String(a.stationName || '').localeCompare(String(b.stationName || ''), 'zh-Hant'));"""
+          if source.count(old_sort) != 1:
+              raise SystemExit(f"wind gust sort anchor count mismatch: {source.count(old_sort)}")
+          source = source.replace(old_sort, new_sort, 1)
+
+          path.write_text(source, encoding="utf-8")
+          print("Patched wind gust ranking: full hourly station base + realtime overlay, robust gust parsing, dedupe and descending sort.")
+          PY
+      - name: Commit patch and remove one-time workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm .github/workflows/patch-wind-gust-ranking.yml
+          git commit -m "Fix nationwide wind gust ranking coverage and order"
+          git push origin main
