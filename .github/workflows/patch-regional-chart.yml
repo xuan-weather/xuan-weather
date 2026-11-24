@@ -1,0 +1,93 @@
+name: One-time regional temperature chart patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-regional-chart.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: "!contains(github.event.head_commit.message, '[regional-chart-bot]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Change regional temperature chart to min-max range bands
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+
+          path = Path("index.html")
+          html = path.read_text(encoding="utf-8")
+
+          # Keep exactly one chart-mode switcher.
+          pattern = re.compile(r'\s*<div class="county-regional-temperature-switch" role="group" aria-label="切換氣溫圖表樣式">.*?</div>', re.S)
+          switches = list(pattern.finditer(html))
+          if not switches:
+              raise SystemExit("找不到圖表切換器，停止修改以避免誤改")
+          for match in reversed(switches[1:]):
+              html = html[:match.start()] + html[match.end():]
+
+          # Replace only the line-mode datasets; bar-mode data and source remain untouched.
+          start_marker = "        const chartDatasets=countyRegionalTemperatureChartMode==='line'"
+          start = html.find(start_marker)
+          if start < 0:
+              raise SystemExit("找不到曲線圖資料區塊，停止修改")
+          end = html.find("\n\n        const config={", start)
+          if end < 0:
+              raise SystemExit("找不到圖表設定邊界，停止修改")
+          replacement = """        // 曲線模式沿用柱狀圖完全相同的每日最低／最高溫資料，
+          // 每個城市以同色系半透明範圍帶呈現，清楚表達高低溫區間。
+          const chartDatasets=countyRegionalTemperatureChartMode==='line'
+              ? datasets.flatMap((dataset,di)=>{
+                  const region=regions[di];
+                  const lows=dataset.data.map(range=>Array.isArray(range)?range[0]:null);
+                  const highs=dataset.data.map(range=>Array.isArray(range)?range[1]:null);
+                  const fillColor=region.color+'30';
+                  return [
+                      {
+                          label:`${region.representative}最低溫`,data:lows,
+                          borderColor:region.color,backgroundColor:fillColor,
+                          borderWidth:1.6,borderDash:[4,3],tension:.32,spanGaps:false,
+                          pointRadius:2,pointHoverRadius:4,pointBackgroundColor:region.color,
+                          pointBorderColor:isLight?'#fff':'#0f172a',pointBorderWidth:1,fill:'+1',
+                          order:di*2
+                      },
+                      {
+                          label:`${region.representative}最高溫`,data:highs,
+                          borderColor:region.color,backgroundColor:region.color,
+                          borderWidth:2,tension:.32,spanGaps:false,
+                          pointRadius:2,pointHoverRadius:4,pointBackgroundColor:region.color,
+                          pointBorderColor:isLight?'#fff':'#0f172a',pointBorderWidth:1,fill:false,
+                          order:di*2+1
+                      }
+                  ];
+              })
+              : datasets;"""
+          html = html[:start] + replacement + html[end:]
+
+          if html.count('class="county-regional-temperature-switch"') != 1:
+              raise SystemExit("圖表切換器數量不是 1，停止提交")
+          if "fill:'+1'" not in html or "fillColor=region.color+'30'" not in html:
+              raise SystemExit("曲線範圍帶驗證失敗")
+
+          path.write_text(html, encoding="utf-8")
+          Path(".github/workflows/patch-regional-chart.yml").unlink()
+
+          subprocess.run(["git","config","user.name","github-actions[bot]"],check=True)
+          subprocess.run(["git","config","user.email","41898282+github-actions[bot]@users.noreply.github.com"],check=True)
+          subprocess.run(["git","add","index.html",".github/workflows/patch-regional-chart.yml"],check=True)
+          subprocess.run(["git","commit","-m","[regional-chart-bot] Render city temperature ranges as shaded bands"],check=True)
+          subprocess.run(["git","push","origin","HEAD:main"],check=True)
+          PY
