@@ -19785,6 +19785,30 @@ async function fetchAllStationData(isManualRefresh = false, callback = null, pre
             container.innerHTML = html;
         }
 
+        // 陣風排行以 O-A0001 全測站清單為底，O-A0003 有較新資料時優先覆蓋。
+        function buildWindGustRankingSource() {
+            const byId = new Map();
+            (Array.isArray(latestHourlyStationData) ? latestHourlyStationData : []).forEach(x => {
+                const id=String(x?.StationId||'').trim(); if(id) byId.set(id,x);
+            });
+            (Array.isArray(latestRealtimeStationData) ? latestRealtimeStationData : []).forEach(x => {
+                const id=String(x?.StationId||'').trim(); if(!id)return;
+                const base=byId.get(id)||{}, bw=base.WeatherElement||{}, rw=x.WeatherElement||{};
+                const merged={...bw,...rw,GustInfo:{...(bw.GustInfo||{}),...(rw.GustInfo||{})}};
+                byId.set(id,{...base,...x,GeoInfo:x.GeoInfo||base.GeoInfo,ObsTime:x.ObsTime||base.ObsTime,WeatherElement:merged});
+            });
+            return [...byId.values()];
+        }
+        function getRankingWindGust(x) {
+            const w=x?.WeatherElement||x?.weatherElement||{}, g=w.GustInfo||w.gustInfo||x?.GustInfo||{};
+            for(const raw of [g.PeakGustSpeed,g.peakGustSpeed,w.PeakGustSpeed,w.GUST,w.WindGust,w.GustSpeed,x?.PeakGustSpeed]){
+                if(raw==null||String(raw).trim()==='')continue;
+                const n=Number.parseFloat(String(raw).trim());
+                if(Number.isFinite(n)&&n>=0&&n<=100)return n;
+            }
+            return NaN;
+        }
+
         function renderRankings() {
             const container = document.getElementById('rankingCardsContainer');
             updateRankingObservationTime();
@@ -19800,9 +19824,9 @@ async function fetchAllStationData(isManualRefresh = false, callback = null, pre
             // 雨量類排行仍維持使用 O-A0002-001，不改動原本雨量資料來源。
             const rankingSource = isRainPeriod
                 ? ((Array.isArray(cwaRainfallRankingData) && cwaRainfallRankingData.length > 0) ? cwaRainfallRankingData : [])
-                : ((Array.isArray(latestRealtimeStationData) && latestRealtimeStationData.length > 0)
-                    ? latestRealtimeStationData
-                    : weatherStationData);
+                : (currentRankingTab === 'windGust' ? buildWindGustRankingSource()
+                    : ((Array.isArray(latestRealtimeStationData) && latestRealtimeStationData.length > 0)
+                        ? latestRealtimeStationData : weatherStationData));
             let parsedList = rankingSource.map(station => {
                 const data = isRainPeriod
                     ? {
@@ -19838,7 +19862,7 @@ async function fetchAllStationData(isManualRefresh = false, callback = null, pre
                     rain3d: data.rain3d,
                     elevation: data.elevation,
                     windSpeed: data.windSpeed,
-                    windGust: data.windGust
+                    windGust: currentRankingTab === 'windGust' ? getRankingWindGust(station) : data.windGust
                 };
             });
             if (isRainPeriod) {
@@ -19968,8 +19992,15 @@ async function fetchAllStationData(isManualRefresh = false, callback = null, pre
                 });
                 container.innerHTML = html;
             } else if (currentRankingTab === 'windGust') {
-                let validList = parsedList.filter(item => !isNaN(item.windGust) && item.windGust >= 0);
-                validList.sort((a, b) => b.windGust - a.windGust);
+                const gustByStation = new Map();
+                parsedList.forEach(item => {
+                    const id=String(item.stationId||'').trim();
+                    if(!id||!Number.isFinite(item.windGust)||item.windGust<0)return;
+                    const prev=gustByStation.get(id);
+                    if(!prev||item.windGust>prev.windGust)gustByStation.set(id,item);
+                });
+                let validList = Array.from(gustByStation.values());
+                validList.sort((a,b)=>(b.windGust-a.windGust)||String(a.stationName||'').localeCompare(String(b.stationName||''),'zh-Hant'));
                 let top10 = validList.slice(0, 10);
                 if (top10.length === 0) {
                     container.innerHTML = `<div class="my-location-status" style="grid-column: span 2;">目前無陣風數據</div>`;
