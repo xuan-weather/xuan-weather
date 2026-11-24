@@ -1,0 +1,75 @@
+name: One-time weekly city line chart axis alignment
+
+on:
+  push:
+    paths:
+      - ".github/workflows/one-time-weekly-line-axis.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-line-axis-patch
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Align line chart category spacing with bar chart
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("index.html")
+          html = p.read_text(encoding="utf-8")
+          anchor = "const chartDatasets=countyRegionalTemperatureChartMode==='line'"
+          start = html.find(anchor)
+          if start < 0:
+              raise SystemExit("找不到一週代表城市氣溫比較圖表區塊，停止修改。")
+          old = "x:{grid:{display:false},ticks:{color:textColor,font:{size:11},maxRotation:0}}"
+          new = "x:{offset:true,grid:{display:false},ticks:{color:textColor,font:{size:11},maxRotation:0}}"
+          pos = html.find(old, start)
+          if pos < 0 or html.find(old, pos + len(old)) >= 0:
+              raise SystemExit("曲線／柱狀圖 X 軸設定不符合預期，停止修改。")
+          html = html[:pos] + new + html[pos + len(old):]
+          p.write_text(html, encoding="utf-8")
+          print("已將代表城市氣溫比較圖的 X 軸 offset 設為 true。")
+          PY
+
+      - name: Validate inline JavaScript
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          html = Path("index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script\\b[^>]*>([\\s\\S]*?)</script\\s*>", html, re.I)
+          checked = 0
+          for i, script in enumerate(scripts, 1):
+              if not script.strip():
+                  continue
+              result = subprocess.run(["node", "--check"], input=script, text=True, capture_output=True)
+              if result.returncode:
+                  raise SystemExit(f"Inline script {i} syntax error:\\n{result.stderr}")
+              checked += 1
+          print(f"通過 {checked} 個 inline script 語法檢查。")
+          PY
+
+      - name: Commit change
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && { echo "No changes detected"; exit 1; }
+          git commit -m "Align weekly city line chart spacing with bar chart"
+          git push origin HEAD:main
