@@ -34446,28 +34446,28 @@ function passAqiMapFilter(value, filterValue){
                 ctx.restore();
             }
         };
-        // 曲線模式沿用柱狀圖完全相同的每日最低／最高溫資料，
-// 每個城市以同色系半透明範圍帶呈現，清楚表達高低溫區間。
+        // 曲線模式沿用柱狀圖完全相同的每日最低／最高溫資料。
+// 不使用範圍填色，避免四個城市的高低溫區域重疊後混色。
+// 實線代表最高溫、虛線代表最低溫；同一城市兩條線使用相同顏色。
 const chartDatasets=countyRegionalTemperatureChartMode==='line'
     ? datasets.flatMap((dataset,di)=>{
         const region=regions[di];
         const lows=dataset.data.map(range=>Array.isArray(range)?range[0]:null);
         const highs=dataset.data.map(range=>Array.isArray(range)?range[1]:null);
-        const fillColor=region.color+'30';
         return [
             {
                 label:`${region.representative}最低溫`,data:lows,
-                borderColor:region.color,backgroundColor:fillColor,
-                borderWidth:1.6,borderDash:[4,3],tension:.32,spanGaps:false,
-                pointRadius:2,pointHoverRadius:4,pointBackgroundColor:region.color,
-                pointBorderColor:isLight?'#fff':'#0f172a',pointBorderWidth:1,fill:'+1',
+                borderColor:region.color,backgroundColor:region.color,
+                borderWidth:1.8,borderDash:[5,4],tension:.25,spanGaps:false,
+                pointRadius:2.5,pointHoverRadius:5,pointBackgroundColor:region.color,
+                pointBorderColor:isLight?'#fff':'#0f172a',pointBorderWidth:1,fill:false,
                 order:di*2
             },
             {
                 label:`${region.representative}最高溫`,data:highs,
                 borderColor:region.color,backgroundColor:region.color,
-                borderWidth:2,tension:.32,spanGaps:false,
-                pointRadius:2,pointHoverRadius:4,pointBackgroundColor:region.color,
+                borderWidth:2.5,borderDash:[],tension:.25,spanGaps:false,
+                pointRadius:2.5,pointHoverRadius:5,pointBackgroundColor:region.color,
                 pointBorderColor:isLight?'#fff':'#0f172a',pointBorderWidth:1,fill:false,
                 order:di*2+1
             }
