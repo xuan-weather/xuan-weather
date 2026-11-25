@@ -30817,6 +30817,7 @@ const popVal = getPopForStation(county, town);
 
         function renderMapMarkers() {
             if (!currentMarkersLayer) return;
+            mainMapStationLabelCollisionBoxes = [];
             renderTemperatureDistributionCard();
             renderRainfallDistributionCard();
             updateCwaMapStationCount();
@@ -30839,6 +30840,7 @@ const popVal = getPopForStation(county, town);
                 currentMarkersLayer.clearLayers();
                 if (map) map.closePopup();
                 renderAirQualityMapMarkers();
+                if(typeof renderMainMapTownshipLabels==='function') renderMainMapTownshipLabels();
                 return;
             }
             currentMarkersLayer.clearLayers();
@@ -30924,7 +30926,6 @@ const popVal = getPopForStation(county, town);
             });
 
             // 已放置標籤的螢幕範圍，用於逐站碰撞檢查。
-            mainMapStationLabelCollisionBoxes = [];
             const occupiedStationLabelBoxes = mainMapStationLabelCollisionBoxes;
             weatherStationData.forEach(station => {
                 const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
@@ -31272,6 +31273,8 @@ const popVal = getPopForStation(county, town);
             // 一般 CWA 測站全部重繪完成後，再補回目前排行榜選取的特殊雨量站。
             // 這樣縮放、切換圖層或其他 renderMapMarkers() 觸發都不會讓它消失。
             renderQuickRankingSpecialStationMarker();
+            // 測站名稱標籤位置更新後，再重新挑選鄉鎮名稱，讓測站標籤享有較高顯示優先級。
+            if(typeof renderMainMapTownshipLabels==='function') renderMainMapTownshipLabels();
         }
         // ==================== Xuan Weather 即時在線人數（Cloudflare） ====================
     // /heartbeat 使用 POST + sessionId 回報訪客；/online 使用 GET 讀取目前在線數。
