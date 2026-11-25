@@ -976,7 +976,7 @@
         "no2": "18",
         "nox": "19.6",
         "no": "1.3",
-        "wind_speed": "",
+        "wind_speed": "0.8",
         "wind_direc": "355",
         "publishtime": "2026\/11\/25 19:00:00",
         "co_8hr": "0.3",
