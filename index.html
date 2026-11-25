@@ -27894,13 +27894,16 @@ const popVal = getPopForStation(county, town);
         let mainMapTownshipLabelLayer = null;
         let mainMapTownshipLabelRecords = null;
         let mainMapTownshipLabelLoadPromise = null;
+        // 目前畫面上已顯示的測站名稱／數值標籤範圍，提供鄉鎮標籤做低優先級避讓。
+        let mainMapStationLabelCollisionBoxes = [];
 
         function renderMainMapTownshipLabels(){
             if(!map || !mainMapTownshipLabelLayer || !mainMapTownshipLabelRecords) return;
             mainMapTownshipLabelLayer.clearLayers();
 
             const zoom=map.getZoom();
-            const shouldShowTownshipLabels=zoom>=10;
+            // Zoom 7–9 先以鄉鎮名稱提供地理參考；Zoom 10 起讓位給測站名稱與數值。
+            const shouldShowTownshipLabels=zoom>=7;
             // 強制控制專用標籤 Pane 的可見性，避免圖層重載／重新加入時殘留舊標籤。
             const labelPane=map.getPane('mainMapTownshipLabelPane');
             if(labelPane){
@@ -27912,7 +27915,7 @@ const popVal = getPopForStation(county, town);
 
             const bounds=map.getBounds();
             const center=map.latLngToContainerPoint(map.getCenter());
-            const minGap=zoom>=11?22:zoom>=10?27:zoom>=9?32:36;
+            const minGap=zoom>=14?18:zoom>=12?22:zoom>=10?28:36;
             const candidates=[];
 
             // Zoom 10 起鄉鎮名稱不得壓住測站圓點或測站數值。
@@ -27937,7 +27940,12 @@ const popVal = getPopForStation(county, town);
                     Math.abs(stationPoint.x-point.x)<labelHalfWidth+11 &&
                     Math.abs(stationPoint.y-point.y)<29
                 );
-                if(overlapsStation) return;
+                // 鄉鎮名稱優先級低於測站名稱：只要落在測站名稱／數值標籤範圍附近，就隱藏鄉鎮字。
+                const overlapsStationName=mainMapStationLabelCollisionBoxes.some(box=>
+                    point.x>=box.left-7 && point.x<=box.right+7 &&
+                    point.y>=box.top-5 && point.y<=box.bottom+5
+                );
+                if(overlapsStation || overlapsStationName) return;
                 candidates.push({...record,point,distance:dx*dx+dy*dy});
             });
 
@@ -27953,6 +27961,7 @@ const popVal = getPopForStation(county, town);
                 selected.push(candidate);
             });
 
+            const townshipOpacity=zoom<10?0.84:zoom<12?0.42:zoom<14?0.30:0.22;
             selected.forEach(record=>{
                 const marker=L.marker(record.latlng,{
                     pane:'mainMapTownshipLabelPane',
@@ -27961,7 +27970,7 @@ const popVal = getPopForStation(county, town);
                     riseOnHover:false,
                     icon:L.divIcon({
                         className:'xuan-main-township-label',
-                        html:`<span>${cwaAlertMapEscape(record.name)}</span>`,
+                        html:`<span style="opacity:${townshipOpacity};">${cwaAlertMapEscape(record.name)}</span>`,
                         iconSize:[0,0],
                         iconAnchor:[0,0]
                     })
@@ -30915,7 +30924,8 @@ const popVal = getPopForStation(county, town);
             });
 
             // 已放置標籤的螢幕範圍，用於逐站碰撞檢查。
-            const occupiedStationLabelBoxes = [];
+            mainMapStationLabelCollisionBoxes = [];
+            const occupiedStationLabelBoxes = mainMapStationLabelCollisionBoxes;
             weatherStationData.forEach(station => {
                 const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
                 const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
@@ -31006,7 +31016,7 @@ const popVal = getPopForStation(county, town);
                     const stationLabelName = String(station.StationName || station.LocationName || station.StationId || '測站').trim();
                     const labelPoint = map.latLngToContainerPoint([lat, lon]);
                     const labelWidth = Math.max(54, Math.min(116, Array.from(stationLabelName).length * 12 + 14));
-                    const labelBox = {left:labelPoint.x-labelWidth/2-5,right:labelPoint.x+labelWidth/2+5,top:labelPoint.y+14,bottom:labelPoint.y+54};
+                    const labelBox = {left:labelPoint.x-labelWidth/2-7,right:labelPoint.x+labelWidth/2+7,top:labelPoint.y+14,bottom:labelPoint.y+49};
                     const labelCollision = currentZoom >= 10 && occupiedStationLabelBoxes.some(box =>
                         labelBox.left < box.right && labelBox.right > box.left &&
                         labelBox.top < box.bottom && labelBox.bottom > box.top
