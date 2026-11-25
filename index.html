@@ -28255,16 +28255,13 @@ const popVal = getPopForStation(county, town);
                 window.addEventListener('resize',()=>{ if (xuanStormActive) xuanRenderMainMapStorm(); });
             }
 
-            // 只在「標籤顯示狀態」跨過 zoom 10 時重繪一次；
-            // 避免每一次縮放都清空／重建全部測站圓點，讓地圖拖曳與縮放更流暢。
-            let markerLabelState = map.getZoom() >= 10;
+            // 測站名稱與數值標籤需隨縮放層級重新計算避讓位置。
+            let markerLabelZoom = map.getZoom();
             map.on('zoomend', () => {
                 if (!mapInitialized || !currentMarkersLayer) return;
-                const nextLabelState = map.getZoom() >= 10;
-                if (nextLabelState !== markerLabelState) {
-                    markerLabelState = nextLabelState;
-                    renderMapMarkers();
-                }
+                const nextZoom = map.getZoom();
+                if (nextZoom !== markerLabelZoom && (nextZoom >= 10 || markerLabelZoom >= 10)) renderMapMarkers();
+                markerLabelZoom = nextZoom;
             });
             
             const LegendControl = L.Control.extend({
@@ -30917,6 +30914,8 @@ const popVal = getPopForStation(county, town);
                 if (id) dailyExtremeStationById.set(id, s);
             });
 
+            // 已放置標籤的螢幕範圍，用於逐站碰撞檢查。
+            const occupiedStationLabelBoxes = [];
             weatherStationData.forEach(station => {
                 const lat = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLatitude || station.Latitude);
                 const lon = parseFloat(station.GeoInfo?.Coordinates?.[1]?.StationLongitude || station.Longitude);
@@ -31003,8 +31002,17 @@ const popVal = getPopForStation(county, town);
                     if (!mapFilterPass(filterValue)) return;
 
                     const currentZoom = map.getZoom();
-                    // 初始地圖層級為 8，放大 2 次即 zoom >= 10
-                    const showLabel = mapValueLabelsEnabled && currentZoom >= 10;
+                    // 依螢幕座標避讓測站名稱／數值；重疊標籤暫不顯示，放大後重新計算。
+                    const stationLabelName = String(station.StationName || station.LocationName || station.StationId || '測站').trim();
+                    const labelPoint = map.latLngToContainerPoint([lat, lon]);
+                    const labelWidth = Math.max(54, Math.min(116, Array.from(stationLabelName).length * 12 + 14));
+                    const labelBox = {left:labelPoint.x-labelWidth/2-5,right:labelPoint.x+labelWidth/2+5,top:labelPoint.y+14,bottom:labelPoint.y+54};
+                    const labelCollision = currentZoom >= 10 && occupiedStationLabelBoxes.some(box =>
+                        labelBox.left < box.right && labelBox.right > box.left &&
+                        labelBox.top < box.bottom && labelBox.bottom > box.top
+                    );
+                    const showLabel = mapValueLabelsEnabled && currentZoom >= 10 && !labelCollision;
+                    if (showLabel) occupiedStationLabelBoxes.push(labelBox);
                     const displayVal = !isNaN(val)
                         ? (currentMapMode === 'aqi' || currentMapMode === 'pop' || currentMapMode === 'humidity'
                             ? String(Math.round(Number(val)))
@@ -31020,7 +31028,7 @@ const popVal = getPopForStation(county, town);
                     const markerShadow = '0 0 6px rgba(0,0,0,0.4)';
                     let iconHtml = `<div style="background-color: ${color}; width: ${markerSize}px; height: ${markerSize}px; border-radius: 50%; border: ${markerBorder}px solid white; box-shadow: ${markerShadow}; display: flex; align-items: center; justify-content: center; position: relative; box-sizing: border-box;">`;
                     if (showLabel) {
-                        iconHtml += `<div style="position: absolute; top: ${markerSize + 2}px; white-space: nowrap; font-size: 11px; font-weight: 700; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); background: transparent; border: none; padding: 0;">${displayVal}</div>`;
+                        iconHtml += `<div style="position:absolute;top:${markerSize + 2}px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:1px;white-space:nowrap;font-size:11px;font-weight:800;color:#fff;text-align:center;text-shadow:1px 1px 2px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.9);background:transparent;border:0;padding:0;pointer-events:none;"><span style="font-size:10px;line-height:1.15;font-weight:900;">${escapeQuickRankingText(stationLabelName)}</span><span style="font-size:11px;line-height:1.15;">${displayVal}</span></div>`;
                     }
                     iconHtml += `</div>`;
 
