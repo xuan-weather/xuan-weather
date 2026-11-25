@@ -7912,6 +7912,10 @@ html[data-theme="light"] .xuan-social-card-art .xuan-social-brand-copy span {
 .xuan-popup-v2 .station-popup-tab-nav::-webkit-scrollbar{display:none;}
 .xuan-popup-v2 .station-popup-tab-btn{flex:0 0 auto;border:1px solid rgba(148,163,184,.25);border-radius:9px;background:rgba(148,163,184,.08);color:var(--popup-sub,#475569);padding:7px 9px;font-size:10px;font-weight:850;white-space:nowrap;cursor:pointer;}
 .xuan-popup-v2 .station-popup-tab-btn.active{background:linear-gradient(135deg,#06b6d4,#3b82f6);border-color:#0ea5e9;color:#fff;}
+/* 深色模式：測站彈窗分頁文字與「目前觀測資料」標題提高對比，避免灰字融入深色背景。 */
+html[data-theme="dark"] .xuan-popup-v2 .station-popup-tab-btn{color:#f8fafc!important;background:rgba(148,163,184,.16);border-color:rgba(148,163,184,.42);}
+html[data-theme="dark"] .xuan-popup-v2 .station-popup-tab-btn.active{color:#fff!important;background:linear-gradient(135deg,#06b6d4,#3b82f6);border-color:#38bdf8;}
+html[data-theme="dark"] .xuan-popup-v2 .station-popup-slide-title{color:#f8fafc!important;}
 .xuan-popup-v2 .station-popup-slide-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;border-radius:12px;}
 .xuan-popup-v2 .station-popup-slide-track::-webkit-scrollbar{display:none;}
 .xuan-popup-v2 .station-popup-slide{flex:0 0 100%;width:100%;min-width:100%;scroll-snap-align:start;scroll-snap-stop:always;box-sizing:border-box;}
