@@ -997,7 +997,8 @@
         .cwa-official-alert-brand-sub{font-size:12px;color:var(--text-muted);font-weight:700;line-height:1.2;}
         .cwa-official-alert-brand-title{font-size:19px;font-weight:900;color:var(--text-color);line-height:1.25;margin-top:3px;}
         .cwa-official-alert-sync{font-size:10px;color:var(--text-muted);white-space:nowrap;}
-        /* 官方警特報：切換顯示，避免多張卡片一直往下滑 */        .cwa-official-alert-switch{
+        /* 官方警特報：切換顯示，避免多張卡片一直往下滑 */
+        .cwa-official-alert-switch{
             display:flex;
             gap:6px;
             margin:0 0 10px;
@@ -1996,7 +1997,8 @@
         .map-layer-switcher.open .map-layer-switcher-toggle .map-layer-chevron{transform:rotate(180deg);}
         .map-layer-switcher-menu{
             position:absolute;top:44px;right:0;min-width:160px;padding:5px;
-            border:1px solid rgba(255,255,255,.45);border-radius:11px;            background:rgba(255,255,255,.96);box-shadow:0 10px 28px rgba(0,0,0,.22);
+            border:1px solid rgba(255,255,255,.45);border-radius:11px;
+            background:rgba(255,255,255,.96);box-shadow:0 10px 28px rgba(0,0,0,.22);
             backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;
             pointer-events:auto;
         }
@@ -2995,7 +2997,8 @@
         .air-quality-detail-section{margin-top:14px;padding:14px;border-radius:16px;background:var(--card-bg);border:1px solid var(--card-border);}
         .air-quality-detail-section-title{font-size:14px;font-weight:900;color:var(--text-color);margin-bottom:10px;}
         .air-quality-detail-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
-        .air-quality-detail-action{border:1px solid var(--action-border);border-radius:12px;padding:10px 8px;background:var(--action-bg);color:#38bdf8;font-weight:800;font-size:12px;cursor:pointer;}        .air-quality-detail-action:hover{background:rgba(56,189,248,.12);}
+        .air-quality-detail-action{border:1px solid var(--action-border);border-radius:12px;padding:10px 8px;background:var(--action-bg);color:#38bdf8;font-weight:800;font-size:12px;cursor:pointer;}
+        .air-quality-detail-action:hover{background:rgba(56,189,248,.12);}
         .air-quality-health{font-size:12px;line-height:1.65;color:var(--text-muted);}
         .air-quality-health strong{color:var(--text-color);}
         .air-quality-trend-wrap{height:230px;position:relative;}
@@ -3994,7 +3997,8 @@
     gap:10px;
     margin:0;
     white-space:nowrap;
-}@media(max-width:600px){
+}
+@media(max-width:600px){
     .county-regional-temperature-actions{
         width:100%;
         gap:8px;
@@ -4993,7 +4997,8 @@ body.japan-mode .tab-btn.active{background:linear-gradient(135deg,#06b6d4,#3b82f
 .county-regional-temperature-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;}
 .county-regional-temperature-legend .north{background:#60a5fa;}
 .county-regional-temperature-legend .central{background:#34d399;}
-.county-regional-temperature-legend .south{background:#fb923c;}.county-regional-temperature-legend .east{background:#facc15;}
+.county-regional-temperature-legend .south{background:#fb923c;}
+.county-regional-temperature-legend .east{background:#facc15;}
 .county-regional-temperature-legend-head{justify-content:flex-end;flex-wrap:nowrap;gap:12px;margin:0;white-space:nowrap;}
 .county-regional-temperature-legend-head span{gap:4px;}
 .county-regional-temperature-download{
@@ -5992,7 +5997,8 @@ html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .xuan-map-right .typhoon
   color:#183247 !important;
   border-color:#d4e1eb !important;
   box-shadow:none !important;
-}html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .xuan-map-right .simple-typhoon-info-grid small,
+}
+html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .xuan-map-right .simple-typhoon-info-grid small,
 html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .xuan-map-right .typhoon-monitor-item small,
 html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .xuan-map-right .typhoon-impact-grid span,
 html[data-theme="light"] #typhoonPanel.xuan-typhoon-gis .xuan-map-right .typhoon-upgrade-note,
@@ -6991,7 +6997,8 @@ html[data-theme="light"] .xuan-intensity-leaflet-popup .leaflet-popup-close-butt
   box-shadow:0 10px 24px color-mix(in srgb,var(--extreme-accent) 16%,transparent);
 }
 .quick-ranking-section .quick-ranking-label{
-  position:relative;z-index:1;  color:var(--text-muted);
+  position:relative;z-index:1;
+  color:var(--text-muted);
   font-size:12px;
   line-height:1.35;
   gap:7px;
@@ -7990,7 +7997,8 @@ html[data-theme="dark"] .xuan-popup-v2 .station-popup-slide-title{color:#f8fafc!
 <circle cx="31" cy="17" r="8" fill="#FFD166"/>
 <path d="M13 35h21.5c4.14 0 7.5-3.36 7.5-7.5S38.64 20 34.5 20c-.9 0-1.77.16-2.57.45C30.05 16.65 26.38 14 22.08 14 16.51 14 12 18.51 12 24.08c0 .55.05 1.09.13 1.61A6.75 6.75 0 0 0 13 39.25H34.5" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M10 41h28" stroke="rgba(255,255,255,.65)" stroke-width="3" stroke-linecap="round"/>
-</svg></div>    <div class="xoi-copy">
+</svg></div>
+    <div class="xoi-copy">
       <div class="xoi-title">Xuan 即時氣象監測網</div>
       <div class="xoi-subtitle">即時天氣•防災資訊•全台觀測</div>
       <div class="xoi-rule"></div>
@@ -8989,7 +8997,8 @@ html[data-theme="dark"] .xuan-popup-v2 .station-popup-slide-title{color:#f8fafc!
                             <button type="button" data-county-extreme-mode="current" onclick="switchCountyExtremeMode('current')">目前極值</button>
                         </div>
                         
-                    </div>                </div>
+                    </div>
+                </div>
                 <div class="county-region-strip" id="countyRegionComparison"><div class="county-extreme-empty">等待測站資料載入…</div></div>
                 <div class="county-extreme-grid" id="countyExtremeGrid"><div class="county-extreme-empty">正在整理各縣市極值資料…</div></div>
             </section>
@@ -9988,7 +9997,8 @@ html[data-theme="dark"] .xuan-popup-v2 .station-popup-slide-title{color:#f8fafc!
                             score += 1000 + v.length * 10;
                         } else if (v && typeof v === 'object') {
                             score += 1000 + Object.keys(v).length * 10;
-                        }                    }
+                        }
+                    }
                 }
 
                 Object.keys(node).forEach(key => walk(node[key], depth + 1));
@@ -10987,7 +10997,8 @@ const longWave = longWaveResult.status === 'fulfilled'
                 const now=Date.now();
                 const active=alerts.filter(alert=>{
                     const status=String(alert?.status||'').toLowerCase();
-                    if(status!=='actual' && status!=='test') return false;                    const eff=alert.effective?Date.parse(alert.effective):NaN;
+                    if(status!=='actual' && status!=='test') return false;
+                    const eff=alert.effective?Date.parse(alert.effective):NaN;
                     const exp=alert.expires?Date.parse(alert.expires):NaN;
                     return !(Number.isFinite(eff)&&eff>now) && !(Number.isFinite(exp)&&exp<now);
                 });
@@ -11986,7 +11997,8 @@ const longWave = longWaveResult.status === 'fulfilled'
             locations.forEach(location=>{
                 const hazards=location?.hazardConditions?.hazards;
                 cwaOfficialAlertFindHazards(hazards,location?.locationName,found,undefined,0,{
-                    issueTime:cwaOfficialAlertReadTime(records,['issueTime','IssueTime','sent','Sent','publishTime','PublishTime','publishedAt','PublishedAt']),                    startTime:cwaOfficialAlertReadTime(records,['startTime','StartTime','onset','Onset','effective','Effective']),
+                    issueTime:cwaOfficialAlertReadTime(records,['issueTime','IssueTime','sent','Sent','publishTime','PublishTime','publishedAt','PublishedAt']),
+                    startTime:cwaOfficialAlertReadTime(records,['startTime','StartTime','onset','Onset','effective','Effective']),
                     endTime:cwaOfficialAlertReadTime(records,['endTime','EndTime','expires','Expires','expireTime','ExpireTime'])
                 });
             });
@@ -12985,7 +12997,8 @@ const longWave = longWaveResult.status === 'fulfilled'
                                 <div class="cwa-alert-time-value">至 ${cwaOfficialAlertTime(info?.expires)}</div>
                             </div>
                         </div>
-                        <div class="cwa-alert-area-row">                            <span class="cwa-alert-area-badge typhoon">${cwaOfficialAlertEscape(badge)}</span>
+                        <div class="cwa-alert-area-row">
+                            <span class="cwa-alert-area-badge typhoon">${cwaOfficialAlertEscape(badge)}</span>
                             <span class="cwa-alert-area-text">${cwaOfficialAlertEscape(areas.join('、')||'請依中央氣象署最新颱風警報')}</span>
                         </div>
                         ${(name||headline)?`<div class="cwa-alert-detail">${name?`颱風：${cwaOfficialAlertEscape(name)}　`:''}${cwaOfficialAlertEscape(headline)}</div>`:''}
@@ -13984,6 +13997,7 @@ const longWave = longWaveResult.status === 'fulfilled'
                 container.appendChild(empty);
             }
         }
+
         function updateWeatherWarningTabCounts(counts) {
             const safe = Object.assign({all:0, thunderstorm:0, heavyRain:0, strongWind:0, hot:0, earthquake:0, longWave:0, other:0}, counts || {});
             Object.keys(safe).forEach(key => {
@@ -14983,7 +14997,8 @@ const longWave = longWaveResult.status === 'fulfilled'
                             /(\d{2,4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日\s*(\d{1,2})\s*時\s*(\d{1,2})\s*分[^。\n]{0,20}?(?:發布|發佈)/,
                             /(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T](\d{1,2}):(\d{2})/,
                             /(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})/
-                        ];                        for (const pattern of patterns) {
+                        ];
+                        for (const pattern of patterns) {
                             const m = raw.match(pattern);
                             if (!m) continue;
                             let y, mo, d, h, mi;
@@ -15982,7 +15997,8 @@ function japanAmedasMapTempColor(v){
                         button.innerHTML='<i class="fas fa-location-crosshairs"></i>';
                         L.DomEvent.disableClickPropagation(container);
                         L.DomEvent.on(button,'click',function(e){
-                            L.DomEvent.stopPropagation(e);                            locateJapanAmedasMapUser(button);
+                            L.DomEvent.stopPropagation(e);
+                            locateJapanAmedasMapUser(button);
                         });
                         return container;
                     };
@@ -16982,6 +16998,7 @@ const cwaTemperatureHistoryRemoteNameCache = new Map();
                 return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
             };
             const formatValue = value => `${isIntegerUnit ? Math.round(value) : Number(value).toFixed(1)}${unit}`;
+
             if (subtitle) {
                 const first = new Date(cleanValues[0].ts);
                 const last = new Date(cleanValues[cleanValues.length - 1].ts);
@@ -17980,7 +17997,8 @@ async function fetchAllStationData(isManualRefresh = false, callback = null, pre
             const rainSource=(Array.isArray(latestRainfallStationData)&&latestRainfallStationData.length?latestRainfallStationData:(Array.isArray(cwaRainfallRankingData)?cwaRainfallRankingData:[]));
             const rains=rainSource.map(s=>({s,v:weatherNewsRain10(s)})).filter(x=>Number.isFinite(x.v)&&x.v>0).sort((a,b)=>b.v-a.v);
             const aqiRows=(Array.isArray(airQualityData)?airQualityData:[]).map(s=>({s,v:weatherNewsNumber(s.AQI)})).filter(x=>x.s?.AQI!==undefined && x.s?.AQI!==null && String(x.s.AQI).trim()!=='' && Number.isFinite(x.v)).sort((a,b)=>b.v-a.v);
-            // 跑馬燈只顯示最近 24 小時內的地震，避免把多日前的舊報告誤當成最新消息。            const newestQuake=Array.isArray(earthquakeData)&&earthquakeData.length?earthquakeData[0]:null;
+            // 跑馬燈只顯示最近 24 小時內的地震，避免把多日前的舊報告誤當成最新消息。
+            const newestQuake=Array.isArray(earthquakeData)&&earthquakeData.length?earthquakeData[0]:null;
             const newestQuakeInfo=newestQuake?.EarthquakeInfo||{};
             const newestQuakeTime=newestQuakeInfo?.OriginTime || newestQuake?.OriginTime || newestQuake?.originTime || '';
             const newestQuakeMs=newestQuakeTime ? Date.parse(newestQuakeTime) : NaN;
@@ -18979,7 +18997,8 @@ async function fetchAllStationData(isManualRefresh = false, callback = null, pre
                 const local = id && stationHistoryCache && Array.isArray(stationHistoryCache[id]) ? stationHistoryCache[id] : [];
                 for (const point of local) {
                     const ts = Number(point?.ts);
-                    const value = Number(point?.wind);                    if (Number.isFinite(ts) && Number.isFinite(value) && value >= 0 && value <= 60) {
+                    const value = Number(point?.wind);
+                    if (Number.isFinite(ts) && Number.isFinite(value) && value >= 0 && value <= 60) {
                         maxValue = Number.isFinite(maxValue) ? Math.max(maxValue, value) : value;
                     }
                 }
@@ -19978,7 +19997,8 @@ async function fetchAllStationData(isManualRefresh = false, callback = null, pre
                         </div>
                     `;
                 });
-                container.innerHTML = html;            } else if (currentRankingTab === 'temp') {
+                container.innerHTML = html;
+            } else if (currentRankingTab === 'temp') {
                 let validTempList = parsedList.filter(item => !isNaN(item.temp));
                 validTempList.sort((a, b) => b.temp - a.temp);
                 let top10 = validTempList.slice(0, 10);
@@ -20977,7 +20997,8 @@ let currentQuakeFilter = 'all';
                                             color: highlightColor,
                                             weight: 3,
                                             opacity: 0.98,
-                                            fillColor: highlightColor,                                            fillOpacity: 0.34
+                                            fillColor: highlightColor,
+                                            fillOpacity: 0.34
                                         },
                                         interactive: false
                                     }).addTo(intensityMap);
@@ -21976,7 +21997,8 @@ let currentQuakeFilter = 'all';
                 }
 
                 /* 目前位置的 10 級暴風圈：有官方 radius25 時，以紅色虛線圈標示。
-                   半徑直接使用 CWA 觀測資料，不自行推估；沒有官方數值就不畫。 */                if(latest && Number.isFinite(Number(p.radius25)) && Number(p.radius25)>0){
+                   半徑直接使用 CWA 觀測資料，不自行推估；沒有官方數值就不畫。 */
+                if(latest && Number.isFinite(Number(p.radius25)) && Number(p.radius25)>0){
                     const currentStorm10Layer=L.circle([p.lat,p.lon],{
                         radius:Math.max(5000,Number(p.radius25)*1000),
                         color:'#ef4444',
@@ -22975,7 +22997,8 @@ let currentQuakeFilter = 'all';
                             const itemInfo = item?.EarthquakeInfo || item;
                             const time = String(itemInfo?.OriginTime || itemInfo?.OriginTimeString || '');
                             const no = item?.EarthquakeNo || itemInfo?.EarthquakeNo || item?.ReportNo || itemInfo?.ReportNo || '';
-                            return (originTime && time === originTime) || (reportNo && normalizeNo(no) === normalizeNo(reportNo));                        });
+                            return (originTime && time === originTime) || (reportNo && normalizeNo(no) === normalizeNo(reportNo));
+                        });
                         if (matched) { walk(matched); break; }
                     } catch (_) {}
                 }
@@ -23974,7 +23997,8 @@ const popVal = getPopForStation(county, town);
             const local = Array.isArray(stationHistoryCache?.[historyId]) ? stationHistoryCache[historyId] : [];
             const humidityByTs = new Map();
             // CWA 缺值可能以 null、空字串、--、X 或 -99 表示；
-            // 不可直接 Number(null)/Number('')，否則會被轉成 0 並誤畫成 0%。            const parseObservedHumidity = raw => {
+            // 不可直接 Number(null)/Number('')，否則會被轉成 0 並誤畫成 0%。
+            const parseObservedHumidity = raw => {
                 if (raw === null || raw === undefined) return NaN;
                 if (typeof raw === 'string' && !raw.trim()) return NaN;
                 const text = String(raw).trim().toUpperCase();
@@ -24973,7 +24997,8 @@ const popVal = getPopForStation(county, town);
             }
 
             // 每次建立圖表時，預設選取排序後最後一筆，也就是目前時間窗內最新的有效陣風觀測。
-            // 此預設同時供初次繪製的紅色虛線／紅點使用，避免等到使用者觸碰圖表才出現選取狀態。            const latestPointIndex = points.length - 1;
+            // 此預設同時供初次繪製的紅色虛線／紅點使用，避免等到使用者觸碰圖表才出現選取狀態。
+            const latestPointIndex = points.length - 1;
 
             // 陣風圖只平滑線條的繪製路徑，不修改任何實測資料：
             // 在相鄰實測點之間以 Catmull–Rom/Hermite 曲線補繪過渡座標。
@@ -25972,7 +25997,8 @@ const popVal = getPopForStation(county, town);
             // 只出現在整點/極值資料而沒有被趨勢圖抓到。
             const officialSourceCandidates = [
                 hourlyTemperatureStation,
-                realtimeTemperatureStation,                exactTemperatureStation
+                realtimeTemperatureStation,
+                exactTemperatureStation
             ].filter(Boolean);
             const officialSourceNameKey = normalizeStationKey(stationNameForTemp || '');
             if (officialSourceNameKey) {
@@ -26971,7 +26997,8 @@ const popVal = getPopForStation(county, town);
                     Number.isFinite(Number(point?.y))
                 );
                 const actualTemperatures = actualPoints.map(point => Number(point.y));
-                const latestObservedTs = actualPoints.reduce(                    (latest, point) => Math.max(latest, Number(point.x)),
+                const latestObservedTs = actualPoints.reduce(
+                    (latest, point) => Math.max(latest, Number(point.x)),
                     -Infinity
                 );
 
@@ -27970,7 +27997,8 @@ const popVal = getPopForStation(county, town);
                         html:`<span>${cwaAlertMapEscape(record.name)}</span>`,
                         iconSize:[0,0],
                         iconAnchor:[0,0]
-                    })                });
+                    })
+                });
                 mainMapTownshipLabelLayer.addLayer(marker);
             });
         }
@@ -28969,6 +28997,7 @@ const popVal = getPopForStation(county, town);
                     iconAnchor: [markerSize / 2, markerSize / 2],
                     popupAnchor: [0, -markerSize / 2]
                 });
+
                 const marker = L.marker([lat, lon], { icon: markerIcon });
                 marker.bindPopup(`
                     <div class="popup-card">
@@ -29968,7 +29997,8 @@ const popVal = getPopForStation(county, town);
                     maxZoom:18, detectRetina:true, updateWhenZooming:false, updateWhenIdle:true, keepBuffer:3, opacity:.9
                 }).addTo(temperatureSocialMap);
                 temperatureSocialMarkerLayer = L.layerGroup().addTo(temperatureSocialMap);
-            }            if (temperatureSocialMap && temperatureSocialMarkerLayer) {
+            }
+            if (temperatureSocialMap && temperatureSocialMarkerLayer) {
                 temperatureSocialMarkerLayer.clearLayers();
                 rows.forEach(item => {
                     const color = getTempColor(item.value);
@@ -30967,7 +30997,8 @@ const popVal = getPopForStation(county, town);
                         color = getApparentTemperatureColor(val);
                         unit = '°C';
                     } else if (currentMapMode === 'temp') {
-                        val = data.temp;                        color = getTempColor(val);
+                        val = data.temp;
+                        color = getTempColor(val);
                         unit = '°C';
                     } else if (currentMapMode === 'tempRange') {
                         val = dailyTemperatureRange;
@@ -31966,7 +31997,8 @@ const popVal = getPopForStation(county, town);
 
             try{
                 const [townIndex,countyIndex]=await Promise.all([
-                    cwaAlertMapLoadTownIndex(),                    cwaAlertMapLoadCountyIndex()
+                    cwaAlertMapLoadTownIndex(),
+                    cwaAlertMapLoadCountyIndex()
                 ]);
                 if(token!==radarStrongWindRenderToken || !radarMap) return;
 
@@ -32966,6 +32998,7 @@ async function submitLocalWeatherReport(){
     }catch(err){ console.error('在地天氣回報失敗',err); setLocalWeatherReportStatus(`❌ ${err?.message || '上傳失敗，請稍後再試。'}`,'bad'); }
     finally{ btn.disabled=false; }
 }
+
 function getLocalWeatherDeleteTokens(){
     try { return JSON.parse(localStorage.getItem('xuanWeatherLocalReportDeleteTokens') || '{}') || {}; }
     catch(e) { return {}; }
@@ -33964,7 +33997,8 @@ function passAqiMapFilter(value, filterValue){
                     const a=Number(tempMatch[1]);
                     const b=tempMatch[2]===undefined?a:Number(tempMatch[2]);
                     slot.min=slot.min===null?Math.min(a,b):Math.min(slot.min,a,b);
-                    slot.max=slot.max===null?Math.max(a,b):Math.max(slot.max,a,b);                }
+                    slot.max=slot.max===null?Math.max(a,b):Math.max(slot.max,a,b);
+                }
             });
         }
 
@@ -34963,7 +34997,8 @@ function passAqiMapFilter(value, filterValue){
                         for(const county of Object.keys(parsedLite)){
                             if(!parsedLite[county] || typeof parsedLite[county] !== 'object') continue;
                             countyCountLite++;
-                            for(const town of Object.keys(parsedLite[county])){                                if(parsedLite[county][town]) townCountLite++;
+                            for(const town of Object.keys(parsedLite[county])){
+                                if(parsedLite[county][town]) townCountLite++;
                             }
                         }
                         if(!countyCountLite || !townCountLite) throw new Error('輕量鄉鎮預報資料沒有可顯示內容');
@@ -35962,7 +35997,8 @@ function passAqiMapFilter(value, filterValue){
         const times=new Map();
         const popRows=[];
         const ingest=(el,kind)=>arr(el?.Time||el?.time).forEach(t=>{
-          const start=t.DataTime||t.dataTime||t.StartTime||t.startTime||'';          if(!start) return;
+          const start=t.DataTime||t.dataTime||t.StartTime||t.startTime||'';
+          if(!start) return;
           const evs=arr(t.ElementValue||t.elementValue);
           const firstValue=(...keys)=>{for(const ev of evs){for(const k of keys){if(ev?.[k]!==undefined&&ev?.[k]!==null&&String(ev[k]).trim()!=='')return ev[k]}}return null};
           // 降雨機率常以 StartTime/EndTime 區間提供，不能只用 DataTime 跟氣溫時間直接合併。
@@ -36961,7 +36997,8 @@ function passAqiMapFilter(value, filterValue){
             }
             const fmt = ts => new Intl.DateTimeFormat('zh-TW', {
                 timeZone:'Asia/Taipei', month:'2-digit', day:'2-digit'
-            }).format(new Date(ts));            const fmtDateTime = ts => new Intl.DateTimeFormat('zh-TW', {
+            }).format(new Date(ts));
+            const fmtDateTime = ts => new Intl.DateTimeFormat('zh-TW', {
                 timeZone:'Asia/Taipei', year:'numeric', month:'2-digit', day:'2-digit',
                 hour:'2-digit', minute:'2-digit', hourCycle:'h23'
             }).format(new Date(ts));
@@ -37960,7 +37997,8 @@ function passAqiMapFilter(value, filterValue){
   });
   // 每次掃描按警報類型合併重複項目；高溫資訊優先保留較短的摘要，
   // 避免同一則高溫內容以「即時政府示警」和「高溫資訊」重複通知。
-  var grouped=new Map();  Array.from(found.values()).forEach(function(n){
+  var grouped=new Map();
+  Array.from(found.values()).forEach(function(n){
    var groupKey=n.category==='高溫警報'?'高溫資訊':n.category;
    var old=grouped.get(groupKey);
    if(!old){grouped.set(groupKey,n);return;}
@@ -38959,7 +38997,8 @@ html[data-theme="light"] #xuanEntryList .xuan-taiwan-extremes-card .xuan-entry-a
   color:#ffbd59 !important;
 }
 #xuanEntryList .xuan-taiwan-extremes-card,
-html[data-theme="dark"] #xuanEntryList .xuan-taiwan-extremes-card,html[data-theme="light"] #xuanEntryList .xuan-taiwan-extremes-card {
+html[data-theme="dark"] #xuanEntryList .xuan-taiwan-extremes-card,
+html[data-theme="light"] #xuanEntryList .xuan-taiwan-extremes-card {
   border-color:rgba(245,158,11,.42) !important;
 }
 #xuanEntryList .xuan-taiwan-extremes-card:hover {
@@ -39958,7 +39997,8 @@ html[data-theme="dark"] #xuanEntryList .xuan-typhoon-warning-badge{
       const top=document.getElementById('xuanSharedTop'); if(top)top.style.display='none';
       const clock=document.getElementById('liveClockBar'); if(clock)clock.style.display='none';
       const ticker=document.getElementById('weatherNewsTicker'); if(ticker)ticker.style.display='none';
-      const toolbar=document.getElementById('xuanContentToolbar'); if(toolbar)toolbar.style.display='grid';      const quickMenu=document.getElementById('xuanQuickSwitchMenu'); if(quickMenu)quickMenu.classList.remove('open');
+      const toolbar=document.getElementById('xuanContentToolbar'); if(toolbar)toolbar.style.display='grid';
+      const quickMenu=document.getElementById('xuanQuickSwitchMenu'); if(quickMenu)quickMenu.classList.remove('open');
       const quickBtn=document.getElementById('xuanQuickSwitchBtn'); if(quickBtn)quickBtn.setAttribute('aria-expanded','false');
       const footer=document.getElementById('xuanSharedFooter'); if(footer)footer.style.display='none';
       window.scrollTo({top:0,behavior:'smooth'});
@@ -40957,7 +40997,8 @@ html[data-theme="light"] #xuanEntryLocationContent .location-weather-grid > .loc
   #countrySwitcher .site-brand-title {
     font-size: 18px !important;
     letter-spacing: -0.35px !important;
-    white-space: nowrap !important;    overflow: visible !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
     text-overflow: clip !important;
     max-width: none !important;
   }
@@ -41957,6 +41998,7 @@ html[data-theme="light"] .xuan-popup-v2 .station-popup-weather span {
   opacity: 1 !important;
 }
 html[data-theme="light"] .xuan-popup-v2 .station-popup-weather strong { color: #0f172a !important; font-weight: 850 !important; }
+
 /* 日期／時間長按：自繪月曆與即時動態指針時鐘 */
 .xuan-longpress-panel{display:none;width:100%;margin:-5px 0 16px;padding:14px;border-radius:18px;background:var(--popup-bg,#fff);color:var(--popup-text,#0f172a);border:1px solid rgba(148,163,184,.25);box-shadow:0 8px 24px rgba(15,23,42,.12);animation:xuanInlineExpand .22s ease-out}
 .xuan-longpress-panel.show{display:block}
@@ -42955,7 +42997,8 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
 /* 逐時預報所在地移至標題後方，與未來24小時趨勢標題使用相同分隔線及字級。 */
 #localForecastPanel .local-forecast-heading .local-hourly-title-inline {
   display:flex !important; align-items:center; flex-wrap:wrap; gap:0.22em 0.12em;
-  font-size:clamp(18px,2.6vw,23px) !important; line-height:1.4 !important;  font-weight:800 !important; color:var(--text-color) !important;
+  font-size:clamp(18px,2.6vw,23px) !important; line-height:1.4 !important;
+  font-weight:800 !important; color:var(--text-color) !important;
 }
 #localForecastPanel .local-hourly-title-inline > i { flex:0 0 auto; margin-right:0.12em; }
 #localForecastPanel .local-hourly-title-inline .local-hourly-title-separator {
@@ -43466,4 +43509,3 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
   };
 })();
 </script>
-</body></html>
