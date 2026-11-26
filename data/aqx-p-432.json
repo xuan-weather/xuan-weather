@@ -407,10 +407,10 @@
         "wind_speed": "",
         "wind_direc": "",
         "publishtime": "2026\/11\/27 02:00:00",
-        "co_8hr": "",
+        "co_8hr": "0.5",
         "pm2.5_avg": "",
         "pm10_avg": "",
-        "so2_avg": "",
+        "so2_avg": "1",
         "longitude": "121.30501",
         "latitude": "24.99471",
         "siteid": "17"
