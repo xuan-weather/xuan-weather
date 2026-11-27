@@ -9359,10 +9359,6 @@ html[data-theme="dark"] .xuan-popup-v2 .station-popup-slide-title{color:#f8fafc!
                     <button type="button" id="radarLightningToggle" class="radar-lightning-toggle" aria-pressed="false" disabled title="目前沒有可用的中央氣象署閃電資料">
                         <i class="fas fa-bolt"></i><span>閃電：無資料</span>
                     </button>
-                    <button type="button" id="radarConvectiveToggle" class="radar-analysis-toggle convective" aria-pressed="false" title="顯示中央氣象署 QPESUMS 對流胞監測圖層"><i class="fas fa-bullseye"></i><span>強對流辨識</span></button>
-                    <button type="button" id="radarCloudTopToggle" class="radar-analysis-toggle cloud-top" aria-pressed="false" title="顯示紅外線冷雲區作為雲頂高度參考；不是直接高度量測"><i class="fas fa-cloud"></i><span>雲頂高度參考</span></button>
-                    <button type="button" id="radarLightningHeatToggle" class="radar-analysis-toggle lightning-heat" aria-pressed="false" title="依最近 60 分鐘閃電定位計算密度熱區"><i class="fas fa-fire"></i><span>閃電密度</span></button>
-                    <button type="button" id="radarRainStationsToggle" class="radar-analysis-toggle rain-stations" aria-pressed="false" title="顯示 CWA 自動雨量站即時觀測"><i class="fas fa-cloud-rain"></i><span>雨量測站</span></button>
                 </div>
             </div>
             <div class="radar-page-map-wrap">
@@ -32973,8 +32969,6 @@ const popVal = getPopForStation(county, town);
             radarMap.getPane('radarRainStationPane').style.zIndex='695';
             radarLightningHeatLayer=L.layerGroup();
             radarRainStationLayer=L.layerGroup();
-            const analysisBindings=[['radarConvectiveToggle',toggleRadarConvectiveLayer],['radarCloudTopToggle',toggleRadarCloudTopReference],['radarLightningHeatToggle',toggleRadarLightningDensity],['radarRainStationsToggle',toggleRadarRainStations]];
-            analysisBindings.forEach(([id,fn])=>{const b=document.getElementById(id);if(b&&!b.dataset.bound){b.dataset.bound='true';b.addEventListener('click',fn);}});
             const radarLightningButton=document.getElementById('radarLightningToggle');
             if(radarLightningButton && !radarLightningButton.dataset.bound){
                 radarLightningButton.dataset.bound='true';
