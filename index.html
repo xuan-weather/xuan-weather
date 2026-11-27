@@ -44953,4 +44953,204 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
     });
     const list = document.getElementById('stationTempPointList');
     const wrap24 = document.getElementById('stationTemp24hCanvasWrap');
-    const wrap7 = document.getElementById('stationTemp7dCanvasWrap');
+    const wrap7 = document.getElementById('stationTemp7dCanvasWrap');    const title = document.getElementById('chartMainTitle');
+    const subtitle = document.getElementById('chartTimeSubtitle');
+    const extremes = document.getElementById('stationTempExtremes');
+    if(list) list.style.display = next === '24h' ? '' : 'none';
+    if(wrap24) wrap24.style.display = next === '24h' ? '' : 'none';
+    if(wrap7) wrap7.style.display = next === '7d' ? '' : 'none';
+    const clickHint = document.getElementById('stationTemp7dClickHint');
+    if(clickHint) clickHint.style.display = next === '7d' ? 'block' : 'none';
+
+    if(next === '7d'){
+      if(!saved24h && title && subtitle && extremes){
+        saved24h = {title:title.textContent,subtitle:subtitle.textContent,extremes:extremes.innerHTML,aria:extremes.getAttribute('aria-label')};
+      }
+      if(title) title.textContent = `${window.xuanStationTemp7dStationName || '測站'} 過去 7 天溫度變化趨勢`;
+      window.renderXuanStationTemp7dChart();
+    }else{
+      if(title && saved24h) title.textContent = saved24h.title;
+      if(subtitle && saved24h) subtitle.textContent = saved24h.subtitle;
+      if(extremes && saved24h){
+        extremes.innerHTML = saved24h.extremes;
+        if(saved24h.aria) extremes.setAttribute('aria-label',saved24h.aria);
+      }
+      requestAnimationFrame(()=>{
+        if(window.tempChart && typeof window.tempChart.resize === 'function') window.tempChart.resize();
+      });
+    }
+  }
+
+  window.renderXuanStationTemp7dChart = function(){
+    const canvas = document.getElementById('stationTemp7dChart');
+    const subtitle = document.getElementById('chartTimeSubtitle');
+    const title = document.getElementById('chartMainTitle');
+    const extremes = document.getElementById('stationTempExtremes');
+    if(!canvas || typeof Chart === 'undefined') return;
+    const points = Array.isArray(window.xuanStationTemp7dPoints) ? window.xuanStationTemp7dPoints : [];
+    if(title) title.textContent = `${window.xuanStationTemp7dStationName || '測站'} 過去 7 天溫度變化趨勢`;
+    if(points.length < 2){
+      if(subtitle) subtitle.textContent = '過去 7 天實測資料不足，資料累積中';
+      if(chart7d){chart7d.destroy();chart7d=null;}
+      return;
+    }
+    const first = points[0], last = points[points.length-1];
+    const fmtDateTime = ts => new Intl.DateTimeFormat('zh-TW',{
+      timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+    }).format(new Date(ts));
+    const fmtTime = ts => new Intl.DateTimeFormat('zh-TW',{
+      timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+    }).format(new Date(ts));
+    if(subtitle) subtitle.textContent = `${fmtDateTime(first.x)} ～ ${fmtDateTime(last.x)}`;
+    const vals = points.map(p=>Number(p.y)).filter(Number.isFinite);
+    if(extremes && vals.length){
+      extremes.innerHTML = `<div class="temp-chart-extreme-high">最高 ${Math.max(...vals).toFixed(1)}°C</div><div class="temp-chart-extreme-low">最低 ${Math.min(...vals).toFixed(1)}°C</div>`;
+      extremes.setAttribute('aria-label','過去7天最高及最低實測氣溫');
+    }
+    if(chart7d){try{chart7d.destroy();}catch(e){} chart7d=null;}
+    selectedIndex = points.length-1;
+    const light = document.documentElement.getAttribute('data-theme') === 'light';
+    const textColor = light ? '#475569' : '#cbd5e1';
+    const gridColor = light ? 'rgba(100,116,139,.16)' : 'rgba(148,163,184,.16)';
+    const setTooltipSide = (chart,index) => {
+      const element = chart?.getDatasetMeta(0)?.data?.[index];
+      const area = chart?.chartArea;
+      if(!element || !area || !chart.options?.plugins?.tooltip) return;
+      const midpoint = area.left + (area.right - area.left) / 2;
+      // 選取點在圖表左半部時，提示框放在右側；選取點在右半部時，提示框放在左側，
+      // 避免提示框覆蓋紅色垂直選取虛線。
+      // Chart.js 的 xAlign 是提示框相對錨點的對齊方向；右側選取點使用 right，
+      // 讓提示框完整移到選取線左側，左側選取點則使用 left。
+      chart.options.plugins.tooltip.xAlign = element.x <= midpoint ? 'left' : 'right';
+      if (chart.tooltip?.options) chart.tooltip.options.xAlign = chart.options.plugins.tooltip.xAlign;
+    };
+    const cursorPlugin = {
+      id:'xuanStation7dSelectedCursor',
+      afterEvent(chart,args){
+        const ev=args?.event;
+        if(!ev || !['mousemove','click','touchstart','touchmove'].includes(ev.type)) return;
+        const hits=chart.getElementsAtEventForMode(ev,'nearest',{axis:'x',intersect:false},false);
+        if(hits && hits.length){
+          selectedIndex=hits[0].index;
+          setTooltipSide(chart,selectedIndex);
+          const active=[{datasetIndex:0,index:selectedIndex}];
+          chart.setActiveElements(active);
+          const el=chart.getDatasetMeta(0)?.data?.[selectedIndex];
+          if(el && chart.tooltip) chart.tooltip.setActiveElements(active,{x:el.x,y:el.y});
+          args.changed=true;
+        }
+      },
+      afterDraw(chart){
+        const el=chart.getDatasetMeta(0)?.data?.[selectedIndex];
+        const area=chart.chartArea;
+        if(!el || !area || !Number.isFinite(el.x) || !Number.isFinite(el.y)) return;
+        const c=chart.ctx;c.save();
+        c.beginPath();c.setLineDash([7,7]);c.lineWidth=2;c.strokeStyle='rgba(220,38,38,.48)';
+        c.moveTo(el.x,area.top);c.lineTo(el.x,area.bottom);c.stroke();
+        c.setLineDash([]);c.beginPath();c.arc(el.x,el.y,6,0,Math.PI*2);
+        c.fillStyle='#dc2626';c.fill();c.lineWidth=3;c.strokeStyle='#fff';c.stroke();c.restore();
+      }
+    };
+    chart7d = new Chart(canvas.getContext('2d'),{
+      type:'line',plugins:[cursorPlugin],
+      data:{datasets:[{
+        label:'過去 7 天實測氣溫',data:points,parsing:false,
+        borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.10)',
+        borderWidth:3,fill:'start',tension:.25,pointRadius:0,pointHoverRadius:4,
+        pointHitRadius:12,spanGaps:false
+      }]},
+      options:{
+        responsive:true,maintainAspectRatio:false,animation:false,
+        events:['mousemove','mouseout','click','touchstart','touchmove'],
+        interaction:{mode:'nearest',intersect:false,axis:'x'},
+        onClick:(event,activeElements,chart)=>{
+          const xScale=chart.scales?.x;
+          if(!xScale || typeof xScale.getValueForPixel!=='function') return;
+          const ts=Number(xScale.getValueForPixel(event.x));
+          if(!Number.isFinite(ts) || ts<Number(first.x) || ts>Number(last.x)) return;
+          // 依點擊位置換算臺灣當地日期；日期間的中午網格線也可直接點擊。
+          const local=new Date(ts+8*60*60*1000);
+          const dayStartTs=Date.UTC(local.getUTCFullYear(),local.getUTCMonth(),local.getUTCDate())-8*60*60*1000;
+          window.openHomeTemperatureDayDetail(dayStartTs,points,window.xuanStationTemp7dStationName||'測站');
+        },
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            enabled:true,displayColors:false,
+            backgroundColor:light?'#fff':'rgba(15,23,42,.98)',
+            titleColor:light?'#111827':'#f8fafc',bodyColor:light?'#111827':'#f8fafc',
+            borderColor:'rgba(220,38,38,.55)',borderWidth:1.5,padding:7,cornerRadius:8,
+            callbacks:{
+              title:items=>items[0]?.raw ? fmtTime(Number(items[0].raw.x)) : '',
+              label:item=>`${Number(item.parsed.y).toFixed(1)}°C`
+            }
+          }
+        },
+        scales:{
+          x:{
+            type:'linear',min:first.x,max:last.x,
+            grid:{color:gridColor},
+            afterBuildTicks:scale=>{
+              // 日期標籤只從第一筆資料所在日期的「隔天」開始，
+              // 避免最左側不完整日期擠在圖框邊緣；每個日期只建立一個 00:00 刻度。
+              // 每日 12:00 另外建立無文字的網格線，表示當日中午位置。
+              // 不額外加入最後一筆資料時間，避免最右側日期重複顯示。
+              const day=24*60*60*1000;
+              const halfDay=12*60*60*1000;
+              const taiwanOffset=8*60*60*1000;
+              const firstTs=Number(first.x);
+              const lastTs=Number(last.x);
+              const firstMidnight=Math.floor((firstTs+taiwanOffset)/day)*day-taiwanOffset;
+              const ticks=[];
+              for(let midnight=firstMidnight+day;midnight<=lastTs;midnight+=day){
+                if(midnight>=firstTs) ticks.push({value:midnight});
+                const noon=midnight+halfDay;
+                if(noon>firstTs && noon<lastTs) ticks.push({value:noon});
+              }
+              scale.ticks=ticks.sort((a,b)=>a.value-b.value);
+            },
+            ticks:{
+              color:textColor,
+              autoSkip:false,
+              maxRotation:0,
+              minRotation:0,
+              callback:value=>{
+                const parts=new Intl.DateTimeFormat('en-CA',{
+                  timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+                }).formatToParts(new Date(Number(value)));
+                const part=type=>parts.find(item=>item.type===type)?.value;
+                // 中午刻度保留網格線但不顯示文字。
+                if(part('hour')==='12' && part('minute')==='00') return '';
+                return `${part('month')}/${part('day')}`;
+              }
+            }
+          },
+          y:{grid:{color:gridColor},ticks:{color:textColor,callback:value=>`${Number(value).toFixed(0)}`}}
+        }
+      }
+    });
+    const active=[{datasetIndex:0,index:selectedIndex}];
+    setTooltipSide(chart7d,selectedIndex);
+    chart7d.setActiveElements(active);
+    const el=chart7d.getDatasetMeta(0)?.data?.[selectedIndex];
+    if(el && chart7d.tooltip) chart7d.tooltip.setActiveElements(active,{x:el.x,y:el.y});
+    chart7d.update('none');
+    requestAnimationFrame(()=>{if(chart7d) chart7d.resize();});
+  };
+
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('[data-station-temp-range]');
+    if(button) setRange(button.dataset.stationTempRange);
+  });
+
+  // 測站更換時回到 24 小時；重新整理頁面也由 HTML 預設顯示 24 小時與最新資料。
+  window.resetXuanStationTempRange = function(stationName){
+    const key=String(stationName || '');
+    if(window.xuanStationTempCurrentKey !== key){
+      window.xuanStationTempCurrentKey=key;
+      saved24h=null;
+      setRange('24h');
+    }
+  };
+})();
+</script>
