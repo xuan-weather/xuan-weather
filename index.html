@@ -1807,6 +1807,17 @@
             touch-action:pan-x;
         }
         .map-mode-btn-group::-webkit-scrollbar{display:none;}
+
+        .map-mode-family{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:3px 5px;border:1px solid rgba(148,163,184,.3);border-radius:13px;background:rgba(15,23,42,.42)}
+        .map-mode-family-label{font-size:11px;font-weight:800;color:#cbd5e1;white-space:nowrap;padding:0 3px}
+        .map-mode-family-options{display:flex;align-items:center;gap:3px}
+        .map-mode-family-options button{min-height:31px!important;padding:6px 10px!important;border-radius:9px!important;font-size:12px!important}
+        .map-mode-family-options button.active{background:#0ea5e9!important;border-color:#38bdf8!important;color:#fff!important}
+        [data-theme="light"] .map-mode-family{background:#f1f5f9;border-color:#cbd5e1}
+        [data-theme="light"] .map-mode-family-label{color:#475569}
+        [data-theme="light"] .map-mode-family-options button{background:#e2e8f0!important;color:#475569!important}
+        [data-theme="light"] .map-mode-family-options button.active{background:#0ea5e9!important;color:#fff!important}
+
         .map-mode-btn-group button{
             flex:0 0 auto;
             border:1px solid rgba(148,163,184,.28);
@@ -9430,13 +9441,23 @@ html[data-theme="dark"] .xuan-popup-v2 .station-popup-slide-title{color:#f8fafc!
                     </div>
                 </div>
                 <div class="map-mode-btn-group" id="mapModeBtnGroup" aria-label="天氣即時觀測資料圖層">
-                    <button id="btnMapTemp" class="active" onclick="switchMapMode('temp')">🌡️ 氣溫</button>
-                    <button id="btnMapApparent" onclick="switchMapMode('apparent')">🌡️ 體感溫度</button>
+                    <div class="map-mode-family" role="group" aria-label="氣溫觀測切換">
+                        <span class="map-mode-family-label">🌡️ 氣溫</span>
+                        <div class="map-mode-family-options">
+                            <button type="button" data-map-mode="temp" class="active" aria-pressed="true" onclick="switchMapMode('temp')">氣溫</button>
+                            <button type="button" data-map-mode="apparent" aria-pressed="false" onclick="switchMapMode('apparent')">體感</button>
+                        </div>
+                    </div>
+                    <div class="map-mode-family" role="group" aria-label="累積雨量觀測切換">
+                        <span class="map-mode-family-label">🌧️ 累積雨量</span>
+                        <div class="map-mode-family-options">
+                            <button type="button" data-map-mode="rain" aria-pressed="false" onclick="switchMapMode('rain')">日雨量</button>
+                            <button type="button" data-map-mode="rain2d" aria-pressed="false" onclick="switchMapMode('rain2d')">2日</button>
+                            <button type="button" data-map-mode="rain3d" aria-pressed="false" onclick="switchMapMode('rain3d')">3日</button>
+                        </div>
+                    </div>
                     <button id="btnMapPop" onclick="switchMapMode('pop')">📈 降雨機率</button>
                     <button id="btnMapHumidity" onclick="switchMapMode('humidity')">💧 濕度</button>
-                    <button id="btnMapRain" onclick="switchMapMode('rain')">🌧️ 日雨量</button>
-                    <button id="btnMapRain2d" onclick="switchMapMode('rain2d')">2日累積</button>
-                    <button id="btnMapRain3d" onclick="switchMapMode('rain3d')">3日累積</button>
                     <button id="btnMapWind" onclick="switchMapMode('wind')">💨 風速</button>
                     <button id="btnMapWindGust" onclick="switchMapMode('windGust')">🌪️ 陣風</button>
                     <button id="btnMapWindFlow" onclick="switchMapMode('windFlow')">🌬️ 風場流向</button>
@@ -29415,6 +29436,11 @@ const popVal = getPopForStation(county, town);
             if (!validModes.includes(mode)) return;
 
             currentMapMode = mode;
+            document.querySelectorAll('[data-map-mode]').forEach(button => {
+                const selected = button.dataset.mapMode === mode;
+                button.classList.toggle('active', selected);
+                button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+            });
             const apparentNote = document.getElementById('apparentTemperatureNote');
             if (apparentNote) apparentNote.style.display = mode === 'apparent' ? 'block' : 'none';
             updateLowlandLowTempTop10Callouts();
