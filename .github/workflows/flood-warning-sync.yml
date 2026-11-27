@@ -1,0 +1,189 @@
+name: Sync WRA Flood Warning
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: flood-warning-sync
+  cancel-in-progress: false
+
+jobs:
+  update-flood-warning:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch and parse official WRA flood warning KML
+        shell: python
+        run: |
+          import json
+          import re
+          import html
+          import urllib.request
+          import xml.etree.ElementTree as ET
+          from datetime import datetime, timezone, timedelta
+          from html.parser import HTMLParser
+          from pathlib import Path
+
+          SOURCE_URL = "https://opendata.wra.gov.tw/cloud/5982FloodWarningOfDisasterPreventionInformation/286-%E9%98%B2%E7%81%BD%E8%B3%87%E8%A8%8A_%E6%B7%B9%E6%B0%B4%E8%AD%A6%E6%88%92.kml"
+          OUTPUT = Path("data/flood-warning.json")
+          TZ = timezone(timedelta(hours=8))
+
+          class TextOnly(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.parts = []
+              def handle_data(self, data):
+                  self.parts.append(data)
+              def text(self):
+                  return re.sub(r"\\s+", " ", " ".join(self.parts)).strip()
+
+          def clean(value):
+              parser = TextOnly()
+              parser.feed(html.unescape(value or ""))
+              return parser.text()
+
+          def local(tag):
+              return tag.rsplit("}", 1)[-1]
+
+          request = urllib.request.Request(
+              SOURCE_URL,
+              headers={"User-Agent": "XuanWeather-FloodWarning/1.0"}
+          )
+          with urllib.request.urlopen(request, timeout=30) as response:
+              raw = response.read()
+              source_last_modified = response.headers.get("Last-Modified")
+              source_etag = response.headers.get("ETag")
+
+          root = ET.fromstring(raw)
+          placemarks = [node for node in root.iter() if local(node.tag) == "Placemark"]
+          alerts = []
+          no_warning_text = False
+
+          for index, placemark in enumerate(placemarks, start=1):
+              name = ""
+              description = ""
+              fields = {}
+
+              for node in placemark.iter():
+                  tag = local(node.tag)
+                  if tag == "name" and not name:
+                      name = clean("".join(node.itertext()))
+                  elif tag == "description":
+                      description = clean("".join(node.itertext()))
+                  elif tag == "Data":
+                      key = node.attrib.get("name", "")
+                      value = next((clean("".join(child.itertext())) for child in node if local(child.tag) == "value"), "")
+                      if key:
+                          fields[key] = value
+                  elif tag == "SimpleData":
+                      key = node.attrib.get("name", "")
+                      if key:
+                          fields[key] = clean("".join(node.itertext()))
+
+              combined = " ".join([name, description, *fields.keys(), *fields.values()])
+              if re.search(r"目前無警戒|目前無淹水警戒|無淹水警戒", combined):
+                  no_warning_text = True
+                  continue
+
+              level_code = None
+              for key, value in fields.items():
+                  if re.search(r"警戒|level", key, re.I):
+                      match = re.search(r"([123])", value)
+                      if match:
+                          level_code = int(match.group(1))
+                          break
+
+              if level_code is None:
+                  if re.search(r"一級|第一級|1\\s*級|level\\s*1", combined, re.I):
+                      level_code = 1
+                  elif re.search(r"二級|第二級|2\\s*級|level\\s*2", combined, re.I):
+                      level_code = 2
+                  elif re.search(r"三級|第三級|3\\s*級|level\\s*3", combined, re.I):
+                      level_code = 3
+
+              level_label = {1: "一級警戒", 2: "二級警戒", 3: "三級警戒"}.get(level_code, "官方警戒區域")
+              county_match = re.search(r"(臺北市|台北市|新北市|桃園市|臺中市|台中市|臺南市|台南市|高雄市|基隆市|新竹市|嘉義市|新竹縣|苗栗縣|彰化縣|南投縣|雲林縣|嘉義縣|屏東縣|宜蘭縣|花蓮縣|臺東縣|台東縣|澎湖縣|金門縣|連江縣)", combined)
+              town_match = re.search(r"([\\u4e00-\\u9fff]{1,6}(?:鄉|鎮|市|區))", combined)
+              county = county_match.group(1) if county_match else ""
+              town = town_match.group(1) if town_match else ""
+              area = " ".join(part for part in [county, town] if part) or name or f"警戒區域 {index}"
+
+              alerts.append({
+                  "name": name or area,
+                  "county": county,
+                  "town": town,
+                  "area": area,
+                  "level": level_code,
+                  "levelLabel": level_label,
+                  "description": description[:600],
+                  "fields": fields
+              })
+
+          # 不把解析失敗或空白檔案誤判為「無警戒」。
+          if alerts:
+              status = "active"
+              message = f"水利署資料列出 {len(alerts)} 筆淹水警戒區域"
+          elif no_warning_text or (len(placemarks) == 0 and re.search(r"目前無警戒|無淹水警戒", raw.decode("utf-8", "ignore"))):
+              status = "no_warning"
+              message = "官方資料目前未列出淹水警戒"
+          else:
+              status = "unknown"
+              message = "來源檔目前沒有可辨識的警戒區域；請以水利署官方頁面為準"
+
+          alerts.sort(key=lambda item: (item["level"] or 9, item["county"], item["town"], item["name"]))
+
+          OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+          previous = {}
+          if OUTPUT.exists():
+              try:
+                  previous = json.loads(OUTPUT.read_text(encoding="utf-8"))
+              except Exception:
+                  previous = {}
+
+          comparable = {
+              "status": status,
+              "sourceLastModified": source_last_modified,
+              "sourceEtag": source_etag,
+              "alerts": alerts
+          }
+          previous_comparable = {
+              "status": previous.get("status"),
+              "sourceLastModified": previous.get("sourceLastModified"),
+              "sourceEtag": previous.get("sourceEtag"),
+              "alerts": previous.get("alerts", [])
+          }
+
+          if comparable == previous_comparable:
+              print("官方淹水警戒資料沒有變化，略過提交。")
+          else:
+              now = datetime.now(TZ).isoformat(timespec="seconds")
+              payload = {
+                  **comparable,
+                  "generatedAt": now,
+                  "sourceUrl": "https://data.gov.tw/dataset/5982",
+                  "sourceKmlUrl": SOURCE_URL,
+                  "message": message
+              }
+              OUTPUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+              print(f"已更新淹水警戒資料：{status}，{len(alerts)} 筆。")
+
+      - name: Commit changed flood warning data
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- data/flood-warning.json; then
+            echo "Flood warning data unchanged; skip commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/flood-warning.json
+          git commit -m "chore: sync official flood warning data"
+          git push
