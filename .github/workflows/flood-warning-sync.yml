@@ -101,17 +101,17 @@ jobs:
                           break
 
               if level_code is None:
-                  if re.search(r"一級|第一級|1\\s*級|level\\s*1", combined, re.I):
+                  if re.search(r"一級|第一級|1\s*級|level\s*1", combined, re.I):
                       level_code = 1
-                  elif re.search(r"二級|第二級|2\\s*級|level\\s*2", combined, re.I):
+                  elif re.search(r"二級|第二級|2\s*級|level\s*2", combined, re.I):
                       level_code = 2
-                  elif re.search(r"三級|第三級|3\\s*級|level\\s*3", combined, re.I):
+                  elif re.search(r"三級|第三級|3\s*級|level\s*3", combined, re.I):
                       level_code = 3
 
               level_label = {1: "一級警戒", 2: "二級警戒", 3: "三級警戒"}.get(level_code, "官方警戒區域")
               county_match = re.search(r"(臺北市|台北市|新北市|桃園市|臺中市|台中市|臺南市|台南市|高雄市|基隆市|新竹市|嘉義市|新竹縣|苗栗縣|彰化縣|南投縣|雲林縣|嘉義縣|屏東縣|宜蘭縣|花蓮縣|臺東縣|台東縣|澎湖縣|金門縣|連江縣)", combined)
               town_source = combined.replace(county_match.group(1), " ") if county_match else combined
-          town_match = re.search(r"([\u4e00-\u9fff]{1,6}(?:鄉|鎮|市|區))", town_source)
+              town_match = re.search(r"([\u4e00-\u9fff]{1,6}(?:鄉|鎮|市|區))", town_source)
               county = county_match.group(1) if county_match else ""
               town = town_match.group(1) if town_match else ""
               area = " ".join(part for part in [county, town] if part) or name or f"警戒區域 {index}"
