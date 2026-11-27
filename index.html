@@ -8754,6 +8754,57 @@ html[data-theme="dark"] .xuan-popup-v2 .station-popup-slide-title{color:#f8fafc!
 </style>
 <div id="rainMonitoringPanel" class="content-panel modern-dashboard rainmon">
  <div class="header"><div class="header-title"><i class="fas fa-cloud-showers-heavy" style="color:#38bdf8"></i><h2>即時降雨監測</h2></div><button class="rainmon-btn" id="rmRefresh">↻ 更新資料</button></div>
+ 
+<style id="xuan-flood-warning-monitor-style">
+#floodWarningMonitorCard{margin:0 0 14px}
+#floodWarningMonitorCard .fwm-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px}
+#floodWarningMonitorCard .fwm-stat{min-width:0;padding:10px;border:1px solid var(--panel-border);border-radius:12px;background:var(--action-bg)}
+#floodWarningMonitorCard .fwm-stat span{display:block;font-size:10px;color:var(--text-muted)}
+#floodWarningMonitorCard .fwm-stat strong{display:block;margin-top:4px;font-size:21px;font-weight:900}
+#floodWarningMonitorCard .fwm-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:0 12px 10px}
+#floodWarningMonitorCard .fwm-toolbar-controls{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+#floodWarningMonitorCard select,#floodWarningMonitorCard button{border:1px solid var(--action-border);border-radius:9px;background:var(--select-bg);color:var(--text-color);padding:8px 10px;font-size:11px}
+#floodWarningMonitorCard button{cursor:pointer;font-weight:800}
+#floodWarningMonitorCard .fwm-list{padding:0 12px 12px;display:grid;gap:8px}
+#floodWarningMonitorCard .fwm-row{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;padding:11px;border:1px solid var(--panel-border);border-radius:12px;background:var(--action-bg)}
+#floodWarningMonitorCard .fwm-level{align-self:start;display:inline-flex;justify-content:center;padding:5px 8px;border-radius:8px;font-size:11px;font-weight:900;background:rgba(148,163,184,.14);color:var(--text-muted)}
+#floodWarningMonitorCard .fwm-level.l1{background:rgba(239,68,68,.16);color:#ef4444}
+#floodWarningMonitorCard .fwm-level.l2{background:rgba(249,115,22,.16);color:#f97316}
+#floodWarningMonitorCard .fwm-level.l3{background:rgba(234,179,8,.16);color:#eab308}
+#floodWarningMonitorCard .fwm-area{font-size:13px;font-weight:900;overflow-wrap:anywhere}
+#floodWarningMonitorCard .fwm-detail{margin-top:4px;font-size:11px;line-height:1.55;color:var(--text-muted);overflow-wrap:anywhere}
+#floodWarningMonitorCard .fwm-empty{padding:18px 12px;text-align:center;border:1px dashed var(--panel-border);border-radius:12px;color:var(--text-muted);font-size:12px}
+#floodWarningMonitorCard .fwm-empty.ok{color:#22c55e;border-color:rgba(34,197,94,.3)}
+#floodWarningMonitorCard .fwm-foot{padding:0 12px 12px;font-size:10px;line-height:1.6;color:var(--text-muted)}
+@media(max-width:480px){#floodWarningMonitorCard .fwm-stats{gap:5px;padding:10px}#floodWarningMonitorCard .fwm-stat{padding:8px}#floodWarningMonitorCard .fwm-stat strong{font-size:18px}#floodWarningMonitorCard .fwm-row{grid-template-columns:1fr;gap:6px}}
+</style>
+
+<section class="rainmon-card" id="floodWarningMonitorCard" aria-label="淹水警戒監測">
+ <div class="rainmon-head">
+  <div><h3>🚨 淹水警戒監測</h3><div class="rainmon-help">經濟部水利署官方防災資訊淹水警戒</div></div>
+  <a class="rainmon-btn" href="https://fhy.wra.gov.tw/fhyv2/alert/warn" target="_blank" rel="noopener">官方即時警戒 ↗</a>
+ </div>
+ <div class="fwm-stats">
+  <div class="fwm-stat"><span>警戒區域</span><strong id="fwmTotal">--</strong></div>
+  <div class="fwm-stat"><span>一級警戒</span><strong id="fwmLevel1">--</strong></div>
+  <div class="fwm-stat"><span>二級警戒</span><strong id="fwmLevel2">--</strong></div>
+ </div>
+ <div class="fwm-toolbar">
+  <span class="rainmon-help" id="fwmStatus" aria-live="polite">等待官方資料同步…</span>
+  <div class="fwm-toolbar-controls">
+   <select id="fwmCounty" aria-label="淹水警戒縣市篩選"><option value="">全臺灣</option></select>
+   <button type="button" id="fwmRefresh">↻ 重新整理</button>
+  </div>
+ </div>
+ <div class="fwm-list" id="fwmList"><div class="fwm-empty">等待首次同步官方淹水警戒資料…</div></div>
+ <div class="fwm-foot">
+  <div id="fwmDataTime">資料檔更新時間：尚未同步</div>
+  <div id="fwmCheckedTime">本頁最近檢查：--</div>
+  官方資料集標示為「不定期更新」；Xuan Weather 每 10 分鐘檢查來源、頁面每 5 分鐘重新讀取。若官方來源未更新，畫面不會自行推測警戒狀態。
+  <br>資料來源：<a href="https://data.gov.tw/dataset/5982" target="_blank" rel="noopener">政府資料開放平臺－防災資訊淹水警戒</a>（經濟部水利署）
+ </div>
+</section>
+
  <div class="rainmon-stats"><div class="rainmon-stat"><span>取得測站</span><b id="rmStationCount">—</b></div><div class="rainmon-stat"><span>有雨測站</span><b id="rmWetCount">—</b></div><div class="rainmon-stat"><span>最高 1 小時雨量</span><b id="rmMax">—</b><span id="rmMaxName">尚未載入</span></div></div>
  <div class="rainmon-grid">
   <section class="rainmon-card"><div class="rainmon-head"><div><h3>🛰️ 臺灣雷達回波</h3><div class="rainmon-help" id="rmRadarTime">中央氣象署公開產品</div></div><a class="rainmon-btn" href="https://qpeplus.cwa.gov.tw/" target="_blank" rel="noopener">官方雷達動畫 ↗</a></div><div class="rainmon-radar"><img id="rmRadarImg" alt="中央氣象署雷達回波影像" src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-003.png"></div><div class="rainmon-actions"><button class="rainmon-btn primary" id="rmRadarReload">重新載入雷達</button><span class="rainmon-help" id="rmRadarStatus">影像載入中…</span></div></section>
@@ -44337,6 +44388,112 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
   }
 }
 </style>
+
+
+<script id="xuan-flood-warning-monitor-script">
+(function(){
+  const DATA_URL = 'data/flood-warning.json';
+  const $ = id => document.getElementById(id);
+  const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  let currentData = null;
+  let busy = false;
+
+  function formatTime(value){
+    if(!value) return '尚未提供';
+    const date = new Date(value);
+    if(Number.isNaN(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(date);
+  }
+  function levelInfo(item){
+    const n = Number(item.level);
+    if(n === 1) return {label:'一級警戒',cls:'l1'};
+    if(n === 2) return {label:'二級警戒',cls:'l2'};
+    if(n === 3) return {label:'三級警戒',cls:'l3'};
+    return {label:item.levelLabel || '官方警戒區域',cls:''};
+  }
+  function render(){
+    const data = currentData || {};
+    const alerts = Array.isArray(data.alerts) ? data.alerts : [];
+    const county = $('fwmCounty')?.value || '';
+    const level1 = alerts.filter(item => Number(item.level) === 1).length;
+    const level2 = alerts.filter(item => Number(item.level) === 2).length;
+    if($('fwmTotal')) $('fwmTotal').textContent = String(alerts.length);
+    if($('fwmLevel1')) $('fwmLevel1').textContent = String(level1);
+    if($('fwmLevel2')) $('fwmLevel2').textContent = String(level2);
+
+    const counties = [...new Set(alerts.map(item => item.county).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-TW'));
+    const select = $('fwmCounty');
+    if(select){
+      const previous = select.value;
+      select.innerHTML = '<option value="">全臺灣</option>' + counties.map(name=>'<option value="'+esc(name)+'">'+esc(name)+'</option>').join('');
+      select.value = counties.includes(previous) ? previous : '';
+    }
+
+    const visible = alerts.filter(item => !county || item.county === county);
+    const list = $('fwmList');
+    if(list){
+      if(data.status === 'no_warning'){
+        list.innerHTML = '<div class="fwm-empty ok">✓ 官方資料目前未列出淹水警戒</div>';
+      }else if(data.status === 'pending'){
+        list.innerHTML = '<div class="fwm-empty">等待首次同步官方淹水警戒資料…</div>';
+      }else if(data.status !== 'active' || !alerts.length){
+        list.innerHTML = '<div class="fwm-empty">目前沒有可確認的警戒清單。請查看水利署官方即時警戒頁面；不將來源空白誤判為無警戒。</div>';
+      }else if(!visible.length){
+        list.innerHTML = '<div class="fwm-empty">所選縣市目前沒有列出的淹水警戒區域。</div>';
+      }else{
+        list.innerHTML = visible.map(item=>{
+          const level = levelInfo(item);
+          const area = item.area || item.name || '警戒區域';
+          const detail = item.description || [item.county,item.town].filter(Boolean).join(' ') || '水利署官方淹水警戒範圍';
+          return '<article class="fwm-row"><span class="fwm-level '+level.cls+'">'+esc(level.label)+'</span><div><div class="fwm-area">'+esc(area)+'</div><div class="fwm-detail">'+esc(detail)+'</div></div></article>';
+        }).join('');
+      }
+    }
+    if($('fwmDataTime')) $('fwmDataTime').textContent = '資料檔更新時間：' + formatTime(data.generatedAt);
+    if($('fwmCheckedTime')) $('fwmCheckedTime').textContent = '本頁最近檢查：' + formatTime(new Date().toISOString());
+    if($('fwmStatus')){
+      $('fwmStatus').textContent = data.status === 'active'
+        ? '已取得官方警戒資料｜' + alerts.length + ' 筆區域'
+        : data.status === 'no_warning'
+          ? '官方資料目前未列出淹水警戒'
+          : data.status === 'pending'
+            ? '等待首次同步'
+            : '資料狀態待確認｜請以官方頁面為準';
+    }
+  }
+
+  async function load(manual){
+    if(busy) return;
+    busy = true;
+    const button = $('fwmRefresh');
+    if(button){button.disabled=true;button.textContent='讀取中…';}
+    try{
+      const response = await fetch(DATA_URL + '?t=' + Date.now(), {cache:'no-store'});
+      if(!response.ok) throw new Error('HTTP ' + response.status);
+      const data = await response.json();
+      if(!data || !Array.isArray(data.alerts) || !data.status) throw new Error('資料格式不正確');
+      currentData = data;
+      render();
+    }catch(error){
+      if($('fwmStatus')) $('fwmStatus').textContent = '無法讀取淹水警戒資料，請稍後重試';
+      if($('fwmList') && !currentData) $('fwmList').innerHTML = '<div class="fwm-empty">資料載入失敗；請直接查看水利署官方即時警戒頁面。</div>';
+      console.warn('[Xuan Flood Warning]', error);
+    }finally{
+      busy = false;
+      if(button){button.disabled=false;button.textContent='↻ 重新整理';}
+    }
+  }
+
+  document.addEventListener('change', event => {
+    if(event.target && event.target.id === 'fwmCounty') render();
+  });
+  document.addEventListener('click', event => {
+    if(event.target && event.target.closest && event.target.closest('#fwmRefresh')) load(true);
+  });
+  load(false);
+  window.setInterval(()=>load(false), 5 * 60 * 1000);
+})();
+</script>
 
 </body>
 </html>
