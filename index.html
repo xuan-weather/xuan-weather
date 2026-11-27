@@ -9749,6 +9749,30 @@ html[data-theme="dark"] .xuan-popup-v2 .station-popup-slide-title{color:#f8fafc!
                     </div>
                     <div class="weekly-forecast-trend-foot">依目前選擇的縣市與鄉鎮市區更新；溫度顯示每日預報高低範圍，降雨機率採白天與晚上時段較高值。</div>
                 </section>
+                <section class="county-weekly-extra-grid" aria-label="未來一週降雨與雲況分析">
+                    <article class="county-weekly-extra-card">
+                        <div class="county-weekly-extra-head"><i class="fas fa-cloud-showers-heavy"></i><div><strong>未來 7 天降雨趨勢</strong><small>每日最高降雨機率・依白天及夜間預報整理</small></div></div>
+                        <div class="county-weekly-extra-chart"><canvas id="countyWeeklyRainTrendChart" role="img" aria-label="未來七天降雨機率趨勢圖"></canvas></div>
+                        <div id="countyWeeklyRainSummary" class="county-weekly-extra-summary">等待一週預報資料…</div>
+                        <div class="county-weekly-extra-note">此圖顯示降雨機率，不代表預估雨量（mm）；官方資料未提供逐日定量雨量時，不自行推算雨量。</div>
+                    </article>
+                    <article class="county-weekly-extra-card">
+                        <div class="county-weekly-extra-head"><i class="fas fa-cloud"></i><div><strong>未來 7 天雲況變化</strong><small>依官方天氣現象整理白天／夜間雲況</small></div></div>
+                        <div id="countyWeeklyCloudTrend" class="county-weekly-cloud-list"><div class="county-insight-empty">等待一週預報資料…</div></div>
+                        <div class="county-weekly-extra-note">以官方天氣現象（晴、多雲、陰、降雨等）呈現雲況分類，並非衛星雲量或百分比雲量預報。</div>
+                    </article>
+                    <article class="county-weekly-extra-card">
+                        <div class="county-weekly-extra-head"><i class="fas fa-bell"></i><div><strong>天氣轉變提醒</strong><small>自動比較未來各日預報差異</small></div></div>
+                        <div id="countyWeeklyTransitionAlerts" class="county-weekly-transition-list"><div class="county-insight-empty">等待一週預報資料…</div></div>
+                        <div class="county-weekly-extra-note">依官方預報欄位及門檻產生趨勢提示，不取代氣象署正式警特報。</div>
+                    </article>
+                    <article class="county-weekly-extra-card">
+                        <div class="county-weekly-extra-head"><i class="fas fa-scale-balanced"></i><div><strong>預報與實際觀測比較</strong><small>比對所選鄉鎮附近 CWA 測站最新觀測</small></div></div>
+                        <div id="countyForecastObservationCompare" class="county-weekly-compare-content"><div class="county-insight-empty">正在等待預報與測站觀測資料…</div></div>
+                        <div class="county-weekly-extra-note">測站與鄉鎮預報網格位置、時間可能不同；差異僅供參考，不視為正式預報驗證分數。</div>
+                    </article>
+                </section>
+
                 <section class="county-regional-temperature" aria-label="北中南東未來一週氣溫柱狀圖">
                     <div class="county-regional-temperature-head">
                         <div class="weekly-forecast-trend-title"><i class="fas fa-chart-bar"></i><span>一週代表城市氣溫比較</span></div>
@@ -34384,6 +34408,35 @@ function passAqiMapFilter(value, filterValue){
   .site-brand-title { font-size: 18px !important; }
   .site-brand-subtitle { font-size: 11px !important; }
 }
+<style>
+/* 各縣市預報新增四項分析卡：採原頁面主題色，手機單欄避免橫向擠壓。 */
+.county-weekly-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0 8px;}
+.county-weekly-extra-card{min-width:0;padding:14px;border:1px solid var(--panel-border);border-radius:17px;background:var(--card-bg);box-shadow:0 5px 16px rgba(15,23,42,.05);}
+.county-weekly-extra-head{display:flex;align-items:flex-start;gap:9px;margin-bottom:10px;color:var(--text-color);}
+.county-weekly-extra-head>i{color:#38bdf8;font-size:19px;margin-top:2px;flex:0 0 auto;}
+.county-weekly-extra-head strong{display:block;font-size:15px;font-weight:900;}
+.county-weekly-extra-head small{display:block;margin-top:3px;color:var(--text-muted);font-size:10px;line-height:1.45;}
+.county-weekly-extra-chart{position:relative;height:205px;min-width:0;}
+.county-weekly-extra-chart canvas{display:block;width:100%!important;height:100%!important;}
+.county-weekly-extra-summary{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.county-weekly-extra-pill{padding:5px 8px;border-radius:9px;background:rgba(56,189,248,.10);color:var(--text-color);font-size:10px;font-weight:800;}
+.county-weekly-extra-note{margin-top:9px;color:var(--text-muted);font-size:10px;line-height:1.55;}
+.county-weekly-cloud-list{display:grid;gap:7px;}
+.county-weekly-cloud-row{display:grid;grid-template-columns:58px 1fr 1fr;align-items:center;gap:6px;padding:8px 9px;border-radius:10px;background:rgba(148,163,184,.08);font-size:11px;}
+.county-weekly-cloud-date{font-weight:900;color:var(--text-color);}
+.county-weekly-cloud-period{color:var(--text-muted);white-space:nowrap;}
+.county-weekly-cloud-period b{display:block;margin-top:2px;color:var(--text-color);font-size:12px;}
+.county-weekly-transition-item{display:flex;gap:8px;padding:9px 10px;margin-bottom:7px;border-radius:11px;background:rgba(148,163,184,.08);font-size:11px;line-height:1.5;color:var(--text-color);}
+.county-weekly-transition-item i{margin-top:2px;color:#38bdf8;flex:0 0 auto;}
+.county-weekly-transition-item.is-warning i{color:#f59e0b;}
+.county-weekly-compare-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.county-weekly-compare-item{padding:10px;border-radius:11px;background:rgba(148,163,184,.08);min-width:0;}
+.county-weekly-compare-item span{display:block;color:var(--text-muted);font-size:10px;}
+.county-weekly-compare-item strong{display:block;margin-top:4px;color:var(--text-color);font-size:18px;font-weight:900;overflow-wrap:anywhere;}
+.county-weekly-compare-item small{display:block;margin-top:3px;color:var(--text-muted);font-size:10px;line-height:1.4;}
+@media(max-width:650px){.county-weekly-extra-grid{grid-template-columns:1fr;gap:10px}.county-weekly-extra-card{padding:12px}.county-weekly-extra-chart{height:190px}.county-weekly-cloud-row{grid-template-columns:52px 1fr 1fr;}}
+</style>
+
 </style>
 
 
@@ -35861,6 +35914,7 @@ function passAqiMapFilter(value, filterValue){
         }
         weeklyRenderInsightPanels(rows,county,town);
         weeklyRenderCountyExtraPanels(rows,county,town);
+        countyWeeklyRenderObservationCompare(county,town,rows);
         const fmt=(value,digits=0)=>value===null||value===undefined||value===''||!Number.isFinite(Number(value))?'—':Number(value).toFixed(digits);
         scroller.innerHTML=rows.map((row,index)=>{
             const date=new Date(row.ts),hour=date.getHours(),label=index===0?'現在':`${String(hour).padStart(2,'0')}:00`;
@@ -36028,6 +36082,80 @@ function passAqiMapFilter(value, filterValue){
         if(selected)countyExtraRenderWarnings(selected.county,selected.town);
     });
 
+    let countyWeeklyRainTrendChart=null;
+    function countyWeeklyThemeColors(){
+        const light=document.documentElement.getAttribute('data-theme')==='light';
+        return {text:light?'#475569':'#cbd5e1',grid:light?'rgba(100,116,139,.16)':'rgba(148,163,184,.16)',tip:light?'rgba(255,255,255,.97)':'rgba(15,23,42,.97)'};
+    }
+    function countyWeeklyDailyValues(days){
+        return (Array.isArray(days)?days:[]).map(day=>{
+            const pops=[day?.day?.pop,day?.night?.pop].map(Number).filter(Number.isFinite);
+            const mins=[day?.day?.min,day?.night?.min].map(Number).filter(Number.isFinite);
+            const maxs=[day?.day?.max,day?.night?.max].map(Number).filter(Number.isFinite);
+            return {date:day.date,pop:pops.length?Math.max(...pops):null,min:mins.length?Math.min(...mins):null,max:maxs.length?Math.max(...maxs):null,dayWx:String(day?.day?.wx||''),nightWx:String(day?.night?.wx||'')};
+        });
+    }
+    function countyWeeklyEsc(v){return String(v??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    function countyWeeklyRenderRain(days,county,town){
+        const canvas=document.getElementById('countyWeeklyRainTrendChart'),summary=document.getElementById('countyWeeklyRainSummary');
+        if(!canvas)return;
+        const rows=countyWeeklyDailyValues(days),valid=rows.filter(x=>x.pop!==null);
+        if(typeof Chart==='undefined'){if(summary)summary.textContent='圖表元件載入中，請稍後重新整理。';return;}
+        const colors=countyWeeklyThemeColors();
+        const config={type:'bar',data:{labels:rows.map(x=>[weeklyFormatDate(x.date),'週'+weeklyWeekday(x.date)]),datasets:[{label:'每日最高降雨機率',data:rows.map(x=>x.pop),backgroundColor:rows.map(x=>x.pop===null?'rgba(148,163,184,.22)':x.pop>=70?'rgba(59,130,246,.88)':x.pop>=40?'rgba(6,182,212,.78)':'rgba(56,189,248,.48)'),borderRadius:7,borderSkipped:false,maxBarThickness:28}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:colors.tip,titleColor:colors.text,bodyColor:colors.text,callbacks:{label:c=>c.raw===null?'降雨機率：無資料':'最高降雨機率：'+Math.round(c.raw)+'%'}}},scales:{x:{grid:{display:false},ticks:{color:colors.text,font:{size:10},maxRotation:0}},y:{min:0,max:100,grid:{color:colors.grid},ticks:{color:colors.text,stepSize:25,callback:v=>v+'%'},title:{display:true,text:'降雨機率 %',color:colors.text,font:{size:10}}}}}};
+        if(countyWeeklyRainTrendChart){countyWeeklyRainTrendChart.data=config.data;countyWeeklyRainTrendChart.options=config.options;countyWeeklyRainTrendChart.update();}
+        else countyWeeklyRainTrendChart=new Chart(canvas.getContext('2d'),config);
+        if(summary){const max=valid.length?Math.max(...valid.map(x=>x.pop)):null;const high=valid.filter(x=>x.pop>=40).length;const peak=valid.slice().sort((a,b)=>b.pop-a.pop)[0];summary.innerHTML='<span class="county-weekly-extra-pill">'+countyWeeklyEsc(county+'・'+town)+'</span><span class="county-weekly-extra-pill">最高機率 '+(max===null?'—':Math.round(max)+'%')+'</span><span class="county-weekly-extra-pill">≥40% '+high+' 天</span><span class="county-weekly-extra-pill">高點 '+(peak?weeklyFormatDate(peak.date):'—')+'</span>';}
+        canvas.setAttribute('aria-label',county+town+'未來七天每日最高降雨機率圖');
+    }
+    function countyWeeklyCloudClass(text){
+        const t=String(text||'').trim();if(!t)return '未提供';
+        if(/雷雨|豪雨|大雨|陣雨|雨/.test(t))return '降雨雲系';
+        if(/陰/.test(t))return '陰天';
+        if(/多雲/.test(t))return '多雲';
+        if(/晴/.test(t))return '晴朗';
+        return t.length>8?t.slice(0,8)+'…':t;
+    }
+    function countyWeeklyRenderCloud(days){
+        const box=document.getElementById('countyWeeklyCloudTrend');if(!box)return;
+        const rows=countyWeeklyDailyValues(days);
+        box.innerHTML=rows.length?rows.map(row=>'<div class="county-weekly-cloud-row"><span class="county-weekly-cloud-date">'+weeklyFormatDate(row.date)+'</span><span class="county-weekly-cloud-period">☀️ 白天<b>'+countyWeeklyEsc(countyWeeklyCloudClass(row.dayWx))+'</b></span><span class="county-weekly-cloud-period">🌙 夜間<b>'+countyWeeklyEsc(countyWeeklyCloudClass(row.nightWx))+'</b></span></div>').join(''):'<div class="county-insight-empty">目前沒有雲況預報資料。</div>';
+    }
+    function countyWeeklyRenderTransitions(days){
+        const box=document.getElementById('countyWeeklyTransitionAlerts');if(!box)return;
+        const rows=countyWeeklyDailyValues(days),alerts=[];
+        rows.forEach((row,i)=>{
+            const wx=(row.dayWx+' '+row.nightWx).trim();
+            if(/雷雨|豪雨|大雨|強降雨/.test(wx))alerts.push({warning:true,icon:'fa-cloud-bolt',text:weeklyFormatDate(row.date)+'：預報天氣現象包含'+wx.slice(0,28)+'，請留意後續官方警特報。'});
+            if(row.pop!==null&&row.pop>=70)alerts.push({warning:true,icon:'fa-cloud-rain',text:weeklyFormatDate(row.date)+'：降雨機率最高約 '+Math.round(row.pop)+'%，外出建議留意降雨。'});
+            const prev=rows[i-1];if(prev){
+                if(row.max!==null&&prev.max!==null&&prev.max-row.max>=4)alerts.push({warning:false,icon:'fa-temperature-arrow-down',text:weeklyFormatDate(row.date)+'：預報最高溫較前一日下降約 '+Math.round(prev.max-row.max)+'°C。'});
+                if(row.min!==null&&prev.min!==null&&prev.min-row.min>=4)alerts.push({warning:false,icon:'fa-temperature-arrow-down',text:weeklyFormatDate(row.date)+'：預報最低溫較前一日下降約 '+Math.round(prev.min-row.min)+'°C。'});
+                if(row.pop!==null&&prev.pop!==null&&row.pop-prev.pop>=30)alerts.push({warning:true,icon:'fa-cloud-showers-heavy',text:weeklyFormatDate(row.date)+'：降雨機率較前一日增加 '+Math.round(row.pop-prev.pop)+' 個百分點。'});
+                if(/晴/.test(prev.dayWx+' '+prev.nightWx)&&/雨|陰/.test(wx))alerts.push({warning:false,icon:'fa-cloud',text:weeklyFormatDate(row.date)+'：天氣現象由晴朗轉為較多雲或有雨，留意天氣變化。'});
+            }
+        });
+        const unique=[...new Map(alerts.map(x=>[x.text,x])).values()].slice(0,8);
+        box.innerHTML=unique.length?unique.map(a=>'<div class="county-weekly-transition-item'+(a.warning?' is-warning':'')+'"><i class="fas '+a.icon+'"></i><span>'+countyWeeklyEsc(a.text)+'</span></div>').join(''):'<div class="county-insight-empty">目前未偵測到明顯的預報轉變；仍請留意每日更新及官方警特報。</div>';
+    }
+    function countyWeeklyRenderObservationCompare(county,town,forecastRows){
+        const box=document.getElementById('countyForecastObservationCompare');if(!box)return;
+        let rows=[];try{rows=typeof xuanStationRows==='function'?xuanStationRows():[];}catch(e){}
+        const norm=v=>String(v||'').replace(/台/g,'臺').replace(/[縣市區鄉鎮村里\s　]/g,'').toLowerCase();
+        const c=norm(county),t=norm(town);
+        const candidates=rows.filter(r=>norm(r.county)===c);
+        const station=candidates.find(r=>norm(r.town)===t)||candidates.find(r=>norm(r.town).includes(t)||t.includes(norm(r.town)))||candidates.find(r=>norm(r.name).includes(t));
+        const forecast=Array.isArray(forecastRows)&&forecastRows.length?forecastRows[0]:null;
+        if(!station){box.innerHTML='<div class="county-insight-empty">目前找不到此鄉鎮可配對的有效 CWA 氣象測站觀測資料。</div>';return;}
+        const obsTemp=Number.isFinite(Number(station.temp))?Number(station.temp):null;
+        const fcTemp=forecast&&Number.isFinite(Number(forecast.temp))?Number(forecast.temp):null;
+        const diff=obsTemp!==null&&fcTemp!==null?obsTemp-fcTemp:null;
+        const obsRain=Number.isFinite(Number(station.rain))?Number(station.rain):null;
+        const fcPop=forecast&&Number.isFinite(Number(forecast.pop))?Number(forecast.pop):null;
+        const fmt=(v,d=1)=>v===null?'—':Number(v).toFixed(d);
+        box.innerHTML='<div class="county-weekly-compare-grid"><div class="county-weekly-compare-item"><span>附近測站實測氣溫</span><strong>'+fmt(obsTemp)+(obsTemp===null?'':'°C')+'</strong><small>'+countyWeeklyEsc(station.name||'CWA測站')+'</small></div><div class="county-weekly-compare-item"><span>目前時段預報氣溫</span><strong>'+fmt(fcTemp)+(fcTemp===null?'':'°C')+'</strong><small>'+(forecast?new Date(forecast.ts).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',month:'numeric',day:'numeric'}):'無可配對時段')+'</small></div><div class="county-weekly-compare-item"><span>氣溫差異（實測－預報）</span><strong>'+(diff===null?'—':(diff>0?'+':'')+diff.toFixed(1)+'°C')+'</strong><small>'+(diff===null?'資料不足':Math.abs(diff)<1?'兩者接近':diff>0?'實測較預報高':'實測較預報低')+'</small></div><div class="county-weekly-compare-item"><span>最近 1 小時雨量／預報降雨機率</span><strong>'+(obsRain===null?'—':obsRain.toFixed(1)+' mm')+' / '+(fcPop===null?'—':Math.round(fcPop)+'%')+'</strong><small>兩者單位及意義不同，不計算數值誤差</small></div></div><div class="county-weekly-extra-note">測站觀測時間：'+countyWeeklyEsc(station.time||'—')+'；觀測資料來自本站已載入的 CWA 測站資料。</div>';
+    }
+
     function weeklyRender(){
         const scroller =
             document.getElementById('weeklyForecastScroller');
@@ -36110,6 +36238,9 @@ function passAqiMapFilter(value, filterValue){
             .slice(0,7);
 
         weeklyRenderTrendChart(days, county, town);
+        countyWeeklyRenderRain(days,county,town);
+        countyWeeklyRenderCloud(days);
+        countyWeeklyRenderTransitions(days);
         weeklyRenderRegionalTemperatureChart(days);
         weeklyRenderRegionalZoneCharts(days);
 
