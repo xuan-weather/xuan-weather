@@ -36147,13 +36147,13 @@ function passAqiMapFilter(value, filterValue){
         const station=candidates.find(r=>norm(r.town)===t)||candidates.find(r=>norm(r.town).includes(t)||t.includes(norm(r.town)))||candidates.find(r=>norm(r.name).includes(t));
         const forecast=Array.isArray(forecastRows)&&forecastRows.length?forecastRows[0]:null;
         if(!station){box.innerHTML='<div class="county-insight-empty">目前找不到此鄉鎮可配對的有效 CWA 氣象測站觀測資料。</div>';return;}
-        const obsTemp=Number.isFinite(Number(station.temp))?Number(station.temp):null;
-        const fcTemp=forecast&&Number.isFinite(Number(forecast.temp))?Number(forecast.temp):null;
+        const obsTemp=station.temp!==null&&station.temp!==undefined&&Number.isFinite(Number(station.temp))?Number(station.temp):null;
+        const fcTemp=forecast&&forecast.temp!==null&&forecast.temp!==undefined&&Number.isFinite(Number(forecast.temp))?Number(forecast.temp):null;
         const diff=obsTemp!==null&&fcTemp!==null?obsTemp-fcTemp:null;
-        const obsRain=Number.isFinite(Number(station.rain))?Number(station.rain):null;
-        const fcPop=forecast&&Number.isFinite(Number(forecast.pop))?Number(forecast.pop):null;
+        const obsRain=station.rain!==null&&station.rain!==undefined&&Number.isFinite(Number(station.rain))?Number(station.rain):null;
+        const fcPop=forecast&&forecast.pop!==null&&forecast.pop!==undefined&&Number.isFinite(Number(forecast.pop))?Number(forecast.pop):null;
         const fmt=(v,d=1)=>v===null?'—':Number(v).toFixed(d);
-        box.innerHTML='<div class="county-weekly-compare-grid"><div class="county-weekly-compare-item"><span>附近測站實測氣溫</span><strong>'+fmt(obsTemp)+(obsTemp===null?'':'°C')+'</strong><small>'+countyWeeklyEsc(station.name||'CWA測站')+'</small></div><div class="county-weekly-compare-item"><span>目前時段預報氣溫</span><strong>'+fmt(fcTemp)+(fcTemp===null?'':'°C')+'</strong><small>'+(forecast?new Date(forecast.ts).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',month:'numeric',day:'numeric'}):'無可配對時段')+'</small></div><div class="county-weekly-compare-item"><span>氣溫差異（實測－預報）</span><strong>'+(diff===null?'—':(diff>0?'+':'')+diff.toFixed(1)+'°C')+'</strong><small>'+(diff===null?'資料不足':Math.abs(diff)<1?'兩者接近':diff>0?'實測較預報高':'實測較預報低')+'</small></div><div class="county-weekly-compare-item"><span>最近 1 小時雨量／預報降雨機率</span><strong>'+(obsRain===null?'—':obsRain.toFixed(1)+' mm')+' / '+(fcPop===null?'—':Math.round(fcPop)+'%')+'</strong><small>兩者單位及意義不同，不計算數值誤差</small></div></div><div class="county-weekly-extra-note">測站觀測時間：'+countyWeeklyEsc(station.time||'—')+'；觀測資料來自本站已載入的 CWA 測站資料。</div>';
+        box.innerHTML='<div class="county-weekly-compare-grid"><div class="county-weekly-compare-item"><span>附近測站實測氣溫</span><strong>'+fmt(obsTemp)+(obsTemp===null?'':'°C')+'</strong><small>'+countyWeeklyEsc(station.name||'CWA測站')+'</small></div><div class="county-weekly-compare-item"><span>目前時段預報氣溫</span><strong>'+fmt(fcTemp)+(fcTemp===null?'':'°C')+'</strong><small>'+(forecast?new Date(forecast.ts).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',month:'numeric',day:'numeric'}):'無可配對時段')+'</small></div><div class="county-weekly-compare-item"><span>氣溫差異（實測－預報）</span><strong>'+(diff===null?'—':(diff>0?'+':'')+diff.toFixed(1)+'°C')+'</strong><small>'+(diff===null?'資料不足':Math.abs(diff)<1?'兩者接近':diff>0?'實測較預報高':'實測較預報低')+'</small></div><div class="county-weekly-compare-item"><span>測站最新雨量／預報降雨機率</span><strong>'+(obsRain===null?'—':obsRain.toFixed(1)+' mm')+' / '+(fcPop===null?'—':Math.round(fcPop)+'%')+'</strong><small>兩者單位及意義不同，不計算數值誤差</small></div></div><div class="county-weekly-extra-note">測站觀測時間：'+countyWeeklyEsc(station.time||'—')+'；觀測資料來自本站已載入的 CWA 測站資料。</div>';
     }
 
     function weeklyRender(){
