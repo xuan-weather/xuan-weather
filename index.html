@@ -2029,6 +2029,31 @@
                 right:max(8px,env(safe-area-inset-right,0px));
             }
         }
+        /* Xuan Weather 全螢幕沉浸地圖：延續深色玻璃面板與青藍漸層，不改動底圖及測站圖層。 */
+        .map-immersive-tools{display:none;position:absolute;left:12px;bottom:18px;z-index:1000003;max-width:min(310px,calc(100vw - 24px));pointer-events:auto;font-family:inherit;}
+        #map.leaflet-fullscreen-on .map-immersive-tools,#map.leaflet-pseudo-fullscreen .map-immersive-tools,#map.map-layer-fullscreen-active .map-immersive-tools{display:block;}
+        .map-immersive-tools-toggle{display:flex;align-items:center;gap:9px;min-height:42px;padding:0 14px;border:1px solid rgba(56,189,248,.42);border-radius:14px;background:rgba(15,23,42,.88);color:#e2e8f0;box-shadow:0 8px 24px rgba(0,0,0,.28);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);font-size:12px;font-weight:850;cursor:pointer;}
+        .map-immersive-tools-toggle i{color:#38bdf8;font-size:16px;}
+        .map-immersive-tools-toggle .map-immersive-chevron{font-size:10px;color:#94a3b8;transition:transform .18s ease;}
+        .map-immersive-tools.open .map-immersive-tools-toggle .map-immersive-chevron{transform:rotate(180deg);}
+        .map-immersive-tools-panel{display:none;width:min(310px,calc(100vw - 24px));max-height:min(54vh,430px);overflow:auto;margin-bottom:8px;padding:12px;border:1px solid rgba(56,189,248,.28);border-radius:17px;background:rgba(15,23,42,.92);color:#e2e8f0;box-shadow:0 14px 36px rgba(0,0,0,.32);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+        .map-immersive-tools.open .map-immersive-tools-panel{display:block;}
+        .map-immersive-tools-heading{margin:0 0 8px;color:#94a3b8;font-size:10px;font-weight:900;letter-spacing:.5px;}
+        .map-immersive-quicklayers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:12px;}
+        .map-immersive-quicklayers button{min-width:0;min-height:38px;padding:8px 9px;border:1px solid rgba(148,163,184,.2);border-radius:11px;background:rgba(148,163,184,.09);color:#cbd5e1;font-size:11px;font-weight:800;text-align:left;cursor:pointer;}
+        .map-immersive-quicklayers button:active{transform:scale(.98);}
+        .map-immersive-quicklayers button i{width:17px;color:#38bdf8;}
+        .map-immersive-switches{display:grid;gap:7px;}
+        .map-immersive-switch{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px;padding:8px 10px;border:1px solid rgba(148,163,184,.16);border-radius:11px;background:rgba(148,163,184,.07);color:#e2e8f0;font-size:11px;font-weight:750;cursor:pointer;}
+        .map-immersive-switch input{width:18px;height:18px;margin:0;accent-color:#0ea5e9;flex:0 0 auto;}
+        .map-immersive-tools-hint{margin-top:9px;color:#94a3b8;font-size:9px;line-height:1.5;}
+        [data-theme="light"] .map-immersive-tools-toggle{background:rgba(255,255,255,.94);color:#172033;border-color:rgba(14,165,233,.35);}
+        [data-theme="light"] .map-immersive-tools-panel{background:rgba(255,255,255,.96);color:#172033;border-color:rgba(14,165,233,.24);}
+        [data-theme="light"] .map-immersive-quicklayers button{background:#f1f5f9;color:#334155;border-color:#dbe4ee;}
+        [data-theme="light"] .map-immersive-switch{background:#f8fafc;color:#334155;border-color:#e2e8f0;}
+        [data-theme="light"] .map-immersive-tools-hint,[data-theme="light"] .map-immersive-tools-heading{color:#64748b;}
+        @media(max-width:600px){.map-immersive-tools{left:max(9px,env(safe-area-inset-left,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));}.map-immersive-tools-toggle{min-height:40px;padding:0 12px;border-radius:12px;}.map-immersive-tools-panel{max-height:48vh;padding:10px;}}
+
         .map-container-wrapper {
             position: relative;
             width: 100%;
@@ -9619,6 +9644,25 @@ html[data-theme="dark"] .xuan-popup-v2 .station-popup-slide-title{color:#f8fafc!
                         <button type="button" id="btnMapTempRange" onclick="switchMapMode('tempRange')">🌡️ 溫差</button>
                         <button type="button" id="btnMapAqi" onclick="switchMapMode('aqi')">😷 空品</button>
                     </div>
+                </div>
+                <div class="map-immersive-tools" id="mapImmersiveTools">
+                    <div class="map-immersive-tools-panel" id="mapImmersiveToolsPanel" aria-label="沉浸式地圖功能圖層">
+                        <div class="map-immersive-tools-heading">快速切換觀測圖層</div>
+                        <div class="map-immersive-quicklayers">
+                            <button type="button" onclick="switchMapMode('temp')"><i class="fas fa-temperature-half"></i> 氣溫</button>
+                            <button type="button" onclick="switchMapMode('rain')"><i class="fas fa-cloud-rain"></i> 日雨量</button>
+                            <button type="button" onclick="switchMapMode('windFlow')"><i class="fas fa-wind"></i> 風場流向</button>
+                            <button type="button" onclick="switchMapMode('aqi')"><i class="fas fa-lungs"></i> 空氣品質</button>
+                        </div>
+                        <div class="map-immersive-tools-heading">地圖顯示與即時圖層</div>
+                        <div class="map-immersive-switches">
+                            <label class="map-immersive-switch" for="mapImmersiveValuesToggle"><span>測站數值標籤</span><input type="checkbox" id="mapImmersiveValuesToggle" onchange="setMapValueLabelsEnabled(this.checked)"></label>
+                            <label class="map-immersive-switch" for="mapImmersiveBoundariesToggle"><span>縣市／鄉鎮界線</span><input type="checkbox" id="mapImmersiveBoundariesToggle" onchange="setMapBoundariesVisible(this.checked)"></label>
+                            <button type="button" class="map-immersive-switch" id="mapImmersiveStormToggle" onclick="toggleImmersiveStormLayer()"><span><i class="fas fa-cloud-bolt" style="color:#38bdf8;margin-right:7px;"></i>雷雨雷達與閃電追蹤</span><span id="mapImmersiveStormState">關閉</span></button>
+                        </div>
+                        <div class="map-immersive-tools-hint">圖層使用本站既有觀測資料與開關；不會更動測站圓點、資料來源或原有篩選設定。</div>
+                    </div>
+                    <button type="button" class="map-immersive-tools-toggle" id="mapImmersiveToolsToggle" aria-expanded="false" aria-controls="mapImmersiveToolsPanel" onclick="toggleMapImmersiveTools(event)"><i class="fas fa-sliders"></i><span>地圖功能圖層</span><i class="fas fa-chevron-up map-immersive-chevron"></i></button>
                 </div>
                 </div>
             </div>
@@ -28902,6 +28946,7 @@ const popVal = getPopForStation(county, town);
                     }
                 }
                 document.getElementById('xuanStormToggle')?.addEventListener('click',xuanToggleStorm);
+                document.getElementById('xuanStormToggle')?.addEventListener('click',()=>window.setTimeout(syncMapImmersiveTools,80));
                 window.addEventListener('resize',()=>{ if (xuanStormActive) xuanRenderMainMapStorm(); });
             }
 
@@ -29121,6 +29166,37 @@ const popVal = getPopForStation(county, town);
             toggle.setAttribute('aria-expanded', 'false');
         }
 
+        // 全螢幕沉浸地圖懸浮面板：沿用既有狀態與開關，不建立第二套圖層資料流程。
+        function syncMapImmersiveTools(){
+            const values=document.getElementById('mapImmersiveValuesToggle');
+            const boundaries=document.getElementById('mapImmersiveBoundariesToggle');
+            const storm=document.getElementById('xuanStormToggle');
+            const stormState=document.getElementById('mapImmersiveStormState');
+            if(values) values.checked=!!mapValueLabelsEnabled;
+            if(boundaries) boundaries.checked=!!mapBoundariesVisible;
+            if(stormState) stormState.textContent=storm?.getAttribute('aria-pressed')==='true'?'開啟':'關閉';
+        }
+        function toggleMapImmersiveTools(event){
+            if(event){event.preventDefault();event.stopPropagation();}
+            const root=document.getElementById('mapImmersiveTools');
+            const button=document.getElementById('mapImmersiveToolsToggle');
+            if(!root||!button)return;
+            const opened=root.classList.toggle('open');
+            button.setAttribute('aria-expanded',opened?'true':'false');
+            if(opened) syncMapImmersiveTools();
+        }
+        function toggleImmersiveStormLayer(){
+            document.getElementById('xuanStormToggle')?.click();
+            window.setTimeout(syncMapImmersiveTools,80);
+        }
+        document.addEventListener('click',function(event){
+            const root=document.getElementById('mapImmersiveTools');
+            if(root&&!root.contains(event.target)){
+                root.classList.remove('open');
+                document.getElementById('mapImmersiveToolsToggle')?.setAttribute('aria-expanded','false');
+            }
+        });
+
         // 點選圖層選項後，直接更新全台地圖，不跳頁；選完自動收起選單。
         document.addEventListener('click', function(event) {
             const switcher = document.getElementById('mapLayerSwitcher');
@@ -29176,6 +29252,7 @@ const popVal = getPopForStation(county, town);
                 localStorage.setItem('cwa_map_boundaries_visible_v2', mapBoundariesVisible ? '1' : '0');
             } catch (e) {}
             syncMapBoundariesToggle();
+            if (typeof syncMapImmersiveTools === 'function') syncMapImmersiveTools();
             if (!map) return;
 
             [mainMapCountyBoundaryLayer, mainMapTownshipBoundaryLayer].forEach(layer => {
