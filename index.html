@@ -44507,7 +44507,7 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
     {name:'臺東',lat:22.75,lon:121.15},{name:'澎湖',lat:23.57,lon:119.58}
   ];
   const HOURLY=[
-    'total_column_integrated_water_vapour','freezing_level_height','snowfall_height',
+    'total_column_integrated_water_vapour','freezing_level_height',
     'temperature_2m','pressure_msl','cape','geopotential_height_500hPa',
     'temperature_850hPa','dew_point_850hPa','wind_speed_850hPa','wind_direction_850hPa',
     'geopotential_height_850hPa','temperature_1000hPa','dew_point_1000hPa','temperature_925hPa','dew_point_925hPa',
@@ -44523,6 +44523,7 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
     times.forEach((t,i)=>{const n=Math.abs(Date.parse(t)-now);if(n<delta){delta=n;best=i;}});return best;
   };
   const val=(data,key,i)=>{const a=data?.hourly?.[key];return Array.isArray(a)?a[i]:null;};
+  const valMinutely=(data,key)=>{const a=data?.minutely_15?.[key],times=data?.minutely_15?.time;if(!Array.isArray(a)||!Array.isArray(times)||!a.length)return null;let best=0,delta=Infinity;times.forEach((t,i)=>{const n=Math.abs(Date.parse(t)-Date.now());if(n<delta){delta=n;best=i;}});return a[best]??null;};
   const timeLabel=t=>t?new Date(t).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'時間未提供';
   function createPanel(){
     if($('xuanAtmosphereCenterPanel'))return;
@@ -44557,7 +44558,7 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
     if(loading)return;if(!force&&payload&&Date.now()-lastLoaded<20*60*1000){renderAll();return;}
     loading=true;const status=$('xacStatus');if(status)status.textContent='正在更新模式資料…';
     try{
-      const params=new URLSearchParams({latitude:LOCATIONS.map(x=>x.lat).join(','),longitude:LOCATIONS.map(x=>x.lon).join(','),hourly:HOURLY.join(','),forecast_days:'3',past_hours:'3',timezone:'Asia/Taipei',models:'best_match'});
+      const params=new URLSearchParams({latitude:LOCATIONS.map(x=>x.lat).join(','),longitude:LOCATIONS.map(x=>x.lon).join(','),hourly:HOURLY.join(','),minutely_15:'snowfall_height',forecast_days:'3',past_hours:'3',timezone:'Asia/Taipei',models:'best_match'});
       const response=await fetch('https://api.open-meteo.com/v1/forecast?'+params.toString(),{cache:'no-store'});
       if(!response.ok)throw new Error('模式資料服務回應 '+response.status);
       const json=await response.json();payload=Array.isArray(json)?json:[json];lastLoaded=Date.now();
@@ -44617,7 +44618,7 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
   function renderFreezing(){
     const el=$('xacFreezingGrid');if(!el||!payload)return;
     const idx=currentIndex(getCurrentCentral());
-    const central=getCurrentCentral();const zero=val(central,'freezing_level_height',idx),snow=val(central,'snowfall_height',idx);
+    const central=getCurrentCentral();const zero=val(central,'freezing_level_height',idx),snow=valMinutely(central,'snowfall_height');
     el.innerHTML=`<div class="xac-info"><strong>零度層高度</strong><span style="font-size:22px;font-weight:900;color:#38bdf8">${fmt(zero)} m</span><br><span>模式推估 0°C 等溫面高度</span></div><div class="xac-info"><strong>降雪高度</strong><span style="font-size:22px;font-weight:900;color:#a5b4fc">${snow==null?'資料源未提供':fmt(snow)+' m'}</span><br><span>僅在模式資料有提供時顯示，不以零度層自行換算</span></div>`;
     renderMap('freezing');
   }
@@ -44952,8 +44953,8 @@ html[data-theme="dark"] .xuan-social-info-panel .xuan-social-location{background
       button.setAttribute('aria-pressed',active?'true':'false');
     });
     const list = document.getElementById('stationTempPointList');
-    const wrap24 = document.getElementById('stationTemp24hCanvasWrap');
-    const wrap7 = document.getElementById('stationTemp7dCanvasWrap');    const title = document.getElementById('chartMainTitle');
+    const wrap24 = document.getElementById('stationTemp24hCanvasWrap');    const wrap7 = document.getElementById('stationTemp7dCanvasWrap');
+    const title = document.getElementById('chartMainTitle');
     const subtitle = document.getElementById('chartTimeSubtitle');
     const extremes = document.getElementById('stationTempExtremes');
     if(list) list.style.display = next === '24h' ? '' : 'none';
